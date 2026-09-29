@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>موجة العمليات</title>
+
+<style>
+*{box-sizing:border-box}
+body{
+margin:0;
+font-family:Arial,Tahoma,sans-serif;
+background:#02070d;
+color:#fff;
+min-height:100vh;
+}
+.app{
+max-width:520px;
+margin:auto;
+min-height:100vh;
+padding:14px;
+background:linear-gradient(180deg,#06111c,#02070d);
+}
+.header{
+border:1px solid #16465d;
+border-radius:18px;
+padding:14px;
+background:linear-gradient(135deg,#071925,#031018);
+box-shadow:0 0 25px #00d9ff22;
+}
+.top{
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:8px;
+}
+.logo{
+font-weight:bold;
+font-size:17px;
+color:#dcecff;
+}
+.wave-title{
+font-size:25px;
+font-weight:bold;
+color:#24ffd0;
+text-shadow:0 0 12px #00ffb3;
+text-align:center;
+flex:1;
+}
+.status{
+color:#00ff91;
+font-size:13px;
+white-space:nowrap;
+}
+.wave-box{
+margin-top:15px;
+padding:18px 10px;
+border:1px solid #00b889;
+border-radius:16px;
+background:radial-gradient(circle,#06351f,#02160f);
+text-align:center;
+position:relative;
+}
+.wave-label{
+font-size:14px;
+color:#cbd9d6;
+}
+.wave-name{
+font-size:29px;
+font-weight:bold;
+color:#21ff9b;
+margin:5px 0 14px;
+}
+.wave-controls{
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:8px;
+}
+.wave-btn{
+width:54px;
+height:48px;
+border:1px solid #00ffb3;
+border-radius:12px;
+background:#05291f;
+color:#fff;
+font-size:25px;
+cursor:pointer;
+box-shadow:0 0 12px #00ff8c44;
+}
+.wave-btn:active{transform:scale(.94)}
+.code{
+display:inline-block;
+padding:8px 20px;
+border:1px solid #00e49a;
+border-radius:12px;
+color:#36ffad;
+font-weight:bold;
+}
+.state{
+margin-top:12px;
+color:#00ffae;
+}
+.actions{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:10px;
+margin-top:14px;
+}
+.action{
+border:0;
+border-radius:14px;
+padding:15px 8px;
+font-size:17px;
+font-weight:bold;
+color:#fff;
+cursor:pointer;
+}
+.create{background:linear-gradient(135deg,#ff9d00,#e35d00)}
+.join{background:linear-gradient(135deg,#087dff,#0648c8)}
+.fav{
+margin-top:12px;
+width:100%;
+padding:13px;
+border-radius:13px;
+border:1px solid #ffd43b;
+background:#241c05;
+color:#ffd43b;
+font-size:16px;
+cursor:pointer;
+}
+.mic-area{
+margin-top:20px;
+text-align:center;
+}
+.mic{
+width:190px;
+height:190px;
+border-radius:50%;
+border:5px solid #19ff82;
+background:radial-gradient(circle,#073f25,#03130c 65%);
+color:#fff;
+font-size:19px;
+font-weight:bold;
+box-shadow:0 0 25px #00ff8855, inset 0 0 25px #00ff4433;
+cursor:pointer;
+}
+.mic small{
+display:block;
+margin-top:8px;
+color:#50ffb5;
+font-size:12px;
+}
+.members{
+margin-top:20px;
+border:1px solid #173b51;
+border-radius:16px;
+padding:14px;
+background:#06121c;
+}
+.section-title{
+font-size:18px;
+font-weight:bold;
+margin-bottom:12px;
+}
+.member{
+display:flex;
+align-items:center;
+justify-content:space-between;
+padding:11px 4px;
+border-bottom:1px solid #16303e;
+}
+.member:last-child{border-bottom:0}
+.dot{
+width:10px;
+height:10px;
+border-radius:50%;
+background:#00ff91;
+display:inline-block;
+margin-left:7px;
+}
+.bottom{
+margin-top:20px;
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:5px;
+border:1px solid #173b51;
+border-radius:15px;
+padding:7px;
+background:#06111a;
+}
+.nav{
+padding:12px 4px;
+border:0;
+border-radius:10px;
+background:transparent;
+color:#9cb1c3;
+font-size:12px;
+cursor:pointer;
+}
+.nav.active{
+background:#063d35;
+color:#00ffb0;
+}
+.modal{
+display:none;
+position:fixed;
+inset:0;
+background:#000b;
+align-items:center;
+justify-content:center;
+padding:20px;
+z-index:10;
+}
+.card{
+width:100%;
+max-width:400px;
+background:#071522;
+border:1px solid #1687b1;
+border-radius:18px;
+padding:20px;
+box-shadow:0 0 35px #00bfff33;
+}
+.card h2{
+margin-top:0;
+color:#24ffd0;
+}
+.card p{
+color:#c5d4df;
+line-height:1.7;
+}
+input{
+width:100%;
+padding:14px;
+margin:7px 0;
+border-radius:10px;
+border:1px solid #23516b;
+background:#020b13;
+color:#fff;
+font-size:15px;
+}
+.modal-buttons{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:8px;
+margin-top:12px;
+}
+.modal-buttons button{
+padding:13px;
+border-radius:10px;
+border:0;
+font-weight:bold;
+}
+.ok{background:#00bd70;color:#fff}
+.cancel{background:#263542;color:#fff}
+.toast{
+position:fixed;
+bottom:25px;
+left:50%;
+transform:translateX(-50%);
+background:#09251e;
+border:1px solid #00d994;
+padding:13px 20px;
+border-radius:12px;
+display:none;
+z-index:20;
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+<header class="header">
+<div class="top">
+<div class="logo">📡 BAOFENG<br><small>UV-5R</small></div>
+<div class="wave-title">موجة العمليات</div>
+<div class="status">● متصل</div>
+</div>
+
+<div class="wave-box">
+<div class="wave-controls">
+<button class="wave-btn" onclick="changeWave(-1)">◀</button>
+
+<div>
+<div class="wave-label">المجموعة النشطة</div>
+<div class="wave-name" id="waveName">موجة العمليات</div>
+<div class="code">المعرف: <span id="waveCode">7F3A</span> 🔒</div>
+</div>
+
+<button class="wave-btn" onclick="changeWave(1)">▶</button>
+</div>
+
+<div class="state">الحالة: جاهز للتواصل 🎙️</div>
+</div>
+</header>
+
+<div class="actions">
+<button class="action create" onclick="openCreate()">👥 إنشاء مجموعة</button>
+<button class="action join" onclick="openJoin()">➕ الانضمام لمجموعة</button>
+</div>
+
+<button class="fav" onclick="toggleFavorite()">☆ إضافة إلى المفضلة</button>
+
+<div class="mic-area">
+<button class="mic" id="micBtn" onclick="toggleMic()">
+🎙️
+<br>
+اضغط للتحدث
+<small>سيتم إرسال صوتك للمجموعة</small>
+</button>
+</div>
+
+<section class="members">
+<div class="section-title">👥 أعضاء المجموعة <span id="memberCount">5</span></div>
+
+<div class="member">👑 أبو سالم <span><i class="dot"></i>متصل</span></div>
+<div class="member">👤 علي <span><i class="dot"></i>متصل</span></div>
+<div class="member">👤 محمد <span><i class="dot"></i>متصل</span></div>
+<div class="member">👤 سالم <span><i class="dot"></i>متصل</span></div>
+<div class="member">👤 خالد <span><i class="dot"></i>متصل</span></div>
+</section>
+
+<nav class="bottom">
+<button class="nav active">🏠<br>الرئيسية</button>
+<button class="nav">💬<br>المحادثات</button>
+<button class="nav">👥<br>المجموعات</button>
+<button class="nav">⚙️<br>الإعدادات</button>
+</nav>
+
+</div>
+
+<!-- نافذة تغيير الموجة -->
+<div class="modal" id="waveModal">
+<div class="card">
+<h2>⚠️ تغيير الموجة</h2>
+<p>
+أنت متصل حاليًا بـ <b id="oldWave">موجة العمليات</b>.
+<br><br>
+عند المتابعة سيتم قطع اتصالك من المجموعة الحالية والانتقال إلى الموجة الجديدة.
+</p>
+<div class="modal-buttons">
+<button class="cancel" onclick="closeModal()">عودة</button>
+<button class="ok" onclick="confirmWave()">تغيير الموجة</button>
+</div>
+</div>
+</div>
+
+<!-- إنشاء مجموعة -->
+<div class="modal" id="createModal">
+<div class="card">
+<h2>👥 إنشاء مجموعة جديدة</h2>
+<input id="newName" placeholder="اسم المجموعة">
+<input id="newCode" placeholder="كود المعرف (4 - 8 أحرف)">
+<div class="modal-buttons">
+<button class="cancel" onclick="closeModal()">إلغاء</button>
+<button class="ok" onclick="createGroup()">إنشاء</button>
+</div>
+</div>
+</div>
+
+<!-- الانضمام -->
+<div class="modal" id="joinModal">
+<div class="card">
+<h2>🔗 الانضمام لمجموعة</h2>
+<input id="joinCode" placeholder="أدخل كود المجموعة">
+<div class="modal-buttons">
+<button class="cancel" onclick="closeModal()">إلغاء</button>
+<button class="ok" onclick="joinGroup()">انضمام</button>
+</div>
+</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const waves=[
+{name:"موجة العمليات",code:"7F3A"},
+{name:"الموجة العامة",code:"9K21"},
+{name:"موجة الطوارئ",code:"4M88"},
+{name:"الموجة الخاصة",code:"6P17"}
+];
+
+let waveIndex=0;
+let pendingIndex=0;
+let micOn=false;
+
+const saved=localStorage.getItem("radioWave");
+if(saved){
+try{
+const x=JSON.parse(saved);
+waveIndex=x.index||0;
+document.getElementById("waveName").textContent=waves[waveIndex].name;
+document.getElementById("waveCode").textContent=waves[waveIndex].code;
+}catch(e){}
+}
+
+function changeWave(direction){
+pendingIndex=(waveIndex+direction+waves.length)%waves.length;
+document.getElementById("oldWave").textContent=waves[waveIndex].name;
+document.getElementById("waveModal").style.display="flex";
+}
+
+function confirmWave(){
+waveIndex=pendingIndex;
+document.getElementById("waveName").textContent=waves[waveIndex].name;
+document.getElementById("waveCode").textContent=waves[waveIndex].code;
+
+localStorage.setItem("radioWave",JSON.stringify({
+index:waveIndex,
+name:waves[waveIndex].name,
+code:waves[waveIndex].code
+}));
+
+closeModal();
+showToast("تم تغيير الموجة إلى "+waves[waveIndex].name);
+}
+
+function toggleFavorite(){
+const key="fav_"+waves[waveIndex].code;
+const value=localStorage.getItem(key);
+
+if(value){
+localStorage.removeItem(key);
+showToast("تمت إزالة المجموعة من المفضلة");
+}else{
+localStorage.setItem(key,waves[waveIndex].name);
+showToast("⭐ تمت إضافة المجموعة إلى المفضلة");
+}
+}
+
+function toggleMic(){
+micOn=!micOn;
+const btn=document.getElementById("micBtn");
+
+if(micOn){
+btn.innerHTML="🎙️<br>جاري التحدث<small>اضغط لإيقاف الإرسال</small>";
+showToast("تم تشغيل الميكروفون");
+}else{
+btn.innerHTML="🎙️<br>اضغط للتحدث<small>سيتم إرسال صوتك للمجموعة</small>";
+showToast("تم إيقاف الميكروفون");
+}
+}
+
+function openCreate(){
+document.getElementById("createModal").style.display="flex";
+}
+
+function openJoin(){
+document.getElementById("joinModal").style.display="flex";
+}
+
+function createGroup(){
+const name=document.getElementById("newName").value.trim();
+const code=document.getElementById("newCode").value.trim();
+
+if(!name||!code){
+showToast("أدخل اسم المجموعة والكود");
+return;
+}
+
+waves.push({name:name,code:code});
+waveIndex=waves.length-1;
+
+document.getElementById("waveName").textContent=name;
+document.getElementById("waveCode").textContent=code;
+
+localStorage.setItem("radioWave",JSON.stringify({
+index:waveIndex,name:name,code:code
+}));
+
+closeModal();
+showToast("تم إنشاء المجموعة وحفظها");
+}
+
+function joinGroup(){
+const code=document.getElementById("joinCode").value.trim();
+
+if(!code){
+showToast("أدخل كود المجموعة");
+return;
+}
+
+showToast("جاري البحث عن المجموعة...");
+closeModal();
+}
+
+function closeModal(){
+document.querySelectorAll(".modal").forEach(x=>x.style.display="none");
+}
+
+function showToast(message){
+const t=document.getElementById("toast");
+t.textContent=message;
+t.style.display="block";
+setTimeout(()=>t.style.display="none",2600);
+}
+</script>
+
+</body>
+</html>
