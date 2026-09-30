@@ -982,7 +982,7 @@ async function connectLiveKit(){
       await livekitRoom.localParticipant.publishTrack(
         localAudioTrack
       );
-
+localAudioTrack.enabled = false;
     }catch(error){
 
       console.log("Microphone not published:",error);
@@ -1016,13 +1016,40 @@ function stopTalking(event){
 
   event.preventDefault();
 
+function startTalking(event){
+
+  if(event){
+    event.preventDefault();
+  }
+
+  el("pttButton").classList.add("active");
+
+  if(localAudioTrack){
+    localAudioTrack.enabled = true;
+  }
+}
+
+function stopTalking(event){
+
+  if(event){
+    event.preventDefault();
+  }
+
   el("pttButton").classList.remove("active");
 
   if(localAudioTrack){
-
     localAudioTrack.enabled = false;
   }
 }
+
+const pttButton = el("pttButton");
+
+pttButton.addEventListener("pointerdown", startTalking);
+pttButton.addEventListener("pointerup", stopTalking);
+pttButton.addEventListener("pointercancel", stopTalking);
+pttButton.addEventListener("pointerleave", stopTalking);
+  
+
 
 function updateWave(){
 
