@@ -1042,15 +1042,6 @@ function stopTalking(event){
   }
 }
 
-const pttButton = el("pttButton");
-
-pttButton.addEventListener("pointerdown", startTalking);
-pttButton.addEventListener("pointerup", stopTalking);
-pttButton.addEventListener("pointercancel", stopTalking);
-pttButton.addEventListener("pointerleave", stopTalking);
-  
-
-
 function updateWave(){
 
   const wave = waves[waveIndex];
