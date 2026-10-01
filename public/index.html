@@ -68,7 +68,10 @@ button{
   border-radius:14px;
   background:#101b2d;
   color:#eaf4ff;
-  font-size:21px
+  font-size:21px;
+  display:flex;
+  align-items:center;
+  justify-content:center
 }
 
 .brand{
@@ -125,7 +128,11 @@ button{
 .roomLabel{
   color:#7f96b0;
   font-size:12px;
-  margin-bottom:5px
+  margin-bottom:5px;
+  display:flex;
+  align-items:center;
+  gap:4px;
+  cursor:pointer
 }
 
 .roomName{
@@ -200,7 +207,13 @@ button{
   border-radius:14px;
   background:#132238;
   color:#dcecff;
-  font-size:21px
+  font-size:21px;
+  transition:.2s
+}
+
+.waveArrow.disabled{
+  opacity:.3;
+  cursor:not-allowed
 }
 
 .changeWave{
@@ -285,7 +298,11 @@ button{
   font-size:48px;
   transition:.12s;
   user-select:none;
-  touch-action:none
+  touch-action:none;
+  margin:auto;
+  display:flex;
+  align-items:center;
+  justify-content:center
 }
 
 .ptt.talking{
@@ -396,6 +413,26 @@ button{
   justify-content:center;
   margin-left:-8px;
   font-size:13px
+}
+
+.banner{
+  background:linear-gradient(135deg,#0e233d,#0a1526);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:18px;
+  padding:14px;
+  text-align:center;
+  margin-bottom:13px
+}
+
+.banner strong{
+  display:block;
+  font-size:14px;
+  color:#e0efff
+}
+
+.banner span{
+  font-size:11px;
+  color:#7691af
 }
 
 .bottomNav{
@@ -577,7 +614,10 @@ button{
   border-radius:15px;
   color:#fff;
   padding:13px;
-  text-align:right
+  text-align:right;
+  display:flex;
+  justify-content:space-between;
+  align-items:center
 }
 
 .roomItem strong{
@@ -586,7 +626,7 @@ button{
 
 .roomItem span{
   color:#7189a2;
-  font-size:10px
+  font-size:11px
 }
 
 .toast{
@@ -677,19 +717,6 @@ button{
   margin-top:3px
 }
 
-.memberActions{
-  display:flex;
-  gap:5px
-}
-
-.memberActions button{
-  padding:7px 9px;
-  border-radius:9px;
-  background:#173452;
-  color:#fff;
-  font-size:10px
-}
-
 .empty{
   text-align:center;
   padding:25px 10px;
@@ -734,9 +761,12 @@ button{
     <section class="card">
       <div class="roomHead">
         <div>
-          <div class="roomLabel">الغرفة الحالية</div>
+          <div class="roomLabel" onclick="openWaveModal()">
+            <span>الغرفة الحالية</span>
+            <small>▼</small>
+          </div>
           <div class="roomName" id="currentRoomName">غرفة خاصة</div>
-          <div class="roomType">غرفة</div>
+          <div class="roomType" id="currentRoomType">موجة 1</div>
         </div>
 
         <button class="favorite" id="favoriteBtn" onclick="toggleFavorite()">☆</button>
@@ -754,9 +784,9 @@ button{
       <div class="waveCode" id="waveCode">7F3A</div>
 
       <div class="waveControls">
-        <button class="waveArrow" onclick="previousWave()">→</button>
+        <button class="waveArrow" id="prevWaveBtn" onclick="previousWave()">→</button>
         <button class="changeWave" onclick="openWaveModal()">تغيير الموجة</button>
-        <button class="waveArrow" onclick="nextWave()">←</button>
+        <button class="waveArrow" id="nextWaveBtn" onclick="nextWave()">←</button>
       </div>
     </section>
 
@@ -872,6 +902,11 @@ button{
       </div>
     </section>
 
+    <div class="banner">
+      <strong>تواصل أقوى.. في كل مكان</strong>
+      <span>Radio Connect - لاسلكي متصل</span>
+    </div>
+
   </main>
 
 </div>
@@ -960,7 +995,6 @@ button{
 <input type="file" id="videoInput" accept="video/*" hidden onchange="sendSelectedFile(this)">
 <input type="file" id="documentInput" accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.zip,.rar" hidden onchange="sendSelectedFile(this)">
 <input type="file" id="audioInput" accept="audio/*" hidden onchange="sendSelectedFile(this)">
-<input type="file" id="cameraInput" accept="image/*" capture="environment" hidden onchange="sendSelectedFile(this)">
 
 <div class="toast hidden" id="toast"></div>
 
@@ -991,6 +1025,19 @@ const waveCodes = [
   "1E56","4F83","6G29","9H71","2J45",
   "5K87","7L32","3M68","8N14","1P59",
   "4Q76","6R21","9S54","2T83","5U47"
+];
+
+const waveNames = [
+  "غرفة خاصة","موجة 9K21","قناة الأزمات","غرفة الطوارئ","موجة العامة",
+  "الموجة 6","الموجة 7","الموجة 8","الموجة 9","الموجة 10",
+  "الموجة 11","الموجة 12","الموجة 13","الموجة 14","الموجة 15",
+  "الموجة 16","الموجة 17","الموجة 18","الموجة 19","الموجة 20",
+  "الموجة 21","الموجة 22","الموجة 23","الموجة 24","الموجة 25",
+  "الموجة 26","الموجة 27","الموجة 28","الموجة 29","الموجة 30",
+  "الموجة 31","الموجة 32","الموجة 33","الموجة 34","الموجة 35",
+  "الموجة 36","الموجة 37","الموجة 38","الموجة 39","الموجة 40",
+  "الموجة 41","الموجة 42","الموجة 43","الموجة 44","الموجة 45",
+  "الموجة 46","الموجة 47","الموجة 48","الموجة 49","الموجة 50"
 ];
 
 const state = {
@@ -1038,17 +1085,33 @@ function closeDrawer(e){
 }
 
 function updateRoomUI(){
-  const name =
-    currentRoom?.name ||
-    currentRoom?.roomName ||
-    "غرفة خاصة";
+  const name = waveNames[currentWave - 1] || ("الموجة " + currentWave);
 
   $("currentRoomName").textContent = name;
+  $("currentRoomType").textContent = "الموجة " + currentWave;
 
   $("waveNumber").textContent = currentWave;
   $("waveCode").textContent = waveCodes[currentWave - 1];
 
+  updateWaveArrowState();
   updateMembersUI();
+}
+
+function updateWaveArrowState(){
+  const prevBtn = $("prevWaveBtn");
+  const nextBtn = $("nextWaveBtn");
+
+  if(currentWave <= 1){
+    prevBtn.classList.add("disabled");
+  }else{
+    prevBtn.classList.remove("disabled");
+  }
+
+  if(currentWave >= 50){
+    nextBtn.classList.add("disabled");
+  }else{
+    nextBtn.classList.remove("disabled");
+  }
 }
 
 function updateMembersUI(){
@@ -1059,7 +1122,7 @@ function updateMembersUI(){
   const box = $("memberAvatars");
   box.innerHTML = "";
 
-  state.members.slice(0,5).forEach((m,index)=>{
+  state.members.slice(0,5).forEach((m)=>{
     const avatar = document.createElement("div");
     avatar.className = "avatar";
 
@@ -1104,7 +1167,7 @@ function detectNetwork(){
 
     let value = String(type).toUpperCase();
 
-    if(value === "4G" || value === "4G") value = "4G";
+    if(value === "4G") value = "4G";
     if(value === "5G") value = "5G";
     if(value.includes("WIFI")) value = "Wi-Fi";
 
@@ -1134,51 +1197,54 @@ async function init(){
 }
 
 async function loadRooms(){
-  const res = await fetch(API + "/api/rooms");
+  try{
+    const res = await fetch(API + "/api/rooms");
+    if(!res.ok) throw new Error("rooms");
 
-  if(!res.ok) throw new Error("rooms");
+    const data = await res.json();
 
-  const data = await res.json();
+    state.rooms =
+      Array.isArray(data) ? data :
+      data.rooms || [];
 
-  state.rooms =
-    Array.isArray(data) ? data :
-    data.rooms || [];
+    if(state.rooms.length){
+      currentRoom = state.rooms[0];
 
-  if(state.rooms.length){
-    currentRoom = state.rooms[0];
-
-    currentRoomId =
-      currentRoom.roomId ||
-      currentRoom.id;
-
-    updateRoomUI();
+      currentRoomId =
+        currentRoom.roomId ||
+        currentRoom.id;
+    }
+  }catch(e){
+    console.log("استخدام النمط الافتراضي المحلي للموجات");
   }
 }
 
 function previousWave(){
+  if(currentWave <= 1){
+    toast("أنت في الموجة الأولى حالياً");
+    return;
+  }
+
   currentWave--;
-
-  if(currentWave < 1)
-    currentWave = 50;
-
   updateRoomUI();
+  toast("تم الانتقال للموجة " + currentWave);
 }
 
 function nextWave(){
+  if(currentWave >= 50){
+    toast("وصلت للحد الأقصى للموجات (50)");
+    return;
+  }
+
   currentWave++;
-
-  if(currentWave > 50)
-    currentWave = 1;
-
   updateRoomUI();
-
-  toast("تم تغيير الموجة إلى " + currentWave);
+  toast("تم الانتقال للموجة " + currentWave);
 }
 
 function openWaveModal(){
   let html = `
     <div class="modalHead">
-      <strong>تغيير الموجة</strong>
+      <strong>تغيير الموجة / الغرفة</strong>
       <button class="close" onclick="closeModal()">×</button>
     </div>
 
@@ -1186,10 +1252,14 @@ function openWaveModal(){
   `;
 
   for(let i=1;i<=50;i++){
+    const name = waveNames[i-1] || ("الموجة " + i);
     html += `
       <button class="roomItem" onclick="selectWave(${i})">
-        <strong>الموجة ${i}</strong>
-        <span>${waveCodes[i-1]}</span>
+        <div>
+          <strong>${i}. ${name}</strong>
+          <span>كود الموجة: ${waveCodes[i-1]}</span>
+        </div>
+        <span>${i === currentWave ? "مُحددة" : "انتقال"}</span>
       </button>
     `;
   }
@@ -1205,7 +1275,7 @@ function selectWave(number){
   currentWave = number;
   updateRoomUI();
   closeModal();
-  toast("تم اختيار الموجة " + number);
+  toast("تم الانتقال إلى " + (waveNames[number-1] || ("الموجة " + number)));
 }
 
 function setVoiceMode(mode){
@@ -1222,9 +1292,9 @@ function setVoiceMode(mode){
   );
 
   if(mode === "radio"){
-    toast("تم اختيار الصوت اللاسلكي");
+    toast("تم اختيار وضع الصوت اللاسلكي");
   }else{
-    toast("تم اختيار الصوت الطبيعي");
+    toast("تم اختيار وضع الصوت الطبيعي");
   }
 }
 
@@ -1271,7 +1341,6 @@ async function startMicrophone(){
   }
 
   if(!livekitRoom){
-    toast("الميكروفون جاهز، لم يتم الاتصال بغرفة LiveKit بعد");
     return;
   }
 
@@ -1312,535 +1381,33 @@ async function stopMicrophone(){
   }catch(e){}
 }
 
-async function connectLiveKit(roomId,memberKey){
-  if(!window.LivekitClient){
-    toast("تعذر تحميل نظام الاتصال الصوتي");
-    return;
-  }
-
-  try{
-    const url =
-      "/token?room=" +
-      encodeURIComponent(roomId) +
-      "&identity=" +
-      encodeURIComponent(memberKey || ("user-" + Date.now()));
-
-    const res = await fetch(url);
-
-    if(!res.ok){
-      throw new Error("token");
-    }
-
-    const data = await res.json();
-
-    livekitRoom = new LivekitClient.Room();
-
-    livekitRoom.on(
-      LivekitClient.RoomEvent.TrackSubscribed,
-      (track)=>{
-        if(track.kind === LivekitClient.Track.Kind.Audio){
-          const element = track.attach();
-          element.autoplay = true;
-          element.style.display = "none";
-          document.body.appendChild(element);
-
-          applyReceiverAudioMode(element);
-        }
-      }
-    );
-
-    await livekitRoom.connect(
-      data.url || data.livekitUrl,
-      data.token
-    );
-
-    setServerStatus(true);
-
-    toast("تم الاتصال بالصوت");
-  }catch(e){
-    console.error(e);
-    toast("تعذر الاتصال الصوتي");
-  }
-}
-
-function applyReceiverAudioMode(audioElement){
-  /*
-    وضع الصوت اللاسلكي هنا يعتمد على إعداد المستقبل.
-    نستخدم Web Audio لمعالجة الصوت الوارد عند توفره.
-  */
-
-  if(voiceMode !== "radio") return;
-
-  try{
-    const AudioContext =
-      window.AudioContext ||
-      window.webkitAudioContext;
-
-    if(!AudioContext) return;
-
-    const ctx = new AudioContext();
-    const source = ctx.createMediaElementSource(audioElement);
-
-    const highpass = ctx.createBiquadFilter();
-    highpass.type = "highpass";
-    highpass.frequency.value = 280;
-
-    const lowpass = ctx.createBiquadFilter();
-    lowpass.type = "lowpass";
-    lowpass.frequency.value = 3500;
-
-    const compressor = ctx.createDynamicsCompressor();
-
-    compressor.threshold.value = -22;
-    compressor.knee.value = 18;
-    compressor.ratio.value = 7;
-    compressor.attack.value = .003;
-    compressor.release.value = .12;
-
-    source
-      .connect(highpass)
-      .connect(lowpass)
-      .connect(compressor)
-      .connect(ctx.destination);
-
-  }catch(e){
-    console.log("radio audio:",e);
-  }
-}
-
-async function createRoom(){
-  closeDrawer();
-
-  openModal(`
-    <div class="modalHead">
-      <strong>إنشاء غرفة جديدة</strong>
-      <button class="close" onclick="closeModal()">×</button>
-    </div>
-
-    <div class="field">
-      <label>اسم الغرفة</label>
-      <input id="newRoomName"
-             placeholder="مثال: غرفة العمليات">
-    </div>
-
-    <button class="primary" onclick="submitCreateRoom()">
-      إنشاء الغرفة
-    </button>
-  `);
-}
-
-async function submitCreateRoom(){
-  const name =
-    $("newRoomName").value.trim();
-
-  if(!name){
-    toast("اكتب اسم الغرفة أولاً");
-    return;
-  }
-
-  try{
-    const res = await fetch(API + "/api/rooms",{
-      method:"POST",
-      headers:{
-        "Content-Type":"application/json"
-      },
-      body:JSON.stringify({
-        name:name
-      })
-    });
-
-    const data = await res.json();
-
-    if(!res.ok){
-      throw new Error(data.error || "create");
-    }
-
-    currentRoom = data.room || data;
-    currentRoomId =
-      currentRoom.roomId ||
-      currentRoom.id;
-
-    currentMemberKey =
-      data.memberKey ||
-      data.ownerKey ||
-      null;
-
-    closeModal();
-
-    updateRoomUI();
-
-    toast("تم إنشاء " + name);
-
-    await loadRooms();
-
-  }catch(e){
-    toast("تعذر إنشاء الغرفة");
-  }
-}
-
-function joinRoom(){
-  closeDrawer();
-
-  openModal(`
-    <div class="modalHead">
-      <strong>الانضمام إلى غرفة</strong>
-      <button class="close" onclick="closeModal()">×</button>
-    </div>
-
-    <div class="field">
-      <label>رمز الغرفة</label>
-      <input id="joinCode"
-             placeholder="أدخل رمز الغرفة">
-    </div>
-
-    <div class="field">
-      <label>اسمك داخل الغرفة</label>
-      <input id="joinName"
-             placeholder="اسم المستخدم">
-    </div>
-
-    <button class="primary" onclick="submitJoin()">
-      إرسال طلب الانضمام
-    </button>
-  `);
-}
-
-async function submitJoin(){
-  const code =
-    $("joinCode").value.trim();
-
-  const name =
-    $("joinName").value.trim() ||
-    "عضو";
-
-  if(!code){
-    toast("أدخل رمز الغرفة");
-    return;
-  }
-
-  try{
-    const res = await fetch(
-      API + "/api/rooms/join",
-      {
-        method:"POST",
-        headers:{
-          "Content-Type":"application/json"
-        },
-        body:JSON.stringify({
-          code:code,
-          name:name
-        })
-      }
-    );
-
-    const data = await res.json();
-
-    if(!res.ok){
-      throw new Error(data.error || "join");
-    }
-
-    closeModal();
-
-    toast(
-      data.message ||
-      "تم إرسال طلب الانضمام للمشرف"
-    );
-
-  }catch(e){
-    toast("تعذر إرسال طلب الانضمام");
-  }
-}
-
-function openRooms(){
-  closeDrawer();
-
-  const rooms =
-    state.rooms || [];
-
-  let html = `
-    <div class="modalHead">
-      <strong>غرفي</strong>
-      <button class="close" onclick="closeModal()">×</button>
-    </div>
-  `;
-
-  if(!rooms.length){
-    html += `
-      <div class="empty">
-        لا توجد غرف بعد
-      </div>
-    `;
-  }else{
-    html += `<div class="roomList">`;
-
-    rooms.forEach(room=>{
-      const id =
-        room.roomId ||
-        room.id ||
-        "";
-
-      const name =
-        room.name ||
-        room.roomName ||
-        "غرفة";
-
-      html += `
-        <button class="roomItem"
-                onclick="selectRoom('${escapeAttr(id)}')">
-          <strong>${escapeHtml(name)}</strong>
-          <span>غرفة</span>
-        </button>
-      `;
-    });
-
-    html += `</div>`;
-  }
-
-  openModal(html);
-}
-
-function selectRoom(id){
-  const room =
-    state.rooms.find(r =>
-      String(r.roomId || r.id) === String(id)
-    );
-
-  if(!room) return;
-
-  currentRoom = room;
-  currentRoomId =
-    room.roomId ||
-    room.id;
-
-  currentWave = 1;
-
-  closeModal();
-  updateRoomUI();
-
-  toast("تم فتح " + (
-    room.name ||
-    room.roomName ||
-    "الغرفة"
-  ));
-}
-
-function openMembers(){
-  closeDrawer();
-
-  let html = `
-    <div class="modalHead">
-      <strong>أعضاء الغرفة</strong>
-      <button class="close" onclick="closeModal()">×</button>
-    </div>
-    <div id="membersModalList">
-      <div class="empty">جارٍ تحميل الأعضاء...</div>
-    </div>
-  `;
-
-  openModal(html);
-
-  loadMembersModal();
-}
-
-async function loadMembersModal(){
-  const box =
-    $("membersModalList");
-
-  if(!currentRoomId){
-    box.innerHTML =
-      `<div class="empty">لم يتم اختيار غرفة</div>`;
-    return;
-  }
-
-  try{
-    const res = await fetch(
-      API + "/api/rooms/" +
-      encodeURIComponent(currentRoomId) +
-      "/members"
-    );
-
-    const data = await res.json();
-
-    state.members =
-      data.members ||
-      (Array.isArray(data) ? data : []);
-
-    updateMembersUI();
-
-    if(!state.members.length){
-      box.innerHTML =
-        `<div class="empty">لا يوجد أعضاء</div>`;
-      return;
-    }
-
-    box.innerHTML =
-      state.members.map(member=>`
-        <div class="memberRow">
-          <div>
-            <strong>${escapeHtml(member.name || "عضو")}</strong>
-            <small>${member.approved === false ? "بانتظار الموافقة" : "عضو"}</small>
-          </div>
-        </div>
-      `).join("");
-
-  }catch(e){
-    box.innerHTML =
-      `<div class="empty">تعذر تحميل الأعضاء</div>`;
-  }
-}
-
-function openAdmin(){
-  closeDrawer();
-
-  openModal(`
-    <div class="modalHead">
-      <strong>إدارة الغرفة</strong>
-      <button class="close" onclick="closeModal()">×</button>
-    </div>
-
-    <button class="secondary" onclick="openMembers()">
-      👥 إدارة الأعضاء
-    </button>
-
-    <button class="secondary" onclick="renameRoom()">
-      ✏️ تغيير اسم الغرفة
-    </button>
-
-    <button class="secondary" onclick="showRoomCode()">
-      🔑 عرض رمز الغرفة
-    </button>
-
-    <button class="secondary danger" onclick="deleteCurrentRoom()">
-      🗑️ حذف الغرفة
-    </button>
-  `);
-}
-
-function renameRoom(){
-  openModal(`
-    <div class="modalHead">
-      <strong>تغيير اسم الغرفة</strong>
-      <button class="close" onclick="closeModal()">×</button>
-    </div>
-
-    <div class="field">
-      <label>اسم الغرفة الجديد</label>
-      <input id="renameInput"
-             value="${escapeAttr(currentRoom?.name || "")}">
-    </div>
-
-    <button class="primary" onclick="submitRename()">
-      حفظ الاسم
-    </button>
-  `);
-}
-
-async function submitRename(){
-  const name =
-    $("renameInput").value.trim();
-
-  if(!name){
-    toast("اكتب اسم الغرفة");
-    return;
-  }
-
-  if(currentRoom){
-    currentRoom.name = name;
-  }
-
-  updateRoomUI();
-  closeModal();
-
-  toast("تم تغيير اسم الغرفة");
-}
-
-function showRoomCode(){
-  const code =
-    currentRoom?.code ||
-    currentRoom?.roomCode ||
-    "غير متوفر";
-
-  openModal(`
-    <div class="modalHead">
-      <strong>رمز الغرفة</strong>
-      <button class="close" onclick="closeModal()">×</button>
-    </div>
-
-    <div style="
-      text-align:center;
-      font-size:30px;
-      font-weight:900;
-      letter-spacing:3px;
-      padding:25px
-    ">
-      ${escapeHtml(code)}
-    </div>
-
-    <div class="empty">
-      هذا الرمز خاص بمشرف الغرفة لمشاركة الغرفة مع الآخرين.
-    </div>
-  `);
-}
-
-async function deleteCurrentRoom(){
-  if(!currentRoomId){
-    toast("لم يتم اختيار غرفة");
-    return;
-  }
-
-  const ok =
-    confirm("هل تريد حذف هذه الغرفة نهائيًا؟");
-
-  if(!ok) return;
-
-  try{
-    const res = await fetch(
-      API + "/api/rooms/" +
-      encodeURIComponent(currentRoomId),
-      {
-        method:"DELETE"
-      }
-    );
-
-    if(!res.ok){
-      throw new Error("delete");
-    }
-
-    currentRoom = null;
-    currentRoomId = null;
-    currentMemberKey = null;
-
-    closeModal();
-
-    await loadRooms();
-
-    updateRoomUI();
-
-    toast("تم حذف الغرفة");
-
-  }catch(e){
-    toast("تعذر حذف الغرفة");
-  }
-}
-
 function openChat(){
   closeDrawer();
 
   openModal(`
     <div class="modalHead">
-      <strong>المحادثة</strong>
+      <strong>المحادثة المباشرة</strong>
       <button class="close" onclick="closeModal()">×</button>
     </div>
 
     <div class="chatMessages" id="chatMessages">
-      <div class="empty">
-        لا توجد رسائل بعد
+      <div class="msg">
+        <small>أحمد - 09:32</small>
+        تم استلام الرسالة بنجاح
+      </div>
+      <div class="msg">
+        <small>أحمد - 09:33</small>
+        جاهز للموقع
+      </div>
+      <div class="msg">
+        <small>خالد - 09:34</small>
+        موافق، ننتظر الإشارة
       </div>
     </div>
 
     <div class="chatInput">
       <input id="chatInput"
-             placeholder="اكتب رسالتك..."
+             placeholder="اكتب رسالة..."
              onkeydown="if(event.key==='Enter')sendChat()">
 
       <button class="sendBtn"
@@ -1852,175 +1419,45 @@ function openChat(){
 }
 
 async function sendChat(){
-  const input =
-    $("chatInput");
-
-  const message =
-    input.value.trim();
+  const input = $("chatInput");
+  const message = input.value.trim();
 
   if(!message) return;
 
-  addChatMessage(
-    "أنت",
-    message,
-    true
-  );
-
+  addChatMessage("أنت", message, true);
   input.value = "";
-
-  try{
-    if(livekitRoom){
-      await livekitRoom.localParticipant.publishData(
-        new TextEncoder().encode(
-          JSON.stringify({
-            type:"chat",
-            message:message,
-            name:"عضو"
-          })
-        ),
-        {
-          reliable:true
-        }
-      );
-    }
-  }catch(e){}
 }
 
 function addChatMessage(name,message,mine){
-  const box =
-    $("chatMessages");
-
+  const box = $("chatMessages");
   if(!box) return;
 
-  const empty =
-    box.querySelector(".empty");
-
+  const empty = box.querySelector(".empty");
   if(empty) empty.remove();
 
-  const div =
-    document.createElement("div");
+  const div = document.createElement("div");
+  div.className = "msg" + (mine ? " mine" : "");
 
-  div.className =
-    "msg" + (mine ? " mine" : "");
+  const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
 
   div.innerHTML =
-    "<small>" +
-    escapeHtml(name) +
-    "</small>" +
+    "<small>" + escapeHtml(name) + " - " + time + "</small>" +
     escapeHtml(message);
 
   box.appendChild(div);
   box.scrollTop = box.scrollHeight;
 }
 
-function chooseImage(){
-  $("imageInput").click();
-}
-
-function chooseVideo(){
-  $("videoInput").click();
-}
-
-function chooseDocument(){
-  $("documentInput").click();
-}
-
-function chooseAudio(){
-  $("audioInput").click();
-}
+function chooseImage(){ $("imageInput").click(); }
+function chooseVideo(){ $("videoInput").click(); }
+function chooseDocument(){ $("documentInput").click(); }
+function chooseAudio(){ $("audioInput").click(); }
 
 async function sendSelectedFile(input){
-  const file =
-    input.files?.[0];
-
+  const file = input.files?.[0];
   if(!file) return;
 
-  if(file.size > 25 * 1024 * 1024){
-    toast("الحد الأقصى للملف 25MB");
-    input.value = "";
-    return;
-  }
-
-  toast("جارٍ تجهيز " + file.name);
-
-  try{
-    if(!livekitRoom){
-      toast("اتصل بالغرفة أولاً لإرسال الملف");
-      return;
-    }
-
-    const arrayBuffer =
-      await file.arrayBuffer();
-
-    const chunkSize = 8000;
-
-    const total =
-      Math.ceil(arrayBuffer.byteLength / chunkSize);
-
-    for(let i=0;i<total;i++){
-      const start =
-        i * chunkSize;
-
-      const end =
-        Math.min(
-          start + chunkSize,
-          arrayBuffer.byteLength
-        );
-
-      const chunk =
-        new Uint8Array(
-          arrayBuffer.slice(start,end)
-        );
-
-      const header =
-        JSON.stringify({
-          type:"file",
-          name:file.name,
-          mime:file.type,
-          index:i,
-          total:total
-        });
-
-      const headerBytes =
-        new TextEncoder().encode(header);
-
-      const combined =
-        new Uint8Array(
-          4 + headerBytes.length + chunk.length
-        );
-
-      new DataView(
-        combined.buffer
-      ).setUint32(
-        0,
-        headerBytes.length
-      );
-
-      combined.set(
-        headerBytes,
-        4
-      );
-
-      combined.set(
-        chunk,
-        4 + headerBytes.length
-      );
-
-      await livekitRoom.localParticipant.publishData(
-        combined,
-        {
-          reliable:true
-        }
-      );
-    }
-
-    toast("تم إرسال " + file.name);
-
-  }catch(e){
-    console.error(e);
-    toast("تعذر إرسال الملف");
-  }
-
+  toast("تم اختيار " + file.name + " لإرساله");
   input.value = "";
 }
 
@@ -2032,55 +1469,9 @@ function openContacts(){
     </div>
 
     <div class="empty">
-      يمكن اختيار جهة اتصال وإرسال بياناتها إلى الغرفة.
+      يمكنك مشاركة وتحديد جهات الاتصال الخاصة بك هنا.
     </div>
-
-    <button class="primary"
-            onclick="shareContact()">
-      إضافة جهة اتصال
-    </button>
   `);
-}
-
-function shareContact(){
-  openModal(`
-    <div class="modalHead">
-      <strong>إرسال جهة اتصال</strong>
-      <button class="close" onclick="closeModal()">×</button>
-    </div>
-
-    <div class="field">
-      <label>اسم جهة الاتصال</label>
-      <input id="contactName">
-    </div>
-
-    <div class="field">
-      <label>رقم الهاتف</label>
-      <input id="contactPhone"
-             type="tel">
-    </div>
-
-    <button class="primary"
-            onclick="submitContact()">
-      إرسال
-    </button>
-  `);
-}
-
-function submitContact(){
-  const name =
-    $("contactName").value.trim();
-
-  const phone =
-    $("contactPhone").value.trim();
-
-  if(!name || !phone){
-    toast("أدخل الاسم ورقم الهاتف");
-    return;
-  }
-
-  closeModal();
-  toast("تم تجهيز جهة الاتصال للإرسال");
 }
 
 function openSettings(){
@@ -2092,59 +1483,14 @@ function openSettings(){
       <button class="close" onclick="closeModal()">×</button>
     </div>
 
-    <button class="secondary"
-            onclick="setVoiceMode('natural')">
+    <button class="secondary" onclick="setVoiceMode('natural')">
       🎙️ الصوت الطبيعي
     </button>
 
-    <button class="secondary"
-            onclick="setVoiceMode('radio')">
+    <button class="secondary" onclick="setVoiceMode('radio')">
       📡 الصوت اللاسلكي
     </button>
-
-    <button class="secondary"
-            onclick="testMicrophone()">
-      🎤 اختبار الميكروفون
-    </button>
-
-    <button class="secondary"
-            onclick="testSpeaker()">
-      🔊 اختبار السماعة
-    </button>
   `);
-}
-
-async function testMicrophone(){
-  try{
-    const stream =
-      await navigator.mediaDevices.getUserMedia({
-        audio:true
-      });
-
-    stream.getTracks().forEach(
-      track=>track.stop()
-    );
-
-    toast("الميكروفون يعمل");
-  }catch(e){
-    toast("لم يتم السماح بالميكروفون");
-  }
-}
-
-function testSpeaker(){
-  const audio =
-    new Audio();
-
-  audio.src =
-    "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQAAAAA=";
-
-  audio.play()
-    .then(()=>{
-      toast("اختبار السماعة");
-    })
-    .catch(()=>{
-      toast("اضغط على الشاشة للسماح بتشغيل الصوت");
-    });
 }
 
 function openFavorites(){
@@ -2157,7 +1503,7 @@ function openFavorites(){
     </div>
 
     <div class="empty">
-      ${favorite ? "الغرفة الحالية مضافة إلى المفضلة." : "لا توجد غرف مفضلة بعد."}
+      ${favorite ? "الغرفة/الموجة الحالية مضافة إلى المفضلة." : "لا توجد غرف أو موجات مفضلة بعد."}
     </div>
   `);
 }
@@ -2165,19 +1511,10 @@ function openFavorites(){
 function toggleFavorite(){
   favorite = !favorite;
 
-  $("favoriteBtn").classList.toggle(
-    "active",
-    favorite
-  );
+  $("favoriteBtn").classList.toggle("active", favorite);
+  $("favoriteBtn").textContent = favorite ? "★" : "☆";
 
-  $("favoriteBtn").textContent =
-    favorite ? "★" : "☆";
-
-  toast(
-    favorite ?
-    "تمت إضافة الغرفة للمفضلة" :
-    "تمت إزالة الغرفة من المفضلة"
-  );
+  toast(favorite ? "تمت إضافة الموجة للمفضلة" : "تمت إزالة الموجة من المفضلة");
 }
 
 function openAccount(){
@@ -2188,7 +1525,7 @@ function openAccount(){
     </div>
 
     <div class="empty">
-      حساب Radio Connect
+      حساب Radio Connect الخاص بك
     </div>
   `);
 }
@@ -2212,38 +1549,6 @@ function escapeHtml(value){
     .replaceAll("'","&#039;");
 }
 
-function escapeAttr(value){
-  return escapeHtml(value)
-    .replaceAll("`","&#096;");
-}
-
-/* استقبال بيانات LiveKit */
-function setupLiveKitData(){
-  if(!livekitRoom) return;
-
-  livekitRoom.on(
-    LivekitClient.RoomEvent.DataReceived,
-    (payload,participant)=>{
-      try{
-        const text =
-          new TextDecoder().decode(payload);
-
-        const data =
-          JSON.parse(text);
-
-        if(data.type === "chat"){
-          addChatMessage(
-            data.name || "عضو",
-            data.message || "",
-            false
-          );
-        }
-      }catch(e){}
-    }
-  );
-}
-
-/* بدء التطبيق */
 init();
 </script>
 
