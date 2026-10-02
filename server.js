@@ -74,12 +74,12 @@ function ensureDevice(deviceId) {
 }
 
 function findMember(room, deviceId) {
-  if (!room ||!deviceId) return null;
+  if (!room || !deviceId) return null;
   return room.members.find(member => member.deviceId === deviceId);
 }
 
 function findMemberByKey(room, memberKey) {
-  if (!room ||!memberKey) return null;
+  if (!room || !memberKey) return null;
   return room.members.find(member => member.memberKey === memberKey);
 }
 
@@ -90,8 +90,8 @@ function safeMember(member, requesterDeviceId = null) {
     name: member.name,
     role: member.role,
     status: member.status,
-    adminId: isSelf? member.adminId : undefined,
-    isSelf:!!isSelf,
+    adminId: isSelf ? member.adminId : undefined,
+    isSelf: !!isSelf,
     joinedAt: member.joinedAt || null,
     requestedAt: member.requestedAt || null,
     approvedAt: member.approvedAt || null
@@ -109,9 +109,9 @@ function publicRoom(room, deviceId = null) {
     memberCount: room.members.filter(m => m.status === "approved").length,
     pendingCount: room.members.filter(m => m.status === "pending").length,
     isOwner,
-    isMember:!!member && member.status === "approved",
-    isPending:!!member && member.status === "pending",
-    favorite:!!deviceId && devices.get(deviceId)?.favorites?.includes(room.id) === true
+    isMember: !!member && member.status === "approved",
+    isPending: !!member && member.status === "pending",
+    favorite: !!deviceId && devices.get(deviceId)?.favorites?.includes(room.id) === true
   };
 }
 
@@ -198,7 +198,7 @@ app.post("/api/rooms/join", (req, res) => {
   }
   let member = findMember(room, deviceId);
   if (member) {
-    return res.json({ success: true, status: member.status, roomId: room.id, room: publicRoom(room, deviceId), message: member.status === "approved"? "أنت عضو مقبول بالفعل" : "طلبك بانتظار موافقة المشرف" });
+    return res.json({ success: true, status: member.status, roomId: room.id, room: publicRoom(room, deviceId), message: member.status === "approved" ? "أنت عضو مقبول بالفعل" : "طلبك بانتظار موافقة المشرف" });
   }
   member = { memberKey: "M-" + createId(12), deviceId, adminId: device.adminId, name: memberName, role: "member", status: "pending", requestedAt: new Date().toISOString() };
   room.members.push(member);
@@ -211,11 +211,11 @@ app.get("/api/rooms/:roomId/members", (req, res) => {
   const room = rooms.get(roomId);
   if (!room) return res.status(404).json({ error: "Room not found" });
   const currentMember = findMember(room, deviceId);
-  if (deviceId!== room.ownerDeviceId && (!currentMember || currentMember.status!== "approved")) {
+  if (deviceId !== room.ownerDeviceId && (!currentMember || currentMember.status !== "approved")) {
     return res.status(403).json({ error: "Access denied" });
   }
   const device = devices.get(deviceId);
-  res.json({ success: true, members: room.members.map(m => safeMember(m, deviceId)), myAdminId: device? device.adminId : null, isOwner: room.ownerDeviceId === deviceId });
+  res.json({ success: true, members: room.members.map(m => safeMember(m, deviceId)), myAdminId: device ? device.adminId : null, isOwner: room.ownerDeviceId === deviceId });
 });
 
 app.post("/api/rooms/:roomId/members/:memberKey/approve", (req, res) => {
@@ -224,7 +224,7 @@ app.post("/api/rooms/:roomId/members/:memberKey/approve", (req, res) => {
   const ownerDeviceId = getDeviceId(req);
   const room = rooms.get(roomId);
   if (!room) return res.status(404).json({ error: "Room not found" });
-  if (room.ownerDeviceId!== ownerDeviceId) return res.status(403).json({ error: "Only room owner can approve members" });
+  if (room.ownerDeviceId !== ownerDeviceId) return res.status(403).json({ error: "Only room owner can approve members" });
   const member = findMemberByKey(room, memberKey);
   if (!member) return res.status(404).json({ error: "Member not found" });
   member.status = "approved";
@@ -238,7 +238,7 @@ app.delete("/api/rooms/:roomId/members/:memberKey", (req, res) => {
   const ownerDeviceId = getDeviceId(req);
   const room = rooms.get(roomId);
   if (!room) return res.status(404).json({ error: "Room not found" });
-  if (room.ownerDeviceId!== ownerDeviceId) return res.status(403).json({ error: "Only room owner can remove members" });
+  if (room.ownerDeviceId !== ownerDeviceId) return res.status(403).json({ error: "Only room owner can remove members" });
   const index = room.members.findIndex(m => m.memberKey === memberKey);
   if (index === -1) return res.status(404).json({ error: "Member not found" });
   if (room.members[index].role === "owner") return res.status(400).json({ error: "Cannot remove owner" });
@@ -251,10 +251,10 @@ app.delete("/api/rooms/:roomId", (req, res) => {
   const deviceId = getDeviceId(req);
   const room = rooms.get(roomId);
   if (!room) return res.status(404).json({ error: "Room not found" });
-  if (room.ownerDeviceId!== deviceId) return res.status(403).json({ error: "Only room owner can delete the room" });
+  if (room.ownerDeviceId !== deviceId) return res.status(403).json({ error: "Only room owner can delete the room" });
   rooms.delete(roomId);
   for (const device of devices.values()) {
-    device.favorites = device.favorites.filter(id => id!== roomId);
+    device.favorites = device.favorites.filter(id => id !== roomId);
   }
   res.json({ success: true, message: "تم حذف الغرفة" });
 });
@@ -279,13 +279,13 @@ app.get("/token", async (req, res) => {
     const identity = cleanText(req.query.identity || "", 64);
     const roomId = cleanText(req.query.room || "", 64);
     const deviceId = cleanText(req.query.deviceId || identity, 100);
-    if (!identity ||!roomId) return res.status(400).json({ error: "Identity and Room are required" });
+    if (!identity || !roomId) return res.status(400).json({ error: "Identity and Room are required" });
     const room = rooms.get(roomId);
     if (!room) return res.status(404).json({ error: "Room not found" });
     const member = findMember(room, deviceId);
     const isOwner = deviceId === room.ownerDeviceId;
     const isApproved = member && member.status === "approved";
-    if (!isOwner &&!isApproved) return res.status(403).json({ error: "You are not approved to join this room" });
+    if (!isOwner && !isApproved) return res.status(403).json({ error: "You are not approved to join this room" });
     const livekitApiKey = process.env.LIVEKIT_API_KEY || "devkey";
     const livekitApiSecret = process.env.LIVEKIT_API_SECRET || "secret";
     const livekitUrl = process.env.LIVEKIT_URL || "wss://radioconnect-8uyh53qc.livekit.cloud";
