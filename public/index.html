@@ -509,8 +509,7 @@ input:checked + .slider:before{ transform:translateX(14px); background-color:#ff
       <button class="pttBtn" id="pttButton"
               onpointerdown="startTalking(event)"
               onpointerup="stopTalking(event)"
-              onpointercancel="stopTalking(event)"
-              onpointerleave="stopTalking(event)">
+              onpointercancel="stopTalking(event)">
         <span class="pttIcon">🎙️</span>
         <span class="pttText" id="pttText">اضغط للتحدث</span>
       </button>
@@ -664,6 +663,9 @@ let livekitRoom = null;
 let localAudioTrack = null;
 let talking = false;
 
+let pttPointerId = null;
+let pttSession = 0;
+
 let currentRoom = null;
 let voiceMode = "natural";
 
@@ -710,51 +712,114 @@ async function registerDevice(){
   }catch(e){ console.error("Device reg error:", e); }
 }
 
-/* الاتصال بالغرفة الصوتية وإدارة التوكن بأمان عبر الخادم */
-async function connectLiveKitRoom() {
-  if (!currentRoom) return;
+async function connectLiveKitRoom(){
+  if(!currentRoom) return false;
 
-  try {
-    if (livekitRoom) {
-      await livekitRoom.disconnect();
+  try{
+
+    /* إذا كان الاتصال موجوداً لا تفصله ولا تعيد إنشاءه */
+    if(
+      livekitRoom &&
+      livekitRoom.state === "connected"
+    ){
+      return true;
+    }
+
+    /* تنظيف اتصال قديم */
+    if(livekitRoom){
+      try{
+        await livekitRoom.disconnect();
+      }catch(err){}
+
       livekitRoom = null;
     }
 
-    const res = await fetch(`${API}/token?room=${currentRoom.id}`, {
-      headers: { "x-device-id": deviceId }
-    });
+    const res = await fetch(
+      `${API}/token?room=${encodeURIComponent(currentRoom.id)}`,
+      {
+        headers:{
+          "x-device-id": deviceId
+        }
+      }
+    );
+
     const data = await res.json();
 
-    if (!res.ok || !data.token) {
-      console.warn("LiveKit token rejected:", data.error);
-      return;
+    if(!res.ok || !data.token){
+      console.warn(
+        "LiveKit token rejected:",
+        data.error
+      );
+
+      return false;
     }
 
     livekitRoom = new LivekitClient.Room({
-      adaptiveStream: true,
-      dynacast: true,
-      audioCaptureDefaults: { echoCancellation: true, noiseSuppression: true }
-    });
-
-    livekitRoom.on(LivekitClient.RoomEvent.TrackSubscribed, (track) => {
-      if (track.kind === LivekitClient.Track.Kind.Audio) {
-        const audioElement = track.attach();
-        document.body.appendChild(audioElement);
+      adaptiveStream:true,
+      dynacast:true,
+      audioCaptureDefaults:{
+        echoCancellation:true,
+        noiseSuppression:true,
+        autoGainControl:true
       }
     });
 
-    await livekitRoom.connect(data.url, data.token);
-  } catch (error) {
-    console.error("LiveKit Connect Error:", error);
+    livekitRoom.on(
+      LivekitClient.RoomEvent.TrackSubscribed,
+      (track) => {
+
+        if(
+          track.kind ===
+          LivekitClient.Track.Kind.Audio
+        ){
+
+          const audioElement = track.attach();
+
+          audioElement.autoplay = true;
+          audioElement.playsInline = true;
+
+          document.body.appendChild(
+            audioElement
+          );
+
+          audioElement.play().catch(() => {});
+        }
+      }
+    );
+
+    await livekitRoom.connect(
+      data.url,
+      data.token
+    );
+
+    console.log(
+      "LiveKit connected:",
+      currentRoom.name
+    );
+
+    return true;
+
+  }catch(error){
+
+    console.error(
+      "LiveKit Connect Error:",
+      error
+    );
+
+    livekitRoom = null;
+
+    return false;
   }
 }
 
 async function startTalking(e){
-  if(talking) return;
-  e.preventDefault();
 
-  if (LivekitClient.Room.startAudio) {
-    LivekitClient.Room.startAudio();
+  if(e){
+    e.preventDefault();
+  }
+
+  if(talking){
+    return;
   }
 
   if(!currentRoom){
@@ -762,46 +827,231 @@ async function startTalking(e){
     return;
   }
 
+  const session = ++pttSession;
+
+  pttPointerId =
+    e?.pointerId ?? null;
+
+  const btn = $("pttButton");
+
+  if(
+    e &&
+    e.pointerId !== undefined &&
+    btn.setPointerCapture
+  ){
+
+    try{
+      btn.setPointerCapture(
+        e.pointerId
+      );
+    }catch(err){}
+  }
+
   talking = true;
-  $("pttButton").classList.add("talking");
-  $("pttText").textContent = "جارٍ التحدث";
+
+  btn.classList.add("talking");
+
+  $("pttText").textContent =
+    "جارٍ التحدث";
+
   $("waveLeft").classList.add("active");
   $("waveRight").classList.add("active");
 
-  try {
-    if (!livekitRoom || livekitRoom.state !== "connected") {
+  try{
+
+    /* الاتصال بـ LiveKit */
+    const connected =
       await connectLiveKitRoom();
+
+    /* المستخدم أفلت الزر أثناء الاتصال */
+    if(
+      !talking ||
+      session !== pttSession
+    ){
+      return;
     }
 
-    if (livekitRoom) {
-      if (!localAudioTrack) {
-        localAudioTrack = await LivekitClient.createLocalAudioTrack({ echoCancellation: true, noiseSuppression: true });
-        await livekitRoom.localParticipant.publishTrack(localAudioTrack);
-      } else {
-        await localAudioTrack.unmute();
-      }
+    if(
+      !connected ||
+      !livekitRoom ||
+      livekitRoom.state !== "connected"
+    ){
+      throw new Error(
+        "LiveKit room is not connected"
+      );
     }
-  } catch (err) {
-    toast("تعذر تشغيل الميكروفون");
-    stopTalking(e);
+
+    /* فتح الميكروفون */
+    const track =
+      await LivekitClient
+        .createLocalAudioTrack({
+
+          echoCancellation:true,
+          noiseSuppression:true,
+          autoGainControl:true
+
+        });
+
+    /* تم الإفلات قبل فتح الميكروفون */
+    if(
+      !talking ||
+      session !== pttSession
+    ){
+
+      try{
+        track.stop();
+      }catch(err){}
+
+      return;
+    }
+
+    localAudioTrack = track;
+
+    /* إرسال الصوت إلى الغرفة */
+    await livekitRoom
+      .localParticipant
+      .publishTrack(
+        localAudioTrack
+      );
+
+    /* تحقق نهائي */
+    if(
+      !talking ||
+      session !== pttSession
+    ){
+
+      try{
+        await livekitRoom
+          .localParticipant
+          .unpublishTrack(
+            localAudioTrack
+          );
+      }catch(err){}
+
+      try{
+        localAudioTrack.stop();
+      }catch(err){}
+
+      localAudioTrack = null;
+
+      return;
+    }
+
+    console.log(
+      "PTT microphone ON"
+    );
+
+  }catch(err){
+
+    console.error(
+      "PTT microphone error:",
+      err
+    );
+
+    if(
+      session === pttSession
+    ){
+      toast(
+        "تعذر تشغيل الميكروفون"
+      );
+    }
+
+    await stopTalking();
   }
 }
 
 async function stopTalking(e){
-  if(!talking) return;
-  if(e) e.preventDefault();
+
+  if(
+    e &&
+    pttPointerId !== null &&
+    e.pointerId !== undefined &&
+    e.pointerId !== pttPointerId
+  ){
+    return;
+  }
+
+  if(e){
+    e.preventDefault();
+  }
+
+  /* إلغاء أي عملية تشغيل معلقة */
+  ++pttSession;
 
   talking = false;
-  $("pttButton").classList.remove("talking");
-  $("pttText").textContent = "اضغط للتحدث";
-  $("waveLeft").classList.remove("active");
-  $("waveRight").classList.remove("active");
 
-  try {
-    if (localAudioTrack) {
-      await localAudioTrack.mute();
+  pttPointerId = null;
+
+  const btn =
+    $("pttButton");
+
+  btn.classList.remove(
+    "talking"
+  );
+
+  $("pttText").textContent =
+    "اضغط للتحدث";
+
+  $("waveLeft")
+    .classList.remove("active");
+
+  $("waveRight")
+    .classList.remove("active");
+
+  /* حفظ المسار ثم حذفه من المتغير */
+  const track =
+    localAudioTrack;
+
+  localAudioTrack = null;
+
+  if(!track){
+    console.log(
+      "PTT microphone OFF"
+    );
+
+    return;
+  }
+
+  try{
+
+    if(
+      livekitRoom &&
+      livekitRoom.localParticipant
+    ){
+
+      try{
+
+        await livekitRoom
+          .localParticipant
+          .unpublishTrack(
+            track
+          );
+
+      }catch(err){
+
+        console.warn(
+          "Unpublish microphone:",
+          err
+        );
+
+      }
     }
-  } catch (err){}
+
+    try{
+      track.stop();
+    }catch(err){}
+
+    console.log(
+      "PTT microphone OFF"
+    );
+
+  }catch(err){
+
+    console.error(
+      "PTT stop error:",
+      err
+    );
+  }
 }
 
 function toggleVoiceMode(mode){
