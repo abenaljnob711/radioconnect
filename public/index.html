@@ -1,113 +1,59 @@
 <!DOCTYPE html>
-<html dir="rtl" lang="ar">
+<html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Radio Connect</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#030712">
+<title>Radio Connect - جهاز لاسلكي</title>
+<script src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
+
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0}
 html,body{min-height:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:#02050e;color:#eaf2ff;direction:rtl;text-align:right}
 body{padding-bottom:75px}
-button,input{font:inherit}button{border:0;cursor:pointer}
+button,input{font:inherit}
+button{border:0;cursor:pointer}
 .hidden{display:none!important}
 .app{max-width:520px;min-height:100vh;margin:auto;background:radial-gradient(circle at 50% 15%,rgba(13,40,81,.4),transparent 60%),linear-gradient(180deg,#050c1b,#02050e);padding:10px}
-/* ... باقي الـ CSS حقك نفسه ... */
-</style>
-</head>
-<body>
-<div class="app">
-  <!-- ضع هنا نفس الـ HTML حق الواجهة من الصورة -->
-  <div class="topbar">
-    <button class="iconbtn" onclick="openDrawer()">☰</button>
-    <div class="brand"><strong>Radio Connect</strong><span>جهاز لاسلكي</span></div>
-    <div class="serverStatus"><span class="statusDot"></span><span id="serverStatusText">متصل</span></div>
-  </div>
-  <!-- ... -->
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
-<script>
-'use strict';
-const API = location.origin;
-const $ = id => document.getElementById(id);
-
-let deviceId = localStorage.getItem('deviceId') || null;
-let livekitRoom = null, livekitRoomId = null, localAudioTrack = null;
-let talking = false, pttPointerId = null, pttSession = 0;
-let currentRoom = null, voiceMode = 'natural';
-const state = { rooms:[], members:[] };
-
-function toast(msg){
-  const e = $('toast'); if(!e) return;
-  e.textContent = msg; e.classList.remove('hidden');
-  clearTimeout(window.toastTimer);
-  window.toastTimer = setTimeout(()=>e.classList.add('hidden'),3000)
-}
-
-// ... باقي الدوال مع التصليح ...
-
-async function connectLiveKitRoom(){
-  if(!currentRoom || !window.LivekitClient) return false;
-  const target = currentRoom.id;
-  if(livekitRoom && livekitRoom.state === 'connected' && livekitRoomId === target) return true;
-  if(livekitRoom) await disconnectLiveKit();
-  try{
-    const r = await fetch(`${API}/token?room=${encodeURIComponent(target)}`,{headers:{'x-device-id':deviceId||''}});
-    const d = await r.json();
-    if(!r.ok || !d.token) return false;
-    const room = new LivekitClient.Room({adaptiveStream:true,dynacast:true});
-    room.on(LivekitClient.RoomEvent.TrackSubscribed, track => {
-      if(track.kind === LivekitClient.Track.Kind.Audio){
-        const a = track.attach(); a.autoplay=true; a.playsInline=true;
-        document.body.appendChild(a); a.play().catch(()=>{})
-      }
-    });
-    await room.connect(d.url, d.token);
-    livekitRoom = room; livekitRoomId = target;
-    return true;
-  }catch(e){ console.error(e); return false; }
-}
-
-async function startTalking(e){
-  if(e){ e.preventDefault(); if(e.pointerId!==undefined) pttPointerId=e.pointerId; }
-  if(talking || !currentRoom) return;
-  const session = ++pttSession;
-  talking = true;
-  $('pttButton').classList.add('talking');
-  $('pttText').textContent = 'جارٍ التحدث';
-  try{
-    const connected = await connectLiveKitRoom();
-    if(!talking || session !== pttSession) return;
-    if(!connected) throw new Error('LIVEKIT_NOT_CONNECTED');
-    const stream = await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}});
-    const raw = stream.getAudioTracks()[0];
-    localAudioTrack = new LivekitClient.LocalAudioTrack(raw);
-    await livekitRoom.localParticipant.publishTrack(localAudioTrack);
-    toast('الميكروفون يعمل الآن');
-  }catch(err){ await stopTalking(); toast('تعذر تشغيل الميكروفون - تأكد من HTTPS والسماح بالميكروفون'); }
-}
-
-async function stopTalking(e){
-  if(e && pttPointerId !== null && e.pointerId !== undefined && e.pointerId !== pttPointerId) return;
-  ++pttSession; talking=false; pttPointerId=null;
-  $('pttButton').classList.remove('talking');
-  $('pttText').textContent = 'اضغط للتحدث';
-  const t = localAudioTrack; localAudioTrack=null;
-  if(!t) return;
-  try{ if(livekitRoom?.localParticipant) await livekitRoom.localParticipant.unpublishTrack(t); }catch{}
-  try{ t.stop(); }catch{}
-}
-
-// اربط احداث الزر
-document.addEventListener('DOMContentLoaded', ()=>{
-  const btn = $('pttButton');
-  if(btn){
-    btn.addEventListener('pointerdown', startTalking);
-    btn.addEventListener('pointerup', stopTalking);
-    btn.addEventListener('pointerleave', stopTalking);
-    btn.addEventListener('pointercancel', stopTalking);
-  }
-});
-</script>
-</body>
-</html>
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:6px 2px 12px}
+.iconbtn{width:38px;height:38px;border-radius:12px;background:#091526;color:#eaf2ff;font-size:18px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.06)}
+.brand{text-align:center;line-height:1.2}
+.brand strong{display:block;font-size:16px}
+.brand span{font-size:11px;color:#627999}
+.serverStatus{display:flex;align-items:center;gap:5px;background:#071424;padding:5px 10px;border-radius:18px;border:1px solid rgba(255,255,255,.05);font-size:11px}
+.statusDot{width:7px;height:7px;background:#2ecc71;border-radius:50%;box-shadow:0 0 6px #2ecc71}
+.topGrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px}
+.card{background:linear-gradient(145deg,#081426,#040a16);border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:10px;box-shadow:0 6px 20px rgba(0,0,0,.3)}
+.statusCard{display:flex;justify-content:space-between;align-items:center;text-align:center}
+.statusItem{flex:1}
+.statusIcon{font-size:12px;margin-bottom:2px}
+.statusIcon.green{color:#2ecc71}
+.statusIcon.orange{color:#e67e22}
+.statusVal{font-size:10px;font-weight:700}
+.statusLbl{font-size:8px;color:#5b7394}
+.waveCard{text-align:center;display:flex;flex-direction:column;justify-content:space-between}
+.waveTitle,.waveSub,.roomMembersCount{font-size:9px;color:#5b7394}
+.waveNav{display:flex;align-items:center;justify-content:space-between;margin:2px 0}
+.waveArrow{background:transparent;color:#6c88b0;font-size:12px}
+.waveCode{font-size:16px;font-weight:800;letter-spacing:1px;color:#fff}
+.roomCard{display:flex;flex-direction:column;justify-content:space-between}
+.roomSelect{display:flex;align-items:center;gap:4px;font-size:12px;font-weight:700;cursor:pointer}
+.roomSelect .star{color:#f1c40f;font-size:13px}
+.roomSelect .arrow{font-size:9px;color:#6a83a6}
+.roomMembersCount{margin-top:8px}
+.adminCodeBadge{background:linear-gradient(135deg,#0c2742,#071629);border:1px solid rgba(52,152,219,.25);border-radius:12px;padding:8px;text-align:center;margin-bottom:10px}
+.adminCodeBadge .lbl{font-size:9px;color:#6b8eb8}
+.adminCodeBadge .val{font-size:17px;font-weight:900;color:#3498db;letter-spacing:2px}
+.voiceSection{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:10px;position:relative}
+.voiceToggleBox{flex:1;background:linear-gradient(145deg,#081426,#040a16);border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:10px 8px;display:flex;align-items:center;justify-content:space-between}
+.toggleInfo strong{display:block;font-size:10px}
+.toggleInfo span{font-size:8px;color:#5b7394}
+.switch{position:relative;display:inline-block;width:30px;height:16px}
+.switch input{opacity:0;width:0;height:0}
+.slider{position:absolute;cursor:pointer;inset:0;background:#0f1d30;transition:.3s;border-radius:20px}
+.slider:before{position:absolute;content:"";height:10px;width:10px;left:3px;bottom:3px;background:#5b7394;transition:.3s;border-radius:50%}
+input:checked+.slider{background:#1c6294}
+input:checked+.slider:before{transform:translateX(14px);background:#fff}
+.pttMainArea{position:relative;display:flex;align-items:center;justify-content:center}
+.pttBtn{width:98px;height:98px;border-radius:50%;background:radial-gradient(circle at 50% 35%,#1d6194,#0b314f 60%,#061c2e);border:3px solid #174b73;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 0 0 5px rgba(13,44,71,.4),0 6px 20px rgba(0,0,0,.5);user-select:none;touch-action:none;transition:.1s}
+.pttBtn.talking{transform:scale(.95);background:radial-gradient(circle at 50% 35%,#e74c3c,#8e2a1f 60%,#521812);border
