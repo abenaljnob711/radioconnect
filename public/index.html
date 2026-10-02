@@ -52,7 +52,6 @@ button{
   padding:10px;
 }
 
-/* Topbar Header */
 .topbar{
   display:flex;
   align-items:center;
@@ -108,7 +107,6 @@ button{
   box-shadow:0 0 6px #2ecc71;
 }
 
-/* Top 3 Header Cards Grid */
 .topGrid{
   display:grid;
   grid-template-columns: 1fr 1fr 1fr;
@@ -177,7 +175,6 @@ button{
 .roomSelect .arrow{ font-size:9px; color:#6a83a6; }
 .roomMembersCount{ font-size:9px; color:#5b7394; margin-top:8px; }
 
-/* Admin Code Section */
 .adminCodeBadge{
   background:linear-gradient(135deg, #0c2742, #071629);
   border:1px solid rgba(52, 152, 219, 0.25);
@@ -190,7 +187,6 @@ button{
 .adminCodeBadge .lbl{ font-size:9px; color:#6b8eb8; }
 .adminCodeBadge .val{ font-size:17px; font-weight:900; color:#3498db; letter-spacing:2px; }
 
-/* Center PTT Voice Area */
 .voiceSection{
   display:flex;
   align-items:center;
@@ -281,10 +277,9 @@ input:checked + .slider:before{ transform:translateX(14px); background-color:#ff
 
 @keyframes wavePulse{ to{ height:24px; background:#3498db; } }
 
-/* Main Screen Direction Layout (Matches Screen 1 & 2) */
 .mainBodyGrid{
   display:grid;
-  grid-template-columns: 0.9fr 1.1fr; /* Buttons on Right/Left matching image */
+  grid-template-columns: 0.9fr 1.1fr;
   gap:8px;
   margin-bottom:10px;
 }
@@ -374,7 +369,6 @@ input:checked + .slider:before{ transform:translateX(14px); background-color:#ff
 
 .chatSendBtn{ background:transparent; color:#3498db; font-size:11px; }
 
-/* Footer Banner */
 .footerBanner{
   background:linear-gradient(90deg, #051221, #0a1f36, #051221);
   border:1px solid rgba(255,255,255,0.05);
@@ -387,7 +381,6 @@ input:checked + .slider:before{ transform:translateX(14px); background-color:#ff
 .footerBanner strong{ display:block; font-size:10px; color:#cadcf5; }
 .footerBanner span{ font-size:8px; color:#506887; }
 
-/* Bottom Bar Nav */
 .bottomNav{
   position:fixed;
   bottom:0; left:50%; transform:translateX(-50%);
@@ -407,7 +400,6 @@ input:checked + .slider:before{ transform:translateX(14px); background-color:#ff
 .navItem.active{ color:#3498db; }
 .navItem b{ font-size:16px; }
 
-/* Modals and Drawer */
 .drawer{ position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:50; }
 .drawerPanel{ width:260px; height:100%; background:#040b17; padding:18px; box-shadow:5px 0 20px rgba(0,0,0,0.5); }
 .drawerHead{ display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
@@ -434,7 +426,6 @@ input:checked + .slider:before{ transform:translateX(14px); background-color:#ff
 
 <div class="app">
 
-  <!-- Header Top Bar -->
   <header class="topbar">
     <button class="iconbtn" onclick="openDrawer()">☰</button>
 
@@ -451,7 +442,6 @@ input:checked + .slider:before{ transform:translateX(14px); background-color:#ff
     <button class="iconbtn" style="font-size:13px;" onclick="openSettings()">⚙️</button>
   </header>
 
-  <!-- Top 3 Cards Grid -->
   <div class="topGrid">
     
     <div class="card statusCard">
@@ -493,13 +483,11 @@ input:checked + .slider:before{ transform:translateX(14px); background-color:#ff
 
   </div>
 
-  <!-- Admin Code Card -->
   <div class="adminCodeBadge hidden" id="adminCodeCard">
     <div class="lbl">رقم تعريف المشرف الخاص بك</div>
     <div class="val" id="adminCodeDisplay">------</div>
   </div>
 
-  <!-- Voice Control Area -->
   <div class="voiceSection">
     
     <div class="voiceToggleBox">
@@ -545,7 +533,6 @@ input:checked + .slider:before{ transform:translateX(14px); background-color:#ff
 
   </div>
 
-  <!-- Main Body Grid: Actions Left & Chat Right (Exact Image Match) -->
   <div class="mainBodyGrid">
     
     <div class="actionsGrid">
@@ -612,7 +599,6 @@ input:checked + .slider:before{ transform:translateX(14px); background-color:#ff
 
   </div>
 
-  <!-- Footer Banner -->
   <div class="footerBanner">
     <strong>تواصل أقوى .. في كل مكان</strong>
     <span>Radio Connect - لاسلكي متصل</span>
@@ -620,7 +606,6 @@ input:checked + .slider:before{ transform:translateX(14px); background-color:#ff
 
 </div>
 
-<!-- Navigation Bar -->
 <nav class="bottomNav">
   <button class="navItem active" onclick="goHome()">
     <b>⌂</b>
@@ -643,7 +628,6 @@ input:checked + .slider:before{ transform:translateX(14px); background-color:#ff
   </button>
 </nav>
 
-<!-- Drawer Panel -->
 <div class="drawer hidden" id="drawer" onclick="closeDrawer(event)">
   <div class="drawerPanel" onclick="event.stopPropagation()">
     <div class="drawerHead">
@@ -661,12 +645,10 @@ input:checked + .slider:before{ transform:translateX(14px); background-color:#ff
   </div>
 </div>
 
-<!-- Modal Dialog -->
 <div class="modalWrap hidden" id="modalWrap">
   <div class="modal" id="modalContent"></div>
 </div>
 
-<!-- File Select Controls -->
 <input type="file" id="imageInput" accept="image/*" hidden onchange="sendSelectedFile(this)">
 <input type="file" id="videoInput" accept="video/*" hidden onchange="sendSelectedFile(this)">
 <input type="file" id="documentInput" accept=".pdf,.doc,.docx,.xls,.xlsx,.txt" hidden onchange="sendSelectedFile(this)">
@@ -728,7 +710,7 @@ async function registerDevice(){
   }catch(e){ console.error("Device reg error:", e); }
 }
 
-/* LiveKit Voice Connection Engine */
+/* الاتصال بالغرفة الصوتية وإدارة التوكن بأمان عبر الخادم */
 async function connectLiveKitRoom() {
   if (!currentRoom) return;
 
@@ -738,11 +720,15 @@ async function connectLiveKitRoom() {
       livekitRoom = null;
     }
 
-    const identity = deviceId;
-    const res = await fetch(`${API}/token?identity=${identity}&room=${currentRoom.id}&deviceId=${deviceId}`);
+    const res = await fetch(`${API}/token?room=${currentRoom.id}`, {
+      headers: { "x-device-id": deviceId }
+    });
     const data = await res.json();
 
-    if (!res.ok || !data.token) return;
+    if (!res.ok || !data.token) {
+      console.warn("LiveKit token rejected:", data.error);
+      return;
+    }
 
     livekitRoom = new LivekitClient.Room({
       adaptiveStream: true,
@@ -767,7 +753,6 @@ async function startTalking(e){
   if(talking) return;
   e.preventDefault();
 
-  // تفعيل الصوت في المتصفح لضمان نطق الصوت تلقائياً
   if (LivekitClient.Room.startAudio) {
     LivekitClient.Room.startAudio();
   }
