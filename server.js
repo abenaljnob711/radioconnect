@@ -340,70 +340,33 @@ app.delete("/api/rooms/:roomId/members/:memberKey", (req, res) => {
   res.json({ success: true, message: "تم حذف العضو من الغرفة" });
 });
 
-app.post("/api/rooms/:roomId/favorite", (req, res) => {
-  const roomId = cleanText(req.params.roomId, 64);
-  const deviceId = getDeviceId(req);
-
-  if (!deviceId) return res.status(400).json({ error: "Device ID is required" });
-  if (!rooms.has(roomId)) return res.status(404).json({ error: "Room not found" });
-
-  const device = ensureDevice(deviceId);
-  const index = device.favorites.indexOf(roomId);
-
-  if (index === -1) {
-    device.favorites.push(roomId);
-    return res.json({ success: true, favorite: true });
-  }
-
-  device.favorites.splice(index, 1);
-  res.json({ success: true, favorite: false });
-});
-
-app.get("/api/favorites", (req, res) => {
-  const deviceId = getDeviceId(req);
-  if (!deviceId) return res.status(400).json({ error: "Device ID is required" });
-
-  const device = devices.get(deviceId);
-  if (!device) return res.json({ success: true, rooms: [] });
-
-  const favoriteRooms = device.favorites
-    .map(roomId => rooms.get(roomId))
-    .filter(Boolean)
-    .map(room => publicRoom(room, deviceId));
-
-  res.json({ success: true, rooms: favoriteRooms });
-});
-
 /* =========================
-   LiveKit Token Generator
+   توليد LiveKit Token (مع التحقق المباشر من العضوية)
 ========================= */
 
 app.get("/token", async (req, res) => {
   try {
-    const identity = cleanText(req.query.identity || "", 64);
+    const deviceId = getDeviceId(req);
     const roomId = cleanText(req.query.room || "", 64);
-    const reqDeviceId = cleanText(req.query.deviceId || identity, 100);
 
-    if (!identity || !roomId) {
-      return res.status(400).json({ error: "Identity and Room required" });
+    if (!deviceId || !roomId) {
+      return res.status(400).json({ error: "DeviceId and Room ID are required" });
     }
 
     const room = rooms.get(roomId);
-    if (!room) return res.status(404).json({ error: "Room not found" });
+    if (!room) return res.status(404).json({ error: "الغرفة غير موجودة" });
 
-    const member = findMember(room, reqDeviceId);
-    const isAdmin = isUserAdminOrOwner(room, reqDeviceId);
-    const isApproved = member && member.status === "approved";
-
-    if (!isAdmin && !isApproved) {
-      return res.status(403).json({ error: "غير مصرح لك بالدخول لهذه الغرفة" });
+    const member = findMember(room, deviceId);
+    if (!member || member.status !== "approved") {
+      return res.status(403).json({ error: "يجب الحصول على موافقة الانضمام للغرفة أولاً" });
     }
 
     const livekitApiKey = process.env.LIVEKIT_API_KEY || "devkey";
     const livekitApiSecret = process.env.LIVEKIT_API_SECRET || "secret";
     const livekitUrl = process.env.LIVEKIT_URL || "wss://radioconnect-8uyh53qc.livekit.cloud";
 
-    const token = new AccessToken(livekitApiKey, livekitApiSecret, { identity });
+    // استخدام deviceId كهوية للمستخدم داخل الغرفة الصوتية
+    const token = new AccessToken(livekitApiKey, livekitApiSecret, { identity: deviceId });
     token.addGrant({
       roomJoin: true,
       room: roomId,
@@ -412,9 +375,9 @@ app.get("/token", async (req, res) => {
     });
 
     const jwt = await token.toJwt();
-    res.json({ success: true, token: jwt, url: livekitUrl, room: roomId, identity });
+    res.json({ success: true, token: jwt, url: livekitUrl, room: roomId, identity: deviceId });
   } catch (error) {
-    res.status(500).json({ error: "Failed to create LiveKit token" });
+    res.status(500).json({ error: "Failed to generate LiveKit token" });
   }
 });
 
