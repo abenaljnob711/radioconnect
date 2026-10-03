@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#07111f">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <title>جهاز لاسلكي - Radio Connect</title>
+  <title>جهاز لاسلكي</title>
   <script src="https://unpkg.com/livekit-client@2.15.3/dist/livekit-client.umd.min.js"></script>
   <style>
     * {
@@ -358,7 +358,7 @@
       background: rgba(200,43,61,.15);
       color: #ff7583;
     }
-    /* مدخلات الإدخال */
+    /* إنشاء غرفة */
     .input-wrap {
       margin-bottom: 12px;
     }
@@ -381,7 +381,7 @@
     .input:focus {
       border-color: rgba(37,145,255,.55);
     }
-    /* شاشة الغرفة والمراسلة الواسعة */
+    /* شاشة الغرفة */
     .room-header {
       display: flex;
       align-items: center;
@@ -444,6 +444,10 @@
       color: #b7d9f8;
       font-size: 20px;
     }
+    .wave-arrow:active {
+      transform: scale(0.92);
+      background: #162f4d;
+    }
     .wave-favorite {
       color: #ffc94d;
       background: transparent;
@@ -487,82 +491,26 @@
       color: #36df91;
       font-weight: 700;
     }
-    
-    /* ساحة المحادثة الكبيرة الشاملة */
-    .chat-section-card {
-      padding: 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-    .chat-messages-area {
-      min-height: 200px;
-      max-height: 320px;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      padding-right: 4px;
-    }
-    .chat-input-bar {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      background: #081422;
-      padding: 6px 8px;
-      border-radius: 16px;
-      border: 1px solid rgba(255,255,255,.08);
-    }
-    .chat-input-bar input {
-      flex: 1;
-      background: transparent;
-      border: none;
-      outline: none;
-      color: #edf6ff;
-      padding: 8px;
-      font-size: 13px;
-    }
-    .pin-btn, .send-btn {
-      width: 40px;
-      height: 40px;
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 18px;
-    }
-    .pin-btn {
-      background: #102135;
-      color: #789cb8;
-    }
-    .send-btn {
-      background: #086dd7;
-      color: #fff;
-    }
-    
-    /* شبكة ملحقات الدبوس المنبثقة */
-    .attachment-grid {
+    /* الأعضاء */
+    .info-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-top: 10px;
+      gap: 9px;
     }
-    .attachment-btn {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 12px;
-      border-radius: 14px;
+    .info-item {
+      padding: 13px;
+      border-radius: 15px;
       background: #0a1726;
-      border: 1px solid rgba(255,255,255,.06);
-      color: #dcecff;
+    }
+    .info-item small {
+      color: #7188a0;
+      font-size: 10px;
+    }
+    .info-item strong {
+      display: block;
+      margin-top: 5px;
       font-size: 12px;
     }
-    .attachment-btn span {
-      font-size: 20px;
-    }
-
-    /* الأعضاء */
     .members {
       display: flex;
       flex-direction: column;
@@ -603,7 +551,31 @@
     .pending {
       color: #ffc44d;
     }
-
+    /* أدوات الغرفة */
+    .tools-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+    .tool {
+      min-height: 70px;
+      border-radius: 15px;
+      background: #0a1726;
+      color: #dcecff;
+      border: 1px solid rgba(255,255,255,.05);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+    }
+    .tool span {
+      font-size: 21px;
+    }
+    .tool small {
+      color: #748aa1;
+      font-size: 9px;
+    }
     /* التنقل السفلي */
     .bottom-nav {
       position: fixed;
@@ -613,7 +585,7 @@
       transform: translateX(-50%);
       width: min(520px, 100%);
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(3, 1fr);
       gap: 5px;
       padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
       background: rgba(5,11,20,.94);
@@ -641,7 +613,6 @@
       color: #43a9ff;
       background: rgba(21,118,215,.09);
     }
-
     /* النوافذ */
     .modal {
       position: fixed;
@@ -741,6 +712,11 @@
     .hidden {
       display: none!important;
     }
+    #chatMessages {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
     @media(max-width: 360px) {
       .ptt {
         width: 165px;
@@ -757,8 +733,8 @@
       <div class="brand">
         <div class="brand-icon">📡</div>
         <div>
-          <div class="brand-title">Radio Connect</div>
-          <div class="brand-sub">جهاز لاسلكي</div>
+          <div class="brand-title">جهاز لاسلكي</div>
+          <div class="brand-sub">اتصال صوتي مباشر</div>
         </div>
       </div>
       <div class="connection">
@@ -773,7 +749,7 @@
     <div class="welcome">
       <div class="big-radio">📡</div>
       <h1>مرحبًا بك</h1>
-      <p>اختبر جهازك قبل الدخول إلى الغرف الصوتية وتأكد من عمل الميكروفون والسماعة.</p>
+      <p> اختبر جهازك قبل الدخول إلى الغرف الصوتية وتأكد من عمل الميكروفون والسماعة. </p>
     </div>
     <div class="card device-card">
       <div class="device-line">
@@ -871,7 +847,7 @@
   <section id="settingsScreen" class="screen">
     <div class="dashboard-head">
       <div>
-        <h1>حسابي</h1>
+        <h1>الإعدادات</h1>
         <p>إعدادات جهاز لاسلكي</p>
       </div>
     </div>
@@ -917,51 +893,63 @@
     <div class="room-header">
       <button class="back" onclick="leaveRoom()"> ← </button>
       <div class="room-header-info">
-        <strong id="activeRoomName">غرفة خاصة</strong>
-        <small id="activeRoomId">أعضاء الغرفة (5)</small>
+        <strong id="activeRoomName">الغرفة</strong>
+        <small id="activeRoomId">RAD---------</small>
       </div>
       <button class="icon-button" onclick="openMembers()"> 👥 </button>
     </div>
-
-    <!-- بطاقة الموجة الحالية -->
     <div class="card wave-card">
       <div class="wave-label">الموجة الحالية</div>
-      <div class="wave-code" id="waveCode">7F3A</div>
-      <div class="wave-label" style="margin-top: 4px;">من 50 موجة</div>
+      <div class="wave-name" id="waveName"> موجة العمليات </div>
+      <div class="wave-code" id="waveCode"> 7F3A </div>
       <div class="wave-controls">
-        <button class="wave-arrow" onclick="changeWave(-1)"> ‹ </button>
-        <button class="wave-favorite" id="waveFavorite" onclick="toggleWaveFavorite()"> ☆ </button>
-        <button class="wave-arrow" onclick="changeWave(1)"> › </button>
+        <button class="wave-arrow" onclick="changeWave(-1)" type="button"> ‹ </button>
+        <button class="wave-favorite" id="waveFavorite" onclick="toggleWaveFavorite()" type="button"> ☆ </button>
+        <button class="wave-arrow" onclick="changeWave(1)" type="button"> › </button>
       </div>
     </div>
-
-    <!-- زر PTT للتحدث -->
     <div class="card ptt-area">
       <button id="pttButton" class="ptt" type="button">
         <span>🎙️</span> اضغط للتحدث
       </button>
       <div id="pttStatus" class="ptt-status"> اضغط باستمرار للتحدث </div>
     </div>
-
-    <!-- ساحة المحادثة الواسعة بتصميم الواتساب/تليجرام -->
     <div class="section-title">
-      <h2>المحادثة</h2>
+      <h2>حالة الغرفة</h2>
     </div>
-    <div class="card chat-section-card">
-      <div id="chatMessages" class="chat-messages-area">
-        <div class="empty">لا توجد رسائل سابقة</div>
+    <div class="info-grid">
+      <div class="info-item">
+        <small>الاتصال الصوتي</small>
+        <strong id="liveStatus">غير متصل</strong>
       </div>
-      <!-- شريط الإرسال السفلي المزود بالدبوس -->
-      <div class="chat-input-bar">
-        <button class="pin-btn" title="إرفاق ملحق" onclick="openAttachmentMenu()">📎</button>
-        <input id="chatInput" placeholder="اكتب رسالة..." onkeydown="if(event.key==='Enter')sendChatMessage()">
-        <button class="send-btn" title="إرسال" onclick="sendChatMessage()">➤</button>
+      <div class="info-item">
+        <small>الأعضاء</small>
+        <strong id="memberCount">0</strong>
+      </div>
+      <div class="info-item">
+        <small>معرف الجهاز</small>
+        <strong id="roomDeviceId">--</strong>
+      </div>
+      <div class="info-item">
+        <small>الدور</small>
+        <strong id="roomRole">عضو</strong>
       </div>
     </div>
-
-    <div id="ownerTools" class="hidden" style="margin-top: 15px;">
+    <div class="section-title">
+      <h2>أدوات الغرفة</h2>
+    </div>
+    <div class="tools-grid">
+      <button class="tool" onclick="openMembers()"> <span>👥</span> <small>الأعضاء</small> </button>
+      <button class="tool" onclick="openChat()"> <span>💬</span> <small>الرسائل</small> </button>
+      <button class="tool" onclick="openMediaTest()"> <span>📷</span> <small>الوسائط</small> </button>
+      <button class="tool" onclick="testMicrophone()"> <span>🎙</span> <small>الميكروفون</small> </button>
+      <button class="tool" onclick="testSpeaker()"> <span>🔊</span> <small>السماعة</small> </button>
+      <button class="tool" onclick="refreshRoom()"> <span>🔄</span> <small>تحديث</small> </button>
+    </div>
+    <div id="ownerTools" class="hidden">
       <div class="section-title">
         <h2>تحكم المسؤول</h2>
+        <span>مسؤول الغرفة</span>
       </div>
       <div class="card">
         <button class="small-btn danger" style="width:100%;padding:13px" onclick="deleteCurrentRoom()"> 🗑️ حذف الغرفة </button>
@@ -971,43 +959,12 @@
 
   <!-- التنقل السفلي -->
   <nav id="bottomNav" class="bottom-nav hidden">
-    <button id="navHome" class="nav-btn active" onclick="showScreen('home')"> <span>📻</span> <small>الرئيسية</small> </button>
+    <button id="navHome" class="nav-btn active" onclick="showScreen('home')"> <span>📻</span> <small>الغرف</small> </button>
     <button id="navFavorites" class="nav-btn" onclick="showScreen('favorites')"> <span>⭐</span> <small>المفضلة</small> </button>
-    <button id="navWaves" class="nav-btn" onclick="showScreen('home')"> <span>📊</span> <small>الموجات</small> </button>
-    <button id="navSettings" class="nav-btn" onclick="showScreen('settings')"> <span>👤</span> <small>حسابي</small> </button>
+    <button id="navSettings" class="nav-btn" onclick="showScreen('settings')"> <span>⚙</span> <small>الإعدادات</small> </button>
   </nav>
 
-  <!-- نافذة الملحقات (الدبوس) المنبثقة -->
-  <div id="attachmentModal" class="modal">
-    <div class="modal-box">
-      <div class="modal-head">
-        <h3>إرسال ملحق</h3>
-        <button class="close" onclick="closeModal('attachmentModal')">×</button>
-      </div>
-      <div class="attachment-grid">
-        <button class="attachment-btn" onclick="openMediaTest(); closeModal('attachmentModal');">
-          <span>📷</span> إرسال صورة
-        </button>
-        <button class="attachment-btn" onclick="openMediaTest(); closeModal('attachmentModal');">
-          <span>🎥</span> إرسال فيديو
-        </button>
-        <button class="attachment-btn" onclick="openMediaTest(); closeModal('attachmentModal');">
-          <span>📄</span> إرسال مستند
-        </button>
-        <button class="attachment-btn" onclick="toast('ميزة إرسال جهات الاتصال قريباً'); closeModal('attachmentModal');">
-          <span>👥</span> جهات الاتصال
-        </button>
-        <button class="attachment-btn" onclick="testMicrophone(); closeModal('attachmentModal');">
-          <span>🎵</span> إرسال صوت
-        </button>
-        <button class="attachment-btn" onclick="openMembers(); closeModal('attachmentModal');">
-          <span>👨‍👩‍👧‍👦</span> أعضاء الغرفة
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- باقي النوافذ المنبثقة الوظيفية -->
+  <!-- النوافذ المنبثقة -->
   <div id="createModal" class="modal">
     <div class="modal-box">
       <div class="modal-head">
@@ -1046,6 +1003,22 @@
       </div>
       <div id="membersList" class="members">
         <div class="empty">جاري التحميل...</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="chatModal" class="modal">
+    <div class="modal-box">
+      <div class="modal-head">
+        <h3>الرسائل</h3>
+        <button class="close" onclick="closeModal('chatModal')">×</button>
+      </div>
+      <div id="chatMessages" class="card" style="min-height:160px;max-height:260px;overflow-y:auto;margin-bottom:10px;">
+        <div class="empty">لا توجد رسائل</div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <input id="chatInput" class="input" placeholder="اكتب رسالة..." style="flex:1" onkeydown="if(event.key==='Enter')sendChatMessage()">
+        <button class="small-btn join" onclick="sendChatMessage()"> إرسال </button>
       </div>
     </div>
   </div>
@@ -1138,6 +1111,9 @@
     $("connectionText").textContent = text;
     $("homeConnection").textContent = text;
     $("settingsConnection").textContent = text;
+    if ($("liveStatus")) {
+      $("liveStatus").textContent = text;
+    }
   }
 
   function updateTests() {
@@ -1181,6 +1157,7 @@
   function updateDeviceUI() {
     $("deviceIdText").textContent = deviceId;
     $("settingsDeviceId").textContent = deviceId;
+    $("roomDeviceId").textContent = deviceId;
   }
 
   /* ========================================== الشبكة والبطارية ========================================== */
@@ -1529,7 +1506,9 @@
   }
 
   function showRoomScreen() {
-    $("activeRoomName").textContent = activeRoom?.name || "غرفة خاصة";
+    $("activeRoomName").textContent = activeRoom?.name || "الغرفة";
+    $("activeRoomId").textContent = activeRoom?.id || activeRoomId || "--";
+    $("roomRole").textContent = activeRoom?.isOwner ? "مسؤول الغرفة" : "عضو";
     $("ownerTools").classList.toggle("hidden", !activeRoom?.isOwner);
     $("bottomNav").classList.add("hidden");
     showOnlyScreen("room");
@@ -1588,16 +1567,22 @@
           }
         });
 
+        livekitRoom.on(window.LivekitClient.RoomEvent.ParticipantConnected, () => updateMemberCount());
+        livekitRoom.on(window.LivekitClient.RoomEvent.ParticipantDisconnected, () => updateMemberCount());
         livekitRoom.on(window.LivekitClient.RoomEvent.Disconnected, () => {
           setConnection(false, "انقطع الاتصال الصوتي");
+          $("liveStatus").textContent = "غير متصل";
         });
       }
 
       await livekitRoom.connect(livekitUrl, tokenData.token);
       setConnection(true, "متصل صوتيًا");
+      $("liveStatus").textContent = "متصل صوتيًا";
+      updateMemberCount();
     } catch (error) {
       console.error("LiveKit connection error:", error);
       setConnection(false, "تعذر الاتصال");
+      $("liveStatus").textContent = "تعذر الاتصال";
       toast("تعذر الاتصال الصوتي. تحقق من LiveKit والإنترنت.");
     }
   }
@@ -1697,11 +1682,6 @@
     localAudioTrack = null;
   }
 
-  /* ========================================== الملحقات والدبوس ========================================== */
-  function openAttachmentMenu() {
-    openModal("attachmentModal");
-  }
-
   /* ========================================== الأعضاء ========================================== */
   async function loadMembers() {
     if (!activeRoomId) return;
@@ -1710,6 +1690,7 @@
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Members error");
       renderMembers(data.members || []);
+      $("memberCount").textContent = (data.members || []).filter(m => m.status === "approved").length;
     } catch (error) {
       console.error(error);
     }
@@ -1804,6 +1785,12 @@
     }
   }
 
+  function updateMemberCount() {
+    if (!livekitRoom) return;
+    const count = livekitRoom.remoteParticipants.size + 1;
+    $("memberCount").textContent = count;
+  }
+
   /* ========================================== المفضلة والموجات ========================================== */
   async function toggleFavorite(roomId) {
     try {
@@ -1845,19 +1832,18 @@
 
   function updateWave() {
     const wave = waves[waveIndex];
+    $("waveName").textContent = wave.name;
     $("waveCode").textContent = wave.code;
     $("waveFavorite").textContent = waveFavorite ? "★" : "☆";
   }
 
+  // السماح لجميع الأعضاء بتغيير وإدارة الموجات عند الضغط مباشرة
   function changeWave(direction) {
-    if (activeRoom && !activeRoom.isOwner) {
-      toast("تغيير الموجة متاح لمسؤول الغرفة");
-      return;
-    }
     waveIndex += direction;
     if (waveIndex < 0) waveIndex = waves.length - 1;
     if (waveIndex >= waves.length) waveIndex = 0;
     updateWave();
+    toast("تم الانتقال إلى: " + waves[waveIndex].name);
   }
 
   function toggleWaveFavorite() {
@@ -1899,6 +1885,26 @@
     $("bottomNav").classList.remove("hidden");
     showScreen("home");
     loadRooms();
+  }
+
+  async function refreshRoom() {
+    if (!activeRoomId) return;
+    try {
+      const response = await fetch(API + "/api/rooms/" + encodeURIComponent(activeRoomId) + "?deviceId=" + encodeURIComponent(deviceId));
+      const data = await response.json();
+      if (response.ok) {
+        activeRoom = data.room;
+        showRoomScreen();
+        loadMembers();
+        toast("تم تحديث الغرفة");
+      }
+    } catch (error) {
+      toast("تعذر تحديث الغرفة");
+    }
+  }
+
+  function openChat() {
+    openModal("chatModal");
   }
 
   function appendMessageToUI(message, senderName, isMine) {
