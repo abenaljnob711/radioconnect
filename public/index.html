@@ -9,119 +9,247 @@
 <script src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
 
 <style>
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0}
-html,body{min-height:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:#02050e;color:#eaf2ff;direction:rtl;text-align:right}
-body{padding-bottom:75px}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{
+  margin:0;
+  min-height:100%;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+  background:#02050e;
+  color:#eaf2ff;
+  direction:rtl;
+}
+body{padding-bottom:82px}
 button,input{font:inherit}
 button{border:0;cursor:pointer}
+.app{max-width:600px;margin:auto;padding:12px}
+
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:8px 2px 14px;
+}
+.logo{
+  font-size:21px;font-weight:900;
+  display:flex;align-items:center;gap:8px;
+}
+.menuBtn{
+  width:44px;height:44px;border-radius:14px;
+  background:#111827;color:#fff;font-size:23px;
+}
+.status{
+  font-size:11px;color:#75e6a8;
+  display:flex;align-items:center;gap:5px;
+}
+.dot{
+  width:8px;height:8px;border-radius:50%;background:#36e58a;
+  box-shadow:0 0 10px #36e58a;
+}
+
+.topGrid{
+  display:grid;grid-template-columns:1fr 1fr;gap:9px;
+}
+.card{
+  background:linear-gradient(145deg,#0b1220,#070c16);
+  border:1px solid #172235;
+  border-radius:18px;
+  padding:14px;
+  margin-bottom:10px;
+  box-shadow:0 8px 25px rgba(0,0,0,.18);
+}
+.smallTitle{font-size:11px;color:#8290a8;margin-bottom:6px}
+.bigValue{font-size:16px;font-weight:800}
+.subValue{font-size:11px;color:#718097;margin-top:4px}
+
+.waveCard{text-align:center;padding:17px}
+.waveTitle{font-size:12px;color:#8190a8;margin-bottom:8px}
+.waveRow{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+}
+.waveBtn{
+  width:42px;height:42px;border-radius:13px;
+  background:#121c2c;color:#dce9ff;font-size:24px;
+}
+.waveName{font-size:21px;font-weight:900;flex:1}
+.waveCode{font-size:11px;color:#718097;margin-top:3px}
+.favoriteBtn{
+  margin-top:10px;background:#111a29;color:#ffcf5c;
+  padding:8px 14px;border-radius:12px;font-size:12px;
+}
+
+.roomCard{padding:16px}
+.roomHead{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.roomName{font-size:18px;font-weight:900}
+.roomCode{
+  direction:ltr;background:#111b2b;border-radius:10px;
+  padding:7px 10px;font-size:12px;color:#9cc4ff;
+}
+.roomMeta{
+  display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;
+}
+.badge{
+  background:#0d1726;border:1px solid #1a2940;
+  padding:6px 9px;border-radius:10px;font-size:11px;color:#9caac0;
+}
+
+.voiceCard{text-align:center;padding:18px}
+.voiceStatus{
+  min-height:22px;font-size:12px;color:#8190a8;margin-bottom:12px;
+}
+.pttBtn{
+  width:185px;height:185px;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,#233b62,#0b172a 62%,#06101e);
+  border:7px solid #172942;
+  color:#fff;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  margin:0 auto;
+  box-shadow:0 0 0 8px rgba(40,100,180,.08),0 15px 40px rgba(0,0,0,.35);
+  user-select:none;
+  touch-action:none;
+}
+.pttBtn.active{
+  background:radial-gradient(circle at 35% 30%,#205e48,#0b2b23 62%,#061811);
+  border-color:#25c987;
+  box-shadow:0 0 0 10px rgba(37,201,135,.10),0 0 35px rgba(37,201,135,.25);
+}
+.pttIcon{font-size:45px;margin-bottom:7px}
+.pttText{font-size:14px;font-weight:800}
+.micIndicator{
+  display:inline-flex;align-items:center;gap:7px;
+  margin-top:14px;padding:7px 12px;border-radius:12px;
+  background:#0c1523;color:#75859c;font-size:11px;
+}
+.micIndicator.on{color:#5df0ae;background:#09251c}
+
+.actionGrid{
+  display:grid;grid-template-columns:repeat(2,1fr);gap:9px;
+}
+.actionBtn{
+  min-height:54px;border-radius:15px;
+  background:#0c1523;border:1px solid #18273b;
+  color:#e8f1ff;font-size:12px;font-weight:700;
+}
+.actionBtn:active{transform:scale(.98);background:#142238}
+
+.chatCard{padding:14px}
+.chatTitle{font-weight:900;margin-bottom:10px}
+.chatMessages{
+  min-height:65px;max-height:260px;overflow-y:auto;
+  display:flex;flex-direction:column;gap:7px;margin-bottom:10px;
+}
+.emptyChat{text-align:center;color:#59677d;font-size:12px;padding:18px}
+.msg{
+  max-width:82%;padding:8px 11px;border-radius:13px;
+  background:#111b2b;align-self:flex-start;
+}
+.msg.mine{
+  align-self:flex-end;background:#123a32;
+}
+.msgName{font-size:10px;color:#72a5dc;margin-bottom:3px}
+.msgText{font-size:13px;line-height:1.5;word-break:break-word}
+.msgTime{font-size:9px;color:#617087;margin-top:3px}
+.chatInputRow{display:flex;gap:7px}
+.chatInput{
+  flex:1;min-width:0;background:#080f1b;border:1px solid #19283d;
+  color:#fff;border-radius:13px;padding:11px 12px;outline:none;
+}
+.chatInput:focus{border-color:#315a8d}
+.chatSendBtn{
+  width:48px;border-radius:13px;background:#1769d2;color:#fff;font-size:21px;
+}
+
+.footer{
+  text-align:center;color:#45536a;font-size:10px;padding:14px 0 4px;
+}
+
+.bottomNav{
+  position:fixed;z-index:50;bottom:0;left:0;right:0;
+  height:70px;background:rgba(3,8,17,.96);
+  border-top:1px solid #172235;
+  display:flex;justify-content:center;
+}
+.navInner{width:100%;max-width:600px;display:flex}
+.navBtn{
+  flex:1;background:transparent;color:#65738a;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;font-size:10px;
+}
+.navBtn span:first-child{font-size:21px}
+.navBtn.active{color:#72a9ff}
+
+.drawerOverlay,.modalOverlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.65);
+  z-index:100;display:none;
+}
+.drawerOverlay.show,.modalOverlay.show{display:block}
+.drawer{
+  position:absolute;top:0;bottom:0;right:0;width:min(88%,360px);
+  background:#070d18;border-left:1px solid #1a2a41;
+  padding:18px;overflow-y:auto;
+}
+.drawerHeader{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:18px;
+}
+.drawerTitle{font-size:20px;font-weight:900}
+.closeBtn{
+  width:40px;height:40px;border-radius:12px;
+  background:#111b2b;color:#fff;font-size:20px;
+}
+.drawerItem{
+  width:100%;text-align:right;padding:14px;
+  margin-bottom:8px;border-radius:14px;
+  background:#0c1523;color:#eaf2ff;border:1px solid #18273b;
+}
+.modal{
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  width:min(92%,500px);max-height:85vh;overflow:auto;
+  background:#08101d;border:1px solid #1b2c44;border-radius:20px;
+  padding:18px;
+}
+.modalTitle{font-size:18px;font-weight:900;margin-bottom:14px}
+.modalInput{
+  width:100%;background:#050b14;border:1px solid #1b2b40;
+  color:#fff;border-radius:12px;padding:12px;margin-bottom:9px;
+  outline:none;
+}
+.modalBtn{
+  width:100%;padding:12px;border-radius:12px;
+  background:#1769d2;color:#fff;font-weight:800;margin-top:5px;
+}
+.modalBtn.secondary{background:#111c2d}
+.modalBtn.danger{background:#702b32}
+.roomList,.memberList{display:flex;flex-direction:column;gap:8px}
+.listItem{
+  background:#0d1726;border:1px solid #192940;
+  padding:12px;border-radius:13px;
+}
+.listHead{display:flex;justify-content:space-between;gap:8px}
+.listName{font-weight:800}
+.listSub{font-size:10px;color:#74839a;margin-top:4px}
+.listActions{display:flex;gap:6px;margin-top:9px}
+.miniBtn{
+  padding:7px 10px;border-radius:9px;
+  background:#17253a;color:#fff;font-size:11px;
+}
+.miniBtn.blue{background:#1769d2}
+.miniBtn.red{background:#6d2c34}
+
+.toast{
+  position:fixed;z-index:300;left:50%;bottom:84px;
+  transform:translate(-50%,20px);
+  background:#111c2c;color:#fff;border:1px solid #263a55;
+  padding:11px 15px;border-radius:13px;font-size:12px;
+  opacity:0;pointer-events:none;transition:.25s;
+  max-width:90%;text-align:center;
+}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
 .hidden{display:none!important}
+.fileInput{display:none}
 
-.app{max-width:520px;min-height:100vh;margin:auto;background:radial-gradient(circle at 50% 15%,rgba(13,40,81,.4),transparent 60%),linear-gradient(180deg,#050c1b,#02050e);padding:10px}
-
-.topbar{display:flex;align-items:center;justify-content:space-between;padding:6px 2px 12px}
-.iconbtn{width:38px;height:38px;border-radius:12px;background:#091526;color:#eaf2ff;font-size:18px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.06)}
-.brand{text-align:center;line-height:1.2}
-.brand strong{display:block;font-size:16px}
-.brand span{font-size:11px;color:#627999}
-
-.serverStatus{display:flex;align-items:center;gap:5px;background:#071424;padding:5px 10px;border-radius:18px;border:1px solid rgba(255,255,255,.05);font-size:11px}
-.statusDot{width:7px;height:7px;background:#2ecc71;border-radius:50%;box-shadow:0 0 6px #2ecc71}
-
-.topGrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px}
-.card{background:linear-gradient(145deg,#081426,#040a16);border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:10px;box-shadow:0 6px 20px rgba(0,0,0,.3)}
-.statusCard{display:flex;justify-content:space-between;align-items:center;text-align:center}
-.statusItem{flex:1}
-.statusIcon{font-size:12px;margin-bottom:2px}
-.statusIcon.green{color:#2ecc71}
-.statusIcon.orange{color:#e67e22}
-.statusVal{font-size:10px;font-weight:700}
-.statusLbl{font-size:8px;color:#5b7394}
-
-.waveCard{text-align:center;display:flex;flex-direction:column;justify-content:space-between}
-.waveTitle,.waveSub,.roomMembersCount{font-size:9px;color:#5b7394}
-.waveNav{display:flex;align-items:center;justify-content:space-between;margin:2px 0}
-.waveArrow{background:transparent;color:#6c88b0;font-size:12px}
-.waveCode{font-size:16px;font-weight:800;letter-spacing:1px;color:#fff}
-
-.roomCard{display:flex;flex-direction:column;justify-content:space-between}
-.roomSelect{display:flex;align-items:center;gap:4px;font-size:12px;font-weight:700;cursor:pointer}
-.roomSelect .star{color:#f1c40f;font-size:13px}
-.roomSelect .arrow{font-size:9px;color:#6a83a6}
-
-.adminCodeBadge{background:linear-gradient(135deg,#0c2742,#071629);border:1px solid rgba(52,152,219,.25);border-radius:12px;padding:8px;text-align:center;margin-bottom:10px}
-.adminCodeBadge .lbl{font-size:9px;color:#6b8eb8}
-.adminCodeBadge .val{font-size:17px;font-weight:900;color:#3498db;letter-spacing:2px}
-
-.voiceSection{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:10px;position:relative}
-.voiceToggleBox{flex:1;background:linear-gradient(145deg,#081426,#040a16);border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:10px 8px;display:flex;align-items:center;justify-content:space-between}
-.toggleInfo strong{display:block;font-size:10px}
-.toggleInfo span{font-size:8px;color:#5b7394}
-
-.switch{position:relative;display:inline-block;width:30px;height:16px}
-.switch input{opacity:0;width:0;height:0}
-.slider{position:absolute;cursor:pointer;inset:0;background:#0f1d30;transition:.3s;border-radius:20px}
-.slider:before{position:absolute;content:"";height:10px;width:10px;left:3px;bottom:3px;background:#5b7394;transition:.3s;border-radius:50%}
-input:checked+.slider{background:#1c6294}
-input:checked+.slider:before{transform:translateX(14px);background:#fff}
-
-.pttMainArea{position:relative;display:flex;align-items:center;justify-content:center}
-.pttBtn{width:98px;height:98px;border-radius:50%;background:radial-gradient(circle at 50% 35%,#1d6194,#0b314f 60%,#061c2e);border:3px solid #174b73;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 0 0 5px rgba(13,44,71,.4),0 6px 20px rgba(0,0,0,.5);user-select:none;touch-action:none;transition:.1s}
-.pttBtn.talking{transform:scale(.95);background:radial-gradient(circle at 50% 35%,#e74c3c,#8e2a1f 60%,#521812);border-color:#e74c3c;box-shadow:0 0 0 7px rgba(231,76,60,.25),0 0 25px rgba(231,76,60,.5)}
-.pttIcon{font-size:22px;margin-bottom:2px}
-.pttText{font-size:9px;font-weight:700}
-
-.waveVisualizer{position:absolute;width:120px;display:flex;justify-content:space-between;pointer-events:none;z-index:0}
-.waveVisualizer.left{right:100%;margin-right:-10px}
-.waveVisualizer.right{left:100%;margin-left:-10px}
-.waveVisualizer span{width:2px;height:10px;background:#143e61;border-radius:2px}
-.waveVisualizer.active span{animation:wavePulse .4s infinite alternate}
-@keyframes wavePulse{to{height:24px;background:#3498db}}
-
-.mainBodyGrid{display:grid;grid-template-columns:.9fr 1.1fr;gap:8px;margin-bottom:10px}
-.actionsGrid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
-.actionBtn{background:linear-gradient(145deg,#081426,#040a16);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:9px 2px;text-align:center;color:#eaf2ff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:55px}
-.actionBtn .ico{font-size:15px;color:#3498db}
-.actionBtn span{font-size:8px;color:#7d97ba}
-.fullRowBtn{grid-column:span 2;display:flex;flex-direction:row;justify-content:space-between;align-items:center;padding:6px 8px}
-
-.chatBoxCard{display:flex;flex-direction:column;justify-content:space-between;height:225px}
-.cardHead{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700;margin-bottom:6px}
-.chatLogs{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:5px}
-.msgBubble{background:#0a172b;border-radius:8px;padding:5px 7px;font-size:9px;max-width:92%;line-height:1.3}
-.msgBubble.mine{align-self:flex-start;background:#143759}
-.msgMeta{display:flex;justify-content:space-between;font-size:7px;color:#5b7394;margin-top:2px}
-.chatInputRow{display:flex;align-items:center;gap:3px;margin-top:5px;background:#040a14;border:1px solid rgba(255,255,255,.05);border-radius:8px;padding:2px 5px}
-.chatInputRow input{flex:1;background:transparent;border:0;color:#fff;font-size:9px;padding:5px 2px;outline:none}
-.chatSendBtn{background:transparent;color:#3498db;font-size:11px}
-
-.footerBanner{background:linear-gradient(90deg,#051221,#0a1f36,#051221);border:1px solid rgba(255,255,255,.05);border-radius:12px;padding:8px;text-align:center;margin-bottom:10px}
-.footerBanner strong{display:block;font-size:10px;color:#cadcf5}
-.footerBanner span{font-size:8px;color:#506887}
-
-.bottomNav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(520px,100%);height:60px;background:rgba(2,6,14,.96);border-top:1px solid rgba(255,255,255,.08);display:grid;grid-template-columns:repeat(4,1fr);z-index:30;backdrop-filter:blur(10px)}
-.navItem{background:transparent;color:#4e6482;font-size:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
-.navItem.active{color:#3498db}
-.navItem b{font-size:16px}
-
-.drawer{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:50}
-.drawerPanel{width:260px;height:100%;background:#040b17;padding:18px;box-shadow:5px 0 20px rgba(0,0,0,.5)}
-.drawerHead{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
-.menu button{width:100%;padding:10px;text-align:right;background:transparent;color:#eaf2ff;border-radius:8px;margin-bottom:3px;font-size:11px}
-
-.modalWrap{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:70;display:flex;align-items:flex-end;justify-content:center}
-.modal{width:min(520px,100%);max-height:85vh;overflow-y:auto;background:#050f1f;border-radius:18px 18px 0 0;padding:14px}
-.modalHead{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
-.modalHead button{background:#09182b;color:#fff;width:30px;height:30px;border-radius:8px}
-.field{margin-bottom:8px}
-.field label{display:block;font-size:9px;color:#5b7394;margin-bottom:3px}
-.field input{width:100%;background:#020612;border:1px solid rgba(255,255,255,.08);color:#fff;border-radius:8px;padding:8px;font-size:11px;outline:none}
-.primary{width:100%;padding:10px;background:#1a6194;color:#fff;border-radius:8px;font-weight:700;margin-top:4px;font-size:11px}
-.secondary{width:100%;padding:8px;background:#09182b;color:#cadcf5;border-radius:8px;margin-top:4px;font-size:10px}
-
-.toast{position:fixed;left:50%;bottom:70px;transform:translateX(-50%);padding:7px 14px;background:#0a1e36;color:#fff;border:1px solid rgba(255,255,255,.1);border-radius:16px;font-size:10px;z-index:100;max-width:90%;text-align:center}
-.memberRow,.roomItem{display:flex;justify-content:space-between;align-items:center;padding:8px;background:#020612;border-radius:7px;margin-bottom:5px;font-size:10px;color:#eaf2ff;width:100%}
-.empty{padding:15px;text-align:center;color:#6d84a5;font-size:10px}
-.micTest{margin-top:7px;padding:8px;background:#071a2b;border:1px solid rgba(52,152,219,.2);border-radius:8px;color:#9fc8ed;width:100%;font-size:10px}
+@media(max-width:380px){
+  .pttBtn{width:165px;height:165px}
+  .actionBtn{font-size:11px}
+}
 </style>
 </head>
 
@@ -129,2548 +257,1390 @@ input:checked+.slider:before{transform:translateX(14px);background:#fff}
 
 <div class="app">
 
-<header class="topbar">
-<button class="iconbtn" onclick="openDrawer()">☰</button>
+  <div class="topbar">
+    <button class="menuBtn" onclick="toggleDrawer()">☰</button>
+    <div class="logo">📡 جهاز لاسلكي</div>
+    <div class="status"><span class="dot"></span><span id="serverStatus">متصل</span></div>
+  </div>
 
-<div class="brand">
-<strong>Radio Connect</strong>
-<span>جهاز لاسلكي</span>
-</div>
+  <div class="topGrid">
+    <div class="card">
+      <div class="smallTitle">حالة الاتصال</div>
+      <div class="bigValue" id="connectionStatus">متصل بالخادم</div>
+      <div class="subValue" id="networkStatus">جارٍ الفحص...</div>
+    </div>
 
-<div class="serverStatus">
-<i class="statusDot"></i>
-<span id="serverStatusText">متصل</span>
-</div>
-</header>
+    <div class="card">
+      <div class="smallTitle">حالة الجهاز</div>
+      <div class="bigValue" id="deviceStatus">جاري التجهيز</div>
+      <div class="subValue" id="batteryStatus">البطارية --%</div>
+    </div>
+  </div>
 
-<div class="topGrid">
+  <div class="card waveCard">
+    <div class="waveTitle">الموجة الحالية</div>
+    <div class="waveRow">
+      <button class="waveBtn" onclick="prevWave()">‹</button>
+      <div>
+        <div class="waveName" id="waveName">موجة العمليات</div>
+        <div class="waveCode" id="waveCode">7F3A</div>
+      </div>
+      <button class="waveBtn" onclick="nextWave()">›</button>
+    </div>
+    <button class="favoriteBtn" id="waveFavoriteBtn" onclick="toggleWaveFavorite()">☆ إضافة للمفضلة</button>
+  </div>
 
-<div class="card statusCard">
+  <div class="card roomCard">
+    <div class="roomHead">
+      <div>
+        <div class="smallTitle">الغرفة الحالية</div>
+        <div class="roomName" id="roomName">لا توجد غرفة محددة</div>
+      </div>
+      <div class="roomCode" id="roomCode">---</div>
+    </div>
 
-<div class="statusItem">
-<div class="statusIcon green">✔</div>
-<div class="statusVal" id="connectionValue">متصل</div>
-<div class="statusLbl">بالخادم</div>
-</div>
+    <div class="roomMeta">
+      <div class="badge" id="roomMembers">الأعضاء: 0</div>
+      <div class="badge" id="roomRole">غير متصل</div>
+      <div class="badge" id="roomVoice">الصوت: غير متصل</div>
+    </div>
+  </div>
 
-<div class="statusItem">
-<div class="statusIcon green">📶</div>
-<div class="statusVal" id="networkValue">3G</div>
-<div class="statusLbl">الشبكة</div>
-</div>
+  <div class="card voiceCard">
+    <div class="voiceStatus" id="voiceStatus">اضغط باستمرار للتحدث</div>
 
-<div class="statusItem">
-<div class="statusIcon orange">🔋</div>
-<div class="statusVal" id="batteryValue">--%</div>
-<div class="statusLbl">البطارية</div>
-</div>
+    <button
+      class="pttBtn"
+      id="pttButton"
+      onpointerdown="startTalking(event)"
+      onpointerup="stopTalking(event)"
+      onpointercancel="stopTalking(event)"
+      onlostpointercapture="stopTalking(event)"
+    >
+      <span class="pttIcon">🎙️</span>
+      <span class="pttText" id="pttText">اضغط للتحدث</span>
+    </button>
 
-</div>
+    <div class="micIndicator" id="micIndicator">
+      <span>●</span>
+      <span id="micIndicatorText">الميكروفون متوقف</span>
+    </div>
+  </div>
 
-<div class="card waveCard">
-<div class="waveTitle">الموجة الحالية</div>
+  <div class="actionGrid">
+    <button class="actionBtn" onclick="chooseFile('videoInput')">🎥 إرسال فيديو</button>
+    <button class="actionBtn" onclick="chooseFile('imageInput')">🖼️ إرسال صورة</button>
+    <button class="actionBtn" onclick="chooseFile('documentInput')">📄 إرسال مستند</button>
+    <button class="actionBtn" onclick="openContacts()">👥 جهات الاتصال</button>
+    <button class="actionBtn" onclick="openMembers()">👤 أعضاء الغرفة</button>
+    <button class="actionBtn" onclick="chooseFile('audioInput')">🔊 إرسال صوت</button>
+    <button class="actionBtn" onclick="testMicrophone()">🎙️ اختبار الميكروفون</button>
+    <button class="actionBtn" onclick="openSettings()">⚙️ الإعدادات</button>
+  </div>
 
-<div class="waveNav">
-<button class="waveArrow" onclick="prevWave()">❮</button>
-<div class="waveCode" id="waveCodeDisplay">68B665</div>
-<button class="waveArrow" onclick="nextWave()">❯</button>
-</div>
+  <input id="videoInput" class="fileInput" type="file" accept="video/*" onchange="sendSelectedFile(this,'فيديو')">
+  <input id="imageInput" class="fileInput" type="file" accept="image/*" onchange="sendSelectedFile(this,'صورة')">
+  <input id="documentInput" class="fileInput" type="file" onchange="sendSelectedFile(this,'مستند')">
+  <input id="audioInput" class="fileInput" type="file" accept="audio/*" onchange="sendSelectedFile(this,'صوت')">
 
-<div class="waveSub">من 50 موجة</div>
-</div>
+  <div class="card chatCard">
+    <div class="chatTitle">💬 المحادثة</div>
 
-<div class="card roomCard">
+    <div class="chatMessages" id="chatMessages">
+      <div class="emptyChat" id="emptyChat">لا توجد رسائل بعد</div>
+    </div>
 
-<div class="roomSelect" onclick="openRooms()">
-<span class="star">★</span>
-<span id="currentRoomName">العمليات</span>
-<span class="arrow">▼</span>
-</div>
+    <div class="chatInputRow">
+      <input
+        id="chatInput"
+        class="chatInput"
+        placeholder="اكتب رسالة..."
+        autocomplete="off"
+        onkeydown="if(event.key==='Enter')sendChat()"
+      >
+      <button class="chatSendBtn" onclick="sendChat()">➤</button>
+    </div>
+  </div>
 
-<div class="roomMembersCount" id="membersCount">
-أعضاء الغرفة (0)
-</div>
-
-</div>
-</div>
-
-<div id="adminCodeCard" class="adminCodeBadge hidden">
-<div class="lbl">رقم تعريف المشرف الخاص بك</div>
-<div class="val" id="adminCodeDisplay">------</div>
-</div>
-
-<div class="voiceSection">
-
-<div class="voiceToggleBox">
-<div class="toggleInfo">
-<strong>الصوت اللاسلكي</strong>
-<span id="radioVoiceStatus">متوقف</span>
-</div>
-
-<label class="switch">
-<input id="radioVoiceToggle" type="checkbox" onchange="toggleVoiceMode('radio')">
-<span class="slider"></span>
-</label>
-</div>
-
-<div class="pttMainArea">
-
-<div class="waveVisualizer left" id="waveLeft">
-<span></span><span></span><span></span><span></span><span></span>
-</div>
-
-<button
-id="pttButton"
-class="pttBtn"
-type="button"
-onpointerdown="startTalking(event)"
-onpointerup="stopTalking(event)"
-onpointercancel="stopTalking(event)"
-onlostpointercapture="stopTalking(event)">
-
-<span class="pttIcon">🎙️</span>
-<span class="pttText" id="pttText">اضغط للتحدث</span>
-
-</button>
-
-<div class="waveVisualizer right" id="waveRight">
-<span></span><span></span><span></span><span></span><span></span>
-</div>
-
-</div>
-
-<div class="voiceToggleBox">
-<div class="toggleInfo">
-<strong>الصوت الطبيعي</strong>
-<span id="naturalVoiceStatus">مفعل</span>
-</div>
-
-<label class="switch">
-<input id="naturalVoiceToggle" type="checkbox" checked onchange="toggleVoiceMode('natural')">
-<span class="slider"></span>
-</label>
-</div>
+  <div class="footer">
+    Radio Connect • جهاز لاسلكي
+  </div>
 
 </div>
 
-<div class="mainBodyGrid">
-
-<div class="card">
-
-<div class="actionsGrid">
-
-<button class="actionBtn" onclick="chooseFile('videoInput')">
-<div class="ico">🎥</div>
-<span>إرسال فيديو</span>
-</button>
-
-<button class="actionBtn" onclick="chooseFile('imageInput')">
-<div class="ico">🖼️</div>
-<span>إرسال صورة</span>
-</button>
-
-<button class="actionBtn" onclick="chooseFile('documentInput')">
-<div class="ico">📄</div>
-<span>إرسال مستند</span>
-</button>
-
-<button class="actionBtn" onclick="openContacts()">
-<div class="ico">👥</div>
-<span>جهات الاتصال</span>
-</button>
-
-<button class="actionBtn" onclick="openMembers()">
-<div class="ico">👥</div>
-<span>أعضاء الغرفة</span>
-</button>
-
-<button class="actionBtn" onclick="chooseFile('audioInput')">
-<div class="ico">🎵</div>
-<span>إرسال صوت</span>
-</button>
-
-<button class="actionBtn fullRowBtn" onclick="testMicrophone()">
-<span>🎙️ اختبار الميكروفون</span>
-<span>الصوت اللاسلكي</span>
-</button>
-
-</div>
+<div class="bottomNav">
+  <div class="navInner">
+    <button class="navBtn active" onclick="goHome()">
+      <span>⌂</span><span>الرئيسية</span>
+    </button>
+    <button class="navBtn" onclick="openFavorites()">
+      <span>★</span><span>المفضلة</span>
+    </button>
+    <button class="navBtn" onclick="openRooms()">
+      <span>▣</span><span>الغرف</span>
+    </button>
+    <button class="navBtn" onclick="openAccount()">
+      <span>●</span><span>حسابي</span>
+    </button>
+  </div>
 </div>
 
-<div class="card chatBoxCard">
+<div class="drawerOverlay" id="drawerOverlay" onclick="closeDrawer(event)">
+  <div class="drawer" onclick="event.stopPropagation()">
+    <div class="drawerHeader">
+      <div class="drawerTitle">القائمة</div>
+      <button class="closeBtn" onclick="toggleDrawer()">×</button>
+    </div>
 
-<div class="cardHead">💬 المحادثة</div>
-
-<div class="chatLogs" id="chatLogs">
-
-<div class="msgBubble" id="chatEmpty">
-جاهز للموقع
-<div class="msgMeta">
-<span>النظام</span>
-<span>الآن</span>
-</div>
-</div>
-
-</div>
-
-<div class="chatInputRow">
-
-<input
-id="chatInput"
-placeholder="اكتب رسالة..."
-onkeydown="if(event.key==='Enter')sendChat()">
-
-<button class="chatSendBtn" onclick="sendChat()">➤</button>
-
-</div>
+    <button class="drawerItem" onclick="createRoom()">➕ إنشاء غرفة</button>
+    <button class="drawerItem" onclick="joinRoom()">🔗 الانضمام إلى غرفة</button>
+    <button class="drawerItem" onclick="openRooms()">▣ الغرف</button>
+    <button class="drawerItem" onclick="openMembers()">👥 أعضاء الغرفة</button>
+    <button class="drawerItem" onclick="openAdmin()">🛡️ التحكم والإدارة</button>
+    <button class="drawerItem" onclick="openSettings()">⚙️ الإعدادات</button>
+  </div>
 </div>
 
+<div class="modalOverlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal" id="modalBox" onclick="event.stopPropagation()"></div>
 </div>
 
-<input id="videoInput" type="file" accept="video/*" hidden onchange="sendSelectedFile(this)">
-<input id="imageInput" type="file" accept="image/*" hidden onchange="sendSelectedFile(this)">
-<input id="documentInput" type="file" accept=".pdf,.doc,.docx,.txt" hidden onchange="sendSelectedFile(this)">
-<input id="audioInput" type="file" accept="audio/*" hidden onchange="sendSelectedFile(this)">
-
-<div class="footerBanner">
-<strong>تواصل أقوى .. في كل مكان</strong>
-<span>Radio Connect - لاسلكي متصل</span>
-</div>
-
-</div>
-
-<nav class="bottomNav">
-
-<button class="navItem active" onclick="goHome()">
-<b>⌂</b>الرئيسية
-</button>
-
-<button class="navItem" onclick="openFavorites()">
-<b>★</b>المفضلة
-</button>
-
-<button class="navItem" onclick="openRooms()">
-<b>📶</b>الموجات
-</button>
-
-<button class="navItem" onclick="openAccount()">
-<b>👤</b>حسابي
-</button>
-
-</nav>
-
-<div id="drawer" class="drawer hidden" onclick="closeDrawer(event)">
-
-<div class="drawerPanel" onclick="event.stopPropagation()">
-
-<div class="drawerHead">
-<strong>Radio Connect</strong>
-<button class="iconbtn" onclick="closeDrawer()">×</button>
-</div>
-
-<div class="menu">
-
-<button onclick="createRoom()">➕ إنشاء غرفة جديدة</button>
-<button onclick="joinRoom()">🔑 الانضمام إلى غرفة</button>
-<button onclick="openRooms()">🏠 قائمة الغرف والموجات</button>
-<button onclick="openMembers()">👥 إدارة الأعضاء</button>
-<button onclick="openAdmin()">🛡️ إعدادات الإشراف</button>
-<button onclick="openSettings()">⚙️ الإعدادات العامة</button>
-
-</div>
-</div>
-</div>
-
-<div id="modalWrap" class="modalWrap hidden">
-<div class="modal" id="modalContent"></div>
-</div>
-
-<div id="toast" class="toast hidden"></div>
+<div class="toast" id="toast"></div>
 
 <script>
+"use strict";
 
-const API=location.origin;
+const API = location.origin;
 
-let deviceId=localStorage.getItem('deviceId')||null;
+let deviceId = localStorage.getItem("deviceId") || null;
+let livekitRoom = null;
+let livekitRoomId = null;
+let localAudioTrack = null;
+let localRawStream = null;
+let talking = false;
+let pttPointerId = null;
+let pttSession = 0;
+let currentRoom = null;
+let connectingPromise = null;
 
-let livekitRoom=null;
-let livekitRoomId=null;
-
-let localAudioTrack=null;
-let localMediaStream=null;
-
-let talking=false;
-let pttPointerId=null;
-let pttSession=0;
-
-let currentRoom=null;
-let voiceMode='natural';
-
-const attachedAudioElements=new Map();
-
-const state={
-rooms:[],
-members:[]
+const state = {
+  rooms: [],
+  members: []
 };
 
-const $=id=>document.getElementById(id);
+const waves = [
+  {name:"موجة العمليات",code:"7F3A"},
+  {name:"موجة الأمن",code:"9K21"},
+  {name:"موجة الدعم",code:"4M88"},
+  {name:"موجة الطوارئ",code:"6P17"}
+];
 
-function toast(msg){
+let waveIndex = 0;
 
-const e=$('toast');
+const $ = id => document.getElementById(id);
 
-if(!e)return;
-
-e.textContent=msg;
-e.classList.remove('hidden');
-
-clearTimeout(window.toastTimer);
-
-window.toastTimer=setTimeout(()=>{
-e.classList.add('hidden');
-},3000);
-
+function toast(message){
+  const el = $("toast");
+  if(!el) return;
+  el.textContent = message;
+  el.classList.add("show");
+  clearTimeout(window.__toastTimer);
+  window.__toastTimer = setTimeout(()=>el.classList.remove("show"),2600);
 }
 
-function openModal(html){
+async function apiFetch(url, options={}){
+  const headers = Object.assign({}, options.headers || {});
+  if(deviceId) headers["x-device-id"] = deviceId;
 
-$('modalContent').innerHTML=html;
-$('modalWrap').classList.remove('hidden');
+  if(options.body && typeof options.body !== "string"){
+    headers["Content-Type"] = "application/json";
+    options.body = JSON.stringify(options.body);
+  }
 
+  const response = await fetch(url,Object.assign({},options,{headers}));
+  let data = {};
+
+  try{
+    data = await response.json();
+  }catch(e){}
+
+  if(!response.ok){
+    throw new Error(data.error || "حدث خطأ في الاتصال بالخادم");
+  }
+
+  return data;
 }
-
-function closeModal(){
-
-$('modalWrap').classList.add('hidden');
-
-}
-
-function openDrawer(){
-
-$('drawer').classList.remove('hidden');
-
-}
-
-function closeDrawer(e){
-
-if(!e||e.target===$('drawer')){
-$('drawer').classList.add('hidden');
-}
-
-}
-
-$('modalWrap').addEventListener('click',e=>{
-
-if(e.target===$('modalWrap')){
-closeModal();
-}
-
-});
-
 
 /* =========================
-   DEVICE
+   الجهاز
 ========================= */
 
 async function registerDevice(){
+  try{
+    const data = await apiFetch("/api/device",{
+      method:"POST",
+      body:{deviceId}
+    });
 
-try{
+    deviceId = data.deviceId;
+    localStorage.setItem("deviceId",deviceId);
 
-const r=await fetch(API+'/api/device',{
-method:'POST',
-headers:{
-'Content-Type':'application/json'
-},
-body:JSON.stringify({
-deviceId
-})
-});
+    $("deviceStatus").textContent = "جاهز";
+    $("connectionStatus").textContent = "متصل بالخادم";
+    $("serverStatus").textContent = "متصل";
 
-const d=await r.json();
-
-if(d.deviceId){
-
-deviceId=d.deviceId;
-
-localStorage.setItem('deviceId',deviceId);
-
+    return true;
+  }catch(error){
+    $("deviceStatus").textContent = "غير متصل";
+    $("connectionStatus").textContent = "خطأ في الخادم";
+    $("serverStatus").textContent = "غير متصل";
+    toast(error.message);
+    return false;
+  }
 }
-
-}catch(e){
-
-console.error('device',e);
-
-}
-
-}
-
 
 /* =========================
-   LIVEKIT AUDIO ELEMENTS
+   الشبكة والبطارية
 ========================= */
 
-function attachRemoteAudio(track,publication){
-
-try{
-
-if(!track)return;
-
-const key=
-publication?.trackSid||
-track.sid||
-('audio-'+Date.now());
-
-if(attachedAudioElements.has(key)){
-
-try{
-attachedAudioElements.get(key).remove();
-}catch(e){}
-
-attachedAudioElements.delete(key);
-
+function updateNetwork(){
+  const online = navigator.onLine;
+  $("networkStatus").textContent = online ? "الإنترنت متصل" : "لا يوجد اتصال بالإنترنت";
+  $("serverStatus").textContent = online ? "متصل" : "غير متصل";
 }
 
-const audio=track.attach();
+async function updateBattery(){
+  try{
+    if(!navigator.getBattery){
+      $("batteryStatus").textContent = "البطارية متاحة";
+      return;
+    }
 
-audio.autoplay=true;
-audio.playsInline=true;
-audio.muted=false;
-audio.volume=1;
-audio.controls=false;
+    const battery = await navigator.getBattery();
 
-audio.style.position='fixed';
-audio.style.width='1px';
-audio.style.height='1px';
-audio.style.opacity='0';
-audio.style.pointerEvents='none';
+    function refresh(){
+      const percent = Math.round(battery.level * 100);
+      $("batteryStatus").textContent =
+        "البطارية " + percent + "%" + (battery.charging ? " • شحن" : "");
+    }
 
-document.body.appendChild(audio);
-
-attachedAudioElements.set(key,audio);
-
-const tryPlay=async()=>{
-
-try{
-await audio.play();
-console.log('Remote audio playing');
-}catch(e){
-console.warn('Remote audio play blocked',e);
+    refresh();
+    battery.addEventListener("levelchange",refresh);
+    battery.addEventListener("chargingchange",refresh);
+  }catch(e){}
 }
 
-};
-
-tryPlay();
-
-return key;
-
-}catch(e){
-
-console.error('attach remote audio',e);
-
-}
-
-}
-
-function detachRemoteAudio(publication,track){
-
-try{
-
-const key=
-publication?.trackSid||
-track?.sid;
-
-if(key&&attachedAudioElements.has(key)){
-
-const el=attachedAudioElements.get(key);
-
-try{
-el.pause();
-}catch(e){}
-
-try{
-el.remove();
-}catch(e){}
-
-attachedAudioElements.delete(key);
-
-}else if(track){
-
-try{
-track.detach().forEach(el=>el.remove());
-}catch(e){}
-
-}
-
-}catch(e){
-
-console.error('detach audio',e);
-
-}
-
-}
-
-function clearRemoteAudio(){
-
-for(const el of attachedAudioElements.values()){
-
-try{
-el.pause();
-}catch(e){}
-
-try{
-el.remove();
-}catch(e){}
-
-}
-
-attachedAudioElements.clear();
-
-}
-
+window.addEventListener("online",updateNetwork);
+window.addEventListener("offline",updateNetwork);
 
 /* =========================
-   LIVEKIT ROOM
+   LiveKit
 ========================= */
-
-async function disconnectLiveKit(){
-
-try{
-
-if(localAudioTrack){
-
-try{
-if(livekitRoom?.localParticipant){
-await livekitRoom.localParticipant.unpublishTrack(localAudioTrack);
-}
-}catch(e){}
-
-try{
-localAudioTrack.stop();
-}catch(e){}
-
-localAudioTrack=null;
-
-}
-
-}catch(e){}
-
-if(localMediaStream){
-
-try{
-localMediaStream.getTracks().forEach(t=>t.stop());
-}catch(e){}
-
-localMediaStream=null;
-
-}
-
-clearRemoteAudio();
-
-if(livekitRoom){
-
-try{
-await livekitRoom.disconnect();
-}catch(e){}
-
-}
-
-livekitRoom=null;
-livekitRoomId=null;
-
-}
 
 async function connectLiveKitRoom(){
+  if(!currentRoom || !currentRoom.id){
+    toast("اختر غرفة أولاً");
+    return false;
+  }
 
-if(!currentRoom)return false;
+  if(livekitRoom && livekitRoomId === currentRoom.id){
+    if(livekitRoom.state === "connected") return true;
+  }
 
-const target=currentRoom.id;
+  if(connectingPromise) return connectingPromise;
 
-if(
-livekitRoom&&
-livekitRoom.state==='connected'&&
-livekitRoomId===target
-){
+  connectingPromise = (async ()=>{
+    try{
+      const response = await fetch(
+        API + "/token?room=" + encodeURIComponent(currentRoom.id),
+        {
+          headers:{
+            "x-device-id":deviceId
+          }
+        }
+      );
 
-return true;
+      let data = {};
+      try{ data = await response.json(); }catch(e){}
 
+      if(!response.ok){
+        throw new Error(data.error || "تعذر الاتصال بالغرفة");
+      }
+
+      if(!window.LivekitClient){
+        throw new Error("تعذر تحميل نظام الصوت");
+      }
+
+      if(livekitRoom){
+        try{ livekitRoom.disconnect(); }catch(e){}
+        livekitRoom = null;
+      }
+
+      const room = new LivekitClient.Room({
+        adaptiveStream:true,
+        dynacast:true
+      });
+
+      room.on(
+        LivekitClient.RoomEvent.TrackSubscribed,
+        (track, publication, participant)=>{
+          if(track.kind === LivekitClient.Track.Kind.Audio){
+            attachRemoteAudio(track);
+          }
+        }
+      );
+
+      room.on(
+        LivekitClient.RoomEvent.TrackUnsubscribed,
+        track=>{
+          try{
+            const elements = track.detach();
+            elements.forEach(el=>{
+              try{el.remove();}catch(e){}
+            });
+          }catch(e){}
+        }
+      );
+
+      room.on(
+        LivekitClient.RoomEvent.DataReceived,
+        (payload, participant, kind, topic)=>{
+          receiveChat(payload,participant,topic);
+        }
+      );
+
+      room.on(
+        LivekitClient.RoomEvent.Disconnected,
+        ()=>{
+          if(livekitRoom === room){
+            $("roomVoice").textContent = "الصوت: غير متصل";
+            livekitRoom = null;
+            livekitRoomId = null;
+          }
+        }
+      );
+
+      await room.connect(data.url,data.token);
+
+      livekitRoom = room;
+      livekitRoomId = currentRoom.id;
+
+      $("roomVoice").textContent = "الصوت: متصل";
+      return true;
+
+    }catch(error){
+      $("roomVoice").textContent = "الصوت: غير متصل";
+      console.error("LiveKit:",error);
+      throw error;
+    }finally{
+      connectingPromise = null;
+    }
+  })();
+
+  return connectingPromise;
 }
 
-if(livekitRoom){
+function attachRemoteAudio(track){
+  try{
+    const elements = track.attach();
 
-await disconnectLiveKit();
+    elements.forEach(audio=>{
+      audio.autoplay = true;
+      audio.playsInline = true;
+      audio.muted = false;
+      audio.volume = 1;
+      audio.style.display = "none";
+      document.body.appendChild(audio);
 
+      const playPromise = audio.play();
+      if(playPromise && playPromise.catch){
+        playPromise.catch(()=>{
+          toast("المس الشاشة مرة واحدة للسماح بتشغيل الصوت");
+        });
+      }
+    });
+  }catch(error){
+    console.error("Remote audio:",error);
+  }
 }
 
-try{
+function receiveChat(payload,participant,topic){
+  if(topic && topic !== "radio-chat") return;
 
-const r=await fetch(
-`${API}/token?room=${encodeURIComponent(target)}`,
-{
-headers:{
-'x-device-id':deviceId||''
+  try{
+    let textData;
+
+    if(payload instanceof Uint8Array){
+      textData = new TextDecoder().decode(payload);
+    }else{
+      textData = new TextDecoder().decode(new Uint8Array(payload));
+    }
+
+    const data = JSON.parse(textData);
+
+    if(data.type !== "radio-chat") return;
+    if(data.senderDeviceId === deviceId) return;
+
+    appendChatMessage(
+      data.text || "",
+      data.senderName || participant?.identity || "عضو",
+      false,
+      data.time || Date.now()
+    );
+  }catch(error){
+    console.error("Chat receive:",error);
+  }
 }
-}
-);
-
-let d={};
-
-try{
-d=await r.json();
-}catch(e){}
-
-if(!r.ok||!d.token){
-
-console.error('Token error',d);
-
-toast(d.error||'تعذر الحصول على تصريح الاتصال');
-
-return false;
-
-}
-
-const room=new LivekitClient.Room({
-
-adaptiveStream:true,
-dynacast:true,
-
-audioCaptureDefaults:{
-echoCancellation:true,
-noiseSuppression:true,
-autoGainControl:true
-},
-
-audioOutputOptions:{
-volume:1
-}
-
-});
-
-
-/* الصوت الوارد */
-
-room.on(
-LivekitClient.RoomEvent.TrackSubscribed,
-(track,publication,participant)=>{
-
-console.log(
-'TrackSubscribed:',
-track.kind,
-participant?.identity
-);
-
-if(
-track.kind===
-LivekitClient.Track.Kind.Audio
-){
-
-attachRemoteAudio(
-track,
-publication
-);
-
-}
-
-}
-);
-
-
-/* إزالة الصوت الوارد */
-
-room.on(
-LivekitClient.RoomEvent.TrackUnsubscribed,
-(track,publication,participant)=>{
-
-console.log(
-'TrackUnsubscribed:',
-participant?.identity
-);
-
-if(
-track.kind===
-LivekitClient.Track.Kind.Audio
-){
-
-detachRemoteAudio(
-publication,
-track
-);
-
-}
-
-}
-);
-
-
-/* بيانات المحادثة */
-
-room.on(
-LivekitClient.RoomEvent.DataReceived,
-(payload,participant,kind,topic)=>{
-
-receiveChatData(
-payload,
-participant,
-kind,
-topic
-);
-
-}
-);
-
-
-/* اتصال */
-
-room.on(
-LivekitClient.RoomEvent.Connected,
-()=>{
-
-console.log('LiveKit connected');
-
-$('connectionValue').textContent='متصل';
-$('serverStatusText').textContent='متصل';
-
-}
-);
-
-
-/* انقطاع */
-
-room.on(
-LivekitClient.RoomEvent.Disconnected,
-reason=>{
-
-console.warn('LiveKit disconnected',reason);
-
-if(livekitRoom===room){
-
-livekitRoom=null;
-livekitRoomId=null;
-
-}
-
-$('connectionValue').textContent='غير متصل';
-$('serverStatusText').textContent='غير متصل';
-
-}
-);
-
-
-/* خطأ */
-
-room.on(
-LivekitClient.RoomEvent.ConnectionStateChanged,
-stateName=>{
-
-console.log('LiveKit state:',stateName);
-
-}
-);
-
-await room.connect(
-d.url,
-d.token,
-{
-autoSubscribe:true
-}
-);
-
-livekitRoom=room;
-livekitRoomId=target;
-
-return true;
-
-}catch(e){
-
-console.error('LiveKit connect error',e);
-
-livekitRoom=null;
-livekitRoomId=null;
-
-$('connectionValue').textContent='غير متصل';
-$('serverStatusText').textContent='غير متصل';
-
-return false;
-
-}
-
-}
-
 
 /* =========================
-   MICROPHONE
+   الميكروفون
 ========================= */
 
 async function requestMicrophone(){
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    throw new Error("المتصفح لا يدعم الميكروفون");
+  }
 
-if(
-!window.isSecureContext&&
-location.hostname!=='localhost'&&
-location.hostname!=='127.0.0.1'
-){
+  const stream = await navigator.mediaDevices.getUserMedia({
+    audio:{
+      echoCancellation:true,
+      noiseSuppression:true,
+      autoGainControl:true,
+      channelCount:1
+    },
+    video:false
+  });
 
-throw new Error('INSECURE_CONTEXT');
-
+  return stream;
 }
 
-if(
-!navigator.mediaDevices||
-typeof navigator.mediaDevices.getUserMedia!=='function'
-){
+async function startTalking(event){
+  if(talking) return;
 
-throw new Error('MEDIA_DEVICES_UNAVAILABLE');
+  if(!currentRoom){
+    toast("اختر غرفة أولاً");
+    return;
+  }
 
+  if(event){
+    pttPointerId = event.pointerId;
+
+    try{
+      $("pttButton").setPointerCapture(event.pointerId);
+    }catch(e){}
+  }
+
+  const mySession = ++pttSession;
+  talking = true;
+
+  $("pttButton").classList.add("active");
+  $("pttText").textContent = "جاري التحدث";
+  $("voiceStatus").textContent = "🎙️ الميكروفون يعمل الآن";
+  $("micIndicator").classList.add("on");
+  $("micIndicatorText").textContent = "الميكروفون يعمل";
+  $("roomVoice").textContent = "الصوت: جاري الإرسال";
+
+  try{
+    const connected = await connectLiveKitRoom();
+
+    if(!connected || mySession !== pttSession || !talking){
+      return;
+    }
+
+    if(localAudioTrack){
+      try{
+        await livekitRoom.localParticipant.unpublishTrack(localAudioTrack);
+      }catch(e){}
+
+      try{localAudioTrack.stop();}catch(e){}
+      localAudioTrack = null;
+    }
+
+    if(localRawStream){
+      localRawStream.getTracks().forEach(t=>t.stop());
+      localRawStream = null;
+    }
+
+    const stream = await requestMicrophone();
+
+    if(mySession !== pttSession || !talking){
+      stream.getTracks().forEach(t=>t.stop());
+      return;
+    }
+
+    localRawStream = stream;
+
+    const rawTrack = stream.getAudioTracks()[0];
+
+    if(!rawTrack){
+      throw new Error("لم يتم العثور على مسار الميكروفون");
+    }
+
+    localAudioTrack = new LivekitClient.LocalAudioTrack(rawTrack);
+
+    localAudioTrack.enable();
+
+    await livekitRoom.localParticipant.publishTrack(
+      localAudioTrack,
+      {
+        name:"radio-microphone",
+        source:LivekitClient.Track.Source.Microphone
+      }
+    );
+
+    $("roomVoice").textContent = "الصوت: إرسال مباشر";
+
+  }catch(error){
+    console.error("PTT:",error);
+
+    talking = false;
+    pttSession++;
+
+    cleanupLocalAudio();
+
+    $("pttButton").classList.remove("active");
+    $("pttText").textContent = "اضغط للتحدث";
+    $("voiceStatus").textContent = "اضغط باستمرار للتحدث";
+    $("micIndicator").classList.remove("on");
+    $("micIndicatorText").textContent = "الميكروفون متوقف";
+    $("roomVoice").textContent = "الصوت: غير متصل";
+
+    if(error.name === "NotAllowedError"){
+      toast("اسمح للتطبيق باستخدام الميكروفون");
+    }else{
+      toast(error.message || "تعذر تشغيل الميكروفون");
+    }
+  }
 }
 
-try{
+async function stopTalking(event){
+  if(event && pttPointerId !== null){
+    if(
+      event.type === "pointerup" &&
+      event.pointerId !== pttPointerId
+    ){
+      return;
+    }
+  }
 
-return await navigator.mediaDevices.getUserMedia({
+  pttSession++;
 
-audio:{
-echoCancellation:true,
-noiseSuppression:true,
-autoGainControl:true,
-channelCount:1
-},
+  talking = false;
+  pttPointerId = null;
 
-video:false
+  try{
+    if(event && event.pointerId !== undefined){
+      $("pttButton").releasePointerCapture(event.pointerId);
+    }
+  }catch(e){}
 
-});
+  cleanupLocalAudio();
 
-}catch(err){
+  $("pttButton").classList.remove("active");
+  $("pttText").textContent = "اضغط للتحدث";
+  $("voiceStatus").textContent = "اضغط باستمرار للتحدث";
+  $("micIndicator").classList.remove("on");
+  $("micIndicatorText").textContent = "الميكروفون متوقف";
 
-console.error('getUserMedia error',err);
-
-if(
-err.name==='NotAllowedError'||
-err.name==='PermissionDeniedError'
-){
-
-throw new Error('MIC_PERMISSION');
-
+  if(livekitRoom && livekitRoom.state === "connected"){
+    $("roomVoice").textContent = "الصوت: متصل";
+  }else{
+    $("roomVoice").textContent = "الصوت: غير متصل";
+  }
 }
 
-if(err.name==='NotFoundError'){
+function cleanupLocalAudio(){
+  if(localAudioTrack){
+    try{
+      if(livekitRoom && livekitRoom.localParticipant){
+        livekitRoom.localParticipant.unpublishTrack(localAudioTrack).catch(()=>{});
+      }
+    }catch(e){}
 
-throw new Error('MIC_NOT_FOUND');
+    try{localAudioTrack.stop();}catch(e){}
+    localAudioTrack = null;
+  }
 
+  if(localRawStream){
+    try{
+      localRawStream.getTracks().forEach(track=>track.stop());
+    }catch(e){}
+
+    localRawStream = null;
+  }
 }
-
-if(err.name==='NotReadableError'){
-
-throw new Error('MIC_BUSY');
-
-}
-
-if(err.name==='SecurityError'){
-
-throw new Error('MIC_SECURITY');
-
-}
-
-throw err;
-
-}
-
-}
-
-
-/* =========================
-   START TALKING
-========================= */
-
-async function startTalking(e){
-
-if(e)e.preventDefault();
-
-if(talking)return;
-
-if(!currentRoom){
-
-toast('يرجى اختيار غرفة أولاً');
-
-return;
-
-}
-
-const session=++pttSession;
-
-pttPointerId=
-e?.pointerId!==undefined?
-e.pointerId:
-null;
-
-const button=$('pttButton');
-
-if(
-e?.pointerId!==undefined&&
-button.setPointerCapture
-){
-
-try{
-button.setPointerCapture(e.pointerId);
-}catch(x){}
-
-}
-
-talking=true;
-
-button.classList.add('talking');
-
-$('pttText').textContent='جارٍ التحدث';
-
-$('waveLeft').classList.add('active');
-$('waveRight').classList.add('active');
-
-try{
-
-/* الاتصال بالغرفة */
-
-const connected=
-await connectLiveKitRoom();
-
-if(
-!talking||
-session!==pttSession
-){
-
-return;
-
-}
-
-if(
-!connected||
-!livekitRoom||
-livekitRoom.state!=='connected'
-){
-
-throw new Error('LIVEKIT_NOT_CONNECTED');
-
-}
-
-
-/* إذا كان هناك مسار قديم */
-
-if(localAudioTrack){
-
-try{
-await livekitRoom.localParticipant.unpublishTrack(
-localAudioTrack
-);
-}catch(x){}
-
-try{
-localAudioTrack.stop();
-}catch(x){}
-
-localAudioTrack=null;
-
-}
-
-
-/* طلب الميكروفون */
-
-const stream=
-await requestMicrophone();
-
-if(
-!talking||
-session!==pttSession
-){
-
-stream.getTracks().forEach(t=>t.stop());
-
-return;
-
-}
-
-localMediaStream=stream;
-
-const raw=
-stream.getAudioTracks()[0];
-
-if(!raw){
-
-stream.getTracks().forEach(t=>t.stop());
-
-localMediaStream=null;
-
-throw new Error('MIC_NOT_FOUND');
-
-}
-
-
-/*
-  LiveKit LocalAudioTrack
-*/
-
-if(
-LivekitClient.createLocalAudioTrack
-){
-
-try{
-
-const liveTrack=
-await LivekitClient.createLocalAudioTrack({
-
-echoCancellation:true,
-noiseSuppression:true,
-autoGainControl:true
-
-});
-
-/*
-  نستخدم الميكروفون الذي طلبناه مباشرة
-  لضمان عمل WebView.
-*/
-
-try{
-liveTrack.stop();
-}catch(x){}
-
-}
-
-}catch(x){
-
-console.warn(
-'createLocalAudioTrack fallback:',
-x
-);
-
-}
-
-}
-
-
-/* إنشاء مسار LiveKit من MediaStreamTrack */
-
-localAudioTrack=
-new LivekitClient.LocalAudioTrack(raw);
-
-localAudioTrack.enabled=true;
-
-await livekitRoom.localParticipant.publishTrack(
-localAudioTrack,
-{
-name:'radio-microphone',
-source:LivekitClient.Track.Source.Microphone
-}
-);
-
-
-/* تحقق من السباق */
-
-if(
-!talking||
-session!==pttSession
-){
-
-try{
-
-await livekitRoom.localParticipant.unpublishTrack(
-localAudioTrack
-);
-
-}catch(x){}
-
-try{
-localAudioTrack.stop();
-}catch(x){}
-
-localAudioTrack=null;
-
-return;
-
-}
-
-console.log('PTT microphone ON');
-
-}catch(err){
-
-console.error(
-'PTT microphone error:',
-err
-);
-
-if(session===pttSession){
-
-if(err.message==='MIC_PERMISSION'){
-
-toast(
-'اسمح للتطبيق باستخدام الميكروفون ثم اضغط مرة أخرى'
-);
-
-}else if(err.message==='MIC_NOT_FOUND'){
-
-toast('لم يتم العثور على ميكروفون');
-
-}else if(err.message==='MIC_BUSY'){
-
-toast('الميكروفون مستخدم حالياً من تطبيق آخر');
-
-}else if(err.message==='MIC_SECURITY'){
-
-toast('صلاحية الميكروفون غير متاحة في التطبيق');
-
-}else if(err.message==='MEDIA_DEVICES_UNAVAILABLE'){
-
-toast('الميكروفون غير متاح في هذا الجهاز');
-
-}else if(err.message==='INSECURE_CONTEXT'){
-
-toast('الاتصال الآمن بالميكروفون غير متاح');
-
-}else if(err.message==='LIVEKIT_NOT_CONNECTED'){
-
-toast('تعذر الاتصال الصوتي بالغرفة');
-
-}else{
-
-toast('تعذر تشغيل الميكروفون');
-
-}
-
-}
-
-await stopTalking();
-
-}
-
-}
-
-
-/* =========================
-   STOP TALKING
-========================= */
-
-async function stopTalking(e){
-
-if(
-e&&
-pttPointerId!==null&&
-e.pointerId!==undefined&&
-e.pointerId!==pttPointerId
-){
-
-return;
-
-}
-
-if(e)e.preventDefault();
-
-++pttSession;
-
-talking=false;
-
-pttPointerId=null;
-
-$('pttButton').classList.remove('talking');
-
-$('pttText').textContent='اضغط للتحدث';
-
-$('waveLeft').classList.remove('active');
-$('waveRight').classList.remove('active');
-
-const track=localAudioTrack;
-
-localAudioTrack=null;
-
-if(track){
-
-try{
-
-if(livekitRoom?.localParticipant){
-
-await livekitRoom.localParticipant.unpublishTrack(
-track
-);
-
-}
-
-}catch(x){
-
-console.warn(
-'unpublish error',
-x
-);
-
-}
-
-try{
-track.stop();
-}catch(x){}
-
-}
-
-if(localMediaStream){
-
-try{
-
-localMediaStream
-.getTracks()
-.forEach(t=>t.stop());
-
-}catch(x){}
-
-localMediaStream=null;
-
-}
-
-}
-
-
-/* =========================
-   MICROPHONE TEST
-========================= */
 
 async function testMicrophone(){
+  try{
+    toast("جاري اختبار الميكروفون...");
 
-try{
+    const stream = await requestMicrophone();
 
-const stream=
-await requestMicrophone();
+    stream.getTracks().forEach(track=>track.stop());
 
-const track=
-stream.getAudioTracks()[0];
-
-if(track){
-
-toast('الميكروفون يعمل بشكل صحيح');
-
-}else{
-
-toast('لم يتم العثور على ميكروفون');
-
+    toast("الميكروفون يعمل وتم السماح بالوصول إليه");
+  }catch(error){
+    if(error.name === "NotAllowedError"){
+      toast("تم رفض إذن الميكروفون. اسمح للتطبيق باستخدامه.");
+    }else{
+      toast(error.message || "تعذر اختبار الميكروفون");
+    }
+  }
 }
-
-stream.getTracks().forEach(t=>t.stop());
-
-}catch(err){
-
-console.error(err);
-
-if(err.message==='MIC_PERMISSION'){
-
-toast(
-'اسمح للتطبيق باستخدام الميكروفون ثم أعد الاختبار'
-);
-
-}else if(err.message==='MIC_NOT_FOUND'){
-
-toast('لم يتم العثور على ميكروفون');
-
-}else if(err.message==='MIC_BUSY'){
-
-toast('الميكروفون مستخدم حالياً');
-
-}else{
-
-toast('تعذر اختبار الميكروفون');
-
-}
-
-}
-
-}
-
 
 /* =========================
-   VOICE MODE
+   الرسائل
 ========================= */
 
-function toggleVoiceMode(mode){
-
-if(mode==='natural'){
-
-const c=$('naturalVoiceToggle').checked;
-
-$('radioVoiceToggle').checked=!c;
-
-$('naturalVoiceStatus').textContent=
-c?'مفعل':'متوقف';
-
-$('radioVoiceStatus').textContent=
-!c?'مفعل':'متوقف';
-
-voiceMode=c?'natural':'radio';
-
-}else{
-
-const c=$('radioVoiceToggle').checked;
-
-$('naturalVoiceToggle').checked=!c;
-
-$('radioVoiceStatus').textContent=
-c?'مفعل':'متوقف';
-
-$('naturalVoiceStatus').textContent=
-!c?'مفعل':'متوقف';
-
-voiceMode=c?'radio':'natural';
-
-}
-
-}
-
-
-/* =========================
-   ROOM UI
-========================= */
-
-function updateRoomUI(){
-
-if(!currentRoom){
-
-$('currentRoomName').textContent='اختر غرفة';
-
-$('waveCodeDisplay').textContent='----';
-
-$('adminCodeCard').classList.add('hidden');
-
-return;
-
-}
-
-$('currentRoomName').textContent=
-currentRoom.name||'العمليات';
-
-$('waveCodeDisplay').textContent=
-currentRoom.roomCode||'68B665';
-
-if(
-currentRoom.isAdmin&&
-currentRoom.adminCode
-){
-
-$('adminCodeCard').classList.remove('hidden');
-
-$('adminCodeDisplay').textContent=
-currentRoom.adminCode;
-
-}else{
-
-$('adminCodeCard').classList.add('hidden');
-
-}
-
-updateMembersUI();
-
-}
-
-function updateMembersUI(){
-
-$('membersCount').textContent=
-`أعضاء الغرفة (${state.members.length})`;
-
-}
-
-
-/* =========================
-   ROOMS
-========================= */
-
-async function loadRooms(){
-
-try{
-
-const r=await fetch(
-API+'/api/rooms',
-{
-headers:{
-'x-device-id':deviceId||''
-}
-}
-);
-
-if(!r.ok){
-
-$('connectionValue').textContent='غير متصل';
-$('serverStatusText').textContent='غير متصل';
-
-return;
-
-}
-
-const d=await r.json();
-
-state.rooms=d.rooms||[];
-
-if(
-state.rooms.length&&
-!currentRoom
-){
-
-await selectRoom(
-state.rooms[0].id
-);
-
-}else if(
-!state.rooms.length
-){
-
-updateRoomUI();
-
-}
-
-}catch(e){
-
-console.error('rooms',e);
-
-$('connectionValue').textContent='غير متصل';
-$('serverStatusText').textContent='غير متصل';
-
-}
-
-}
-
-async function selectRoom(id){
-
-const room=
-state.rooms.find(r=>r.id===id);
-
-if(!room)return;
-
-if(
-currentRoom&&
-currentRoom.id!==room.id
-){
-
-await disconnectLiveKit();
-
-}
-
-currentRoom=room;
-
-updateRoomUI();
-
-await loadMembers();
-
-const connected=
-await connectLiveKitRoom();
-
-if(!connected){
-
-toast('تعذر الاتصال الصوتي بالغرفة');
-
-}else{
-
-toast('تم اختيار '+room.name);
-
-}
-
-}
-
-
-/* =========================
-   MEMBERS
-========================= */
-
-async function loadMembers(){
-
-if(!currentRoom)return;
-
-try{
-
-const r=await fetch(
-API+
-`/api/rooms/${encodeURIComponent(currentRoom.id)}/members`,
-{
-headers:{
-'x-device-id':deviceId||''
-}
-}
-);
-
-if(!r.ok)return;
-
-const d=await r.json();
-
-state.members=d.members||[];
-
-updateMembersUI();
-
-}catch(e){
-
-console.error('members',e);
-
-}
-
-}
-
-
-/* =========================
-   WAVES
-========================= */
-
-function prevWave(){
-
-toast('الموجة السابقة');
-
-}
-
-function nextWave(){
-
-toast('الموجة التالية');
-
-}
-
-
-/* =========================
-   ROOMS MODAL
-========================= */
-
-function openRooms(){
-
-closeDrawer();
-
-let h=
-'<div class="modalHead">'+
-'<strong>الغرف المتاحة</strong>'+
-'<button onclick="closeModal()">×</button>'+
-'</div>';
-
-if(!state.rooms.length){
-
-h+=
-'<div class="empty">لا توجد غرف حالية</div>';
-
-}else{
-
-state.rooms.forEach(r=>{
-
-const id=
-escapeJs(r.id);
-
-h+=
-`<button class="roomItem"
-onclick="selectRoom('${id}');closeModal()">
-<strong>${escapeHtml(r.name||'غرفة')}</strong>
-<span>${r.isOwner?'مالك':r.isAdmin?'مشرف':'عضو'}</span>
-</button>`;
-
-});
-
-}
-
-openModal(h);
-
-}
-
-
-/* =========================
-   CREATE ROOM
-========================= */
-
-function createRoom(){
-
-closeDrawer();
-
-openModal(
-
-'<div class="modalHead">'+
-'<strong>إنشاء غرفة جديدة</strong>'+
-'<button onclick="closeModal()">×</button>'+
-'</div>'+
-
-'<div class="field">'+
-'<label>اسم الغرفة</label>'+
-'<input id="newRoomName" placeholder="مثال: غرفة العمليات">'+
-'</div>'+
-
-'<div class="field">'+
-'<label>اسمك داخل الغرفة</label>'+
-'<input id="ownerNameInput" placeholder="مالك الغرفة">'+
-'</div>'+
-
-'<button class="primary" onclick="submitCreateRoom()">إنشاء الغرفة</button>'
-
-);
-
-}
-
-async function submitCreateRoom(){
-
-const name=
-$('newRoomName').value.trim();
-
-const memberName=
-$('ownerNameInput').value.trim()||
-'مالك الغرفة';
-
-if(!name){
-
-return toast('أدخل اسم الغرفة');
-
-}
-
-try{
-
-const r=await fetch(
-API+'/api/rooms',
-{
-method:'POST',
-headers:{
-'Content-Type':'application/json',
-'x-device-id':deviceId||''
-},
-body:JSON.stringify({
-name,
-memberName
-})
-}
-);
-
-const d=await r.json();
-
-if(!r.ok){
-
-throw Error(
-d.error||'create'
-);
-
-}
-
-closeModal();
-
-await loadRooms();
-
-if(d.room){
-
-currentRoom=d.room;
-
-await loadMembers();
-
-updateRoomUI();
-
-await connectLiveKitRoom();
-
-}
-
-toast('تم إنشاء الغرفة بنجاح');
-
-}catch(e){
-
-console.error(e);
-
-toast('تعذر إنشاء الغرفة');
-
-}
-
-}
-
-
-/* =========================
-   JOIN ROOM
-========================= */
-
-function joinRoom(){
-
-closeDrawer();
-
-openModal(
-
-'<div class="modalHead">'+
-'<strong>الانضمام إلى غرفة</strong>'+
-'<button onclick="closeModal()">×</button>'+
-'</div>'+
-
-'<div class="field">'+
-'<label>رمز الغرفة أو رقم المشرف</label>'+
-'<input id="joinCode" placeholder="أدخل الرمز">'+
-'</div>'+
-
-'<div class="field">'+
-'<label>اسمك</label>'+
-'<input id="joinName" placeholder="اسمك">'+
-'</div>'+
-
-'<button class="primary" onclick="submitJoin()">إرسال طلب الانضمام</button>'
-
-);
-
-}
-
-async function submitJoin(){
-
-const code=
-$('joinCode').value.trim().toUpperCase();
-
-const memberName=
-$('joinName').value.trim()||
-'عضو جديد';
-
-if(!code){
-
-return toast('أدخل الرمز');
-
-}
-
-try{
-
-const r=await fetch(
-API+'/api/rooms/join',
-{
-method:'POST',
-headers:{
-'Content-Type':'application/json',
-'x-device-id':deviceId||''
-},
-body:JSON.stringify({
-code,
-adminCode:code,
-memberName
-})
-}
-);
-
-const d=await r.json();
-
-if(!r.ok){
-
-throw Error(
-d.error||'join'
-);
-
-}
-
-closeModal();
-
-toast(
-d.message||
-'تم إرسال طلب الانضمام'
-);
-
-await loadRooms();
-
-}catch(e){
-
-console.error(e);
-
-toast(
-e.message&&e.message!=='join'?
-e.message:
-'تعذر الانضمام'
-);
-
-}
-
-}
-
-
-/* =========================
-   MEMBERS MODAL
-========================= */
-
-function openMembers(){
-
-closeDrawer();
-
-openModal(
-
-'<div class="modalHead">'+
-'<strong>أعضاء الغرفة</strong>'+
-'<button onclick="closeModal()">×</button>'+
-'</div>'+
-
-'<div id="membersModalList" class="empty">جارٍ التحميل...</div>'
-
-);
-
-renderMembersList();
-
-}
-
-async function renderMembersList(){
-
-const box=
-$('membersModalList');
-
-if(!box)return;
-
-if(!currentRoom){
-
-box.innerHTML=
-'<div class="empty">اختر غرفة أولاً</div>';
-
-return;
-
-}
-
-await loadMembers();
-
-if(!state.members.length){
-
-box.innerHTML=
-'<div class="empty">لا يوجد أعضاء</div>';
-
-return;
-
-}
-
-box.innerHTML=
-state.members.map(m=>
-
-`<div class="memberRow">
-
-<div>
-<strong>${escapeHtml(m.name||'عضو')}</strong>
-<small>(${escapeHtml(m.role||'member')})</small>
-</div>
-
-${
-currentRoom.isAdmin&&
-m.role!=='owner'
-
-?
-
-`<div>
-
-${
-m.status==='pending'
-
-?
-
-`<button
-onclick="approveMember('${escapeJs(m.memberKey)}')"
-style="background:#1f6b3a;color:#fff;padding:4px 8px;border-radius:6px">
-موافقة
-</button>`
-
-:
-''
-}
-
-<button
-onclick="removeMember('${escapeJs(m.memberKey)}')"
-style="background:#63202a;color:#fff;padding:4px 8px;border-radius:6px">
-حذف
-</button>
-
-</div>`
-
-:
-''
-}
-
-</div>`
-
-).join('');
-
-}
-
-async function approveMember(k){
-
-try{
-
-const r=await fetch(
-API+
-`/api/rooms/${encodeURIComponent(currentRoom.id)}/members/${encodeURIComponent(k)}/approve`,
-{
-method:'POST',
-headers:{
-'x-device-id':deviceId||''
-}
-}
-);
-
-const d=await r.json();
-
-toast(
-d.message||
-'تمت الموافقة'
-);
-
-renderMembersList();
-
-}catch(e){
-
-console.error(e);
-
-toast(
-'تعذر تنفيذ الموافقة'
-);
-
-}
-
-}
-
-async function removeMember(k){
-
-try{
-
-const r=await fetch(
-API+
-`/api/rooms/${encodeURIComponent(currentRoom.id)}/members/${encodeURIComponent(k)}`,
-{
-method:'DELETE',
-headers:{
-'x-device-id':deviceId||''
-}
-}
-);
-
-const d=await r.json();
-
-toast(
-d.message||
-'تم حذف العضو'
-);
-
-renderMembersList();
-
-}catch(e){
-
-console.error(e);
-
-toast(
-'تعذر حذف العضو'
-);
-
-}
-
-}
-
-
-/* =========================
-   ADMIN
-========================= */
-
-function openAdmin(){
-
-closeDrawer();
-
-if(
-!currentRoom||
-!currentRoom.isAdmin
-){
-
-return toast(
-'صلاحيات الإدارة للمشرفين فقط'
-);
-
-}
-
-openModal(
-
-'<div class="modalHead">'+
-'<strong>إدارة الغرفة</strong>'+
-'<button onclick="closeModal()">×</button>'+
-'</div>'+
-
-'<button class="secondary" onclick="openMembers()">👥 إدارة الأعضاء والمشرفين</button>'+
-
-'<button class="secondary" onclick="testMicrophone()">🎙️ اختبار الميكروفون</button>'
-
-);
-
-}
-
-
-/* =========================
-   REAL-TIME CHAT
-========================= */
-
-function encodeChatMessage(data){
-
-try{
-
-const json=
-JSON.stringify(data);
-
-return new TextEncoder().encode(json);
-
-}catch(e){
-
-console.error(
-'encode chat',
-e
-);
-
-return null;
-
-}
-
-}
-
-function decodeChatMessage(payload){
-
-try{
-
-if(payload instanceof Uint8Array){
-
-return JSON.parse(
-new TextDecoder().decode(payload)
-);
-
-}
-
-if(payload instanceof ArrayBuffer){
-
-return JSON.parse(
-new TextDecoder().decode(
-new Uint8Array(payload)
-)
-);
-
-}
-
-if(typeof payload==='string'){
-
-return JSON.parse(payload);
-
-}
-
-return null;
-
-}catch(e){
-
-console.error(
-'decode chat',
-e
-);
-
-return null;
-
-}
-
+function appendChatMessage(text,name,mine,time){
+  const container = $("chatMessages");
+  if(!container) return;
+
+  const empty = $("emptyChat");
+  if(empty) empty.remove();
+
+  const bubble = document.createElement("div");
+  bubble.className = mine ? "msg mine" : "msg";
+
+  const nameEl = document.createElement("div");
+  nameEl.className = "msgName";
+  nameEl.textContent = name || (mine ? "أنت" : "عضو");
+
+  const textEl = document.createElement("div");
+  textEl.className = "msgText";
+  textEl.textContent = text;
+
+  const timeEl = document.createElement("div");
+  timeEl.className = "msgTime";
+
+  const date = new Date(time || Date.now());
+  timeEl.textContent = date.toLocaleTimeString("ar-SA",{
+    hour:"2-digit",
+    minute:"2-digit"
+  });
+
+  bubble.appendChild(nameEl);
+  bubble.appendChild(textEl);
+  bubble.appendChild(timeEl);
+
+  container.appendChild(bubble);
+  container.scrollTop = container.scrollHeight;
 }
 
 async function sendChat(){
+  const input = $("chatInput");
+  const textValue = input.value.trim();
 
-const input=
-$('chatInput');
+  if(!textValue) return;
 
-const value=
-input.value.trim();
+  if(!currentRoom){
+    toast("اختر غرفة أولاً");
+    return;
+  }
 
-if(!value)return;
+  try{
+    const connected = await connectLiveKitRoom();
 
-if(!currentRoom){
+    if(!connected || !livekitRoom){
+      toast("لا يوجد اتصال بالغرفة");
+      return;
+    }
 
-toast(
-'اختر غرفة أولاً'
-);
+    const message = {
+      type:"radio-chat",
+      text:textValue,
+      senderDeviceId:deviceId,
+      senderName:"عضو",
+      time:Date.now()
+    };
 
-return;
+    const payload = new TextEncoder().encode(JSON.stringify(message));
 
+    await livekitRoom.localParticipant.publishData(
+      payload,
+      {
+        reliable:true,
+        topic:"radio-chat"
+      }
+    );
+
+    appendChatMessage(textValue,"أنت",true,message.time);
+
+    input.value = "";
+    input.focus();
+
+  }catch(error){
+    console.error("Chat send:",error);
+    toast("تعذر إرسال الرسالة");
+  }
 }
-
-const connected=
-await connectLiveKitRoom();
-
-if(
-!connected||
-!livekitRoom||
-livekitRoom.state!=='connected'
-){
-
-toast(
-'لا يوجد اتصال بالغرفة'
-);
-
-return;
-
-}
-
-try{
-
-const message={
-
-type:'radio-chat',
-
-text:value,
-
-senderDeviceId:deviceId||'',
-
-senderName:'أنت',
-
-time:Date.now()
-
-};
-
-const payload=
-encodeChatMessage(message);
-
-if(!payload){
-
-throw new Error(
-'ENCODE_FAILED'
-);
-
-}
-
-
-/*
-  إرسال الرسالة إلى جميع المشاركين
-  داخل غرفة LiveKit.
-*/
-
-await livekitRoom.localParticipant.publishData(
-payload,
-{
-reliable:true,
-topic:'radio-chat'
-}
-);
-
-
-/*
-  نعرض الرسالة على جهاز المرسل.
-*/
-
-appendChatMessage(
-value,
-'أنت',
-true
-);
-
-input.value='';
-
-}catch(e){
-
-console.error(
-'send chat error',
-e
-);
-
-toast(
-'تعذر إرسال الرسالة'
-);
-
-}
-
-}
-
-function receiveChatData(
-payload,
-participant,
-kind,
-topic
-){
-
-try{
-
-const data=
-decodeChatMessage(payload);
-
-if(!data)return;
-
-if(data.type!=='radio-chat')return;
-
-if(data.senderDeviceId&&
-data.senderDeviceId===deviceId){
-
-return;
-
-}
-
-const sender=
-data.senderName||
-participant?.name||
-participant?.identity||
-'عضو';
-
-appendChatMessage(
-data.text||'',
-sender,
-false,
-data.time
-);
-
-}catch(e){
-
-console.error(
-'receive chat',
-e
-);
-
-}
-
-}
-
-function appendChatMessage(
-textValue,
-sender,
-mine,
-timeValue
-){
-
-const logs=
-$('chatLogs');
-
-if(!logs)return;
-
-const empty=
-$('chatEmpty');
-
-if(empty)empty.remove();
-
-const bubble=
-document.createElement('div');
-
-bubble.className=
-'mgBubble';
-
-bubble.classList.add(
-'mgBubble'
-);
-
-bubble.className=
-mine?
-'msgBubble mine':
-'msgBubble';
-
-const text=
-document.createElement('div');
-
-text.textContent=
-String(textValue||'');
-
-bubble.appendChild(text);
-
-const meta=
-document.createElement('div');
-
-meta.className='msgMeta';
-
-const who=
-document.createElement('span');
-
-who.textContent=
-sender||'عضو';
-
-const when=
-document.createElement('span');
-
-when.textContent=
-timeValue?
-new Date(timeValue).toLocaleTimeString(
-'ar',
-{
-hour:'2-digit',
-minute:'2-digit'
-}
-):
-'الآن';
-
-meta.appendChild(who);
-meta.appendChild(when);
-
-bubble.appendChild(meta);
-
-logs.appendChild(bubble);
-
-logs.scrollTop=
-logs.scrollHeight;
-
-}
-
 
 /* =========================
-   FILES
+   الغرف
+========================= */
+
+async function loadRooms(){
+  try{
+    const data = await apiFetch("/api/rooms");
+    state.rooms = data.rooms || [];
+    return state.rooms;
+  }catch(error){
+    toast(error.message);
+    return [];
+  }
+}
+
+function updateRoomUI(){
+  if(!currentRoom){
+    $("roomName").textContent = "لا توجد غرفة محددة";
+    $("roomCode").textContent = "---";
+    $("roomMembers").textContent = "الأعضاء: 0";
+    $("roomRole").textContent = "غير متصل";
+    return;
+  }
+
+  $("roomName").textContent = currentRoom.name;
+  $("roomCode").textContent = currentRoom.roomCode || currentRoom.id || "---";
+  $("roomMembers").textContent = "الأعضاء: " + (currentRoom.memberCount || 0);
+
+  let role = "عضو";
+  if(currentRoom.isOwner) role = "مالك";
+  else if(currentRoom.isAdmin) role = "مشرف";
+
+  $("roomRole").textContent = role;
+}
+
+async function selectRoom(room){
+  currentRoom = room;
+  localStorage.setItem("currentRoomId",room.id);
+  updateRoomUI();
+
+  closeModal();
+  closeDrawer();
+
+  toast("تم اختيار غرفة: " + room.name);
+
+  try{
+    await connectLiveKitRoom();
+  }catch(error){
+    if(error.message.includes("موافقة")){
+      toast("يجب الحصول على موافقة المشرف أولاً");
+    }
+  }
+}
+
+async function createRoom(){
+  closeDrawer();
+
+  showModal(`
+    <div class="modalTitle">➕ إنشاء غرفة</div>
+    <input id="newRoomName" class="modalInput" placeholder="اسم الغرفة">
+    <input id="newMemberName" class="modalInput" placeholder="اسمك داخل الغرفة">
+    <button class="modalBtn" onclick="submitCreateRoom()">إنشاء الغرفة</button>
+    <button class="modalBtn secondary" onclick="closeModal()">إلغاء</button>
+  `);
+}
+
+async function submitCreateRoom(){
+  const name = $("newRoomName").value.trim();
+  const memberName = $("newMemberName").value.trim();
+
+  if(!name){
+    toast("اكتب اسم الغرفة");
+    return;
+  }
+
+  try{
+    const data = await apiFetch("/api/rooms",{
+      method:"POST",
+      body:{
+        name,
+        memberName
+      }
+    });
+
+    currentRoom = data.room;
+    localStorage.setItem("currentRoomId",data.roomId);
+
+    updateRoomUI();
+    closeModal();
+
+    toast("تم إنشاء الغرفة بنجاح");
+
+    await loadRooms();
+
+    showModal(`
+      <div class="modalTitle">تم إنشاء الغرفة</div>
+      <div class="listItem">
+        <div class="listSub">اسم الغرفة</div>
+        <div class="listName">${escapeHtml(data.room.name)}</div>
+        <div class="listSub" style="margin-top:12px">رمز الغرفة</div>
+        <div class="listName" dir="ltr">${escapeHtml(data.room.roomCode || "---")}</div>
+        <div class="listSub" style="margin-top:12px">رقم تعريف المشرف</div>
+        <div class="listName" dir="ltr">${escapeHtml(data.adminCode || "---")}</div>
+      </div>
+      <button class="modalBtn" onclick="closeModal()">تم</button>
+    `);
+
+  }catch(error){
+    toast(error.message);
+  }
+}
+
+async function joinRoom(){
+  closeDrawer();
+
+  showModal(`
+    <div class="modalTitle">🔗 الانضمام إلى غرفة</div>
+    <input id="joinCode" class="modalInput" placeholder="رمز الغرفة">
+    <input id="joinAdminCode" class="modalInput" placeholder="رقم تعريف المشرف - اختياري">
+    <input id="joinMemberName" class="modalInput" placeholder="اسمك داخل الغرفة">
+    <button class="modalBtn" onclick="submitJoinRoom()">إرسال طلب الانضمام</button>
+    <button class="modalBtn secondary" onclick="closeModal()">إلغاء</button>
+  `);
+}
+
+async function submitJoinRoom(){
+  const code = $("joinCode").value.trim();
+  const adminCode = $("joinAdminCode").value.trim();
+  const memberName = $("joinMemberName").value.trim();
+
+  if(!code && !adminCode){
+    toast("أدخل رمز الغرفة أو رقم تعريف المشرف");
+    return;
+  }
+
+  try{
+    const data = await apiFetch("/api/rooms/join",{
+      method:"POST",
+      body:{
+        code,
+        adminCode,
+        memberName
+      }
+    });
+
+    if(data.status === "pending"){
+      closeModal();
+      toast("تم إرسال طلب الانضمام وبانتظار موافقة المشرف");
+      await loadRooms();
+      return;
+    }
+
+    await loadRooms();
+
+    const room = state.rooms.find(r=>r.id === data.roomId);
+
+    if(room){
+      currentRoom = room;
+      updateRoomUI();
+    }
+
+    closeModal();
+    toast(data.message || "تم الانضمام إلى الغرفة");
+
+  }catch(error){
+    toast(error.message);
+  }
+}
+
+async function openRooms(){
+  closeDrawer();
+
+  const rooms = await loadRooms();
+
+  let html = `
+    <div class="modalTitle">▣ الغرف</div>
+    <div class="roomList">
+  `;
+
+  if(!rooms.length){
+    html += `<div class="emptyChat">لا توجد غرف حالياً</div>`;
+  }else{
+    rooms.forEach(room=>{
+      html += `
+        <div class="listItem">
+          <div class="listHead">
+            <div>
+              <div class="listName">${escapeHtml(room.name)}</div>
+              <div class="listSub">
+                الأعضاء: ${room.memberCount || 0}
+                ${room.isPending ? " • طلب بانتظار الموافقة" : ""}
+              </div>
+            </div>
+            <div class="listSub">${room.isOwner ? "مالك" : room.isAdmin ? "مشرف" : room.isMember ? "عضو" : room.isPending ? "قيد الانتظار" : ""}</div>
+          </div>
+
+          <div class="listActions">
+            ${
+              room.isMember || room.isOwner || room.isAdmin
+              ? `<button class="miniBtn blue" onclick="chooseRoomById('${room.id}')">فتح</button>`
+              : ""
+            }
+
+            ${
+              room.isOwner
+              ? `<button class="miniBtn red" onclick="deleteRoom('${room.id}')">حذف</button>`
+              : ""
+            }
+          </div>
+        </div>
+      `;
+    });
+  }
+
+  html += `
+    </div>
+    <button class="modalBtn" onclick="createRoom()">➕ إنشاء غرفة</button>
+    <button class="modalBtn secondary" onclick="joinRoom()">🔗 الانضمام إلى غرفة</button>
+    <button class="modalBtn secondary" onclick="closeModal()">إغلاق</button>
+  `;
+
+  showModal(html);
+}
+
+async function chooseRoomById(roomId){
+  const rooms = await loadRooms();
+  const room = rooms.find(r=>r.id === roomId);
+
+  if(!room){
+    toast("الغرفة غير موجودة");
+    return;
+  }
+
+  if(!room.isMember && !room.isAdmin && !room.isOwner){
+    toast("ليس لديك صلاحية دخول هذه الغرفة");
+    return;
+  }
+
+  await selectRoom(room);
+}
+
+async function deleteRoom(roomId){
+  if(!confirm("هل تريد حذف الغرفة نهائياً؟")) return;
+
+  try{
+    await apiFetch("/api/rooms/" + encodeURIComponent(roomId),{
+      method:"DELETE"
+    });
+
+    if(currentRoom && currentRoom.id === roomId){
+      currentRoom = null;
+      updateRoomUI();
+
+      if(livekitRoom){
+        try{livekitRoom.disconnect();}catch(e){}
+      }
+
+      livekitRoom = null;
+      livekitRoomId = null;
+    }
+
+    await loadRooms();
+    closeModal();
+
+    toast("تم حذف الغرفة");
+  }catch(error){
+    toast(error.message);
+  }
+}
+
+/* =========================
+   الأعضاء
+========================= */
+
+async function openMembers(){
+  closeDrawer();
+
+  if(!currentRoom){
+    toast("اختر غرفة أولاً");
+    return;
+  }
+
+  try{
+    const data = await apiFetch(
+      "/api/rooms/" + encodeURIComponent(currentRoom.id) + "/members"
+    );
+
+    state.members = data.members || [];
+
+    let html = `<div class="modalTitle">👥 أعضاء الغرفة</div><div class="memberList">`;
+
+    if(!state.members.length){
+      html += `<div class="emptyChat">لا يوجد أعضاء</div>`;
+    }
+
+    state.members.forEach(member=>{
+      const roleText =
+        member.role === "owner" ? "مالك" :
+        member.role === "admin" ? "مشرف" : "عضو";
+
+      const statusText =
+        member.status === "approved" ? "مقبول" : "بانتظار الموافقة";
+
+      html += `
+        <div class="listItem">
+          <div class="listHead">
+            <div>
+              <div class="listName">${escapeHtml(member.name || "عضو")}</div>
+              <div class="listSub">${roleText} • ${statusText}</div>
+            </div>
+          </div>
+
+          <div class="listActions">
+            ${
+              (currentRoom.isOwner || currentRoom.isAdmin) &&
+              member.status === "pending"
+              ? `<button class="miniBtn blue" onclick="approveMember('${member.memberKey}')">موافقة</button>`
+              : ""
+            }
+
+            ${
+              currentRoom.isOwner &&
+              member.role !== "owner"
+              ? `
+                <button class="miniBtn" onclick="changeMemberRole('${member.memberKey}','${member.role === "admin" ? "member" : "admin"}')">
+                  ${member.role === "admin" ? "سحب الإشراف" : "ترقية لمشرف"}
+                </button>
+              `
+              : ""
+            }
+
+            ${
+              (currentRoom.isOwner || currentRoom.isAdmin) &&
+              member.role !== "owner"
+              ? `<button class="miniBtn red" onclick="removeMember('${member.memberKey}')">حذف</button>`
+              : ""
+            }
+          </div>
+        </div>
+      `;
+    });
+
+    html += `
+      </div>
+      <button class="modalBtn secondary" onclick="closeModal()">إغلاق</button>
+    `;
+
+    showModal(html);
+
+  }catch(error){
+    toast(error.message);
+  }
+}
+
+async function approveMember(memberKey){
+  try{
+    await apiFetch(
+      "/api/rooms/" + encodeURIComponent(currentRoom.id) +
+      "/members/" + encodeURIComponent(memberKey) + "/approve",
+      {method:"POST"}
+    );
+
+    toast("تمت الموافقة على العضو");
+    await openMembers();
+
+  }catch(error){
+    toast(error.message);
+  }
+}
+
+async function removeMember(memberKey){
+  if(!confirm("هل تريد حذف هذا العضو من الغرفة؟")) return;
+
+  try{
+    await apiFetch(
+      "/api/rooms/" + encodeURIComponent(currentRoom.id) +
+      "/members/" + encodeURIComponent(memberKey),
+      {method:"DELETE"}
+    );
+
+    toast("تم حذف العضو");
+    await openMembers();
+
+  }catch(error){
+    toast(error.message);
+  }
+}
+
+async function changeMemberRole(memberKey,newRole){
+  try{
+    await apiFetch(
+      "/api/rooms/" + encodeURIComponent(currentRoom.id) +
+      "/members/" + encodeURIComponent(memberKey) + "/role",
+      {
+        method:"POST",
+        body:{newRole}
+      }
+    );
+
+    toast(newRole === "admin" ? "تمت ترقية العضو" : "تم سحب صلاحية الإشراف");
+    await openMembers();
+
+  }catch(error){
+    toast(error.message);
+  }
+}
+
+/* =========================
+   التحكم والإدارة
+========================= */
+
+function openAdmin(){
+  closeDrawer();
+
+  if(!currentRoom){
+    toast("اختر غرفة أولاً");
+    return;
+  }
+
+  if(!currentRoom.isAdmin && !currentRoom.isOwner){
+    toast("هذه الصفحة للمشرفين والمالك فقط");
+    return;
+  }
+
+  showModal(`
+    <div class="modalTitle">🛡️ التحكم والإدارة</div>
+
+    <div class="listItem">
+      <div class="listSub">الغرفة</div>
+      <div class="listName">${escapeHtml(currentRoom.name)}</div>
+      <div class="listSub" style="margin-top:10px">رمز الغرفة</div>
+      <div class="listName" dir="ltr">${escapeHtml(currentRoom.roomCode || currentRoom.id)}</div>
+    </div>
+
+    <button class="modalBtn" onclick="openMembers()">👥 إدارة الأعضاء</button>
+    ${
+      currentRoom.isOwner
+      ? `<button class="modalBtn danger" onclick="deleteRoom('${currentRoom.id}')">حذف الغرفة</button>`
+      : ""
+    }
+    <button class="modalBtn secondary" onclick="closeModal()">إغلاق</button>
+  `);
+}
+
+/* =========================
+   الملفات
 ========================= */
 
 function chooseFile(id){
-
-$(id)?.click();
-
+  const input = $(id);
+  if(input) input.click();
 }
 
-function sendSelectedFile(i){
+function sendSelectedFile(input,type){
+  if(!input.files || !input.files[0]) return;
 
-if(i.files?.[0]){
+  const file = input.files[0];
 
-toast(
-'تم اختيار: '+
-i.files[0].name
-);
+  toast("تم اختيار " + type + ": " + file.name);
 
+  /*
+    الخادم الحالي لا يحتوي على API لرفع الملفات.
+    لذلك لا يتم إرسال الملف فعلياً للطرف الآخر هنا.
+  */
+
+  input.value = "";
 }
-
-i.value='';
-
-}
-
 
 /* =========================
-   CONTACTS
+   جهات الاتصال والإعدادات
 ========================= */
 
 function openContacts(){
-
-openModal(
-
-'<div class="modalHead">'+
-'<strong>جهات الاتصال</strong>'+
-'<button onclick="closeModal()">×</button>'+
-'</div>'+
-
-'<div class="empty">الدليل المحلي</div>'+
-
-'<button class="primary" onclick="closeModal()">إغلاق</button>'
-
-);
-
+  showModal(`
+    <div class="modalTitle">👥 جهات الاتصال</div>
+    <div class="emptyChat">يمكنك التواصل مع أعضاء الغرفة الحالية من خلال المحادثة والصوت.</div>
+    <button class="modalBtn secondary" onclick="closeModal()">إغلاق</button>
+  `);
 }
-
-
-/* =========================
-   SETTINGS
-========================= */
 
 function openSettings(){
+  showModal(`
+    <div class="modalTitle">⚙️ الإعدادات</div>
 
-closeDrawer();
+    <div class="listItem">
+      <div class="listSub">الصوت</div>
+      <div class="listName">إلغاء الصدى وتقليل الضوضاء مفعّلان</div>
+    </div>
 
-openModal(
+    <div class="listItem">
+      <div class="listSub">الجهاز</div>
+      <div class="listName" dir="ltr">${escapeHtml(deviceId || "---")}</div>
+    </div>
 
-'<div class="modalHead">'+
-'<strong>الإعدادات العامة</strong>'+
-'<button onclick="closeModal()">×</button>'+
-'</div>'+
-
-'<div class="field">'+
-'<label>الصوت</label>'+
-'<button class="secondary" onclick="testMicrophone()">🎙️ اختبار الميكروفون</button>'+
-'</div>'+
-
-'<div class="field">'+
-'<label>الاتصال</label>'+
-'<div class="empty">الخادم: متصل عبر HTTPS</div>'+
-'</div>'+
-
-'<button class="primary" onclick="closeModal()">حفظ وإغلاق</button>'
-
-);
-
+    <button class="modalBtn" onclick="testMicrophone()">🎙️ اختبار الميكروفون</button>
+    <button class="modalBtn secondary" onclick="closeModal()">إغلاق</button>
+  `);
 }
-
-
-/* =========================
-   ACCOUNT
-========================= */
 
 function openAccount(){
+  showModal(`
+    <div class="modalTitle">● حسابي</div>
 
-openModal(
+    <div class="listItem">
+      <div class="listSub">معرف الجهاز</div>
+      <div class="listName" dir="ltr">${escapeHtml(deviceId || "---")}</div>
+    </div>
 
-'<div class="modalHead">'+
-'<strong>حسابي</strong>'+
-'<button onclick="closeModal()">×</button>'+
-'</div>'+
+    <div class="listItem">
+      <div class="listSub">حالة الجهاز</div>
+      <div class="listName">جاهز للاستخدام</div>
+    </div>
 
-'<div class="empty">بيانات الجهاز الحالية</div>'+
-
-'<div class="field">'+
-'<label>معرف الجهاز الداخلي</label>'+
-
-'<input readonly value="'+
-escapeHtml(deviceId||'غير متوفر')+
-'">'+
-
-'</div>'
-
-);
-
+    <button class="modalBtn secondary" onclick="closeModal()">إغلاق</button>
+  `);
 }
 
+async function openFavorites(){
+  await loadRooms();
 
-/* =========================
-   FAVORITES
-========================= */
+  const favorites = state.rooms.filter(room=>room.favorite);
 
-function openFavorites(){
-
-openModal(
-
-'<div class="modalHead">'+
-'<strong>المفضلة</strong>'+
-'<button onclick="closeModal()">×</button>'+
-'</div>'+
-
-'<div class="empty">القائمة المفضلة</div>'
-
-);
-
+  showModal(`
+    <div class="modalTitle">★ المفضلة</div>
+    ${
+      favorites.length
+      ? `<div class="roomList">
+          ${favorites.map(room=>`
+            <div class="listItem">
+              <div class="listName">${escapeHtml(room.name)}</div>
+              <div class="listActions">
+                <button class="miniBtn blue" onclick="chooseRoomById('${room.id}')">فتح</button>
+              </div>
+            </div>
+          `).join("")}
+        </div>`
+      : `<div class="emptyChat">لا توجد غرف مفضلة محفوظة.</div>`
+    }
+    <button class="modalBtn secondary" onclick="closeModal()">إغلاق</button>
+  `);
 }
 
+/* =========================
+   الموجات
+========================= */
+
+function renderWave(){
+  const wave = waves[waveIndex];
+
+  $("waveName").textContent = wave.name;
+  $("waveCode").textContent = wave.code;
+}
+
+function nextWave(){
+  waveIndex = (waveIndex + 1) % waves.length;
+  renderWave();
+  toast("تم تغيير الموجة إلى " + waves[waveIndex].name);
+}
+
+function prevWave(){
+  waveIndex = (waveIndex - 1 + waves.length) % waves.length;
+  renderWave();
+  toast("تم تغيير الموجة إلى " + waves[waveIndex].name);
+}
+
+function toggleWaveFavorite(){
+  const btn = $("waveFavoriteBtn");
+
+  if(btn.textContent.includes("إضافة")){
+    btn.textContent = "★ الموجة في المفضلة";
+    toast("تمت إضافة الموجة للمفضلة");
+  }else{
+    btn.textContent = "☆ إضافة للمفضلة";
+    toast("تمت إزالة الموجة من المفضلة");
+  }
+}
 
 /* =========================
-   HOME
+   القائمة والنوافذ
 ========================= */
+
+function toggleDrawer(){
+  $("drawerOverlay").classList.toggle("show");
+}
+
+function closeDrawer(event){
+  if(event && event.target !== $("drawerOverlay")) return;
+  $("drawerOverlay").classList.remove("show");
+}
+
+function showModal(html){
+  $("modalBox").innerHTML = html;
+  $("modalOverlay").classList.add("show");
+}
+
+function closeModal(event){
+  if(event && event.target !== $("modalOverlay")) return;
+  $("modalOverlay").classList.remove("show");
+}
 
 function goHome(){
-
-closeModal();
-
-closeDrawer();
-
-window.scrollTo({
-top:0,
-behavior:'smooth'
-});
-
+  closeModal();
+  closeDrawer();
+  window.scrollTo({top:0,behavior:"smooth"});
 }
 
+function escapeHtml(value){
+  return String(value || "")
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&#039;");
+}
 
 /* =========================
-   BATTERY
-========================= */
-
-async function getBattery(){
-
-try{
-
-if(navigator.getBattery){
-
-const b=
-await navigator.getBattery();
-
-const update=()=>{
-
-$('batteryValue').textContent=
-Math.round(
-b.level*100
-)+'%';
-
-};
-
-update();
-
-b.addEventListener(
-'levelchange',
-update
-);
-
-}
-
-}catch(e){}
-
-}
-
-
-/* =========================
-   NETWORK
-========================= */
-
-function detectNetwork(){
-
-try{
-
-$('networkValue').textContent=
-String(
-navigator.connection?.effectiveType||
-'3g'
-).toUpperCase();
-
-}catch(e){}
-
-}
-
-
-/* =========================
-   ESCAPE
-========================= */
-
-function escapeHtml(v){
-
-return String(v??'').replace(
-/[&<>'"]/g,
-c=>({
-
-'&':'&amp;',
-'<':'&lt;',
-'>':'&gt;',
-"'":'&#39;',
-'"':'&quot;'
-
-}[c])
-);
-
-}
-
-function escapeJs(v){
-
-return String(v??'')
-.replace(/\\/g,'\\\\')
-.replace(/'/g,"\\'");
-
-}
-
-
-/* =========================
-   PAGE CLEANUP
-========================= */
-
-window.addEventListener(
-'beforeunload',
-()=>{
-
-try{
-
-if(livekitRoom){
-
-livekitRoom.disconnect();
-
-}
-
-}catch(e){}
-
-}
-);
-
-document.addEventListener(
-'visibilitychange',
-()=>{
-
-if(document.visibilityState==='visible'){
-
-/*
-  عند العودة للتطبيق نحاول التأكد
-  من بقاء الاتصال بالغرفة.
-*/
-
-if(
-currentRoom&&
-(!livekitRoom||
-livekitRoom.state!=='connected')
-){
-
-connectLiveKitRoom()
-.catch(console.error);
-
-}
-
-}
-
-}
-);
-
-
-/* =========================
-   INIT
+   بدء التطبيق
 ========================= */
 
 async function init(){
+  updateNetwork();
+  updateBattery();
+  renderWave();
 
-await registerDevice();
+  const ok = await registerDevice();
 
-getBattery();
+  if(!ok) return;
 
-detectNetwork();
+  await loadRooms();
 
-await loadRooms();
+  const savedRoomId = localStorage.getItem("currentRoomId");
 
-if(!currentRoom){
+  if(savedRoomId){
+    const savedRoom = state.rooms.find(room=>room.id === savedRoomId);
 
-$('currentRoomName').textContent=
-'اختر غرفة';
+    if(savedRoom && (savedRoom.isMember || savedRoom.isAdmin || savedRoom.isOwner)){
+      currentRoom = savedRoom;
+      updateRoomUI();
 
+      /*
+       * الاتصال يتم هنا حتى يستطيع الجهاز استقبال
+       * الصوت والرسائل من بقية أعضاء الغرفة.
+       */
+      connectLiveKitRoom().catch(error=>{
+        console.log("الاتصال الصوتي:",error.message);
+      });
+    }
+  }
 }
 
-}
+document.addEventListener("visibilitychange",()=>{
+  if(document.visibilityState === "visible" && currentRoom){
+    if(!livekitRoom || livekitRoom.state !== "connected"){
+      connectLiveKitRoom().catch(()=>{});
+    }
+  }
+});
+
+window.addEventListener("beforeunload",()=>{
+  try{
+    cleanupLocalAudio();
+    if(livekitRoom) livekitRoom.disconnect();
+  }catch(e){}
+});
 
 init();
-
 </script>
 
 </body>
