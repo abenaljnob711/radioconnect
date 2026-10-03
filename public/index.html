@@ -708,7 +708,6 @@
     .hidden {
       display: none!important;
     }
-    /* تحسين خيارات قائمة المحادثة لتصحيح اتجاه الرسائل */
     #chatMessages {
       display: flex;
       flex-direction: column;
@@ -1282,14 +1281,15 @@
     $("audioTestButton").onclick = startAudioTest;
   }
 
+  // إصلاح دالة اختبار الرسائل لتعمل بشكل مباشر
   async function testMessage() {
     try {
-      const response = await fetch(API + "/health");
+      const response = await fetch(API + "/api/rooms?deviceId=" + encodeURIComponent(deviceId || "test"));
       if (response.ok) {
         markTest("message", "messageTestBtn");
-        toast("اختبار الاتصال بالرسائل نجح");
+        toast("اختبار الاتصال بالرسائل نجح ✅");
       } else {
-        toast("تعذر اختبار الاتصال");
+        toast("تعذر اختبار الاتصال بالخادم");
       }
     } catch (error) {
       toast("لا يوجد اتصال بالخادم");
@@ -1552,7 +1552,6 @@
           }
         });
 
-        // إصلاح استقبال الرسائل وتأكيد تفكيك البيانات بالكامل
         livekitRoom.on(window.LivekitClient.RoomEvent.DataReceived, (payload) => {
           try {
             const text = new TextDecoder("utf-8").decode(payload);
@@ -1907,7 +1906,6 @@
     openModal("chatModal");
   }
 
-  // إصلاح دالة إضافة واستعراض الرسائل
   function appendMessageToUI(message, senderName, isMine) {
     const box = $("chatMessages");
     const empty = box.querySelector(".empty");
