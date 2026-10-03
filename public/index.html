@@ -382,269 +382,627 @@ console.error(e);
 }
 }
 
+
+/* =========================================================
+   🔊 كود الصوت الجديد فقط
+   ========================================================= */
+
 async function disconnectLiveKit(){
+
 if(livekitRoom){
+
 try{
 await livekitRoom.disconnect();
-}catch(e){}
+}catch(e){
+console.warn('LiveKit disconnect error',e);
 }
+
+}
+
 livekitRoom=null;
 livekitRoomId=null;
 }
 
+
+/* تشغيل الصوت القادم من المشاركين */
+function enableRemoteAudio(track){
+
+try{
+
+const element=track.attach();
+
+element.autoplay=true;
+element.playsInline=true;
+element.muted=false;
+element.volume=1;
+element.controls=false;
+
+element.style.display='none';
+
+document.body.appendChild(element);
+
+const playAudio=()=>{
+element.muted=false;
+element.volume=1;
+
+const p=element.play();
+
+if(p&&p.catch){
+p.catch(err=>{
+console.warn('Audio autoplay blocked',err);
+});
+}
+};
+
+playAudio();
+
+/*
+ * محاولة تشغيل الصوت بعد أول تفاعل
+ * مع الشاشة في حال منع المتصفح التشغيل التلقائي.
+ */
+document.addEventListener('click',playAudio,{once:true});
+document.addEventListener('touchstart',playAudio,{once:true});
+
+}catch(err){
+
+console.error('Remote audio error:',err);
+
+}
+}
+
+
 async function connectLiveKitRoom(){
-if(!currentRoom)return false;
+
+if(!currentRoom){
+return false;
+}
 
 const target=currentRoom.id;
 
-if(livekitRoom&&livekitRoom.state==='connected'&&livekitRoomId===target){
+
+/*
+ * إذا كان الاتصال الحالي هو نفس الغرفة
+ * لا نعيد الاتصال.
+ */
+if(
+livekitRoom&&
+livekitRoom.state==='connected'&&
+livekitRoomId===target
+){
 return true;
 }
+
 
 if(livekitRoom){
 await disconnectLiveKit();
 }
 
+
 try{
-const r=await fetch(
+
+const response=await fetch(
 `${API}/token?room=${encodeURIComponent(target)}`,
 {
-headers:{'x-device-id':deviceId||''}
+headers:{
+'x-device-id':deviceId||''
+}
 }
 );
 
-let d={};
 
-try{
-d=await r.json();
-}catch(e){}
-
-if(!r.ok||!d.token){
-console.error('Token error',d);
-return false;
+if(!response.ok){
+throw new Error('TOKEN_REQUEST_FAILED');
 }
+
+
+const data=await response.json();
+
+
+if(!data.token){
+throw new Error('TOKEN_MISSING');
+}
+
 
 const room=new LivekitClient.Room({
 adaptiveStream:true,
 dynacast:true
 });
 
+
+/*
+ * استقبال صوت أي مشارك آخر.
+ */
 room.on(
 LivekitClient.RoomEvent.TrackSubscribed,
-track=>{
-if(track.kind===LivekitClient.Track.Kind.Audio){
-const a=track.attach();
-a.autoplay=true;
-a.playsInline=true;
-a.controls=false;
-a.muted=false;
-a.volume=1;
-a.style.display='none';
-document.body.appendChild(a);
+(track,publication,participant)=>{
 
-const playAudio=()=>{
-a.play().catch(err=>{
-console.warn('Audio autoplay blocked',err);
-});
-};
+console.log(
+'تم استقبال صوت من:',
+participant?.identity||'مشارك'
+);
 
-playAudio();
+if(
+track.kind===
+LivekitClient.Track.Kind.Audio
+){
+
+enableRemoteAudio(track);
+
 }
+
 }
 );
 
+
+/*
+ * إزالة الصوت عند إلغاء الاشتراك.
+ */
+room.on(
+LivekitClient.RoomEvent.TrackUnsubscribed,
+track=>{
+
+try{
+
+track.detach().forEach(
+element=>element.remove()
+);
+
+}catch(e){}
+
+}
+);
+
+
+/*
+ * عند الاتصال.
+ */
+room.on(
+LivekitClient.RoomEvent.Connected,
+()=>{
+
+console.log('LiveKit متصل');
+
+}
+);
+
+
+/*
+ * عند انقطاع الاتصال.
+ */
 room.on(
 LivekitClient.RoomEvent.Disconnected,
 ()=>{
+
+console.log('LiveKit انقطع');
+
 if(livekitRoom===room){
+
 livekitRoom=null;
 livekitRoomId=null;
+
 }
+
+talking=false;
+
+try{
+
+$('pttButton').classList.remove('talking');
+$('pttText').textContent='اضغط للتحدث';
+$('waveLeft').classList.remove('active');
+$('waveRight').classList.remove('active');
+
+}catch(e){}
+
 }
 );
 
-await room.connect(d.url,d.token);
+
+/*
+ * الاتصال بالخادم.
+ */
+await room.connect(
+data.url,
+data.token
+);
+
 
 livekitRoom=room;
 livekitRoomId=target;
 
+
+console.log(
+'تم الاتصال بالغرفة الصوتية'
+);
+
+
 return true;
 
+
 }catch(e){
-console.error('LiveKit connect error',e);
+
+console.error(
+'LiveKit connect error:',
+e
+);
+
 livekitRoom=null;
 livekitRoomId=null;
+
 return false;
+
 }
 }
 
+
+/* طلب الميكروفون */
 async function requestMicrophone(){
-if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
-throw new Error('MEDIA_DEVICES_UNAVAILABLE');
+
+if(
+!navigator.mediaDevices||
+!navigator.mediaDevices.getUserMedia
+){
+
+throw new Error(
+'MEDIA_DEVICES_UNAVAILABLE'
+);
+
 }
+
 
 try{
-return await navigator.mediaDevices.getUserMedia({
+
+const stream=
+await navigator.mediaDevices.getUserMedia({
+
 audio:{
 echoCancellation:true,
 noiseSuppression:true,
 autoGainControl:true,
 channelCount:1
-}
+},
+
+video:false
+
 });
+
+
+return stream;
+
+
 }catch(err){
-console.error('getUserMedia error',err);
+
+console.error(
+'getUserMedia error:',
+err
+);
+
 
 if(
 err.name==='NotAllowedError'||
 err.name==='PermissionDeniedError'
 ){
-throw new Error('MIC_PERMISSION');
+
+throw new Error(
+'MIC_PERMISSION'
+);
+
 }
+
 
 if(err.name==='NotFoundError'){
-throw new Error('MIC_NOT_FOUND');
+
+throw new Error(
+'MIC_NOT_FOUND'
+);
+
 }
+
 
 if(err.name==='NotReadableError'){
-throw new Error('MIC_BUSY');
+
+throw new Error(
+'MIC_BUSY'
+);
+
 }
+
 
 throw err;
+
 }
 }
 
+
+/* بدء التحدث */
 async function startTalking(e){
-if(e)e.preventDefault();
 
-if(talking)return;
+if(e){
+e.preventDefault();
+}
 
-if(!currentRoom){
-toast('يرجى اختيار غرفة أولاً');
+
+if(talking){
 return;
 }
 
-const session=++pttSession;
 
-pttPointerId=e?.pointerId??null;
+if(!currentRoom){
 
-const b=$('pttButton');
+toast(
+'يرجى اختيار غرفة أولاً'
+);
 
-if(
-e?.pointerId!==undefined&&
-b.setPointerCapture
-){
-try{
-b.setPointerCapture(e.pointerId);
-}catch(x){}
+return;
+
 }
 
-talking=true;
 
-b.classList.add('talking');
-$('pttText').textContent='جارٍ التحدث';
-$('waveLeft').classList.add('active');
-$('waveRight').classList.add('active');
+/*
+ * رقم جلسة يمنع تشغيل جلسة صوت قديمة
+ * بعد رفع الإصبع.
+ */
+const session=++pttSession;
+
+
+pttPointerId=
+e?.pointerId??null;
+
+
+const button=$('pttButton');
+
+
+/*
+ * نستخدم Pointer Capture فقط حتى
+ * يستمر الضغط أثناء تحريك الإصبع.
+ */
+if(
+e?.pointerId!==undefined&&
+button.setPointerCapture
+){
 
 try{
 
+button.setPointerCapture(
+e.pointerId
+);
+
+}catch(x){}
+
+}
+
+
 /*
- * الصوت يبدأ من هنا:
- * 1- الاتصال بالغرفة
- * 2- طلب الميكروفون
- * 3- إنشاء مسار LiveKit
- * 4- نشر الميكروفون للمشاركين
+ * إظهار إشارة المايك فوراً.
  */
+talking=true;
 
-const connected=await connectLiveKitRoom();
+button.classList.add(
+'talking'
+);
 
-if(!talking||session!==pttSession)return;
+$('pttText').textContent=
+'جارٍ التحدث';
+
+$('waveLeft').classList.add(
+'active'
+);
+
+$('waveRight').classList.add(
+'active'
+);
+
+
+try{
+
+
+/*
+ * الاتصال بالغرفة.
+ */
+const connected=
+await connectLiveKitRoom();
+
+
+if(
+!talking||
+session!==pttSession
+){
+
+return;
+
+}
+
 
 if(
 !connected||
 !livekitRoom||
 livekitRoom.state!=='connected'
 ){
-throw new Error('LIVEKIT_NOT_CONNECTED');
+
+throw new Error(
+'LIVEKIT_NOT_CONNECTED'
+);
+
 }
 
+
 /*
- * نطلب إذن الميكروفون قبل تشغيله.
+ * طلب إذن الميكروفون.
  */
-const stream=await requestMicrophone();
+const stream=
+await requestMicrophone();
 
-if(!talking||session!==pttSession){
-stream.getTracks().forEach(t=>t.stop());
+
+if(
+!talking||
+session!==pttSession
+){
+
+stream
+.getTracks()
+.forEach(track=>track.stop());
+
 return;
+
 }
 
-const raw=stream.getAudioTracks()[0];
 
-if(!raw){
-stream.getTracks().forEach(t=>t.stop());
-throw new Error('MIC_NOT_FOUND');
+const rawTrack=
+stream.getAudioTracks()[0];
+
+
+if(!rawTrack){
+
+stream
+.getTracks()
+.forEach(track=>track.stop());
+
+throw new Error(
+'MIC_NOT_FOUND'
+);
+
 }
+
+
+console.log(
+'🎙️ Microphone:',
+rawTrack.label
+);
+
 
 /*
- * استخدام LiveKit المحلي مباشرة لإرسال الصوت.
+ * إنشاء مسار LiveKit من الميكروفون.
  */
 localAudioTrack=
-new LivekitClient.LocalAudioTrack(raw);
+new LivekitClient.LocalAudioTrack(
+rawTrack,
+{
+name:'radio-microphone'
+}
+);
+
 
 /*
- * تأكيد أن المسار يعمل.
+ * تأكيد أن المسار فعال.
  */
 localAudioTrack.enable();
 
-await livekitRoom.localParticipant.publishTrack(
+
+/*
+ * نشر الميكروفون للمشاركين.
+ */
+await livekitRoom
+.localParticipant
+.publishTrack(
 localAudioTrack,
 {
 name:'radio-microphone',
-source:LivekitClient.Track.Source.Microphone
+source:
+LivekitClient.Track.Source.Microphone
 }
 );
 
-if(!talking||session!==pttSession){
+
+console.log(
+'🎙️ تم نشر الميكروفون عبر LiveKit'
+);
+
+
+/*
+ * إذا انتهى الضغط أثناء انتظار الإذن
+ * يتم إيقاف المسار مباشرة.
+ */
+if(
+!talking||
+session!==pttSession
+){
 
 try{
-await livekitRoom.localParticipant.unpublishTrack(
+
+await livekitRoom
+.localParticipant
+.unpublishTrack(
 localAudioTrack
 );
+
 }catch(x){}
+
 
 try{
 localAudioTrack.stop();
 }catch(x){}
 
+
 localAudioTrack=null;
+
 return;
+
 }
 
-console.log('PTT microphone ON');
 
 }catch(err){
 
-console.error('PTT microphone error',err);
+console.error(
+'PTT microphone error:',
+err
+);
+
 
 if(session===pttSession){
 
-if(err.message==='MIC_PERMISSION'){
-toast('اسمح للمتصفح باستخدام الميكروفون ثم اضغط مرة أخرى');
-}else if(err.message==='MIC_NOT_FOUND'){
-toast('لم يتم العثور على ميكروفون');
-}else if(err.message==='MIC_BUSY'){
-toast('الميكروفون مستخدم حالياً من تطبيق آخر');
-}else if(err.message==='LIVEKIT_NOT_CONNECTED'){
-toast('تعذر الاتصال الصوتي بالغرفة');
+if(
+err.message==='MIC_PERMISSION'
+){
+
+toast(
+'اسمح للمتصفح باستخدام الميكروفون ثم اضغط مرة أخرى'
+);
+
+}else if(
+err.message==='MIC_NOT_FOUND'
+){
+
+toast(
+'لم يتم العثور على ميكروفون'
+);
+
+}else if(
+err.message==='MIC_BUSY'
+){
+
+toast(
+'الميكروفون مستخدم حالياً من تطبيق آخر'
+);
+
+}else if(
+err.message==='LIVEKIT_NOT_CONNECTED'
+){
+
+toast(
+'تعذر الاتصال الصوتي بالغرفة'
+);
+
 }else{
-toast('تعذر تشغيل الميكروفون');
-}
+
+toast(
+'تعذر تشغيل الميكروفون'
+);
+
 }
 
+}
+
+
+/*
+ * تنظيف حالة المايك.
+ */
 await stopTalking();
-}
+
 }
 
+}
+
+
+/* إيقاف التحدث */
 async function stopTalking(e){
 
 if(
@@ -653,77 +1011,205 @@ pttPointerId!==null&&
 e.pointerId!==undefined&&
 e.pointerId!==pttPointerId
 ){
+
 return;
+
 }
 
-if(e)e.preventDefault();
 
+if(e){
+e.preventDefault();
+}
+
+
+/*
+ * إنهاء جلسة التحدث.
+ */
 ++pttSession;
+
 
 talking=false;
 pttPointerId=null;
 
-$('pttButton').classList.remove('talking');
-$('pttText').textContent='اضغط للتحدث';
-$('waveLeft').classList.remove('active');
-$('waveRight').classList.remove('active');
 
-const t=localAudioTrack;
+/*
+ * إعادة واجهة المايك.
+ */
+$('pttButton')
+.classList.remove('talking');
+
+$('pttText')
+.textContent='اضغط للتحدث';
+
+$('waveLeft')
+.classList.remove('active');
+
+$('waveRight')
+.classList.remove('active');
+
+
+/*
+ * أخذ نسخة من المسار قبل تنظيفه.
+ */
+const track=
+localAudioTrack;
+
 localAudioTrack=null;
 
-if(!t)return;
+
+if(!track){
+return;
+}
+
 
 try{
 
-if(livekitRoom?.localParticipant){
+
+/*
+ * إلغاء نشر الميكروفون.
+ */
+if(
+livekitRoom?.localParticipant
+){
 
 try{
-await livekitRoom.localParticipant.unpublishTrack(t);
+
+await livekitRoom
+.localParticipant
+.unpublishTrack(
+track
+);
+
 }catch(x){
-console.warn('unpublish error',x);
-}
+
+console.warn(
+'unpublish error:',
+x
+);
+
 }
 
+}
+
+
+/*
+ * إيقاف الميكروفون.
+ */
 try{
-t.stop();
+
+track.stop();
+
 }catch(x){}
 
+
 }catch(x){
-console.error(x);
-}
+
+console.error(
+'Stop microphone error:',
+x
+);
+
 }
 
+}
+
+
+/* اختبار الميكروفون */
 async function testMicrophone(){
 
 try{
 
-const stream=await requestMicrophone();
+const stream=
+await requestMicrophone();
 
-const audioTrack=stream.getAudioTracks()[0];
+
+const audioTrack=
+stream.getAudioTracks()[0];
+
 
 if(audioTrack){
-toast('الميكروفون يعمل بشكل صحيح');
+
+console.log(
+'🎙️ الميكروفون يعمل:',
+audioTrack.label
+);
+
+toast(
+'الميكروفون يعمل بشكل صحيح'
+);
+
 }else{
-toast('لم يتم العثور على ميكروفون');
+
+toast(
+'لم يتم العثور على ميكروفون'
+);
+
 }
 
-stream.getTracks().forEach(t=>t.stop());
+
+stream
+.getTracks()
+.forEach(
+track=>track.stop()
+);
+
+
+return true;
+
 
 }catch(err){
 
-const m=err.message;
+console.error(
+'Microphone test error:',
+err
+);
 
-if(m==='MIC_PERMISSION'){
-toast('اسمح للمتصفح باستخدام الميكروفون ثم أعد الاختبار');
-}else if(m==='MIC_NOT_FOUND'){
-toast('لم يتم العثور على ميكروفون');
-}else if(m==='MIC_BUSY'){
-toast('الميكروفون مستخدم حالياً');
+
+const message=
+err.message;
+
+
+if(
+message==='MIC_PERMISSION'
+){
+
+toast(
+'اسمح للمتصفح باستخدام الميكروفون ثم أعد الاختبار'
+);
+
+}else if(
+message==='MIC_NOT_FOUND'
+){
+
+toast(
+'لم يتم العثور على ميكروفون'
+);
+
+}else if(
+message==='MIC_BUSY'
+){
+
+toast(
+'الميكروفون مستخدم حالياً'
+);
+
 }else{
-toast('تعذر اختبار الميكروفون');
+
+toast(
+'تعذر اختبار الميكروفون'
+);
+
 }
+
+return false;
+
 }
-}
+
+
+/* =========================================================
+   نهاية كود الصوت
+   ========================================================= */
+
 
 function toggleVoiceMode(mode){
 
