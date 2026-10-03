@@ -385,10 +385,36 @@ livekitRoomId=null;
 }  
 );  
   
-await room.connect(d.url,d.token);  
-  
-livekitRoom=room;  
-livekitRoomId=target;  
+room.on(
+  LivekitClient.RoomEvent.DataReceived,
+  (payload, participant, kind, topic) => {
+    try {
+      const text = new TextDecoder().decode(payload);
+      const data = JSON.parse(text);
+
+      if (data.type !== 'radio-chat') return;
+
+      const senderId = data.senderDeviceId || '';
+
+      // لا نعرض رسالتنا مرة ثانية
+      if (senderId === deviceId) return;
+
+      appendRemoteChat(
+        data.text || '',
+        data.senderName || 'عضو',
+        data.time || 'الآن'
+      );
+
+    } catch (err) {
+      console.error('Chat receive error:', err);
+    }
+  }
+);
+
+await room.connect(d.url,d.token);
+
+livekitRoom=room;
+livekitRoomId=target;
   
 return true;  
   
@@ -1152,41 +1178,98 @@ openModal(
 '<button class="secondary" onclick="testMicrophone()">🎙️ اختبار الميكروفون</button>'  
 );  
 }  
-  
-function sendChat(){  
-  
-const i=$('chatInput');  
-  
-const v=i.value.trim();  
-  
-if(!v)return;  
-  
-const empty=$('chatEmpty');  
-  
-if(empty)empty.remove();  
-  
-const d=document.createElement('div');  
-  
-d.className='msgBubble mine';  
-  
-d.textContent=v;  
-  
-const m=document.createElement('div');  
-  
-m.className='msgMeta';  
-  
-m.innerHTML=  
-'<span>أنت</span><span>الآن</span>';  
-  
-d.appendChild(m);  
-  
-$('chatLogs').appendChild(d);  
-  
-$('chatLogs').scrollTop=  
-$('chatLogs').scrollHeight;  
-  
-i.value='';  
-}  
+ function appendRemoteChat(text,name,time){
+
+  if(!text)return;
+
+  const empty=$('chatEmpty');
+  if(empty)empty.remove();
+
+  const d=document.createElement('div');
+
+  d.className='msgBubble';
+
+  d.textContent=text;
+
+  const m=document.createElement('div');
+
+  m.className='msgMeta';
+
+  m.innerHTML=
+    '<span>'+escapeHtml(name)+'</span>' +
+    '<span>'+escapeHtml(time)+'</span>';
+
+  d.appendChild(m);
+
+  $('chatLogs').appendChild(d);
+
+  $('chatLogs').scrollTop=
+    $('chatLogs').scrollHeight;
+  } 
+async function sendChat(){
+
+  const i=$('chatInput');
+  const v=i.value.trim();
+
+  if(!v)return;
+
+  if(!currentRoom){
+    toast('يرجى اختيار غرفة أولاً');
+    return;
+  }
+
+  try{
+
+    const connected=await connectLiveKitRoom();
+
+    if(
+      !connected||
+      !livekitRoom||
+      livekitRoom.state!=='connected'
+    ){
+      toast('تعذر الاتصال بالمحادثة');
+      return;
+    }
+
+    const data={
+      type:'radio-chat',
+      text:v,
+      senderDeviceId:deviceId,
+      senderName:'أنت',
+      time:new Date().toLocaleTimeString('ar-SA',{
+        hour:'2-digit',
+        minute:'2-digit'
+      })
+    };
+
+    const payload=new TextEncoder().encode(
+      JSON.stringify(data)
+    );
+
+    await livekitRoom.localParticipant.publishData(
+      payload,
+      {
+        reliable:true,
+        topic:'radio-chat'
+      }
+    );
+
+    // عرض الرسالة على جهاز المرسل
+    appendRemoteChat(
+      v,
+      'أنت',
+      data.time
+    );
+
+    i.value='';
+
+  }catch(err){
+
+    console.error('Chat send error:',err);
+
+    toast('تعذر إرسال الرسالة');
+  }
+}
   
 function chooseFile(id){  
 $(id)?.click();  
