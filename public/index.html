@@ -159,7 +159,7 @@ input:checked+.slider:before{transform:translateX(14px);background:#fff}
 onpointerdown="startTalking(event)"  
 onpointerup="stopTalking(event)"  
 onpointercancel="stopTalking(event)">
-<span class="pttIcon">🎙️</span>
+<span class="pttIcon">🎙️️</span>
 <span class="pttText" id="pttText">اضغط للتحدث</span>
 </button>
 
@@ -234,7 +234,6 @@ onpointercancel="stopTalking(event)">
 </div>  <div id="toast" class="toast hidden"></div>  
 
 <script>  
-// الربط المباشر برابط سيرفر Render الخاص بك
 const API = "https://radio-connect-server.onrender.com";  
   
 let deviceId=localStorage.getItem('deviceId')||null;  
@@ -345,7 +344,6 @@ await disconnectLiveKit();
 }  
   
 try{  
-toast('جارٍ الاتصال بالغرفة...');
 const r=await fetch(  
 `${API}/token?room=${encodeURIComponent(target)}`,  
 {  
@@ -360,10 +358,19 @@ d=await r.json();
 }catch(e){}  
   
 if(!r.ok||!d.token){  
-console.error('Token error',d);  
-toast('فشل جلب التوكن من السيرفر');
+console.error('Token response error:', d);  
+toast('فشل التوكن من السيرفر');
 return false;  
 }  
+
+// قراءة رابط السيرفر من الاستجابة أو استخدام رابط LiveKit Cloud الافتراضي إن وجد
+const livekitUrl = d.url || d.livekitUrl;
+
+if(!livekitUrl){
+  console.error('LiveKit URL missing from server token response');
+  toast('ينقص عنوان LIVEKIT_URL في السيرفر');
+  return false;
+}
   
 const room=new LivekitClient.Room({  
 adaptiveStream:true,  
@@ -427,19 +434,17 @@ room.on(
   }
 );
 
-await room.connect(d.url,d.token);
+await room.connect(livekitUrl, d.token);
 
 livekitRoom=room;
 livekitRoomId=target;  
 setServerOnline(true);
-toast('متصل بالغرفة بنجاح');
 return true;  
   
 }catch(e){  
-console.error('LiveKit connect error',e);  
+console.error('LiveKit connect error:', e);  
 livekitRoom=null;  
 livekitRoomId=null;  
-toast('تعذر الاتصال بسيرفر الصوت');
 return false;  
 }  
 }  
@@ -560,7 +565,7 @@ toast('لم يتم العثور على ميكروفون');
 }else if(err.message==='MIC_BUSY'){  
 toast('الميكروفون مستخدم حالياً من تطبيق آخر');  
 }else if(err.message==='LIVEKIT_NOT_CONNECTED'){  
-toast('تعذر الاتصال الصوتي بالغرفة');  
+toast('تعذر الاتصال بسيرفر الصوت');  
 }else{  
 toast('تعذر تشغيل الميكروفون');  
 }  
@@ -667,17 +672,16 @@ $('membersCount').textContent=`أعضاء الغرفة (${state.members.length})
   
 async function loadRooms(){  
 try{  
-toast('جارٍ الاستجابة مع الخادم...');
 const r=await fetch(API+'/api/rooms',{  
 headers:{'x-device-id':deviceId||''}  
 });  
 if(!r.ok){  
-setServerOnline(false);
+setServerOnline(false);  
 return;  
 }  
 const d=await r.json();  
 state.rooms=d.rooms||[];  
-setServerOnline(true);
+setServerOnline(true);  
 if(state.rooms.length&&!currentRoom){  
 await selectRoom(state.rooms[0].id);  
 }else if(!state.rooms.length){  
@@ -685,7 +689,7 @@ updateRoomUI();
 }  
 }catch(e){  
 console.error('rooms',e);  
-setServerOnline(false, 'السيرفر نائم (استيقاظ...)');
+setServerOnline(false, 'السيرفر نائم (استيقاظ...)');  
 }  
 }  
   
@@ -877,7 +881,7 @@ return toast('صلاحيات الإدارة للمشرفين فقط');
 openModal(  
 '<div class="modalHead"><strong>إدارة الغرفة</strong><button onclick="closeModal()">×</button></div>'+  
 '<button class="secondary" onclick="openMembers()">👥 إدارة الأعضاء والمشرفين</button>'+  
-'<button class="secondary" onclick="testMicrophone()">🎙️️ اختبار الميكروفون</button>'  
+'<button class="secondary" onclick="testMicrophone()">🎙️ اختبار الميكروفون</button>'  
 );  
 }  
 
@@ -912,7 +916,7 @@ async function sendChat(){
   try{  
     const connected=await connectLiveKitRoom();  
     if(!connected||!livekitRoom||livekitRoom.state!=='connected'){  
-      toast('تعذر الاتصال بالمحادثة (تأكد من استجابة السيرفر)');  
+      toast('تعذر إرسال الرسالة إلى الغرفة');  
       return;  
     }  
 
@@ -934,7 +938,7 @@ async function sendChat(){
 
   }catch(err){  
     console.error('Chat send error:',err);  
-    toast('تعذر إرسال الرسالة');  
+    toast('تعذر إرسال الرسالة إلى الغرفة');  
   }  
 }  
   
