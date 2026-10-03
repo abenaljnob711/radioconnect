@@ -4,56 +4,2333 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#030712">
+<meta name="mobile-web-app-capable" content="yes">
 <title>Radio Connect - جهاز لاسلكي</title>
+
 <script src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
 
 <style>
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0}
-html,body{min-height:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:#02050e;color:#eaf2ff;direction:rtl;text-align:right}
-body{padding-bottom:75px}
-button,input{font:inherit}
-button{border:0;cursor:pointer}
-.hidden{display:none!important}
-.app{max-width:520px;min-height:100vh;margin:auto;background:radial-gradient(circle at 50% 15%,rgba(13,40,81,.4),transparent 60%),linear-gradient(180deg,#050c1b,#02050e);padding:10px}
-.topbar{display:flex;align-items:center;justify-content:space-between;padding:6px 2px 12px}
-.iconbtn{width:38px;height:38px;border-radius:12px;background:#091526;color:#eaf2ff;font-size:18px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.06)}
-.brand{text-align:center;line-height:1.2}
-.brand strong{display:block;font-size:16px}
-.brand span{font-size:11px;color:#627999}
-.serverStatus{display:flex;align-items:center;gap:5px;background:#071424;padding:5px 10px;border-radius:18px;border:1px solid rgba(255,255,255,.05);font-size:11px}
-.statusDot{width:7px;height:7px;background:#2ecc71;border-radius:50%;box-shadow:0 0 6px #2ecc71}
-.topGrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px}
-.card{background:linear-gradient(145deg,#081426,#040a16);border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:10px;box-shadow:0 6px 20px rgba(0,0,0,.3)}
-.statusCard{display:flex;justify-content:space-between;align-items:center;text-align:center}
-.statusItem{flex:1}
-.statusIcon{font-size:12px;margin-bottom:2px}
-.statusIcon.green{color:#2ecc71}
-.statusIcon.orange{color:#e67e22}
-.statusVal{font-size:10px;font-weight:700}
-.statusLbl{font-size:8px;color:#5b7394}
-.waveCard{text-align:center;display:flex;flex-direction:column;justify-content:space-between}
-.waveTitle,.waveSub,.roomMembersCount{font-size:9px;color:#5b7394}
-.waveNav{display:flex;align-items:center;justify-content:space-between;margin:2px 0}
-.waveArrow{background:transparent;color:#6c88b0;font-size:12px}
-.waveCode{font-size:16px;font-weight:800;letter-spacing:1px;color:#fff}
-.roomCard{display:flex;flex-direction:column;justify-content:space-between}
-.roomSelect{display:flex;align-items:center;gap:4px;font-size:12px;font-weight:700;cursor:pointer}
-.roomSelect .star{color:#f1c40f;font-size:13px}
-.roomSelect .arrow{font-size:9px;color:#6a83a6}
-.roomMembersCount{margin-top:8px}
-.adminCodeBadge{background:linear-gradient(135deg,#0c2742,#071629);border:1px solid rgba(52,152,219,.25);border-radius:12px;padding:8px;text-align:center;margin-bottom:10px}
-.adminCodeBadge .lbl{font-size:9px;color:#6b8eb8}
-.adminCodeBadge .val{font-size:17px;font-weight:900;color:#3498db;letter-spacing:2px}
-.voiceSection{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:10px;position:relative}
-.voiceToggleBox{flex:1;background:linear-gradient(145deg,#081426,#040a16);border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:10px 8px;display:flex;align-items:center;justify-content:space-between}
-.toggleInfo strong{display:block;font-size:10px}
-.toggleInfo span{font-size:8px;color:#5b7394}
-.switch{position:relative;display:inline-block;width:30px;height:16px}
-.switch input{opacity:0;width:0;height:0}
-.slider{position:absolute;cursor:pointer;inset:0;background:#0f1d30;transition:.3s;border-radius:20px}
-.slider:before{position:absolute;content:"";height:10px;width:10px;left:3px;bottom:3px;background:#5b7394;transition:.3s;border-radius:50%}
-input:checked+.slider{background:#1c6294}
-input:checked+.slider:before{transform:translateX(14px);background:#fff}
-.pttMainArea{position:relative;display:flex;align-items:center;justify-content:center}
-.pttBtn{width:98px;height:98px;border-radius:50%;background:radial-gradient(circle at 50% 35%,#1d6194,#0b314f 60%,#061c2e);border:3px solid #174b73;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 0 0 5px rgba(13,44,71,.4),0 6px 20px rgba(0,0,0,.5);user-select:none;touch-action:none;transition:.1s}
-.pttBtn.talking{transform:scale(.95);background:radial-gradient(circle at 50% 35%,#e74c3c,#8e2a1f 60%,#521812);border
+*{
+  box-sizing:border-box;
+  -webkit-tap-highlight-color:transparent;
+  margin:0;
+  padding:0
+}
+
+html,body{
+  min-height:100%;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+  background:#02050e;
+  color:#eaf2ff;
+  direction:rtl;
+  text-align:right
+}
+
+body{
+  padding-bottom:78px
+}
+
+button,input,select,textarea{
+  font:inherit
+}
+
+button{
+  border:0;
+  cursor:pointer
+}
+
+.hidden{
+  display:none!important
+}
+
+.app{
+  max-width:520px;
+  min-height:100vh;
+  margin:auto;
+  padding:10px;
+  background:
+    radial-gradient(circle at 50% 12%,rgba(19,54,105,.42),transparent 55%),
+    linear-gradient(180deg,#050c1b,#02050e)
+}
+
+.topbar{
+  height:64px;
+  border:1px solid #172844;
+  border-radius:18px;
+  background:rgba(7,15,30,.9);
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:8px 10px;
+  margin-bottom:10px;
+  box-shadow:0 10px 30px rgba(0,0,0,.25)
+}
+
+.iconbtn{
+  width:44px;
+  height:44px;
+  border-radius:13px;
+  background:#0d1a30;
+  color:#dcecff;
+  font-size:24px
+}
+
+.brand{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  gap:2px
+}
+
+.brand strong{
+  font-size:17px
+}
+
+.brand span{
+  font-size:11px;
+  color:#8395b2
+}
+
+.serverStatus{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  font-size:11px;
+  color:#8fd7b0
+}
+
+.statusDot{
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  background:#32d583;
+  box-shadow:0 0 10px #32d583
+}
+
+.card{
+  background:rgba(7,16,32,.9);
+  border:1px solid #162844;
+  border-radius:20px;
+  padding:14px;
+  margin-bottom:10px;
+  box-shadow:0 10px 25px rgba(0,0,0,.18)
+}
+
+.roomHead{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px
+}
+
+.eyebrow{
+  font-size:11px;
+  color:#8094b4;
+  margin-bottom:4px
+}
+
+.roomName{
+  font-size:20px;
+  font-weight:800
+}
+
+.role{
+  font-size:11px;
+  color:#7fa8d9;
+  margin-top:4px
+}
+
+.badge{
+  padding:7px 10px;
+  border-radius:11px;
+  background:#0c2440;
+  color:#8dc4ff;
+  font-size:11px;
+  border:1px solid #173a61
+}
+
+.code{
+  margin-top:12px;
+  border-radius:15px;
+  padding:12px;
+  background:#050b17;
+  border:1px dashed #27466d;
+  text-align:center
+}
+
+.code small{
+  display:block;
+  color:#7789a7;
+  font-size:10px;
+  margin-bottom:4px
+}
+
+.code b{
+  font-size:24px;
+  letter-spacing:5px;
+  color:#dff0ff
+}
+
+.statusGrid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px
+}
+
+.statusBox{
+  background:#050b17;
+  border:1px solid #172943;
+  border-radius:15px;
+  padding:11px;
+  text-align:center
+}
+
+.statusBox small{
+  display:block;
+  color:#7185a4;
+  font-size:10px;
+  margin-bottom:5px
+}
+
+.statusBox b{
+  font-size:13px
+}
+
+.wave{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:12px
+}
+
+.wave button{
+  width:42px;
+  height:42px;
+  border-radius:13px;
+  background:#0d1c31;
+  color:#bcd7f4;
+  font-size:21px
+}
+
+.waveMain{
+  flex:1;
+  text-align:center
+}
+
+.waveMain small{
+  display:block;
+  color:#7186a5;
+  font-size:10px;
+  margin-bottom:4px
+}
+
+.waveMain b{
+  font-size:19px
+}
+
+.fav{
+  margin-top:9px;
+  width:100%;
+  height:38px;
+  border-radius:12px;
+  background:#0b192c;
+  color:#b9cce5;
+  border:1px solid #1a3150
+}
+
+.fav.on{
+  color:#ffd86a;
+  border-color:#6a5720
+}
+
+.pttWrap{
+  padding:5px
+}
+
+.pttBtn{
+  width:100%;
+  min-height:116px;
+  border-radius:25px;
+  background:linear-gradient(145deg,#0d2948,#071525);
+  border:1px solid #24527e;
+  color:#e8f4ff;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  box-shadow:
+    inset 0 1px rgba(255,255,255,.05),
+    0 15px 35px rgba(0,0,0,.28);
+  touch-action:none;
+  user-select:none;
+  -webkit-user-select:none;
+  -webkit-touch-callout:none
+}
+
+.pttBtn:active,
+.pttBtn.talking{
+  background:linear-gradient(145deg,#174b63,#0b2639);
+  border-color:#45bde7;
+  box-shadow:0 0 28px rgba(40,190,235,.2)
+}
+
+.pttIcon{
+  font-size:38px
+}
+
+.pttText{
+  font-weight:800
+}
+
+.pttHint{
+  font-size:10px;
+  color:#7188a6
+}
+
+.waves{
+  display:flex;
+  justify-content:center;
+  gap:5px;
+  height:20px;
+  align-items:end
+}
+
+.bar{
+  width:4px;
+  height:6px;
+  border-radius:4px;
+  background:#35617e
+}
+
+.bar.active{
+  animation:pulse .55s infinite alternate
+}
+
+@keyframes pulse{
+  to{
+    height:19px;
+    background:#55c9ec
+  }
+}
+
+.actions{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px
+}
+
+.action{
+  min-height:58px;
+  border:1px solid #182e4b;
+  background:#081426;
+  color:#d5e5f8;
+  border-radius:15px;
+  font-size:12px
+}
+
+.action span{
+  display:block;
+  font-size:20px;
+  margin-bottom:3px
+}
+
+.sectionTitle{
+  font-weight:800;
+  font-size:14px;
+  margin-bottom:10px
+}
+
+.list{
+  display:flex;
+  flex-direction:column;
+  gap:7px
+}
+
+.listItem{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  padding:11px;
+  border-radius:13px;
+  background:#050b17;
+  border:1px solid #152842
+}
+
+.listItem .info{
+  min-width:0
+}
+
+.listItem b{
+  display:block;
+  font-size:13px
+}
+
+.listItem small{
+  color:#7287a5;
+  font-size:10px
+}
+
+.mini{
+  padding:7px 10px;
+  border-radius:9px;
+  background:#10243c;
+  color:#a9d5fa;
+  font-size:11px
+}
+
+.danger{
+  color:#ff9b9b!important
+}
+
+.empty{
+  text-align:center;
+  padding:24px 10px;
+  color:#7185a3;
+  font-size:12px
+}
+
+.bottom{
+  position:fixed;
+  z-index:20;
+  bottom:8px;
+  left:50%;
+  transform:translateX(-50%);
+  width:min(500px,calc(100% - 20px));
+  height:62px;
+  border:1px solid #182d49;
+  border-radius:19px;
+  background:rgba(5,12,24,.96);
+  backdrop-filter:blur(14px);
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  padding:5px;
+  box-shadow:0 10px 35px rgba(0,0,0,.45)
+}
+
+.navBtn{
+  background:transparent;
+  color:#7185a3;
+  border-radius:14px;
+  font-size:10px
+}
+
+.navBtn span{
+  display:block;
+  font-size:20px;
+  margin-bottom:2px
+}
+
+.navBtn.active{
+  background:#0d2037;
+  color:#d6ecff
+}
+
+.overlay{
+  position:fixed;
+  z-index:50;
+  inset:0;
+  background:rgba(0,0,0,.68);
+  display:flex;
+  align-items:flex-end;
+  justify-content:center;
+  padding:10px
+}
+
+.modal{
+  width:min(520px,100%);
+  max-height:88vh;
+  overflow:auto;
+  background:#07101f;
+  border:1px solid #1b3455;
+  border-radius:22px;
+  padding:15px;
+  box-shadow:0 25px 70px rgba(0,0,0,.55)
+}
+
+.modalHead{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:14px
+}
+
+.modalHead strong{
+  font-size:17px
+}
+
+.close{
+  width:36px;
+  height:36px;
+  border-radius:11px;
+  background:#102039;
+  color:#d7e8fb;
+  font-size:22px
+}
+
+.field{
+  margin-bottom:10px
+}
+
+.field label{
+  display:block;
+  font-size:11px;
+  color:#8296b5;
+  margin-bottom:5px
+}
+
+.field input,
+.field select,
+.field textarea{
+  width:100%;
+  background:#040a14;
+  color:#e8f2ff;
+  border:1px solid #1a3150;
+  border-radius:12px;
+  padding:11px;
+  outline:none
+}
+
+.modalActions{
+  display:flex;
+  gap:8px;
+  margin-top:12px
+}
+
+.primary,
+.secondary{
+  flex:1;
+  padding:11px;
+  border-radius:12px
+}
+
+.primary{
+  background:#17618a;
+  color:white
+}
+
+.secondary{
+  background:#102139;
+  color:#bdd3ec
+}
+
+.drawer{
+  position:fixed;
+  z-index:60;
+  top:0;
+  right:0;
+  width:min(360px,88%);
+  height:100%;
+  background:#06101f;
+  border-left:1px solid #1b3454;
+  padding:15px;
+  box-shadow:-20px 0 60px rgba(0,0,0,.45)
+}
+
+.drawerItem{
+  width:100%;
+  text-align:right;
+  background:#0a192c;
+  color:#d9e9fb;
+  border:1px solid #162e4b;
+  border-radius:13px;
+  padding:13px;
+  margin-bottom:8px
+}
+
+.toast{
+  position:fixed;
+  z-index:100;
+  bottom:82px;
+  left:50%;
+  transform:translateX(-50%);
+  width:min(460px,calc(100% - 30px));
+  background:#11243b;
+  color:#e8f4ff;
+  border:1px solid #285075;
+  border-radius:14px;
+  padding:12px;
+  text-align:center;
+  font-size:12px;
+  box-shadow:0 10px 30px rgba(0,0,0,.4)
+}
+
+@media(max-width:360px){
+  .statusGrid{
+    grid-template-columns:1fr 1fr
+  }
+
+  .statusBox:last-child{
+    grid-column:span 2
+  }
+
+  .actions{
+    grid-template-columns:1fr 1fr
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+<header class="topbar">
+  <button class="iconbtn" onclick="openDrawer()" aria-label="القائمة">☰</button>
+
+  <div class="brand">
+    <strong>Radio Connect</strong>
+    <span>جهاز لاسلكي</span>
+  </div>
+
+  <div class="serverStatus">
+    <i class="statusDot"></i>
+    <span id="serverStatusText">متصل</span>
+  </div>
+</header>
+
+<section class="card">
+  <div class="roomHead">
+
+    <div>
+      <div class="eyebrow">الغرفة الحالية</div>
+      <div class="roomName" id="roomName">لا توجد غرفة</div>
+      <div class="role" id="roomRole">أنشئ أو اختر غرفة للبدء</div>
+    </div>
+
+    <div class="badge" id="memberCount">0 أعضاء</div>
+
+  </div>
+
+  <div class="code">
+    <small>رمز الدخول للغرفة الحالية</small>
+    <b id="roomCode">—</b>
+  </div>
+</section>
+
+<section class="card">
+
+  <div class="sectionTitle">بيانات الحالة</div>
+
+  <div class="statusGrid">
+
+    <div class="statusBox">
+      <small>البطارية</small>
+      <b id="battery">—</b>
+    </div>
+
+    <div class="statusBox">
+      <small>الشبكة</small>
+      <b id="network">—</b>
+    </div>
+
+    <div class="statusBox">
+      <small>الاتصال بالخادم</small>
+      <b id="connection">متصل</b>
+    </div>
+
+  </div>
+
+</section>
+
+<section class="card">
+
+  <div class="wave">
+
+    <button onclick="changeWave(-1)">‹</button>
+
+    <div class="waveMain">
+      <small>الموجة الحالية</small>
+      <b id="waveName">موجة العمليات</b>
+    </div>
+
+    <button onclick="changeWave(1)">›</button>
+
+  </div>
+
+  <button class="fav" id="favBtn" onclick="toggleFavorite()">
+    ☆ إضافة للمفضلة
+  </button>
+
+</section>
+
+<section class="card pttWrap">
+
+  <button
+    class="pttBtn"
+    id="pttButton"
+    type="button"
+    aria-label="اضغط للتحدث"
+  >
+
+    <span class="pttIcon">🎙️</span>
+
+    <span class="pttText" id="pttText">
+      اضغط للتحدث
+    </span>
+
+    <span class="pttHint">
+      اضغط باستمرار ثم تحدث
+    </span>
+
+    <span class="waves">
+      <i class="bar" id="waveLeft"></i>
+      <i class="bar"></i>
+      <i class="bar" id="waveRight"></i>
+    </span>
+
+  </button>
+
+</section>
+
+<section class="card">
+
+  <div class="sectionTitle">اختصارات</div>
+
+  <div class="actions">
+
+    <button class="action" onclick="openRooms()">
+      <span>📡</span>
+      الغرف
+    </button>
+
+    <button class="action" onclick="openContacts()">
+      <span>👥</span>
+      جهات الاتصال
+    </button>
+
+    <button class="action" onclick="openSettings()">
+      <span>⚙️</span>
+      الإعدادات
+    </button>
+
+    <button class="action" onclick="openChat()">
+      <span>💬</span>
+      المحادثة
+    </button>
+
+    <button class="action" onclick="testMicrophone()">
+      <span>🎤</span>
+      اختبار الميكروفون
+    </button>
+
+    <button class="action" onclick="openMembers()">
+      <span>🧑‍🤝‍🧑</span>
+      الأعضاء
+    </button>
+
+  </div>
+
+</section>
+
+</div>
+
+<nav class="bottom">
+
+  <button class="navBtn active" onclick="openRooms()">
+    <span>📡</span>
+    الغرف
+  </button>
+
+  <button class="navBtn" onclick="openContacts()">
+    <span>👥</span>
+    جهات الاتصال
+  </button>
+
+  <button class="navBtn" onclick="openChat()">
+    <span>💬</span>
+    المحادثة
+  </button>
+
+  <button class="navBtn" onclick="openSettings()">
+    <span>⚙️</span>
+    الإعدادات
+  </button>
+
+</nav>
+
+<div
+  id="overlay"
+  class="overlay hidden"
+  onclick="overlayClick(event)"
+>
+  <div id="modal" class="modal"></div>
+</div>
+
+<div
+  id="drawerOverlay"
+  class="overlay hidden"
+  onclick="closeDrawer()"
+></div>
+
+<aside id="drawer" class="drawer hidden">
+
+  <div class="modalHead">
+    <strong>القائمة</strong>
+    <button class="close" onclick="closeDrawer()">×</button>
+  </div>
+
+  <button class="drawerItem" onclick="closeDrawer();openRooms()">
+    📡 إدارة الغرف
+  </button>
+
+  <button class="drawerItem" onclick="closeDrawer();openMembers()">
+    👥 إدارة الأعضاء
+  </button>
+
+  <button class="drawerItem" onclick="closeDrawer();openContacts()">
+    📇 جهات الاتصال
+  </button>
+
+  <button class="drawerItem" onclick="closeDrawer();openSettings()">
+    ⚙️ إعدادات التطبيق
+  </button>
+
+  <button class="drawerItem" onclick="closeDrawer();testMicrophone()">
+    🎙️ اختبار الميكروفون
+  </button>
+
+</aside>
+
+<div id="toast" class="toast hidden"></div>
+
+<script>
+'use strict';
+
+const API = location.origin;
+
+const $ = id => document.getElementById(id);
+
+let deviceId =
+  localStorage.getItem('deviceId') || null;
+
+let livekitRoom = null;
+let livekitRoomId = null;
+let localAudioTrack = null;
+
+let talking = false;
+let pttPointerId = null;
+let pttSession = 0;
+
+let currentRoom = null;
+let voiceMode = 'natural';
+
+let selectedWave =
+  Number(localStorage.getItem('selectedWave') || 0);
+
+let favorites =
+  JSON.parse(localStorage.getItem('favorites') || '[]');
+
+const waves = [
+  'موجة العمليات',
+  'موجة الطوارئ',
+  'موجة الحراسة',
+  'موجة الميدان',
+  'موجة الدعم',
+  'موجة التنسيق',
+  'موجة الإدارة'
+];
+
+const state = {
+  rooms: [],
+  members: []
+};
+
+function toast(msg){
+
+  const e = $('toast');
+
+  if(!e) return;
+
+  e.textContent = msg;
+
+  e.classList.remove('hidden');
+
+  clearTimeout(window.toastTimer);
+
+  window.toastTimer =
+    setTimeout(
+      () => e.classList.add('hidden'),
+      3000
+    );
+}
+
+function openModal(html){
+
+  $('modal').innerHTML = html;
+
+  $('overlay').classList.remove('hidden');
+}
+
+function closeModal(){
+
+  $('overlay').classList.add('hidden');
+}
+
+function overlayClick(e){
+
+  if(e.target === $('overlay')){
+    closeModal();
+  }
+}
+
+function openDrawer(){
+
+  $('drawer').classList.remove('hidden');
+  $('drawerOverlay').classList.remove('hidden');
+}
+
+function closeDrawer(){
+
+  $('drawer').classList.add('hidden');
+  $('drawerOverlay').classList.add('hidden');
+}
+
+async function initDevice(){
+
+  if(!deviceId){
+
+    deviceId = (
+      crypto.randomUUID
+        ? crypto.randomUUID()
+        : (
+          'DEV-' +
+          Date.now() +
+          '-' +
+          Math.random().toString(36).slice(2,8)
+        )
+    )
+    .replaceAll('-','')
+    .slice(0,12)
+    .toUpperCase();
+
+    localStorage.setItem(
+      'deviceId',
+      deviceId
+    );
+  }
+
+  try{
+
+    await fetch(
+      API + '/api/device',
+      {
+        method:'POST',
+        headers:{
+          'Content-Type':'application/json'
+        },
+        body:JSON.stringify({
+          deviceId
+        })
+      }
+    );
+
+  }catch(e){
+
+    console.warn('device',e);
+  }
+}
+
+async function loadRooms(){
+
+  try{
+
+    const r = await fetch(
+      API + '/api/rooms',
+      {
+        headers:{
+          'x-device-id':deviceId || ''
+        }
+      }
+    );
+
+    if(r.ok){
+
+      const d = await r.json();
+
+      if(Array.isArray(d)){
+        state.rooms = d;
+      }
+      else if(Array.isArray(d.rooms)){
+        state.rooms = d.rooms;
+      }
+    }
+
+  }catch(e){
+
+    console.warn('rooms',e);
+  }
+
+  if(!state.rooms.length){
+
+    state.rooms =
+      JSON.parse(
+        localStorage.getItem('demoRooms') || '[]'
+      );
+  }
+
+  updateRoomUI();
+}
+
+async function loadMembers(){
+
+  if(!currentRoom){
+
+    state.members = [];
+    updateMemberCount();
+    return;
+  }
+
+  try{
+
+    const r = await fetch(
+      API +
+      '/api/rooms/' +
+      encodeURIComponent(currentRoom.id) +
+      '/members',
+      {
+        headers:{
+          'x-device-id':deviceId || ''
+        }
+      }
+    );
+
+    if(r.ok){
+
+      const d = await r.json();
+
+      state.members =
+        Array.isArray(d)
+          ? d
+          : (d.members || []);
+    }
+
+  }catch(e){
+
+    state.members = [];
+  }
+
+  updateMemberCount();
+}
+
+function updateMemberCount(){
+
+  $('memberCount').textContent =
+    (state.members.length || 0) +
+    ' أعضاء';
+}
+
+function updateRoomUI(){
+
+  $('roomName').textContent =
+    currentRoom
+      ? currentRoom.name
+      : 'لا توجد غرفة';
+
+  $('roomRole').textContent =
+    currentRoom
+      ? (
+        currentRoom.isAdmin
+          ? 'مشرف الغرفة'
+          : 'عضو في الغرفة'
+      )
+      : 'أنشئ أو اختر غرفة للبدء';
+
+  $('roomCode').textContent =
+    currentRoom
+      ? (
+        currentRoom.code ||
+        currentRoom.roomCode ||
+        currentRoom.id ||
+        '—'
+      )
+      : '—';
+
+  $('waveName').textContent =
+    waves[selectedWave] || waves[0];
+
+  updateFavoriteButton();
+}
+
+async function disconnectLiveKit(){
+
+  if(livekitRoom){
+
+    try{
+      await livekitRoom.disconnect();
+    }catch(e){}
+  }
+
+  livekitRoom = null;
+  livekitRoomId = null;
+}
+
+async function connectLiveKitRoom(){
+
+  if(
+    !currentRoom ||
+    !window.LivekitClient
+  ){
+    return false;
+  }
+
+  const target =
+    currentRoom.id ||
+    currentRoom.roomId ||
+    currentRoom.code;
+
+  if(
+    livekitRoom &&
+    livekitRoom.state === 'connected' &&
+    livekitRoomId === target
+  ){
+    return true;
+  }
+
+  if(livekitRoom){
+    await disconnectLiveKit();
+  }
+
+  try{
+
+    const r = await fetch(
+      API +
+      '/token?room=' +
+      encodeURIComponent(target),
+      {
+        headers:{
+          'x-device-id':deviceId || ''
+        }
+      }
+    );
+
+    let d = {};
+
+    try{
+      d = await r.json();
+    }catch(e){}
+
+    if(!r.ok || !d.token){
+      return false;
+    }
+
+    const room =
+      new LivekitClient.Room({
+        adaptiveStream:true,
+        dynacast:true
+      });
+
+    room.on(
+      LivekitClient.RoomEvent.TrackSubscribed,
+      track => {
+
+        if(
+          track.kind ===
+          LivekitClient.Track.Kind.Audio
+        ){
+
+          const a = track.attach();
+
+          a.autoplay = true;
+          a.playsInline = true;
+
+          a.setAttribute(
+            'playsinline',
+            ''
+          );
+
+          document.body.appendChild(a);
+
+          a.play().catch(()=>{});
+        }
+      }
+    );
+
+    room.on(
+      LivekitClient.RoomEvent.Disconnected,
+      () => {
+
+        if(livekitRoom === room){
+
+          livekitRoom = null;
+          livekitRoomId = null;
+
+          $('connection').textContent =
+            'غير متصل';
+        }
+      }
+    );
+
+    await room.connect(
+      d.url,
+      d.token
+    );
+
+    livekitRoom = room;
+    livekitRoomId = target;
+
+    $('connection').textContent =
+      'متصل';
+
+    return true;
+
+  }catch(e){
+
+    console.error(
+      'LiveKit',
+      e
+    );
+
+    return false;
+  }
+}
+
+function setTalkingUI(on){
+
+  const btn = $('pttButton');
+
+  if(!btn) return;
+
+  btn.classList.toggle(
+    'talking',
+    on
+  );
+
+  $('pttText').textContent =
+    on
+      ? 'جارٍ التحدث'
+      : 'اضغط للتحدث';
+
+  $('waveLeft').classList.toggle(
+    'active',
+    on
+  );
+
+  $('waveRight').classList.toggle(
+    'active',
+    on
+  );
+}
+
+async function startTalking(e){
+
+  if(e){
+    e.preventDefault();
+  }
+
+  if(talking){
+    return;
+  }
+
+  if(!currentRoom){
+
+    toast(
+      'يرجى اختيار غرفة أولاً'
+    );
+
+    return;
+  }
+
+  const session =
+    ++pttSession;
+
+  pttPointerId =
+    e &&
+    e.pointerId !== undefined
+      ? e.pointerId
+      : null;
+
+  talking = true;
+
+  /* إظهار حالة التحدث فوراً */
+  setTalkingUI(true);
+
+  const btn = $('pttButton');
+
+  if(
+    e &&
+    e.pointerId !== undefined &&
+    btn.setPointerCapture
+  ){
+
+    try{
+      btn.setPointerCapture(
+        e.pointerId
+      );
+    }catch(x){}
+  }
+
+  try{
+
+    if(
+      !navigator.mediaDevices ||
+      !navigator.mediaDevices.getUserMedia
+    ){
+      throw new Error(
+        'MEDIA_UNAVAILABLE'
+      );
+    }
+
+    const connected =
+      await connectLiveKitRoom();
+
+    if(
+      !talking ||
+      session !== pttSession
+    ){
+      return;
+    }
+
+    if(
+      !connected ||
+      !livekitRoom ||
+      livekitRoom.state !== 'connected'
+    ){
+      throw new Error('LIVEKIT');
+    }
+
+    const stream =
+      await navigator.mediaDevices.getUserMedia({
+        audio:{
+          echoCancellation:true,
+          noiseSuppression:true,
+          autoGainControl:true
+        }
+      });
+
+    if(
+      !talking ||
+      session !== pttSession
+    ){
+
+      stream
+        .getTracks()
+        .forEach(
+          t => t.stop()
+        );
+
+      return;
+    }
+
+    const raw =
+      stream.getAudioTracks()[0];
+
+    if(!raw){
+      throw new Error(
+        'MIC_NOT_FOUND'
+      );
+    }
+
+    localAudioTrack =
+      new LivekitClient.LocalAudioTrack(
+        raw
+      );
+
+    await livekitRoom.localParticipant.publishTrack(
+      localAudioTrack
+    );
+
+    localAudioTrack
+      .mediaStreamTrack
+      .enabled = true;
+
+    toast(
+      'الميكروفون يعمل الآن'
+    );
+
+  }catch(err){
+
+    console.error(
+      'PTT',
+      err
+    );
+
+    await stopTalking();
+
+    if(
+      err.name === 'NotAllowedError' ||
+      err.name === 'PermissionDeniedError'
+    ){
+
+      toast(
+        'اسمح للموقع باستخدام الميكروفون ثم حاول مرة أخرى'
+      );
+
+    }
+    else if(
+      err.name === 'NotFoundError' ||
+      err.message === 'MIC_NOT_FOUND'
+    ){
+
+      toast(
+        'لم يتم العثور على ميكروفون'
+      );
+
+    }
+    else if(
+      err.message === 'LIVEKIT'
+    ){
+
+      toast(
+        'تعذر الاتصال الصوتي بالغرفة'
+      );
+
+    }
+    else{
+
+      toast(
+        'تعذر تشغيل الميكروفون'
+      );
+    }
+  }
+}
+
+async function stopTalking(e){
+
+  if(
+    e &&
+    pttPointerId !== null &&
+    e.pointerId !== undefined &&
+    e.pointerId !== pttPointerId
+  ){
+    return;
+  }
+
+  ++pttSession;
+
+  talking = false;
+
+  pttPointerId = null;
+
+  setTalkingUI(false);
+
+  const t = localAudioTrack;
+
+  localAudioTrack = null;
+
+  if(!t){
+    return;
+  }
+
+  try{
+
+    if(
+      livekitRoom &&
+      livekitRoom.localParticipant
+    ){
+
+      await livekitRoom.localParticipant.unpublishTrack(
+        t
+      );
+    }
+
+  }catch(x){}
+
+  try{
+    t.stop();
+  }catch(x){}
+}
+
+async function testMicrophone(){
+
+  try{
+
+    if(
+      !navigator.mediaDevices ||
+      !navigator.mediaDevices.getUserMedia
+    ){
+
+      toast(
+        'المتصفح لا يدعم الوصول للميكروفون'
+      );
+
+      return;
+    }
+
+    const stream =
+      await navigator.mediaDevices.getUserMedia({
+        audio:true
+      });
+
+    stream
+      .getTracks()
+      .forEach(
+        t => t.stop()
+      );
+
+    toast(
+      'اختبار الميكروفون ناجح ✅'
+    );
+
+  }catch(e){
+
+    if(
+      e.name === 'NotAllowedError' ||
+      e.name === 'PermissionDeniedError'
+    ){
+
+      toast(
+        'تم رفض إذن الميكروفون. اسمح به من إعدادات المتصفح'
+      );
+
+    }else{
+
+      toast(
+        'تعذر الوصول إلى الميكروفون'
+      );
+    }
+  }
+}
+
+function changeWave(dir){
+
+  selectedWave =
+    (
+      selectedWave +
+      dir +
+      waves.length
+    ) % waves.length;
+
+  localStorage.setItem(
+    'selectedWave',
+    selectedWave
+  );
+
+  updateRoomUI();
+
+  toast(
+    'الموجة: ' +
+    waves[selectedWave]
+  );
+}
+
+function toggleFavorite(){
+
+  if(!currentRoom){
+
+    toast(
+      'اختر غرفة أولاً'
+    );
+
+    return;
+  }
+
+  const id = currentRoom.id;
+
+  if(favorites.includes(id)){
+
+    favorites =
+      favorites.filter(
+        x => x !== id
+      );
+
+  }else{
+
+    favorites.push(id);
+  }
+
+  localStorage.setItem(
+    'favorites',
+    JSON.stringify(favorites)
+  );
+
+  updateFavoriteButton();
+}
+
+function updateFavoriteButton(){
+
+  const b = $('favBtn');
+
+  if(!currentRoom){
+
+    b.textContent =
+      '☆ إضافة للمفضلة';
+
+    b.classList.remove('on');
+
+    return;
+  }
+
+  const on =
+    favorites.includes(
+      currentRoom.id
+    );
+
+  b.textContent =
+    on
+      ? '★ في المفضلة'
+      : '☆ إضافة للمفضلة';
+
+  b.classList.toggle(
+    'on',
+    on
+  );
+}
+
+async function selectRoom(id){
+
+  const room =
+    state.rooms.find(
+      r =>
+        String(
+          r.id ||
+          r.roomId ||
+          r.code
+        ) === String(id)
+    );
+
+  if(!room){
+    return;
+  }
+
+  if(
+    currentRoom &&
+    (
+      currentRoom.id ||
+      currentRoom.roomId
+    ) !==
+    (
+      room.id ||
+      room.roomId
+    )
+  ){
+
+    await disconnectLiveKit();
+  }
+
+  currentRoom = room;
+
+  updateRoomUI();
+
+  await loadMembers();
+
+  closeModal();
+
+  toast(
+    'تم اختيار ' +
+    room.name
+  );
+}
+
+function openRooms(){
+
+  let items =
+    state.rooms
+      .map(
+        r => `
+        <div class="listItem">
+
+          <div class="info">
+            <b>${esc(r.name || 'غرفة')}</b>
+            <small>
+              ${esc(
+                r.code ||
+                r.roomCode ||
+                r.id ||
+                ''
+              )}
+            </small>
+          </div>
+
+          <button
+            class="mini"
+            onclick="selectRoom('${escAttr(
+              r.id ||
+              r.roomId ||
+              r.code
+            )}')"
+          >
+            دخول
+          </button>
+
+        </div>
+        `
+      )
+      .join('');
+
+  openModal(`
+    <div class="modalHead">
+      <strong>الغرف</strong>
+      <button
+        class="close"
+        onclick="closeModal()"
+      >
+        ×
+      </button>
+    </div>
+
+    ${
+      items ||
+      '<div class="empty">لا توجد غرف بعد</div>'
+    }
+
+    <div class="modalActions">
+
+      <button
+        class="primary"
+        onclick="createRoom()"
+      >
+        ＋ إنشاء غرفة
+      </button>
+
+      <button
+        class="secondary"
+        onclick="closeModal()"
+      >
+        إغلاق
+      </button>
+
+    </div>
+  `);
+}
+
+async function createRoom(){
+
+  openModal(`
+    <div class="modalHead">
+
+      <strong>إنشاء غرفة</strong>
+
+      <button
+        class="close"
+        onclick="closeModal()"
+      >
+        ×
+      </button>
+
+    </div>
+
+    <div class="field">
+
+      <label>
+        اسم الغرفة
+      </label>
+
+      <input
+        id="newRoomName"
+        placeholder="مثال: غرفة العمليات"
+      >
+
+    </div>
+
+    <div class="modalActions">
+
+      <button
+        class="primary"
+        onclick="submitCreateRoom()"
+      >
+        إنشاء
+      </button>
+
+      <button
+        class="secondary"
+        onclick="openRooms()"
+      >
+        رجوع
+      </button>
+
+    </div>
+  `);
+
+  setTimeout(
+    () => $('newRoomName')?.focus(),
+    100
+  );
+}
+
+async function submitCreateRoom(){
+
+  const name =
+    $('newRoomName')?.value.trim();
+
+  if(!name){
+
+    toast(
+      'اكتب اسم الغرفة'
+    );
+
+    return;
+  }
+
+  try{
+
+    const r = await fetch(
+      API + '/api/rooms',
+      {
+        method:'POST',
+        headers:{
+          'Content-Type':'application/json',
+          'x-device-id':deviceId || ''
+        },
+        body:JSON.stringify({
+          name
+        })
+      }
+    );
+
+    const d =
+      await r.json().catch(
+        () => ({})
+      );
+
+    if(r.ok){
+
+      const room =
+        d.room || d;
+
+      state.rooms.push(room);
+
+      await selectRoom(
+        room.id ||
+        room.roomId ||
+        room.code
+      );
+
+      return;
+    }
+
+  }catch(e){}
+
+  const room = {
+
+    id:
+      'RAD-' +
+      Math.random()
+        .toString(36)
+        .slice(2,8)
+        .toUpperCase(),
+
+    name,
+
+    code:
+      Math.random()
+        .toString(36)
+        .slice(2,8)
+        .toUpperCase(),
+
+    isAdmin:true
+  };
+
+  state.rooms.push(room);
+
+  localStorage.setItem(
+    'demoRooms',
+    JSON.stringify(
+      state.rooms
+    )
+  );
+
+  await selectRoom(
+    room.id
+  );
+}
+
+function openContacts(){
+
+  openModal(`
+    <div class="modalHead">
+
+      <strong>جهات الاتصال</strong>
+
+      <button
+        class="close"
+        onclick="closeModal()"
+      >
+        ×
+      </button>
+
+    </div>
+
+    <div class="field">
+
+      <input
+        id="contactSearch"
+        placeholder="بحث في جهات الاتصال"
+        oninput="renderContacts(this.value)"
+      >
+
+    </div>
+
+    <div
+      id="contactsList"
+      class="list"
+    ></div>
+  `);
+
+  renderContacts('');
+}
+
+function renderContacts(q){
+
+  const box =
+    $('contactsList');
+
+  if(!box){
+    return;
+  }
+
+  const members =
+    state.members.filter(
+      m =>
+        (
+          m.name ||
+          m.deviceId ||
+          ''
+        )
+        .toLowerCase()
+        .includes(
+          q.toLowerCase()
+        )
+    );
+
+  box.innerHTML =
+    members.length
+      ? members
+          .map(
+            m => `
+              <div class="listItem">
+
+                <div class="info">
+                  <b>
+                    ${esc(
+                      m.name ||
+                      'عضو'
+                    )}
+                  </b>
+
+                  <small>
+                    ${esc(
+                      m.deviceId ||
+                      'متصل'
+                    )}
+                  </small>
+                </div>
+
+                <button
+                  class="mini"
+                  onclick="toast('تم اختيار جهة الاتصال')"
+                >
+                  اتصال
+                </button>
+
+              </div>
+            `
+          )
+          .join('')
+      : `
+        <div class="empty">
+          لا توجد جهات اتصال محفوظة
+        </div>
+      `;
+}
+
+function openMembers(){
+
+  const items =
+    state.members
+      .map(
+        m => `
+          <div class="listItem">
+
+            <div class="info">
+
+              <b>
+                ${esc(
+                  m.name ||
+                  'عضو'
+                )}
+              </b>
+
+              <small>
+                ${esc(
+                  m.role ||
+                  'عضو'
+                )}
+
+                ${
+                  m.deviceId
+                    ? ' • ' +
+                      esc(
+                        m.deviceId
+                      )
+                    : ''
+                }
+              </small>
+
+            </div>
+
+          </div>
+        `
+      )
+      .join('');
+
+  openModal(`
+    <div class="modalHead">
+
+      <strong>
+        أعضاء الغرفة
+      </strong>
+
+      <button
+        class="close"
+        onclick="closeModal()"
+      >
+        ×
+      </button>
+
+    </div>
+
+    ${
+      items ||
+      '<div class="empty">لا يوجد أعضاء</div>'
+    }
+  `);
+}
+
+function openSettings(){
+
+  openModal(`
+    <div class="modalHead">
+
+      <strong>
+        الإعدادات
+      </strong>
+
+      <button
+        class="close"
+        onclick="closeModal()"
+      >
+        ×
+      </button>
+
+    </div>
+
+    <div class="field">
+
+      <label>
+        وضع الصوت
+      </label>
+
+      <select
+        id="voiceMode"
+        onchange="
+          voiceMode=this.value;
+          localStorage.setItem(
+            'voiceMode',
+            voiceMode
+          );
+          toast('تم حفظ إعداد الصوت')
+        "
+      >
+
+        <option value="natural">
+          طبيعي
+        </option>
+
+        <option value="clear">
+          صوت واضح
+        </option>
+
+        <option value="low">
+          تقليل الضوضاء
+        </option>
+
+      </select>
+
+    </div>
+
+    <div class="field">
+
+      <label>
+        معرف الجهاز
+      </label>
+
+      <input
+        value="${escAttr(deviceId || '')}"
+        readonly
+      >
+
+    </div>
+
+    <div class="modalActions">
+
+      <button
+        class="primary"
+        onclick="testMicrophone()"
+      >
+        اختبار الميكروفون
+      </button>
+
+      <button
+        class="secondary"
+        onclick="closeModal()"
+      >
+        إغلاق
+      </button>
+
+    </div>
+  `);
+
+  $('voiceMode').value =
+    localStorage.getItem(
+      'voiceMode'
+    ) || 'natural';
+}
+
+function openChat(){
+
+  openModal(`
+    <div class="modalHead">
+
+      <strong>
+        المحادثة
+      </strong>
+
+      <button
+        class="close"
+        onclick="closeModal()"
+      >
+        ×
+      </button>
+
+    </div>
+
+    <div class="empty">
+      المحادثة النصية جاهزة للربط بالخادم في الغرفة الحالية.
+    </div>
+
+    <div class="field">
+
+      <textarea
+        id="chatMsg"
+        rows="3"
+        placeholder="اكتب رسالة..."
+      ></textarea>
+
+    </div>
+
+    <button
+      class="primary"
+      style="width:100%"
+      onclick="sendChat()"
+    >
+      إرسال
+    </button>
+  `);
+}
+
+function sendChat(){
+
+  const v =
+    $('chatMsg')?.value.trim();
+
+  if(!v){
+    return;
+  }
+
+  toast(
+    'تم تجهيز الرسالة للإرسال'
+  );
+
+  $('chatMsg').value = '';
+}
+
+function esc(v){
+
+  return String(
+    v ?? ''
+  ).replace(
+    /[&<>"']/g,
+    c =>
+      ({
+        '&':'&amp;',
+        '<':'&lt;',
+        '>':'&gt;',
+        '"':'&quot;',
+        "'":'&#39;'
+      }[c])
+  );
+}
+
+function escAttr(v){
+
+  return esc(v)
+    .replace(
+      /`/g,
+      '&#96;'
+    );
+}
+
+function updateBattery(){
+
+  if(navigator.getBattery){
+
+    navigator
+      .getBattery()
+      .then(
+        b => {
+
+          const f = () => {
+
+            $('battery').textContent =
+              Math.round(
+                b.level * 100
+              ) + '%';
+          };
+
+          f();
+
+          b.addEventListener(
+            'levelchange',
+            f
+          );
+        }
+      )
+      .catch(
+        () => {}
+      );
+
+  }else{
+
+    $('battery').textContent =
+      'غير متاح';
+  }
+}
+
+function updateNetwork(){
+
+  const c =
+    navigator.connection ||
+    navigator.mozConnection ||
+    navigator.webkitConnection;
+
+  if(c){
+
+    const f = () => {
+
+      $('network').textContent =
+        c.effectiveType ||
+        c.type ||
+        'متصل';
+    };
+
+    f();
+
+    c.addEventListener?.(
+      'change',
+      f
+    );
+
+  }else{
+
+    $('network').textContent =
+      navigator.onLine
+        ? 'متصل'
+        : 'غير متصل';
+  }
+}
+
+window.addEventListener(
+  'online',
+  () => {
+
+    $('connection').textContent =
+      'متصل';
+
+    $('serverStatusText').textContent =
+      'متصل';
+  }
+);
+
+window.addEventListener(
+  'offline',
+  () => {
+
+    $('connection').textContent =
+      'غير متصل';
+
+    $('serverStatusText').textContent =
+      'غير متصل';
+  }
+);
+
+window.addEventListener(
+  'error',
+  e =>
+    console.error(
+      'App error',
+      e.error || e.message
+    )
+);
+
+window.addEventListener(
+  'unhandledrejection',
+  e =>
+    console.error(
+      'Promise error',
+      e.reason
+    )
+);
+
+document.addEventListener(
+  'DOMContentLoaded',
+  async () => {
+
+    const btn =
+      $('pttButton');
+
+    /*
+      زر التحدث:
+      pointerdown يبدأ الإرسال
+      pointerup ينهي الإرسال
+      pointercancel ينهي الإرسال
+    */
+
+    btn.addEventListener(
+      'pointerdown',
+      startTalking
+    );
+
+    btn.addEventListener(
+      'pointerup',
+      stopTalking
+    );
+
+    btn.addEventListener(
+      'pointercancel',
+      stopTalking
+    );
+
+    btn.addEventListener(
+      'contextmenu',
+      e => e.preventDefault()
+    );
+
+    await initDevice();
+
+    updateBattery();
+
+    updateNetwork();
+
+    selectedWave =
+      Number(
+        localStorage.getItem(
+          'selectedWave'
+        ) || 0
+      );
+
+    voiceMode =
+      localStorage.getItem(
+        'voiceMode'
+      ) || 'natural';
+
+    updateRoomUI();
+
+    await loadRooms();
+  }
+);
+</script>
+
+</body>
+</html>
