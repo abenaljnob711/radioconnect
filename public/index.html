@@ -159,7 +159,7 @@ input:checked+.slider:before{transform:translateX(14px);background:#fff}
 onpointerdown="startTalking(event)"  
 onpointerup="stopTalking(event)"  
 onpointercancel="stopTalking(event)">
-<span class="pttIcon">🎙️️</span>
+<span class="pttIcon">🎙️</span>
 <span class="pttText" id="pttText">اضغط للتحدث</span>
 </button>
 
@@ -234,7 +234,7 @@ onpointercancel="stopTalking(event)">
 </div>  <div id="toast" class="toast hidden"></div>  
 
 <script>  
-const API = "https://radio-connect-server.onrender.com";  
+const API = location.origin;  
   
 let deviceId=localStorage.getItem('deviceId')||null;  
 let livekitRoom=null;  
@@ -363,15 +363,8 @@ toast('فشل التوكن من السيرفر');
 return false;  
 }  
 
-// قراءة رابط السيرفر من الاستجابة أو استخدام رابط LiveKit Cloud الافتراضي إن وجد
-const livekitUrl = d.url || d.livekitUrl;
+const livekitUrl = d.url || d.livekitUrl || 'wss://radioconnect-8uyh53qc.livekit.cloud';
 
-if(!livekitUrl){
-  console.error('LiveKit URL missing from server token response');
-  toast('ينقص عنوان LIVEKIT_URL في السيرفر');
-  return false;
-}
-  
 const room=new LivekitClient.Room({  
 adaptiveStream:true,  
 dynacast:true  
@@ -410,7 +403,7 @@ livekitRoomId=null;
 }  
 }  
 );  
-  
+
 room.on(
   LivekitClient.RoomEvent.DataReceived,
   (payload, participant) => {
