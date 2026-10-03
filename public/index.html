@@ -182,8 +182,7 @@ input:checked+.slider:before{transform:translateX(14px);background:#fff}
 <button class="pttBtn" id="pttButton"
 onpointerdown="startTalking(event)"
 onpointerup="stopTalking(event)"
-onpointercancel="stopTalking(event)"
-onlostpointercapture="stopTalking(event)">
+onpointercancel="stopTalking(event)">
 <span class="pttIcon">🎙️</span>
 <span class="pttText" id="pttText">اضغط للتحدث</span>
 </button>
@@ -438,9 +437,18 @@ const a=track.attach();
 a.autoplay=true;
 a.playsInline=true;
 a.controls=false;
+a.muted=false;
+a.volume=1;
 a.style.display='none';
 document.body.appendChild(a);
-a.play().catch(()=>{});
+
+const playAudio=()=>{
+a.play().catch(err=>{
+console.warn('Audio autoplay blocked',err);
+});
+};
+
+playAudio();
 }
 }
 );
@@ -480,7 +488,8 @@ return await navigator.mediaDevices.getUserMedia({
 audio:{
 echoCancellation:true,
 noiseSuppression:true,
-autoGainControl:true
+autoGainControl:true,
+channelCount:1
 }
 });
 }catch(err){
@@ -539,6 +548,14 @@ $('waveRight').classList.add('active');
 
 try{
 
+/*
+ * الصوت يبدأ من هنا:
+ * 1- الاتصال بالغرفة
+ * 2- طلب الميكروفون
+ * 3- إنشاء مسار LiveKit
+ * 4- نشر الميكروفون للمشاركين
+ */
+
 const connected=await connectLiveKitRoom();
 
 if(!talking||session!==pttSession)return;
@@ -551,6 +568,9 @@ livekitRoom.state!=='connected'
 throw new Error('LIVEKIT_NOT_CONNECTED');
 }
 
+/*
+ * نطلب إذن الميكروفون قبل تشغيله.
+ */
 const stream=await requestMicrophone();
 
 if(!talking||session!==pttSession){
@@ -565,11 +585,23 @@ stream.getTracks().forEach(t=>t.stop());
 throw new Error('MIC_NOT_FOUND');
 }
 
+/*
+ * استخدام LiveKit المحلي مباشرة لإرسال الصوت.
+ */
 localAudioTrack=
 new LivekitClient.LocalAudioTrack(raw);
 
+/*
+ * تأكيد أن المسار يعمل.
+ */
+localAudioTrack.enable();
+
 await livekitRoom.localParticipant.publishTrack(
-localAudioTrack
+localAudioTrack,
+{
+name:'radio-microphone',
+source:LivekitClient.Track.Source.Microphone
+}
 );
 
 if(!talking||session!==pttSession){
@@ -644,9 +676,12 @@ if(!t)return;
 try{
 
 if(livekitRoom?.localParticipant){
+
 try{
 await livekitRoom.localParticipant.unpublishTrack(t);
-}catch(x){}
+}catch(x){
+console.warn('unpublish error',x);
+}
 }
 
 try{
@@ -664,9 +699,15 @@ try{
 
 const stream=await requestMicrophone();
 
-stream.getTracks().forEach(t=>t.stop());
+const audioTrack=stream.getAudioTracks()[0];
 
+if(audioTrack){
 toast('الميكروفون يعمل بشكل صحيح');
+}else{
+toast('لم يتم العثور على ميكروفون');
+}
+
+stream.getTracks().forEach(t=>t.stop());
 
 }catch(err){
 
