@@ -593,7 +593,13 @@ await stopTalking();
 }  
 }  
   
-async function stopTalking(e){  
+async function startTalking(e){
+
+toast('تم الضغط على الميكروفون');
+console.log('PTT START');
+
+if(e)e.preventDefault();
+
   
 if(  
 e&&  
