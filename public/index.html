@@ -19,7 +19,8 @@ button{border:0;cursor:pointer}
 .brand strong{display:block;font-size:16px}  
 .brand span{font-size:11px;color:#627999}  
 .serverStatus{display:flex;align-items:center;gap:5px;background:#071424;padding:5px 10px;border-radius:18px;border:1px solid rgba(255,255,255,.05);font-size:11px}  
-.statusDot{width:7px;height:7px;background:#2ecc71;border-radius:50%;box-shadow:0 0 6px #2ecc71}  
+.statusDot{width:7px;height:7px;background:#e74c3c;border-radius:50%;box-shadow:0 0 6px #e74c3c}  
+.statusDot.online{background:#2ecc71;box-shadow:0 0 6px #2ecc71}  
 .topGrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px}  
 .card{background:linear-gradient(145deg,#081426,#040a16);border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:10px;box-shadow:0 6px 20px rgba(0,0,0,.3)}  
 .statusCard{display:flex;justify-content:space-between;align-items:center;text-align:center}  
@@ -106,12 +107,12 @@ input:checked+.slider:before{transform:translateX(14px);background:#fff}
 <div class="app">  <header class="topbar">  
 <button class="iconbtn" onclick="openDrawer()">☰</button>  
 <div class="brand"><strong>Radio Connect</strong><span>جهاز لاسلكي</span></div>  
-<div class="serverStatus"><i class="statusDot"></i><span id="serverStatusText">متصل</span></div>  
+<div class="serverStatus"><i class="statusDot" id="statusDot"></i><span id="serverStatusText">جارٍ الاتصال...</span></div>  
 </header>  <div class="topGrid">  
 <div class="card statusCard">  
 <div class="statusItem">  
-<div class="statusIcon green">✔</div>  
-<div class="statusVal" id="connectionValue">متصل</div>  
+<div class="statusIcon green" id="statusIcon">⚡</div>  
+<div class="statusVal" id="connectionValue">جارٍ الفحص</div>  
 <div class="statusLbl">بالخادم</div>  
 </div>  <div class="statusItem">  
 <div class="statusIcon green">📶</div>  
@@ -126,14 +127,14 @@ input:checked+.slider:before{transform:translateX(14px);background:#fff}
 <div class="waveTitle">الموجة الحالية</div>  
 <div class="waveNav">  
 <button class="waveArrow" onclick="prevWave()">❮</button>  
-<div class="waveCode" id="waveCodeDisplay">68B665</div>  
+<div class="waveCode" id="waveCodeDisplay">------</div>  
 <button class="waveArrow" onclick="nextWave()">❯</button>  
 </div>  
 <div class="waveSub">من 50 موجة</div>  
 </div>  <div class="card roomCard">  
 <div class="roomSelect" onclick="openRooms()">  
 <span class="star">★</span>  
-<span id="currentRoomName">العمليات</span>  
+<span id="currentRoomName">اختر غرفة</span>  
 <span class="arrow">▼</span>  
 </div>  
 <div class="roomMembersCount" id="membersCount">أعضاء الغرفة (0)</div>  
@@ -197,12 +198,7 @@ onpointercancel="stopTalking(event)">
 <div class="msgBubble" id="chatEmpty">  
 جاهز للموقع  
 <div class="msgMeta">  
-<span>أنت</span><span>09:33</span>  
-</div>  
-</div>  <div class="msgBubble">  
-موافق، ننتظر الإشارة  
-<div class="msgMeta">  
-<span>خالد</span><span>09:34</span>  
+<span>النظام</span><span>09:33</span>  
 </div>  
 </div>  
 </div>  <div class="chatInputRow">  
@@ -235,8 +231,11 @@ onpointercancel="stopTalking(event)">
 </div>  </div>  
 </div>  <div id="modalWrap" class="modalWrap hidden">  
 <div class="modal" id="modalContent"></div>  
-</div>  <div id="toast" class="toast hidden"></div>  <script>  
-const API=location.origin;  
+</div>  <div id="toast" class="toast hidden"></div>  
+
+<script>  
+// الربط المباشر برابط سيرفر Render الخاص بك
+const API = "https://radio-connect-server.onrender.com";  
   
 let deviceId=localStorage.getItem('deviceId')||null;  
 let livekitRoom=null;  
@@ -263,6 +262,21 @@ clearTimeout(window.toastTimer);
 window.toastTimer=setTimeout(()=>e.classList.add('hidden'),3000);  
 }  
   
+function setServerOnline(online, text){
+  const dot = $('statusDot');
+  const txt = $('serverStatusText');
+  const val = $('connectionValue');
+  if(online){
+    dot?.classList.add('online');
+    if(txt) txt.textContent = text || 'متصل';
+    if(val) val.textContent = 'متصل';
+  } else {
+    dot?.classList.remove('online');
+    if(txt) txt.textContent = text || 'غير متصل';
+    if(val) val.textContent = 'غير متصل';
+  }
+}
+
 function openModal(html){  
 $('modalContent').innerHTML=html;  
 $('modalWrap').classList.remove('hidden');  
@@ -300,8 +314,10 @@ if(d.deviceId){
 deviceId=d.deviceId;  
 localStorage.setItem('deviceId',deviceId);  
 }  
+setServerOnline(true);
 }catch(e){  
 console.error(e);  
+setServerOnline(false, 'تأخر السيرفر');
 }  
 }  
   
@@ -329,6 +345,7 @@ await disconnectLiveKit();
 }  
   
 try{  
+toast('جارٍ الاتصال بالغرفة...');
 const r=await fetch(  
 `${API}/token?room=${encodeURIComponent(target)}`,  
 {  
@@ -344,6 +361,7 @@ d=await r.json();
   
 if(!r.ok||!d.token){  
 console.error('Token error',d);  
+toast('فشل جلب التوكن من السيرفر');
 return false;  
 }  
   
@@ -413,12 +431,15 @@ await room.connect(d.url,d.token);
 
 livekitRoom=room;
 livekitRoomId=target;  
+setServerOnline(true);
+toast('متصل بالغرفة بنجاح');
 return true;  
   
 }catch(e){  
 console.error('LiveKit connect error',e);  
 livekitRoom=null;  
 livekitRoomId=null;  
+toast('تعذر الاتصال بسيرفر الصوت');
 return false;  
 }  
 }  
@@ -505,14 +526,14 @@ stream.getTracks().forEach(t=>t.stop());
 throw new Error('MIC_NOT_FOUND');  
 }  
   
-localAudioTrack=new LivekitClient.LocalAudioTrack(raw);  
-localAudioTrack.enable();  
+localAudioTrack = new LivekitClient.LocalAudioTrack(raw);  
+await localAudioTrack.enable();  
   
 await livekitRoom.localParticipant.publishTrack(  
 localAudioTrack,  
 {  
 name:'radio-microphone',  
-source:LivekitClient.Track.Source.Microphone  
+source: LivekitClient.Track.Source.Microphone  
 }  
 );  
   
@@ -646,16 +667,17 @@ $('membersCount').textContent=`أعضاء الغرفة (${state.members.length})
   
 async function loadRooms(){  
 try{  
+toast('جارٍ الاستجابة مع الخادم...');
 const r=await fetch(API+'/api/rooms',{  
 headers:{'x-device-id':deviceId||''}  
 });  
 if(!r.ok){  
-$('connectionValue').textContent='غير متصل';  
-$('serverStatusText').textContent='غير متصل';  
+setServerOnline(false);
 return;  
 }  
 const d=await r.json();  
 state.rooms=d.rooms||[];  
+setServerOnline(true);
 if(state.rooms.length&&!currentRoom){  
 await selectRoom(state.rooms[0].id);  
 }else if(!state.rooms.length){  
@@ -663,8 +685,7 @@ updateRoomUI();
 }  
 }catch(e){  
 console.error('rooms',e);  
-$('connectionValue').textContent='غير متصل';  
-$('serverStatusText').textContent='غير متصل';  
+setServerOnline(false, 'السيرفر نائم (استيقاظ...)');
 }  
 }  
   
@@ -856,66 +877,66 @@ return toast('صلاحيات الإدارة للمشرفين فقط');
 openModal(  
 '<div class="modalHead"><strong>إدارة الغرفة</strong><button onclick="closeModal()">×</button></div>'+  
 '<button class="secondary" onclick="openMembers()">👥 إدارة الأعضاء والمشرفين</button>'+  
-'<button class="secondary" onclick="testMicrophone()">🎙️ اختبار الميكروفون</button>'  
+'<button class="secondary" onclick="testMicrophone()">🎙️️ اختبار الميكروفون</button>'  
 );  
 }  
 
-function appendRemoteChat(text, name, time, isMine = false){
-  if(!text)return;
-  const empty=$('chatEmpty');
-  if(empty)empty.remove();
+function appendRemoteChat(text, name, time, isMine = false){  
+  if(!text)return;  
+  const empty=$('chatEmpty');  
+  if(empty)empty.remove();  
 
-  const d=document.createElement('div');
-  d.className='msgBubble' + (isMine ? ' mine' : '');
-  d.appendChild(document.createTextNode(text));
+  const d=document.createElement('div');  
+  d.className='msgBubble' + (isMine ? ' mine' : '');  
+  d.appendChild(document.createTextNode(text));  
 
-  const m=document.createElement('div');
-  m.className='msgMeta';
-  m.innerHTML='<span>'+escapeHtml(name)+'</span><span>'+escapeHtml(time)+'</span>';
+  const m=document.createElement('div');  
+  m.className='msgMeta';  
+  m.innerHTML='<span>'+escapeHtml(name)+'</span><span>'+escapeHtml(time)+'</span>';  
 
-  d.appendChild(m);
-  $('chatLogs').appendChild(d);
-  $('chatLogs').scrollTop=$('chatLogs').scrollHeight;
+  d.appendChild(m);  
+  $('chatLogs').appendChild(d);  
+  $('chatLogs').scrollTop=$('chatLogs').scrollHeight;  
 } 
 
-async function sendChat(){
-  const i=$('chatInput');
-  const v=i.value.trim();
+async function sendChat(){  
+  const i=$('chatInput');  
+  const v=i.value.trim();  
 
-  if(!v)return;
-  if(!currentRoom){
-    toast('يرجى اختيار غرفة أولاً');
-    return;
-  }
+  if(!v)return;  
+  if(!currentRoom){  
+    toast('يرجى اختيار أو إنشاء غرفة أولاً');  
+    return;  
+  }  
 
-  try{
-    const connected=await connectLiveKitRoom();
-    if(!connected||!livekitRoom||livekitRoom.state!=='connected'){
-      toast('تعذر الاتصال بالمحادثة');
-      return;
-    }
+  try{  
+    const connected=await connectLiveKitRoom();  
+    if(!connected||!livekitRoom||livekitRoom.state!=='connected'){  
+      toast('تعذر الاتصال بالمحادثة (تأكد من استجابة السيرفر)');  
+      return;  
+    }  
 
-    const timeStr = new Date().toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'});
-    const data={
-      type:'radio-chat',
-      text:v,
-      senderDeviceId:deviceId,
-      senderName: currentRoom.memberName || 'أنت',
-      time: timeStr
-    };
+    const timeStr = new Date().toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'});  
+    const data={  
+      type:'radio-chat',  
+      text:v,  
+      senderDeviceId:deviceId,  
+      senderName: currentRoom.memberName || 'أنت',  
+      time: timeStr  
+    };  
 
-    const payload=new TextEncoder().encode(JSON.stringify(data));
+    const payload=new TextEncoder().encode(JSON.stringify(data));  
 
-    await livekitRoom.localParticipant.publishData(payload, { reliable: true });
+    await livekitRoom.localParticipant.publishData(payload, { reliable: true });  
 
-    appendRemoteChat(v, 'أنت', timeStr, true);
-    i.value='';
+    appendRemoteChat(v, 'أنت', timeStr, true);  
+    i.value='';  
 
-  }catch(err){
-    console.error('Chat send error:',err);
-    toast('تعذر إرسال الرسالة');
-  }
-}
+  }catch(err){  
+    console.error('Chat send error:',err);  
+    toast('تعذر إرسال الرسالة');  
+  }  
+}  
   
 function chooseFile(id){ $(id)?.click(); }  
 function sendSelectedFile(i){  
@@ -935,7 +956,7 @@ function openSettings(){
 openModal(  
 '<div class="modalHead"><strong>الإعدادات العامة</strong><button onclick="closeModal()">×</button></div>'+  
 '<div class="field"><label>الصوت</label><button class="secondary" onclick="testMicrophone()">🎙️ اختبار الميكروفون</button></div>'+  
-'<div class="field"><label>الاتصال</label><div class="empty">الخادم: متصل عبر HTTPS</div></div>'+  
+'<div class="field"><label>الاتصال</label><div class="empty">الخادم: HTTPS</div></div>'+  
 '<button class="primary" onclick="closeModal()">حفظ وإغلاق</button>'  
 );  
 }  
@@ -995,9 +1016,6 @@ await registerDevice();
 getBattery();  
 detectNetwork();  
 await loadRooms();  
-if(!currentRoom){  
-$('currentRoomName').textContent='اختر غرفة';  
-}  
 }  
   
 init();  
