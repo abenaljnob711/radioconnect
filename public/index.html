@@ -478,14 +478,13 @@ throw err;
 }  
 }  
   
-async function startTalking(e){  
-if(e)e.preventDefault();  
-  
-if(talking)return;  
-  
-if(!currentRoom){  
-toast('يرجى اختيار غرفة أولاً');  
-return;  
+async function stopTalking(e){
+
+console.log('PTT STOP');
+
+if(e&&pttPointerId!==null&&e.pointerId!==undefined&&e.pointerId!==pttPointerId){
+return;
+}
 }  
   
 const session=++pttSession;  
