@@ -708,6 +708,12 @@
     .hidden {
       display: none!important;
     }
+    /* تحسين خيارات قائمة المحادثة لتصحيح اتجاه الرسائل */
+    #chatMessages {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
     @media(max-width: 360px) {
       .ptt {
         width: 165px;
@@ -933,7 +939,7 @@
       <button class="tool" onclick="openMembers()"> <span>👥</span> <small>الأعضاء</small> </button>
       <button class="tool" onclick="openChat()"> <span>💬</span> <small>الرسائل</small> </button>
       <button class="tool" onclick="openMediaTest()"> <span>📷</span> <small>الوسائط</small> </button>
-      <button class="tool" onclick="testMicrophone()"> <span>🎙️️</span> <small>الميكروفون</small> </button>
+      <button class="tool" onclick="testMicrophone()"> <span>🎙</span> <small>الميكروفون</small> </button>
       <button class="tool" onclick="testSpeaker()"> <span>🔊</span> <small>السماعة</small> </button>
       <button class="tool" onclick="refreshRoom()"> <span>🔄</span> <small>تحديث</small> </button>
     </div>
@@ -952,7 +958,7 @@
   <nav id="bottomNav" class="bottom-nav hidden">
     <button id="navHome" class="nav-btn active" onclick="showScreen('home')"> <span>📻</span> <small>الغرف</small> </button>
     <button id="navFavorites" class="nav-btn" onclick="showScreen('favorites')"> <span>⭐</span> <small>المفضلة</small> </button>
-    <button id="navSettings" class="nav-btn" onclick="showScreen('settings')"> <span>⚙️️</span> <small>الإعدادات</small> </button>
+    <button id="navSettings" class="nav-btn" onclick="showScreen('settings')"> <span>⚙</span> <small>الإعدادات</small> </button>
   </nav>
 
   <!-- النوافذ المنبثقة -->
@@ -1004,7 +1010,7 @@
         <h3>الرسائل</h3>
         <button class="close" onclick="closeModal('chatModal')">×</button>
       </div>
-      <div id="chatMessages" class="card" style="min-height:160px;max-height:260px;overflow-y:auto;margin-bottom:10px;display:flex;flex-direction:column;gap:6px">
+      <div id="chatMessages" class="card" style="min-height:160px;max-height:260px;overflow-y:auto;margin-bottom:10px;">
         <div class="empty">لا توجد رسائل</div>
       </div>
       <div style="display:flex;gap:8px">
@@ -1044,7 +1050,7 @@
 <script>
   "use strict";
 
-  /* ========================================== המתغيرات ========================================== */
+  /* ========================================== المتغيرات ========================================== */
   const API = location.origin;
   let deviceId = localStorage.getItem("radioDeviceId") || "";
   let rooms = [];
@@ -1546,14 +1552,17 @@
           }
         });
 
+        // إصلاح استقبال الرسائل وتأكيد تفكيك البيانات بالكامل
         livekitRoom.on(window.LivekitClient.RoomEvent.DataReceived, (payload) => {
           try {
-            const text = new TextDecoder().decode(payload);
+            const text = new TextDecoder("utf-8").decode(payload);
             const data = JSON.parse(text);
             if (data.type === 'radio-chat' && data.senderDeviceId !== deviceId) {
               appendMessageToUI(data.text, data.senderName, false);
             }
-          } catch (e) {}
+          } catch (e) {
+            console.error("DataReceived decode error:", e);
+          }
         });
 
         livekitRoom.on(window.LivekitClient.RoomEvent.ParticipantConnected, () => updateMemberCount());
@@ -1898,6 +1907,7 @@
     openModal("chatModal");
   }
 
+  // إصلاح دالة إضافة واستعراض الرسائل
   function appendMessageToUI(message, senderName, isMine) {
     const box = $("chatMessages");
     const empty = box.querySelector(".empty");
@@ -1908,9 +1918,12 @@
     item.style.borderRadius = "11px";
     item.style.background = isMine ? "#086dd7" : "#10243a";
     item.style.fontSize = "12px";
-    item.style.alignSelf = isMine ? "flex-start" : "flex-end";
+    item.style.margin = "3px 0";
     item.style.maxWidth = "85%";
-    item.innerHTML = (senderName ? `<small style="display:block;color:#a3c7ef;font-size:10px">${escapeHtml(senderName)}</small>` : '') + escapeHtml(message);
+    item.style.marginLeft = isMine ? "0" : "auto";
+    item.style.marginRight = isMine ? "auto" : "0";
+    
+    item.innerHTML = (senderName ? `<small style="display:block;color:#a3c7ef;font-size:10px;margin-bottom:2px">${escapeHtml(senderName)}</small>` : '') + escapeHtml(message);
 
     box.appendChild(item);
     box.scrollTop = box.scrollHeight;
