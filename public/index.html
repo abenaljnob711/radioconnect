@@ -467,7 +467,7 @@
       cursor: pointer;
     }
 
-    /* الشريط السفلي */
+    /* الشريط السفلي (الترتيب الصحيح: الرئيسية، المفضلة، الموجات، حسابي) */
     .bottom-nav {
       position: fixed;
       bottom: 0;
@@ -709,7 +709,7 @@
     </div>
   </section>
 
-  <!-- الشريط السفلي -->
+  <!-- الشريط السفلي (مرتب بالترتيب الصحيح: الرئيسية، المفضلة، الموجات، حسابي) -->
   <nav class="bottom-nav">
     <button id="navRoom" class="nav-btn active" onclick="showScreen('room')">
       <span>🏠</span>
@@ -1095,7 +1095,10 @@
 
   async function openRoom(roomId) {
     try {
-      const response = await fetch(API + "/api/rooms/" + encodeURIComponent(roomId) + "?deviceId=" + encodeURIComponent(deviceId));
+      const response = await fetch(API + "/api/rooms/" + encodeURIComponent(roomId) + "?deviceId=" + encodeURIComponent(deviceId), {
+        headers: { 'x-device-id': deviceId || '' }
+      });
+      if (!response.ok) throw new Error("تعذر فتح الغرفة");
       const data = await response.json();
       activeRoom = data.room;
       activeRoomId = roomId;
