@@ -1,5 +1,5 @@
 const express = require("express");
-const path = path = require("path");
+const path = require("path");
 const crypto = require("crypto");
 const { AccessToken } = require("livekit-server-sdk");
 
@@ -346,7 +346,6 @@ app.get("/token", async (req, res) => {
       return res.status(500).json({ error: "رابط LiveKit غير صحيح" });
     }
 
-    // تم التصحيح هنا لاستخدام apiKey و apiSecret بالأسماء الصحيحة
     const token = new AccessToken(apiKey, apiSecret, { identity: deviceId });
     token.addGrant({
       roomJoin: true,
