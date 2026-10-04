@@ -10,65 +10,74 @@
     body, html { width: 100%; height: 100%; background: #030810; color: #edf5ff; overflow: hidden; }
     .app { width: 100%; max-width: 520px; height: 100vh; margin: auto; background: linear-gradient(180deg, #071325 0%, #030810 100%); display: flex; flex-direction: column; position: relative; }
     
-    /* 1. شريط العنوان العلوي (مطابق للصورة) */
+    /* 1. شريط العنوان العلوي */
     .header { display: flex; justify-content: space-between; align-items: center; background-color: #0b192c; padding: 10px 15px; border-bottom: 1px solid #1e3a5f; }
-    .header-left, .header-right { display: flex; align-items: center; gap: 10px; }
-    .status-badge { background: #0c2318; border: 1px solid #14532d; padding: 4px 10px; border-radius: 12px; display: flex; align-items: center; gap: 6px; font-size: 11px; color: #2ecc71; }
+    .header-left, .header-right { display: flex; align-items: center; gap: 8px; }
+    .status-badge { background: #0c2318; border: 1px solid #14532d; padding: 4px 8px; border-radius: 12px; display: flex; align-items: center; gap: 5px; font-size: 11px; color: #2ecc71; }
     .status-dot { width: 8px; height: 8px; border-radius: 50%; background-color: #2ecc71; box-shadow: 0 0 8px #2ecc71; }
     .status-dot.weak { background-color: #e74c3c; box-shadow: 0 0 8px #e74c3c; }
 
-    /* 2. شريط العمليات ومعلومات الغرفة والبطارية والشبكة */
+    /* 2. شريط العمليات والبطارية والشبكة */
     .room-bar { background-color: #08121e; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #152942; }
-    .room-title-box { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: bold; color: #fff; }
+    .room-title-box { display: flex; align-items: center; gap: 5px; font-size: 14px; font-weight: bold; color: #fff; }
     .channel-details { font-size: 11px; color: #738aab; margin-top: 2px; }
     .warning-text { color: #f39c12; font-size: 10px; margin-top: 2px; display: block; }
-    .sys-info { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; font-size: 11px; color: #8d99ae; }
-    .sys-row { display: flex; align-items: center; gap: 8px; }
+    .sys-info { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; font-size: 11px; color: #8d99ae; }
+    .sys-row { display: flex; align-items: center; gap: 6px; }
 
-    /* 3. أزرار التحكم الصوتي وزر PTT المركزي */
-    .voice-section { background-color: #060e18; padding: 14px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-bottom: 1px solid #152942; position: relative; }
-    .voice-modes { display: flex; justify-content: space-between; width: 100%; font-size: 11px; color: #738aab; padding: 0 10px; }
-    .ptt-container { display: flex; align-items: center; justify-content: center; gap: 15px; margin: 10px 0; }
-    
+    /* 3. أزرار التحكم الصوتي وزر PTT المركزي المطابق للصورة */
+    .voice-section { background-color: #060e18; padding: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-bottom: 1px solid #152942; position: relative; }
+    .voice-control-row { display: flex; width: 100%; justify-content: space-between; align-items: center; padding: 0 5px; }
+    .voice-box { background: #0b192c; border: 1px solid #1e3a5f; border-radius: 12px; padding: 6px 10px; width: 44%; display: flex; flex-direction: column; gap: 4px; }
+    .voice-box-top { display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: #fff; }
+    .toggle-switch { font-size: 10px; background: #166534; color: #4ade80; padding: 2px 8px; border-radius: 8px; font-weight: bold; }
+    .toggle-switch.off { background: #7f1d1d; color: #f87171; }
+    .toggle-btn { background: #f39c12; color: #000; border: none; font-size: 10px; font-weight: bold; padding: 3px 6px; border-radius: 6px; cursor: pointer; text-align: center; }
+
+    .ptt-container { display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 6px 0; }
     .ptt-btn {
-      width: 150px; height: 150px; border-radius: 50%;
-      background: radial-gradient(circle, #e74c3c 0%, #8b0000 100%);
-      border: 5px solid #1b365d; display: flex; flex-direction: column;
+      width: 130px; height: 130px; border-radius: 50%;
+      background: radial-gradient(circle, #e74c3c 0%, #7f1d1d 100%);
+      border: 4px solid #b91c1c; display: flex; flex-direction: column;
       align-items: center; justify-content: center; cursor: pointer;
-      box-shadow: 0 0 30px rgba(231, 76, 60, 0.4); transition: 0.15s; touch-action: none;
+      box-shadow: 0 0 25px rgba(231, 76, 60, 0.5); transition: 0.15s; touch-action: none; position: relative;
     }
     .ptt-btn.active {
-      background: radial-gradient(circle, #3498db 0%, #11527e 100%);
-      box-shadow: 0 0 35px rgba(52, 152, 219, 0.6);
+      background: radial-gradient(circle, #3498db 0%, #1e3a8a 100%);
+      box-shadow: 0 0 30px rgba(52, 152, 219, 0.7);
       transform: scale(0.95);
     }
-    .ptt-btn span { font-size: 12px; font-weight: bold; color: #fff; margin-top: 4px; }
+    .ptt-instruction { font-size: 10px; color: #facc15; margin-top: 4px; font-weight: bold; background: rgba(0,0,0,0.4); padding: 2px 8px; border-radius: 8px; }
 
     /* 4. قسم المحادثة والدردشة */
-    .chat-section { flex: 1; overflow-y: auto; padding: 12px 15px; display: flex; flex-direction: column; gap: 10px; }
+    .chat-section-title { padding: 8px 15px; font-size: 12px; color: #738aab; display: flex; align-items: center; gap: 6px; background: #050e18; border-bottom: 1px solid #152942; }
+    .chat-section { flex: 1; overflow-y: auto; padding: 10px 15px; display: flex; flex-direction: column; gap: 8px; }
     .msg-bubble { max-width: 80%; padding: 8px 12px; border-radius: 12px; font-size: 12px; line-height: 1.4; }
     .msg-bubble.received { background-color: #0d1b2d; align-self: flex-start; border: 1px solid #1b365d; }
     .msg-bubble.sent { background-color: #0e345c; align-self: flex-end; border: 1px solid #205081; }
-    .typing-indicator { font-size: 11px; color: #3498db; padding: 0 15px 4px; display: block; }
+    .typing-indicator { font-size: 10px; color: #3498db; padding: 0 15px 2px; }
 
-    /* قائمة أدوات المرفقات العائمة (المطابقة تماماً للصورة) */
+    /* قائمة أدوات المرفقات العائمة (مطابقة للصورة تماماً) */
     .tools-menu {
       position: absolute; bottom: 65px; left: 15px; right: 15px;
       background: #091726; border: 1px solid #204066; border-radius: 16px;
-      padding: 12px; display: none; grid-template-columns: repeat(2, 1fr); gap: 10px; z-index: 99;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      padding: 10px; display: none; grid-template-columns: repeat(2, 1fr); gap: 8px; z-index: 99;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.6);
     }
-    .tool-card { background: #0e2238; border-radius: 12px; padding: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; font-size: 12px; color: #dcecff; cursor: pointer; border: 1px solid #1a3c61; }
-    .tool-card span { font-size: 22px; }
+    .tool-card { background: #0e2238; border-radius: 12px; padding: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 11px; color: #dcecff; cursor: pointer; border: 1px solid #1a3c61; }
+    .tool-card span { font-size: 20px; }
+
+    /* تنبيه ترقية مشرف */
+    .admin-notice { background: #1e293b; border: 1px solid #334155; padding: 6px 12px; border-radius: 8px; font-size: 11px; color: #facc15; display: flex; justify-content: space-between; align-items: center; margin: 0 10px 6px; }
 
     /* شريط الكتابة والسفلي */
-    .chat-input-bar { display: flex; align-items: center; background-color: #0b192c; padding: 10px; gap: 10px; border-top: 1px solid #1e3a5f; position: relative; }
-    .chat-input-bar input { flex: 1; background: #050e18; border: 1px solid #1e3a5f; border-radius: 20px; padding: 8px 15px; color: #fff; outline: none; font-size: 12px; }
+    .chat-input-bar { display: flex; align-items: center; background-color: #0b192c; padding: 8px 12px; gap: 8px; border-top: 1px solid #1e3a5f; position: relative; }
+    .chat-input-bar input { flex: 1; background: #050e18; border: 1px solid #1e3a5f; border-radius: 20px; padding: 8px 12px; color: #fff; outline: none; font-size: 12px; }
     .action-icon { font-size: 18px; cursor: pointer; color: #738aab; }
 
     /* 5. شريط التنقل السفلي */
-    .nav-bar { display: flex; justify-content: space-around; background-color: #071322; padding: 8px 0; border-top: 1px solid #152942; }
-    .nav-item { display: flex; flex-direction: column; align-items: center; font-size: 11px; color: #738aab; cursor: pointer; background: none; border: none; }
+    .nav-bar { display: flex; justify-content: space-around; background-color: #071322; padding: 6px 0; border-top: 1px solid #152942; }
+    .nav-item { display: flex; flex-direction: column; align-items: center; font-size: 10px; color: #738aab; cursor: pointer; background: none; border: none; }
     .nav-item.active { color: #3498db; }
   </style>
 </head>
@@ -79,7 +88,7 @@
   <div class="header">
     <div class="header-left">
       <span style="font-size: 18px; cursor: pointer;">☰</span>
-      <span style="font-size: 20px;">📡</span>
+      <span style="font-size: 18px;">🌐</span>
       <div>
         <div style="font-size: 13px; font-weight: bold;">Radio Connect</div>
         <div style="font-size: 9px; color: #738aab;">جهاز لاسلكي</div>
@@ -90,19 +99,20 @@
         <span id="netStatusDot" class="status-dot"></span>
         <span id="netStatusText">متصل</span>
       </div>
-      <span style="cursor: pointer; font-size: 12px; color: #738aab;" onclick="alert('الخادم نشط')">⚙️ الخادم</span>
+      <span style="cursor: pointer; font-size: 11px; color: #738aab;" onclick="alert('الخادم نشط')">⚙️ الخادم</span>
     </div>
   </div>
 
-  <!-- 2. شريط العمليات والبطارية والشبكة -->
+  <!-- 2. شريط العمليات ومعلومات الغرفة والبطارية والشبكة -->
   <div class="room-bar">
     <div>
       <div class="room-title-box">
         <span>العمليات</span>
         <span style="font-size: 10px; color: #738aab;">▼</span>
       </div>
-      <div class="channel-id">7F3A · موجة 1 (أعضاء العملية - 5)</div>
-      <span class="warning-text">⚠️ سوف يتم خروجك من الغرفة عند تغيير الموجة</span>
+      <div class="channel-details">أعضاء العملية - 1 موجة 5</div>
+      <div class="channel-details" style="color: #3498db; font-family: monospace;">7F3A موجة 1</div>
+      <span class="warning-text">⚠️ سوف يتم خروجك من الغرفة</span>
     </div>
     <div class="sys-info">
       <div class="sys-row">
@@ -114,32 +124,46 @@
     </div>
   </div>
 
-  <!-- 3. أزرار التحكم الصوتي وزر PTT -->
+  <!-- 3. أزرار التحكم الصوتي وزر PTT المركزي -->
   <div class="voice-section">
-    <div class="voice-modes">
-      <span>الصوت الطبيعي [مفعل]</span>
-      <span>الصوت اللاسلكي [متوقف]</span>
-    </div>
-    
-    <div class="ptt-container">
-      <div style="color: #3498db; font-size: 14px; font-family: monospace;">ılıll|</div>
+    <div class="voice-control-row">
+      <div class="voice-box">
+        <div class="voice-box-top">
+          <span>الصوت الطبيعي</span>
+          <span class="toggle-switch">مفعل</span>
+        </div>
+        <button class="toggle-btn">تفعيل الصوت الطبيعي</button>
+      </div>
       
-      <!-- زر التحدث الدائري (أحمر افتراضي -> أزرق عند الضغط) -->
-      <div id="pttButton" class="ptt-btn">
-        <svg style="width:30px;height:30px;fill:#fff;" viewBox="0 0 24 24"><path d="M12,2A3,3 0 0,1 15,5V11A3,3 0 0,1 12,14A3,3 0 0,1 9,11V5A3,3 0 0,1 12,2M19,11C19,14.53 16.39,17.44 13,17.93V21H11V17.93C7.61,17.44 5,14.53 5,11H7A5,5 0 0,0 12,16A5,5 0 0,0 17,11H19Z"/></svg>
-        <span id="pttText">اضغط للتحدث</span>
+      <div class="ptt-container">
+        <!-- زر التحدث الدائري المطابق للصورة تماماً -->
+        <div id="pttButton" class="ptt-btn">
+          <span style="font-size: 18px;">📻</span>
+          <span style="font-size: 10px; margin-top: 2px;">7F3A</span>
+        </div>
+        <div class="ptt-instruction">اضغط باستمرار للتحدث</div>
       </div>
 
-      <div style="color: #3498db; font-size: 14px; font-family: monospace;">|llili</div>
+      <div class="voice-box">
+        <div class="voice-box-top">
+          <span>الصوت اللاسلكي</span>
+          <span class="toggle-switch off">متوقف</span>
+        </div>
+        <button class="toggle-btn" style="background: #334155; color: #fff;">تفعيل الصوت اللاسلكي</button>
+      </div>
     </div>
-    <div style="font-size: 10px; color: #738aab;">اضغط باستمرار للتحدث واترك الزر للاستماع.</div>
+  </div>
+
+  <!-- عنوان المحادثة -->
+  <div class="chat-section-title">
+    <span>💬</span> المحادثة
   </div>
 
   <!-- 4. قسم المحادثة والدردشة -->
   <div class="chat-section" id="chatBox">
     <div class="msg-bubble sent">
       تم استلام الرسالة بنجاح
-      <span style="display:block; font-size:9px; color:#8d99ae; text-align: left;">09:32</span>
+      <span style="display:block; font-size:9px; color:rgba(255,255,255,0.6); text-align: left;">09:32</span>
     </div>
     <div class="msg-bubble received">
       <small style="display:block; color:#3498db; font-size:10px;">أحمد</small>
@@ -151,12 +175,15 @@
       ننتظر الإشارة، موافق..
       <span style="display:block; font-size:9px; color:#738aab; text-align: left;">09:34</span>
     </div>
+    <div class="typing-indicator">يكتب الآن...</div>
+    <div class="msg-bubble received">
+      <small style="display:block; color:#3498db; font-size:10px;">أحمد</small>
+      تم
+      <span style="display:block; font-size:9px; color:#738aab; text-align: left;">09:35</span>
+    </div>
   </div>
 
-  <!-- مؤشر يكتب الان -->
-  <div class="typing-indicator" id="typingIndicator">خالد يكتب الان...</div>
-
-  <!-- قائمة أدوات المرفقات العائمة (المطابقة لصورتك تماماً) -->
+  <!-- قائمة أدوات المرفقات العائمة (مطابقة للصورة تماماً) -->
   <div class="tools-menu" id="toolsMenu">
     <div class="tool-card" onclick="triggerFile('image/*')"><span>📷</span>إرسال صورة</div>
     <div class="tool-card" onclick="triggerFile('video/*')"><span>🎥</span>إرسال فيديو</div>
@@ -168,6 +195,12 @@
 
   <!-- ملف مخفي للرفع -->
   <input type="file" id="hiddenFileInput" style="display:none" onchange="handleFile(event)">
+
+  <!-- تنبيه ترقية مشرف -->
+  <div class="admin-notice">
+    <span>تنبيه ترقية مشرف</span>
+    <span style="font-size: 10px; color: #94a3b8;">إرسال الرسالة - اضغط لإرسال نصك</span>
+  </div>
 
   <!-- شريط الكتابة والسفلي -->
   <div class="chat-input-bar">
@@ -198,7 +231,6 @@
   let isTalking = false;
 
   const pttBtn = document.getElementById('pttButton');
-  const pttText = document.getElementById('pttText');
   const netDot = document.getElementById('netStatusDot');
   const netText = document.getElementById('netStatusText');
   const toolsMenu = document.getElementById('toolsMenu');
@@ -272,8 +304,6 @@
     try {
       isTalking = true;
       pttBtn.classList.add('active');
-      pttText.textContent = "تحدث الآن";
-      
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       localAudioTrack = new window.LivekitClient.LocalAudioTrack(stream.getAudioTracks()[0]);
       await localAudioTrack.enable();
@@ -286,7 +316,6 @@
     if(!isTalking) return;
     isTalking = false;
     pttBtn.classList.remove('active');
-    pttText.textContent = "اضغط للتحدث";
 
     try {
       if(livekitRoom && localAudioTrack) await livekitRoom.localParticipant.unpublishTrack(localAudioTrack);
