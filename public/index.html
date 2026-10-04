@@ -481,7 +481,7 @@
       cursor: pointer;
     }
 
-    /* ========================= الشريط السفلي (4 أزرار) ========================= */
+    /* ========================= الشريط السفلي (مرتب بالترتيب الصحيح) ========================= */
     .bottom-nav {
       position: fixed;
       bottom: 0;
@@ -516,7 +516,7 @@
       color: #1a8cff;
     }
 
-    /* النوافذ المساعدة وباقي التنسيقات العامة */
+    /* النوافذ المساعدة والتنسيقات */
     .card { background: #06162d; border-radius: 16px; padding: 14px; margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.05); }
     .room-card { background: #071a36; border-radius: 14px; padding: 12px; margin-bottom: 8px; border: 1px solid rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: space-between; }
     .small-btn { padding: 6px 12px; border-radius: 8px; background: #0d325e; color: #fff; font-size: 11px; cursor: pointer; }
@@ -559,19 +559,9 @@
     </div>
   </header>
 
-  <!-- شاشة الاختبار والتهيئة الأساسية -->
-  <section id="setupScreen" class="screen">
-    <div class="card" style="text-align:center;padding:25px 15px;">
-      <div style="font-size:45px;margin-bottom:12px;">📡</div>
-      <h2 style="margin:0 0 8px 0;">مرحبًا بك في جهاز لاسلكي</h2>
-      <p style="color:#8fa1b9;font-size:12px;margin:0 0 16px 0;">جاهز للاتصال الصوتي المباشر</p>
-      <button class="primary" onclick="enterApp()">الدخول إلى الرئيسية</button>
-    </div>
-  </section>
-
-  <!-- شاشة التطبيق الرئيسية (المطابقة للصورة 100%) -->
+  <!-- شاشة التطبيق الرئيسية -->
   <section id="roomScreen" class="screen active">
-    <!-- الشريط العلوي للحالة والموجات -->
+    <!-- الشريط العلوي -->
     <div class="dashboard-top-grid">
       <!-- كرت الغرفة -->
       <div class="dash-card">
@@ -675,7 +665,7 @@
       </div>
     </div>
 
-    <!-- قائمة المرفقات العائمة (6 أزرار تماماً كالصورة) -->
+    <!-- قائمة المرفقات العائمة (6 أزرار) -->
     <div id="toolsMenu" class="tools-popup-grid hidden">
       <button class="tool-pop-btn" onclick="triggerFileInput('image/*')"><span>🖼️</span> إرسال صورة</button>
       <button class="tool-pop-btn" onclick="triggerFileInput('video/*')"><span>📹</span> إرسال فيديو</button>
@@ -685,7 +675,7 @@
       <button class="tool-pop-btn" onclick="openMembers()"><span>👥</span> أعضاء الغرفة</button>
     </div>
 
-    <!-- شريط إدخال الرسائل -->
+    <!-- شريط إدخال الرسالة -->
     <div class="chat-input-bar">
       <button class="input-icon-btn" onclick="toggleToolsMenu()">📎</button>
       <input id="chatInput" class="chat-input-field" placeholder="اكتب رسالة..." onkeydown="if(event.key==='Enter')sendChatMessage()">
@@ -731,11 +721,12 @@
     </div>
     <div class="card">
       <button class="primary" onclick="testMicrophone()" style="margin-bottom:8px;">🎙️ اختبار الميكروفون</button>
-      <button class="primary" onclick="testSpeaker()">🔊 اختبار السماعة</button>
+      <button class="primary" onclick="testSpeaker()" style="margin-bottom:8px;">🔊 اختبار السماعة</button>
+      <button class="small-btn danger" style="width:100%;padding:10px" onclick="deleteCurrentRoom()" id="leaveRoomBtn">🚪 مغادرة الغرفة الحالية</button>
     </div>
   </section>
 
-  <!-- الشريط السفلي (4 أزرار: الرئيسية، المفضلة، الموجات، حسابي) -->
+  <!-- الشريط السفلي (الترتيب الصحيح: الرئيسية، المفضلة، الموجات، حسابي) -->
   <nav class="bottom-nav">
     <button id="navRoom" class="nav-btn active" onclick="showScreen('room')">
       <span>🏠</span>
@@ -853,10 +844,6 @@
         await loadRooms();
       }
     } catch (error) { setConnection(false, "غير متصل"); }
-  }
-
-  function enterApp() {
-    showScreen("room");
   }
 
   function showScreen(name) {
@@ -1115,6 +1102,7 @@
       activeRoomId = roomId;
       showRoomScreen();
       await connectLiveKit();
+      toast("تم فتح الغرفة بنجاح");
     } catch (error) { toast("تعذر فتح الغرفة"); }
   }
 
@@ -1122,6 +1110,14 @@
     $("activeRoomName").textContent = activeRoom?.name || "غرفة القيادة";
     showScreen("room");
     updateWave();
+  }
+
+  async function deleteCurrentRoom() {
+    await disconnectLiveKit();
+    activeRoom = null;
+    activeRoomId = null;
+    showScreen("home");
+    toast("تمت مغادرة الغرفة");
   }
 
   function openMembers() { openModal("membersModal"); }
