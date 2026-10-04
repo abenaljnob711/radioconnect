@@ -5,339 +5,1320 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
   <title>Radio Connect - جهاز لاسلكي</title>
   <script src="https://unpkg.com/livekit-client@2.15.3/dist/livekit-client.umd.min.js"></script>
+
   <style>
-    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; font-family: Arial, "Noto Sans Arabic", sans-serif; }
-    body, html { width: 100%; height: 100%; background: #030810; color: #edf5ff; overflow: hidden; }
-    .app { width: 100%; max-width: 520px; height: 100vh; margin: auto; background: linear-gradient(180deg, #071325 0%, #030810 100%); display: flex; flex-direction: column; position: relative; }
-    
-    /* 1. شريط العنوان العلوي */
-    .header { display: flex; justify-content: space-between; align-items: center; background-color: #0b192c; padding: 10px 15px; border-bottom: 1px solid #1e3a5f; }
-    .header-right { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: bold; }
-    .header-left { display: flex; align-items: center; gap: 10px; }
-    .status-badge-green { background: #064e3b; border: 1px solid #10b981; color: #34d399; padding: 4px 10px; border-radius: 14px; font-size: 11px; font-weight: bold; display: flex; align-items: center; gap: 5px; }
-    .dot-green { width: 8px; height: 8px; background: #22c55e; border-radius: 50%; box-shadow: 0 0 8px #22c55e; }
-
-    /* 2. شريط العمليات والموجات والبطارية */
-    .room-bar { background-color: #071322; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1e3a5f; }
-    .room-col-right { display: flex; flex-direction: column; gap: 2px; }
-    .room-col-center { display: flex; align-items: center; gap: 8px; text-align: center; }
-    .room-col-left { display: flex; flex-direction: column; align-items: flex-end; font-size: 11px; color: #94a3b8; gap: 2px; }
-    .arrow-btn { background: #1e3a5f; color: #fff; border: none; width: 22px; height: 22px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 12px; }
-
-    /* 3. أزرار التحكم الصوتي وزر PTT المركزي */
-    .voice-section { background-color: #050b14; padding: 15px 10px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1e3a5f; position: relative; }
-    
-    .voice-card { background: #0b192c; border: 1px solid #1e3a5f; border-radius: 14px; padding: 8px; width: 28%; display: flex; flex-direction: column; gap: 6px; text-align: center; }
-    .voice-card-top { display: flex; justify-content: space-between; align-items: center; font-size: 10px; color: #94a3b8; }
-    .badge-on { background: #14532d; color: #4ade80; padding: 1px 6px; border-radius: 6px; font-size: 9px; font-weight: bold; }
-    .badge-off { background: #7f1d1d; color: #f87171; padding: 1px 6px; border-radius: 6px; font-size: 9px; font-weight: bold; }
-    .voice-btn-action { border: none; font-size: 10px; font-weight: bold; padding: 5px; border-radius: 6px; cursor: pointer; color: #fff; }
-
-    .ptt-wrapper { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 40%; }
-    .ptt-circle-main {
-      width: 135px; height: 135px; border-radius: 50%;
-      background: radial-gradient(circle, #ef4444 0%, #7f1d1d 100%);
-      border: 4px solid #b91c1c; box-shadow: 0 0 30px rgba(239, 68, 68, 0.5);
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      cursor: pointer; touch-action: none; transition: 0.1s;
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      margin: 0;
+      padding: 0;
+      font-family: Arial, "Noto Sans Arabic", sans-serif;
     }
+
+    body, html {
+      width: 100%;
+      height: 100%;
+      background: #030810;
+      color: #edf5ff;
+      overflow: hidden;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 520px;
+      height: 100vh;
+      margin: auto;
+      background: linear-gradient(180deg, #071325 0%, #030810 100%);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #0b192c;
+      padding: 10px 15px;
+      border-bottom: 1px solid #1e3a5f;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: bold;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .status-badge-green {
+      background: #064e3b;
+      border: 1px solid #10b981;
+      color: #34d399;
+      padding: 4px 10px;
+      border-radius: 14px;
+      font-size: 11px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .dot-green {
+      width: 8px;
+      height: 8px;
+      background: #22c55e;
+      border-radius: 50%;
+      box-shadow: 0 0 8px #22c55e;
+    }
+
+    .room-bar {
+      background-color: #071322;
+      padding: 10px 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #1e3a5f;
+    }
+
+    .room-col-right {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .room-col-center {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-align: center;
+    }
+
+    .room-col-left {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      font-size: 11px;
+      color: #94a3b8;
+      gap: 2px;
+    }
+
+    .arrow-btn {
+      background: #1e3a5f;
+      color: #fff;
+      border: none;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+    }
+
+    .voice-section {
+      background-color: #050b14;
+      padding: 15px 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #1e3a5f;
+      position: relative;
+    }
+
+    .voice-card {
+      background: #0b192c;
+      border: 1px solid #1e3a5f;
+      border-radius: 14px;
+      padding: 8px;
+      width: 28%;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      text-align: center;
+    }
+
+    .voice-card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 10px;
+      color: #94a3b8;
+    }
+
+    .badge-on {
+      background: #14532d;
+      color: #4ade80;
+      padding: 1px 6px;
+      border-radius: 6px;
+      font-size: 9px;
+      font-weight: bold;
+    }
+
+    .badge-off {
+      background: #7f1d1d;
+      color: #f87171;
+      padding: 1px 6px;
+      border-radius: 6px;
+      font-size: 9px;
+      font-weight: bold;
+    }
+
+    .voice-btn-action {
+      border: none;
+      font-size: 10px;
+      font-weight: bold;
+      padding: 5px;
+      border-radius: 6px;
+      cursor: pointer;
+      color: #fff;
+    }
+
+    .ptt-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 40%;
+    }
+
+    .ptt-circle-main {
+      width: 135px;
+      height: 135px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #ef4444 0%, #7f1d1d 100%);
+      border: 4px solid #b91c1c;
+      box-shadow: 0 0 30px rgba(239, 68, 68, 0.5);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      touch-action: none;
+      transition: 0.1s;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
     .ptt-circle-main.active {
       background: radial-gradient(circle, #3b82f6 0%, #1d4ed8 100%);
       box-shadow: 0 0 35px rgba(59, 130, 246, 0.7);
       transform: scale(0.95);
     }
-    .ptt-txt { font-size: 10px; color: #facc15; margin-top: 6px; font-weight: bold; background: rgba(0,0,0,0.5); padding: 2px 8px; border-radius: 10px; }
 
-    /* 4. المحادثة وقائمة المرفقات العائمة */
-    .chat-title-bar { padding: 6px 15px; font-size: 12px; color: #94a3b8; display: flex; align-items: center; gap: 6px; background: #071322; border-bottom: 1px solid #1e3a5f; }
-    .chat-area { flex: 1; overflow-y: auto; padding: 10px 15px; display: flex; flex-direction: column; gap: 8px; position: relative; }
-    
-    .chat-bubble { max-width: 75%; padding: 8px 12px; border-radius: 12px; font-size: 12px; line-height: 1.4; }
-    .chat-bubble.left { background-color: #0b192c; align-self: flex-start; border: 1px solid #1e3a5f; }
-    .chat-bubble.right { background-color: #0e345c; align-self: flex-end; border: 1px solid #2563eb; }
-    .sender { display: block; color: #38bdf8; font-size: 10px; margin-bottom: 2px; }
-    .time { display: block; font-size: 9px; color: #64748b; text-align: left; margin-top: 2px; }
+    .ptt-txt {
+      font-size: 10px;
+      color: #facc15;
+      margin-top: 6px;
+      font-weight: bold;
+      background: rgba(0,0,0,0.5);
+      padding: 2px 8px;
+      border-radius: 10px;
+    }
 
-    /* شبكة المرفقات العائمة */
+    .chat-title-bar {
+      padding: 6px 15px;
+      font-size: 12px;
+      color: #94a3b8;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: #071322;
+      border-bottom: 1px solid #1e3a5f;
+    }
+
+    .chat-area {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px 15px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      position: relative;
+    }
+
+    .chat-bubble {
+      max-width: 75%;
+      padding: 8px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .chat-bubble.left {
+      background-color: #0b192c;
+      align-self: flex-start;
+      border: 1px solid #1e3a5f;
+    }
+
+    .chat-bubble.right {
+      background-color: #0e345c;
+      align-self: flex-end;
+      border: 1px solid #2563eb;
+    }
+
+    .sender {
+      display: block;
+      color: #38bdf8;
+      font-size: 10px;
+      margin-bottom: 2px;
+    }
+
+    .time {
+      display: block;
+      font-size: 9px;
+      color: #64748b;
+      text-align: left;
+      margin-top: 2px;
+    }
+
     .tools-popup {
-      position: absolute; bottom: 60px; left: 15px; right: 15px;
-      background: #0b192c; border: 1px solid #2563eb; border-radius: 16px;
-      padding: 12px; display: none; grid-template-columns: repeat(2, 1fr); gap: 10px; z-index: 99;
+      position: absolute;
+      bottom: 60px;
+      left: 15px;
+      right: 15px;
+      background: #0b192c;
+      border: 1px solid #2563eb;
+      border-radius: 16px;
+      padding: 12px;
+      display: none;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      z-index: 99;
       box-shadow: 0 10px 30px rgba(0,0,0,0.7);
     }
-    .tool-box { background: #071322; border: 1px solid #1e3a5f; border-radius: 12px; padding: 10px; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 11px; color: #edf5ff; cursor: pointer; }
-    .tool-box span { font-size: 20px; }
 
-    /* تنبيه ترقية مشرف */
-    .admin-notice-bar { background: #071322; border-top: 1px solid #1e3a5f; padding: 6px 15px; display: flex; justify-content: space-between; align-items: center; font-size: 11px; }
+    .tool-box {
+      background: #071322;
+      border: 1px solid #1e3a5f;
+      border-radius: 12px;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      color: #edf5ff;
+      cursor: pointer;
+    }
 
-    /* شريط الكتابة والسفلي */
-    .input-box-bar { display: flex; align-items: center; background-color: #050b14; padding: 8px 12px; gap: 10px; border-top: 1px solid #1e3a5f; }
-    .input-box-bar input { flex: 1; background: #0b192c; border: 1px solid #1e3a5f; border-radius: 20px; padding: 8px 12px; color: #fff; outline: none; font-size: 12px; text-align: right; }
-    .icon-action { font-size: 18px; cursor: pointer; color: #94a3b8; }
+    .tool-box span {
+      font-size: 20px;
+    }
 
-    /* 5. شريط التنقل السفلي */
-    .nav-bar-bottom { display: flex; justify-content: space-around; background-color: #050b14; padding: 8px 0; border-top: 1px solid #1e3a5f; }
-    .nav-btn-item { display: flex; flex-direction: column; align-items: center; font-size: 10px; color: #64748b; cursor: pointer; background: none; border: none; }
-    .nav-btn-item span { font-size: 18px; }
-    .nav-btn-item.active { color: #38bdf8; }
+    .admin-notice-bar {
+      background: #071322;
+      border-top: 1px solid #1e3a5f;
+      padding: 6px 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+    }
+
+    .input-box-bar {
+      display: flex;
+      align-items: center;
+      background-color: #050b14;
+      padding: 8px 12px;
+      gap: 10px;
+      border-top: 1px solid #1e3a5f;
+    }
+
+    .input-box-bar input {
+      flex: 1;
+      background: #0b192c;
+      border: 1px solid #1e3a5f;
+      border-radius: 20px;
+      padding: 8px 12px;
+      color: #fff;
+      outline: none;
+      font-size: 12px;
+      text-align: right;
+    }
+
+    .icon-action {
+      font-size: 18px;
+      cursor: pointer;
+      color: #94a3b8;
+    }
+
+    .nav-bar-bottom {
+      display: flex;
+      justify-content: space-around;
+      background-color: #050b14;
+      padding: 8px 0;
+      border-top: 1px solid #1e3a5f;
+    }
+
+    .nav-btn-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-size: 10px;
+      color: #64748b;
+      cursor: pointer;
+      background: none;
+      border: none;
+    }
+
+    .nav-btn-item span {
+      font-size: 18px;
+    }
+
+    .nav-btn-item.active {
+      color: #38bdf8;
+    }
   </style>
 </head>
+
 <body>
 
 <div class="app">
-  <!-- 1. شريط العنوان العلوي -->
+
   <div class="header">
     <div class="header-right">
       <span>☰</span>
       <span>📡</span>
       <span>Radio Connect جهاز لاسلكي</span>
     </div>
+
     <div class="header-left">
       <div class="status-badge-green">
         <span class="dot-green"></span>
-        <span>متصل</span>
+        <span id="connectionStatus">متصل</span>
       </div>
-      <span style="cursor: pointer; font-size: 11px; color: #94a3b8;" onclick="alert('الخادم نشط')">الخادم ⚙️</span>
+
+      <span
+        style="cursor:pointer;font-size:11px;color:#94a3b8"
+        onclick="showServerStatus()">
+        الخادم ⚙️
+      </span>
     </div>
   </div>
 
-  <!-- 2. شريط العمليات والموجات -->
+
   <div class="room-bar">
+
     <div class="room-col-right">
-      <div style="font-size: 13px; font-weight: bold; display: flex; align-items: center; gap: 4px;">
-        <span>العمليات</span> <span>▼</span>
+      <div style="font-size:13px;font-weight:bold;display:flex;align-items:center;gap:4px">
+        <span>العمليات</span>
+        <span>▼</span>
       </div>
-      <div style="font-size: 10px; color: #94a3b8;">أعضاء العملية - 1 موجة 5</div>
+
+      <div style="font-size:10px;color:#94a3b8">
+        أعضاء العملية - 1 موجة 5
+      </div>
     </div>
-    
+
+
     <div class="room-col-center">
+
       <button class="arrow-btn" onclick="changeWave(-1)">‹</button>
+
       <div>
-        <div style="font-size: 14px; font-weight: bold; color: #38bdf8; font-family: monospace;">7F3A</div>
-        <div style="font-size: 10px; color: #94a3b8;">موجة 1</div>
+        <div style="font-size:14px;font-weight:bold;color:#38bdf8;font-family:monospace">
+          7F3A
+        </div>
+
+        <div style="font-size:10px;color:#94a3b8">
+          موجة 1
+        </div>
       </div>
+
       <button class="arrow-btn" onclick="changeWave(1)">›</button>
-      <div style="font-size: 9px; color: #f59e0b; margin-right: 4px;">⚠️️ سوف يتم خروجك من الغرفة</div>
+
+      <div style="font-size:9px;color:#f59e0b;margin-right:4px">
+        ⚠️️ سوف يتم خروجك من الغرفة
+      </div>
+
     </div>
+
 
     <div class="room-col-left">
-      <div style="display: flex; gap: 6px; align-items: center;">
-        <span style="color: #38bdf8; font-weight: bold;">4G</span>
+
+      <div style="display:flex;gap:6px;align-items:center">
+        <span style="color:#38bdf8;font-weight:bold">4G</span>
         <span>📶</span>
-        <span>81% 🔋</span>
+        <span id="batteryText">81% 🔋</span>
       </div>
-      <div style="color: #22c55e; font-size: 10px;">متصل بالخادم</div>
+
+      <div
+        id="serverText"
+        style="color:#22c55e;font-size:10px">
+        متصل بالخادم
+      </div>
+
     </div>
+
   </div>
 
-  <!-- 3. أزرار الصوت وزر PTT المركزي -->
+
   <div class="voice-section">
-    <!-- الصوت الطبيعي (يسار الواجهة في الرمز) -->
+
     <div class="voice-card">
+
       <div class="voice-card-top">
         <span>الصوت الطبيعي</span>
         <span class="badge-on">مفعل</span>
       </div>
-      <button class="voice-btn-action" style="background: #f59e0b; color: #000;">تفعيل الصوت الطبيعي</button>
+
+      <button
+        class="voice-btn-action"
+        style="background:#f59e0b;color:#000"
+        onclick="enableNaturalVoice()">
+        تفعيل الصوت الطبيعي
+      </button>
+
     </div>
 
-    <!-- زر التحدث الدائري المركزي -->
+
     <div class="ptt-wrapper">
-      <div id="pttButton" class="ptt-circle-main">
-        <span style="font-size: 26px;">📻</span>
-        <span style="font-size: 10px; font-weight: bold; color: #fff; margin-top: 2px; font-family: monospace;">7F3A</span>
+
+      <div
+        id="pttButton"
+        class="ptt-circle-main">
+
+        <span style="font-size:26px">📻</span>
+
+        <span
+          style="font-size:10px;font-weight:bold;color:#fff;margin-top:2px;font-family:monospace">
+          7F3A
+        </span>
+
       </div>
-      <div class="ptt-txt">اضغط باستمرار للتحدث</div>
+
+      <div class="ptt-txt" id="pttText">
+        اضغط باستمرار للتحدث
+      </div>
+
     </div>
 
-    <!-- الصوت اللاسلكي (يمين الواجهة في الرمز) -->
+
     <div class="voice-card">
+
       <div class="voice-card-top">
         <span>الصوت اللاسلكي</span>
         <span class="badge-off">متوقف</span>
       </div>
-      <button class="voice-btn-action" style="background: #1e3a5f; color: #94a3b8;">تفعيل الصوت اللاسلكي</button>
+
+      <button
+        class="voice-btn-action"
+        style="background:#1e3a5f;color:#94a3b8"
+        onclick="enableRadioVoice()">
+        تفعيل الصوت اللاسلكي
+      </button>
+
     </div>
+
   </div>
 
-  <!-- عنوان المحادثة -->
+
   <div class="chat-title-bar">
-    <span>💬</span> المحادثة
+    <span>💬</span>
+    المحادثة
   </div>
 
-  <!-- 4. قسم المحادثة والمرفقات العائمة -->
+
   <div class="chat-area" id="chatBox">
+
     <div class="chat-bubble right">
       تم استلام الرسالة بنجاح
       <span class="time">09:32</span>
     </div>
+
     <div class="chat-bubble left">
       <span class="sender">أحمد</span>
       جاهز للموقع
       <span class="time">09:33</span>
     </div>
+
     <div class="chat-bubble left">
       <span class="sender">خالد</span>
       ننتظر الإشارة، موافق..
       <span class="time">09:34</span>
     </div>
-    <div style="font-size: 10px; color: #38bdf8;">يكتب الآن...</div>
+
+    <div style="font-size:10px;color:#38bdf8">
+      يكتب الآن...
+    </div>
+
     <div class="chat-bubble left">
       <span class="sender">أحمد</span>
       تم
       <span class="time">09:35</span>
     </div>
 
-    <!-- قائمة المرفقات العائمة عند الضغط على الدبوس -->
-    <div class="tools-popup" id="toolsPopup">
-      <div class="tool-box" onclick="triggerFile('image/*')"><span>📷</span>إرسال صورة</div>
-      <div class="tool-box" onclick="triggerFile('video/*')"><span>🎥</span>إرسال فيديو</div>
-      <div class="tool-box" onclick="openContacts()"><span>👤</span>جهات الاتصال</div>
-      <div class="tool-box" onclick="triggerFile('.pdf,.doc')"><span>📄</span>إرسال مستند</div>
-      <div class="tool-box" onclick="sendVoiceNote()"><span>🎙️</span>إرسال صوت</div>
-      <div class="tool-box" onclick="alert('أعضاء الغرفة (5)')"><span>👥</span>أعضاء الغرفة</div>
+
+    <div
+      class="tools-popup"
+      id="toolsPopup">
+
+      <div
+        class="tool-box"
+        onclick="triggerFile('image/*')">
+        <span>📷</span>
+        إرسال صورة
+      </div>
+
+      <div
+        class="tool-box"
+        onclick="triggerFile('video/*')">
+        <span>🎥</span>
+        إرسال فيديو
+      </div>
+
+      <div
+        class="tool-box"
+        onclick="openContacts()">
+        <span>👤</span>
+        جهات الاتصال
+      </div>
+
+      <div
+        class="tool-box"
+        onclick="triggerFile('.pdf,.doc,.docx')">
+        <span>📄</span>
+        إرسال مستند
+      </div>
+
+      <div
+        class="tool-box"
+        onclick="sendVoiceNote()">
+        <span>🎙️</span>
+        إرسال صوت
+      </div>
+
+      <div
+        class="tool-box"
+        onclick="showMembers()">
+        <span>👥</span>
+        أعضاء الغرفة
+      </div>
+
     </div>
+
   </div>
 
-  <!-- مخفي لرفع الملفات -->
-  <input type="file" id="hiddenFileInput" style="display:none" onchange="handleFile(event)">
 
-  <!-- تنبيه ترقية مشرف -->
+  <input
+    type="file"
+    id="hiddenFileInput"
+    style="display:none"
+    onchange="handleFile(event)">
+
+
   <div class="admin-notice-bar">
-    <span style="color: #64748b; font-size: 10px;">إرسال الرسالة - اضغط لإرسال نصك</span>
-    <span style="color: #facc15; font-weight: bold;">تنبيه ترقية مشرف</span>
+
+    <span style="color:#64748b;font-size:10px">
+      إرسال الرسالة - اضغط لإرسال نصك
+    </span>
+
+    <span style="color:#facc15;font-weight:bold">
+      تنبيه ترقية مشرف
+    </span>
+
   </div>
 
-  <!-- 5. شريط الكتابة والسفلي -->
+
   <div class="input-box-bar">
-    <span class="icon-action" onclick="sendVoiceNote()">🎙️</span>
-    <span class="icon-action" onclick="toggleTools()">📎</span>
-    <input type="text" id="chatInput" placeholder="اكتب رسالة..." onkeydown="if(event.key==='Enter')sendMessage()">
-    <span class="icon-action">😊</span>
+
+    <span
+      class="icon-action"
+      onclick="sendVoiceNote()">
+      🎙️
+    </span>
+
+    <span
+      class="icon-action"
+      onclick="toggleTools()">
+      📎
+    </span>
+
+    <input
+      type="text"
+      id="chatInput"
+      placeholder="اكتب رسالة..."
+      onkeydown="if(event.key==='Enter')sendMessage()">
+
+    <span class="icon-action">
+      😊
+    </span>
+
   </div>
 
-  <!-- 6. شريط التنقل السفلي -->
+
   <div class="nav-bar-bottom">
-    <button class="nav-btn-item active" onclick="switchNav(this)"><span>🏠</span><small>الرئيسية</small></button>
-    <button class="nav-btn-item" onclick="switchNav(this)"><span>⭐</span><small>المفضلة</small></button>
-    <button class="nav-btn-item" onclick="switchNav(this)"><span>📶</span><small>الموجات</small></button>
-    <button class="nav-btn-item" onclick="switchNav(this)"><span>👤</span><small>حسابي</small></button>
+
+    <button
+      class="nav-btn-item active"
+      onclick="switchNav(this)">
+      <span>🏠</span>
+      <small>الرئيسية</small>
+    </button>
+
+    <button
+      class="nav-btn-item"
+      onclick="switchNav(this)">
+      <span>⭐</span>
+      <small>المفضلة</small>
+    </button>
+
+    <button
+      class="nav-btn-item"
+      onclick="switchNav(this)">
+      <span>📶</span>
+      <small>الموجات</small>
+    </button>
+
+    <button
+      class="nav-btn-item"
+      onclick="switchNav(this)">
+      <span>👤</span>
+      <small>حسابي</small>
+    </button>
+
   </div>
+
 </div>
 
+
 <script>
-  "use strict";
+"use strict";
 
-  const deviceId = localStorage.getItem("radioDeviceId") || "dev_" + Math.random().toString(36).substr(2, 9);
-  localStorage.setItem("radioDeviceId", deviceId);
+/* =========================================
+   Radio Connect - LiveKit Voice
+   ========================================= */
 
-  const activeRoomId = "default-operations-room";
-  let livekitRoom = null;
-  let localAudioTrack = null;
-  let isTalking = false;
+const deviceId =
+  localStorage.getItem("radioDeviceId") ||
+  "dev_" + Math.random().toString(36).substring(2, 11);
 
-  const pttBtn = document.getElementById('pttButton');
-  const toolsPopup = document.getElementById('toolsPopup');
+localStorage.setItem("radioDeviceId", deviceId);
 
-  function toggleTools() {
-    toolsPopup.style.display = toolsPopup.style.display === "grid" ? "none" : "grid";
+const activeRoomId = "default-operations-room";
+
+let livekitRoom = null;
+let localAudioTrack = null;
+let isTalking = false;
+let connecting = false;
+
+const pttBtn = document.getElementById("pttButton");
+const pttText = document.getElementById("pttText");
+const toolsPopup = document.getElementById("toolsPopup");
+const connectionStatus = document.getElementById("connectionStatus");
+const serverText = document.getElementById("serverText");
+
+
+/* =========================================
+   رسائل الحالة
+   ========================================= */
+
+function setConnectionStatus(text, connected = true) {
+
+  connectionStatus.textContent = text;
+
+  if (connected) {
+    serverText.textContent = "متصل بالخادم";
+    serverText.style.color = "#22c55e";
+  } else {
+    serverText.textContent = text;
+    serverText.style.color = "#ef4444";
+  }
+}
+
+
+function showServerStatus() {
+
+  if (
+    livekitRoom &&
+    livekitRoom.state ===
+    window.LivekitClient.ConnectionState.Connected
+  ) {
+    alert("الخادم نشط\nالاتصال الصوتي متصل");
+  } else {
+    alert("الخادم نشط\nالاتصال الصوتي غير متصل حاليًا");
+  }
+}
+
+
+/* =========================================
+   أدوات المحادثة
+   ========================================= */
+
+function toggleTools() {
+
+  toolsPopup.style.display =
+    toolsPopup.style.display === "grid"
+      ? "none"
+      : "grid";
+}
+
+
+function triggerFile(type) {
+
+  const input =
+    document.getElementById("hiddenFileInput");
+
+  input.accept = type;
+  input.click();
+
+  toolsPopup.style.display = "none";
+}
+
+
+function openContacts() {
+
+  toolsPopup.style.display = "none";
+  alert("تم فتح جهات الاتصال.");
+}
+
+
+function sendVoiceNote() {
+
+  toolsPopup.style.display = "none";
+  alert("ميزة إرسال المقطع الصوتي يمكن ربطها لاحقًا بالتسجيل.");
+}
+
+
+function showMembers() {
+
+  toolsPopup.style.display = "none";
+  alert("أعضاء الغرفة");
+}
+
+
+function handleFile(e) {
+
+  const file = e.target.files[0];
+
+  if (file) {
+    alert("تم اختيار الملف: " + file.name);
+  }
+}
+
+
+function sendMessage() {
+
+  const input =
+    document.getElementById("chatInput");
+
+  const text = input.value.trim();
+
+  if (!text) return;
+
+  const box =
+    document.getElementById("chatBox");
+
+  const msg =
+    document.createElement("div");
+
+  msg.className = "chat-bubble right";
+  msg.textContent = text;
+
+  box.appendChild(msg);
+
+  input.value = "";
+
+  box.scrollTop = box.scrollHeight;
+}
+
+
+/* =========================================
+   LiveKit
+   ========================================= */
+
+async function connectLiveKit() {
+
+  if (!window.LivekitClient) {
+    throw new Error("LiveKit library not loaded");
   }
 
-  function triggerFile(type) {
-    const input = document.getElementById('hiddenFileInput');
-    input.accept = type;
-    input.click();
-    toolsPopup.style.display = "none";
+  if (
+    livekitRoom &&
+    livekitRoom.state ===
+    window.LivekitClient.ConnectionState.Connected
+  ) {
+    return livekitRoom;
   }
 
-  function openContacts() {
-    toolsPopup.style.display = "none";
-    alert("تم فتح جهات الاتصال تلقائياً.");
+  if (connecting) {
+
+    while (connecting) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+
+    return livekitRoom;
   }
 
-  function sendVoiceNote() {
-    toolsPopup.style.display = "none";
-    alert("تم تسجيل مقطع صوتي وإرساله.");
-  }
+  connecting = true;
 
-  function handleFile(e) {
-    const file = e.target.files[0];
-    if(file) alert("تم إرسال الملف: " + file.name);
-  }
+  try {
 
-  function changeWave(dir) {
-    alert("تم تغيير الموجة (سوف يتم خروجك من الغرفة إذا كانت مشتركة)");
-  }
+    setConnectionStatus("جارٍ الاتصال...", false);
 
-  async function connectLiveKit() {
-    if (livekitRoom && livekitRoom.state === "connected") return;
-    try {
-      const res = await fetch(`/token?room=${encodeURIComponent(activeRoomId)}`, { headers: { 'x-device-id': deviceId } });
-      const data = await res.json();
-      
-      livekitRoom = new window.LivekitClient.Room({ adaptiveStream: true, dynacast: true });
-      livekitRoom.on(window.LivekitClient.RoomEvent.TrackSubscribed, track => {
-        if (track.kind === window.LivekitClient.Track.Kind.Audio) {
-          const audio = track.attach(); audio.autoplay = true; document.body.appendChild(audio);
+    const response = await fetch(
+      "/token?room=" +
+      encodeURIComponent(activeRoomId),
+      {
+        method: "GET",
+        headers: {
+          "x-device-id": deviceId
+        },
+        cache: "no-store"
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(
+        "Token HTTP " + response.status
+      );
+    }
+
+    const data = await response.json();
+
+    if (!data.token) {
+      throw new Error(
+        data.error || "لم يتم استلام LiveKit token"
+      );
+    }
+
+    const room =
+      new window.LivekitClient.Room({
+        adaptiveStream: true,
+        dynacast: true,
+        audioCaptureDefaults: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
         }
       });
-      await livekitRoom.connect(data.url || 'wss://radioconnect-8uyh53qc.livekit.cloud', data.token);
-    } catch(err) {}
+
+
+    /* استقبال صوت الأجهزة الأخرى */
+
+    room.on(
+      window.LivekitClient.RoomEvent.TrackSubscribed,
+      (track, publication, participant) => {
+
+        if (
+          track.kind ===
+          window.LivekitClient.Track.Kind.Audio
+        ) {
+
+          const audio =
+            track.attach();
+
+          audio.autoplay = true;
+          audio.setAttribute(
+            "playsinline",
+            ""
+          );
+
+          document.body.appendChild(audio);
+
+          const playPromise =
+            audio.play();
+
+          if (
+            playPromise &&
+            typeof playPromise.catch === "function"
+          ) {
+            playPromise.catch(() => {});
+          }
+        }
+      }
+    );
+
+
+    /* عند إزالة صوت مشارك */
+
+    room.on(
+      window.LivekitClient.RoomEvent.TrackUnsubscribed,
+      track => {
+
+        try {
+          track.detach();
+        } catch (e) {}
+      }
+    );
+
+
+    /* الاتصال */
+
+    await room.connect(
+      data.url ||
+      "wss://radioconnect-8uyh53qc.livekit.cloud",
+      data.token
+    );
+
+    livekitRoom = room;
+
+    setConnectionStatus("متصل", true);
+
+    console.log(
+      "LIVEKIT CONNECTED",
+      room.name
+    );
+
+    return room;
+
+  } catch (error) {
+
+    console.error(
+      "LiveKit connection error:",
+      error
+    );
+
+    setConnectionStatus(
+      "تعذر الاتصال",
+      false
+    );
+
+    throw error;
+
+  } finally {
+
+    connecting = false;
+  }
+}
+
+
+/* =========================================
+   بدء التحدث
+   ========================================= */
+
+async function startTalking(event) {
+
+  if (event) {
+    event.preventDefault();
   }
 
-  async function startTalking(e) {
-    if(e) e.preventDefault();
-    if(isTalking) return;
-    if(!livekitRoom || livekitRoom.state !== "connected") await connectLiveKit();
-
-    try {
-      isTalking = true;
-      pttBtn.classList.add('active');
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      localAudioTrack = new window.LivekitClient.LocalAudioTrack(stream.getAudioTracks()[0]);
-      await localAudioTrack.enable();
-      await livekitRoom.localParticipant.publishTrack(localAudioTrack);
-    } catch(err) { stopTalking(); }
+  if (isTalking) {
+    return;
   }
 
-  async function stopTalking(e) {
-    if(e) e.preventDefault();
-    if(!isTalking) return;
+  try {
+
+    /* الاتصال بالغرفة أولًا */
+
+    const room =
+      await connectLiveKit();
+
+
+    /* طلب صلاحية الميكروفون */
+
+    if (
+      !navigator.mediaDevices ||
+      !navigator.mediaDevices.getUserMedia
+    ) {
+      throw new Error(
+        "المتصفح لا يدعم الميكروفون"
+      );
+    }
+
+
+    /*
+      إنشاء Track بواسطة LiveKit
+      بدل إنشاء LocalAudioTrack يدويًا
+    */
+
+    localAudioTrack =
+      await window.LivekitClient.createLocalAudioTrack({
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true
+      });
+
+
+    /*
+      نشر الميكروفون داخل الغرفة
+    */
+
+    await room.localParticipant.publishTrack(
+      localAudioTrack,
+      {
+        name: "radio-microphone",
+        source:
+          window.LivekitClient.Track.Source.Microphone
+      }
+    );
+
+
+    isTalking = true;
+
+    pttBtn.classList.add("active");
+
+    pttText.textContent =
+      "🎙️ جاري التحدث...";
+
+    console.log(
+      "PTT START - MICROPHONE PUBLISHED"
+    );
+
+  } catch (error) {
+
+    console.error(
+      "PTT START ERROR:",
+      error
+    );
+
     isTalking = false;
-    pttBtn.classList.remove('active');
 
-    try {
-      if(livekitRoom && localAudioTrack) await livekitRoom.localParticipant.unpublishTrack(localAudioTrack);
-    } catch(err){}
-    if(localAudioTrack) { try{localAudioTrack.stop();}catch(e){} localAudioTrack = null; }
+    pttBtn.classList.remove("active");
+
+    pttText.textContent =
+      "اضغط باستمرار للتحدث";
+
+    if (
+      error &&
+      error.name === "NotAllowedError"
+    ) {
+      alert(
+        "تم رفض صلاحية الميكروفون.\n" +
+        "اسمح للمتصفح باستخدام الميكروفون ثم حاول مرة أخرى."
+      );
+    } else {
+      alert(
+        "تعذر تشغيل الميكروفون:\n" +
+        (error.message || error)
+      );
+    }
+  }
+}
+
+
+/* =========================================
+   إيقاف التحدث
+   ========================================= */
+
+async function stopTalking(event) {
+
+  if (event) {
+    event.preventDefault();
   }
 
-  if(pttButton) {
-    pttButton.addEventListener("pointerdown", startTalking);
-    pttButton.addEventListener("pointerup", stopTalking);
-    pttButton.addEventListener("pointercancel", stopTalking);
-    pttButton.addEventListener("pointerleave", stopTalking);
+  if (!isTalking && !localAudioTrack) {
+    return;
   }
 
-  function sendMessage() {
-    const input = document.getElementById('chatInput');
-    if(!input.value.trim()) return;
-    const box = document.getElementById('chatBox');
-    const msg = document.createElement('div');
-    msg.className = "chat-bubble right";
-    msg.textContent = input.value;
-    box.appendChild(msg);
-    input.value = "";
-    box.scrollTop = box.scrollHeight;
+  isTalking = false;
+
+  pttBtn.classList.remove("active");
+
+  pttText.textContent =
+    "اضغط باستمرار للتحدث";
+
+
+  try {
+
+    if (
+      livekitRoom &&
+      localAudioTrack
+    ) {
+
+      await livekitRoom.localParticipant
+        .unpublishTrack(
+          localAudioTrack
+        );
+    }
+
+  } catch (error) {
+
+    console.warn(
+      "Unpublish warning:",
+      error
+    );
+
+  } finally {
+
+    if (localAudioTrack) {
+
+      try {
+        localAudioTrack.stop();
+      } catch (e) {}
+
+      localAudioTrack = null;
+    }
+
+    console.log(
+      "PTT STOP - MICROPHONE RELEASED"
+    );
+  }
+}
+
+
+/* =========================================
+   زر PTT
+   مهم: لا نستخدم pointerleave
+   حتى لا ينقطع الصوت بالخطأ على الهاتف
+   ========================================= */
+
+pttBtn.addEventListener(
+  "pointerdown",
+  startTalking
+);
+
+pttBtn.addEventListener(
+  "pointerup",
+  stopTalking
+);
+
+pttBtn.addEventListener(
+  "pointercancel",
+  stopTalking
+);
+
+
+/*
+  ضمان إيقاف الميكروفون عند خروج الصفحة
+*/
+
+window.addEventListener(
+  "blur",
+  () => {
+    if (isTalking) {
+      stopTalking();
+    }
+  }
+);
+
+document.addEventListener(
+  "visibilitychange",
+  () => {
+    if (
+      document.hidden &&
+      isTalking
+    ) {
+      stopTalking();
+    }
+  }
+);
+
+
+/* =========================================
+   الصوت الطبيعي
+   ========================================= */
+
+function enableNaturalVoice() {
+
+  alert(
+    "الصوت الطبيعي مفعل.\n" +
+    "سيتم إرسال الصوت بدون مؤثر لاسلكي."
+  );
+}
+
+
+/* =========================================
+   الصوت اللاسلكي
+   ========================================= */
+
+function enableRadioVoice() {
+
+  alert(
+    "الصوت اللاسلكي سيتم تطبيق مؤثره " +
+    "على الصوت عند تشغيله."
+  );
+}
+
+
+/* =========================================
+   الموجات
+   ========================================= */
+
+function changeWave(dir) {
+
+  if (isTalking) {
+    stopTalking();
   }
 
-  function switchNav(btn) {
-    document.querySelectorAll('.nav-btn-item').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-  }
+  alert(
+    "تم تغيير الموجة.\n" +
+    "سيتم الخروج من الغرفة الحالية عند تغيير الموجة."
+  );
+}
 
-  connectLiveKit();
+
+/* =========================================
+   التنقل
+   ========================================= */
+
+function switchNav(btn) {
+
+  document
+    .querySelectorAll(".nav-btn-item")
+    .forEach(
+      b => b.classList.remove("active")
+    );
+
+  btn.classList.add("active");
+}
+
+
+/* =========================================
+   البطارية
+   ========================================= */
+
+if (
+  navigator.getBattery
+) {
+
+  navigator.getBattery()
+    .then(battery => {
+
+      function updateBattery() {
+
+        const percent =
+          Math.round(
+            battery.level * 100
+          );
+
+        document.getElementById(
+          "batteryText"
+        ).textContent =
+          percent + "% 🔋";
+      }
+
+      updateBattery();
+
+      battery.addEventListener(
+        "levelchange",
+        updateBattery
+      );
+    })
+    .catch(() => {});
+}
+
+
+/* =========================================
+   تشغيل الاتصال
+   ========================================= */
+
+window.addEventListener(
+  "load",
+  () => {
+
+    connectLiveKit()
+      .catch(error => {
+
+        console.error(
+          "Initial LiveKit connection failed:",
+          error
+        );
+
+      });
+
+  }
+);
+
 </script>
+
 </body>
 </html>
