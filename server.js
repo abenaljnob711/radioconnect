@@ -1,5 +1,5 @@
 const express = require("express");
-const path = require("path");
+const path = path = require("path");
 const crypto = require("crypto");
 const { AccessToken } = require("livekit-server-sdk");
 
@@ -268,34 +268,6 @@ app.get("/api/rooms/:roomId/members", (req, res) => {
   });
 });
 
-app.post("/api/rooms/:roomId/members/:memberKey/role", (req, res) => {
-  const roomId = cleanText(req.params.roomId, 64);
-  const memberKey = cleanText(req.params.memberKey, 100);
-  const deviceId = getDeviceId(req);
-  const { newRole } = req.body;
-
-  const room = rooms.get(roomId);
-  if (!room) return res.status(404).json({ error: "Room not found" });
-
-  if (!isUserAdminOrOwner(room, deviceId)) {
-    return res.status(403).json({ error: "هذه الخدمة متاحة للمشرفين والمالك فقط" });
-  }
-
-  const member = findMemberByKey(room, memberKey);
-  if (!member) return res.status(404).json({ error: "Member not found" });
-
-  if (member.role === "owner") {
-    return res.status(400).json({ error: "لا يمكن تعديل صلاحيات مالك الغرفة الأصلي" });
-  }
-
-  member.role = newRole === "admin" ? "admin" : "member";
-
-  res.json({
-    success: true,
-    message: member.role === "admin" ? "تمت ترقية العضو إلى مشرف" : "تم سحب صلاحية الإشراف من العضو"
-  });
-});
-
 app.post("/api/rooms/:roomId/members/:memberKey/approve", (req, res) => {
   const roomId = cleanText(req.params.roomId, 64);
   const memberKey = cleanText(req.params.memberKey, 100);
@@ -341,9 +313,8 @@ app.delete("/api/rooms/:roomId/members/:memberKey", (req, res) => {
 });
 
 /* =========================
-   توليد LiveKit Token (مع التحقق المباشر من العضوية)
+   توليد LiveKit Token
 ========================= */
-
 app.get("/token", async (req, res) => {
   try {
     const deviceId = getDeviceId(req);
@@ -361,32 +332,22 @@ app.get("/token", async (req, res) => {
       return res.status(403).json({ error: "يجب الحصول على موافقة الانضمام للغرفة أولاً" });
     }
 
-const apiKey = process.env.LIVEKIT_API_KEY;
-const apiSecret = process.env.LIVEKIT_API_SECRET;
-const livekitUrl = String(
-  process.env.LIVEKIT_URL || ""
-).trim().replace(/\/+$/, "");
+    const apiKey = process.env.LIVEKIT_API_KEY;
+    const apiSecret = process.env.LIVEKIT_API_SECRET;
+    const livekitUrl = String(process.env.LIVEKIT_URL || "").trim().replace(/\/+$/, "");
 
-if (!apiKey || !apiSecret || !livekitUrl) {
-  console.error("LiveKit environment variables are missing");
+    if (!apiKey || !apiSecret || !livekitUrl) {
+      console.error("LiveKit environment variables are missing");
+      return res.status(500).json({ error: "إعدادات LiveKit غير مكتملة" });
+    }
 
-  return res.status(500).json({
-    error: "إعدادات LiveKit غير مكتملة"
-  });
-}
+    if (!livekitUrl.startsWith("wss://") && !livekitUrl.startsWith("ws://")) {
+      console.error("Invalid LIVEKIT_URL:", livekitUrl);
+      return res.status(500).json({ error: "رابط LiveKit غير صحيح" });
+    }
 
-if (
-  !livekitUrl.startsWith("wss://") &&
-  !livekitUrl.startsWith("ws://")
-) {
-  console.error("Invalid LIVEKIT_URL:", livekitUrl);
-
-  return res.status(500).json({
-    error: "رابط LiveKit غير صحيح"
-  });
-}
-    // استخدام deviceId كهوية للمستخدم داخل الغرفة الصوتية
-    const token = new AccessToken(livekitApiKey, livekitApiSecret, { identity: deviceId });
+    // تم التصحيح هنا لاستخدام apiKey و apiSecret بالأسماء الصحيحة
+    const token = new AccessToken(apiKey, apiSecret, { identity: deviceId });
     token.addGrant({
       roomJoin: true,
       room: roomId,
@@ -397,6 +358,7 @@ if (
     const jwt = await token.toJwt();
     res.json({ success: true, token: jwt, url: livekitUrl, room: roomId, identity: deviceId });
   } catch (error) {
+    console.error("Token generation error:", error);
     res.status(500).json({ error: "Failed to generate LiveKit token" });
   }
 });
