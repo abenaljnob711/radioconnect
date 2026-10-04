@@ -200,7 +200,7 @@ html,body{
   margin-bottom:3px
 }
 
-#chatModal{
+#chatModal, #waveModal{
   touch-action:auto
 }
 </style>
@@ -216,11 +216,11 @@ html,body{
     class="main-image"
   >
 
-  <div class="radio-screen" id="radioScreen">7F3A</div>
+  <div class="radio-screen" id="radioScreen">1</div>
 
   <div class="radio-glow" id="radioGlow"></div>
 
-  <div class="wave-display" id="waveDisplay">7F3A</div>
+  <div class="wave-display" id="waveDisplay">موجة 1</div>
 
 
   <!-- القائمة -->
@@ -251,7 +251,7 @@ html,body{
   <div
     class="hotspot"
     style="top:13.5%;left:3%;width:32%;height:9%"
-    onclick="showRoom()">
+    onclick="openWaveSearchModal()">
   </div>
 
 
@@ -259,7 +259,7 @@ html,body{
   <div
     class="hotspot"
     style="top:12%;left:37%;width:26%;height:10%"
-    onclick="toast('الموجة: '+currentWave.code)">
+    onclick="toast('الموجة: ' + currentWave.number + ' | رمز التعريف: ' + currentWave.pin)">
   </div>
 
 
@@ -407,7 +407,7 @@ html,body{
   <div
     class="hotspot"
     style="top:92.5%;left:51%;width:22%;height:6%"
-    onclick="toast('الموجات')">
+    onclick="openWaveSearchModal()">
   </div>
 
   <div
@@ -420,6 +420,93 @@ html,body{
 
 
 <div id="toast" class="toast"></div>
+
+
+<!-- نافذة البحث والانضمام برقم التعريف -->
+<div
+  id="waveModal"
+  style="
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.75);
+    z-index:90;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+  "
+>
+  <div
+    style="
+      width:min(400px,100%);
+      background:#050f1f;
+      border:1px solid rgba(52,152,219,.3);
+      border-radius:16px;
+      padding:20px;
+    "
+  >
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px">
+      <strong style="color:#49aaff;">🔍 البحث الذكي برقم التعريف</strong>
+      <button onclick="closeWaveSearchModal()" style="background:#09182b;color:#fff;width:30px;height:30px;border-radius:8px;border:0;cursor:pointer">×</button>
+    </div>
+
+    <p style="font-size:12px;color:#a0c4ff;margin-bottom:10px;">
+      أدخل رقم التعريف (PIN) الذي أرسله لك الصديق للبحث عنه والاتصال المباشر:
+    </p>
+
+    <div style="display:flex;gap:6px;margin-bottom:15px">
+      <input
+        id="wavePinInput"
+        placeholder="أدخل رقم التعريف (PIN)..."
+        autocomplete="off"
+        style="
+          flex:1;
+          background:#040a14;
+          border:1px solid rgba(255,255,255,.15);
+          border-radius:8px;
+          color:#fff;
+          padding:10px;
+          outline:none;
+          font-size:14px;
+        "
+      >
+      <button
+        onclick="searchWaveByPin()"
+        style="
+          background:#1a6194;
+          color:#fff;
+          border:0;
+          border-radius:8px;
+          padding:10px 16px;
+          cursor:pointer;
+          font-weight:bold;
+        "
+      >بحث</button>
+    </div>
+
+    <!-- منطقة عرض نتيجة البحث والزر الموافقة -->
+    <div id="searchResultArea" style="display:none;background:#09182b;border:1px solid rgba(57,255,20,.3);padding:12px;border-radius:8px;margin-top:10px;text-align:center;">
+      <p id="searchResultText" style="font-size:12px;color:#39ff14;margin-bottom:10px;"></p>
+      <button
+        onclick="confirmJoinWave()"
+        style="
+          background:#27ae60;
+          color:#fff;
+          border:0;
+          border-radius:8px;
+          padding:8px 20px;
+          cursor:pointer;
+          font-weight:bold;
+          font-size:13px;
+        "
+      >موافقة والاتصال بالشبكة</button>
+    </div>
+
+    <div style="font-size:11px;color:#8ab4f8;background:#040a14;padding:8px;border-radius:6px;margin-top:10px;">
+      💡 موجتك الحالية: <span id="currentWaveInfo" style="color:#39ff14;font-weight:bold;">موجة 1 (الرمز: --)</span>
+    </div>
+  </div>
+</div>
 
 
 <!-- نافذة المحادثة -->
@@ -454,7 +541,7 @@ html,body{
     >
 
       <strong>
-        💬 <span id="chatRoomName">العمليات</span>
+        💬 <span id="chatRoomName">الموجة 1</span>
       </strong>
 
       <button
@@ -526,12 +613,30 @@ html,body{
 
 
 /* =========================
+   إنشاء 60 موجة برمز تعريف فريد
+========================= */
+
+const waves = Array.from({ length: 60 }, (_, i) => {
+  const num = i + 1;
+  const pin = (100000 + (num * 379) % 899999).toString();
+  return {
+    number: num,
+    name: "موجة " + num,
+    pin: pin,
+    roomId: "WAVE_" + num + "_" + pin
+  };
+});
+
+let currentWave = waves[0];
+let waveIndex = 0;
+let pendingTargetWave = null; // الموجة التي تم العثور عليها بالبحث في انتظار الموافقة
+
+
+/* =========================
    الإعدادات الأساسية
 ========================= */
 
 const API = location.origin;
-
-const DEFAULT_ROOM = "7F3A";
 
 let deviceId =
   localStorage.getItem("deviceId") || null;
@@ -549,22 +654,6 @@ let talking = false;
 let pttSession = 0;
 
 let voiceMode = "natural";
-
-let currentWave = {
-  code:"7F3A",
-  name:"العمليات"
-};
-
-let waveIndex = 0;
-
-
-const waves = [
-  {code:"7F3A",name:"العمليات"},
-  {code:"68B665",name:"غرفة القيادة"},
-  {code:"9K21",name:"الطوارئ"},
-  {code:"4M88",name:"المساندة"},
-  {code:"6P17",name:"القيادة"}
-];
 
 
 const $ = id =>
@@ -665,11 +754,13 @@ async function connectLiveKit(){
 
   }
 
+  const targetRoomId = currentWave.roomId;
+
 
   if(
     livekitRoom &&
     livekitRoom.state === "connected" &&
-    livekitRoomId === DEFAULT_ROOM
+    livekitRoomId === targetRoomId
   ){
 
     return true;
@@ -689,7 +780,7 @@ async function connectLiveKit(){
     const url =
       API +
       "/token?room=" +
-      encodeURIComponent(DEFAULT_ROOM) +
+      encodeURIComponent(targetRoomId) +
       "&identity=" +
       encodeURIComponent(deviceId) +
       "&deviceId=" +
@@ -727,7 +818,7 @@ async function connectLiveKit(){
 
       toast(
         data.error ||
-        "تعذر الاتصال بالغرفة"
+        "تعذر الاتصال بالموجة"
       );
 
       return false;
@@ -895,10 +986,10 @@ async function connectLiveKit(){
     livekitRoom = room;
 
     livekitRoomId =
-      DEFAULT_ROOM;
+      targetRoomId;
 
 
-    toast("متصل بالغرفة ✅");
+    toast("متصل بـ " + currentWave.name + " ✅");
 
     return true;
 
@@ -915,7 +1006,7 @@ async function connectLiveKit(){
     livekitRoomId = null;
 
     toast(
-      "تعذر الاتصال بالغرفة"
+      "تعذر الاتصال بالموجة"
     );
 
     return false;
@@ -1148,10 +1239,6 @@ async function startTalk(event){
 
   try{
 
-    /*
-      الاتصال بالغرفة أولاً
-    */
-
     const connected =
       await connectLiveKit();
 
@@ -1179,10 +1266,6 @@ async function startTalk(event){
 
     }
 
-
-    /*
-      طلب إذن الميكروفون
-    */
 
     const stream =
       await requestMicrophone();
@@ -1221,11 +1304,6 @@ async function startTalk(event){
     }
 
 
-    /*
-      تحويل ميكروفون المتصفح
-      إلى LiveKit Audio Track
-    */
-
     localAudioTrack =
       new LivekitClient.LocalAudioTrack(
         raw
@@ -1261,11 +1339,6 @@ async function startTalk(event){
 
     toast(
       "🎙️ الميكروفون يعمل الآن"
-    );
-
-
-    console.log(
-      "PTT microphone ON"
     );
 
 
@@ -1329,7 +1402,7 @@ async function startTalk(event){
       ){
 
         toast(
-          "تعذر الاتصال بالغرفة"
+          "تعذر الاتصال بالموجة"
         );
 
       }else{
@@ -1526,7 +1599,7 @@ async function sendMsg(){
     ){
 
       toast(
-        "تعذر الاتصال بالغرفة"
+        "تعذر الاتصال بالموجة"
       );
 
       return;
@@ -1580,4 +1653,126 @@ async function sendMsg(){
 
     input.value = "";
 
-    input
+  }catch(error){
+    console.error("Send message:", error);
+    toast("تعذر إرسال الرسالة");
+  }
+
+}
+
+
+function appendChatMessage(text, name, isMe, time){
+
+  const container = $("chatMessages");
+  if(!container) return;
+
+  const msgDiv = document.createElement("div");
+  msgDiv.className = "chat-msg" + (isMe ? " me" : "");
+
+  const timeStr = new Date(time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
+  msgDiv.innerHTML = `
+    <div class="chat-name">${name}</div>
+    <div>${text}</div>
+    <div style="font-size:9px;color:#8ab4f8;text-align:left;margin-top:2px">${timeStr}</div>
+  `;
+
+  container.appendChild(msgDiv);
+  container.scrollTop = container.scrollHeight;
+}
+
+
+/* =========================
+   وظائف الموجات والبحث والربط
+========================= */
+
+function updateWaveUI(){
+  $("radioScreen").textContent = currentWave.number;
+  $("waveDisplay").textContent = currentWave.name;
+  $("chatRoomName").textContent = currentWave.name + " (رمز: " + currentWave.pin + ")";
+  $("currentWaveInfo").textContent = currentWave.name + " (الرمز: " + currentWave.pin + ")";
+}
+
+function changeWave(dir){
+  waveIndex = (waveIndex + dir + waves.length) % waves.length;
+  currentWave = waves[waveIndex];
+  updateWaveUI();
+  toast("تم الانتقال إلى: " + currentWave.name + " | الرمز: " + currentWave.pin);
+  disconnectLiveKit();
+}
+
+function openWaveSearchModal(){
+  $("wavePinInput").value = "";
+  $("searchResultArea").style.display = "none";
+  pendingTargetWave = null;
+  $("currentWaveInfo").textContent = currentWave.name + " (الرمز: " + currentWave.pin + ")";
+  $("waveModal").style.display = "flex";
+  setTimeout(()=> $("wavePinInput").focus(), 100);
+}
+
+function closeWaveSearchModal(){
+  $("waveModal").style.display = "none";
+}
+
+// البحث التلقائي عبر رقم التعريف وإظهار حالة المستخدم الآخر مع زر الموافقة
+function searchWaveByPin(){
+  const pinInput = $("wavePinInput").value.trim();
+  if(!pinInput){
+    toast("الرجاء إدخال رقم التعريف");
+    return;
+  }
+
+  const foundWave = waves.find(w => w.pin === pinInput);
+
+  if(foundWave){
+    pendingTargetWave = foundWave;
+    $("searchResultText").textContent = "تم العثور على الشخص الآخر! يتحدث على (" + foundWave.name + ")";
+    $("searchResultArea").style.display = "block";
+  } else {
+    pendingTargetWave = null;
+    $("searchResultArea").style.display = "none";
+    toast("رقم التعريف غير صحيح أو غير متصل ❌");
+  }
+}
+
+// الضغط على زر الموافقة للانضمام المتبادل للشبكة المشتركة
+async function confirmJoinWave(){
+  if(!pendingTargetWave) return;
+
+  currentWave = pendingTargetWave;
+  waveIndex = waves.indexOf(currentWave);
+  updateWaveUI();
+  closeWaveSearchModal();
+
+  toast("تمت الموافقة! جاري ربط الشبكة المشتركة... ✅");
+  await disconnectLiveKit();
+  await connectLiveKit();
+}
+
+function showConnectionStatus(){
+  toast("حالة الاتصال: متصل بالخادم (4G) | الموجة: " + currentWave.number);
+}
+
+function showBattery(){
+  toast("البطارية: 81% - الشبكة: 4G");
+}
+
+function setVoiceMode(mode){
+  voiceMode = mode;
+  if(mode === 'natural'){
+    toast("تم تفعيل الصوت الطبيعي");
+  } else {
+    toast("تم تفعيل الصوت اللاسلكي");
+  }
+}
+
+function showMembers(){
+  toast("الموجة الحالية رقم " + currentWave.number + " - الرمز السري: " + currentWave.pin);
+}
+
+// تهيئة الواجهة عند التحميل
+updateWaveUI();
+
+</script>
+</body>
+</html>
