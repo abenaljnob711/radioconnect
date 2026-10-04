@@ -13,28 +13,30 @@
     /* 1. شريط العنوان العلوي */
     .header { display: flex; justify-content: space-between; align-items: center; background-color: #1c2541; padding: 10px 15px; border-bottom: 1px solid #3a506b; }
     .header-left, .header-right { display: flex; align-items: center; gap: 10px; }
-    .status-dot { width: 10px; height: 10px; border-radius: 50%; background-color: #2ecc71; display: inline-block; }
-    .status-dot.weak { background-color: #e74c3c; }
+    .status-dot { width: 10px; height: 10px; border-radius: 50%; background-color: #2ecc71; display: inline-block; box-shadow: 0 0 8px #2ecc71; }
+    .status-dot.weak { background-color: #e74c3c; box-shadow: 0 0 8px #e74c3c; }
 
-    /* 2. شريط معلومات الغرفة والبطارية */
+    /* 2. شريط العمليات ومعلومات الغرفة والبطارية */
     .room-bar { background-color: #131b2e; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1c2541; }
     .room-title { font-size: 14px; font-weight: bold; }
     .channel-id { font-size: 11px; color: #8d99ae; }
+    .warning-msg { background: rgba(231, 76, 60, 0.2); color: #e74c3c; font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-top: 3px; display: inline-block; }
 
-    /* 3. أزرار التحكم الصوتي وزر PTT */
-    .voice-section { background-color: #0b132b; padding: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-bottom: 1px solid #1c2541; }
-    .ptt-container { display: flex; align-items: center; justify-content: center; gap: 15px; margin: 10px 0; }
+    /* 3. أزرار التحكم الصوتي وزر PTT المطابق للصورة تماماً */
+    .voice-section { background-color: #0b132b; padding: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-bottom: 1px solid #1c2541; position: relative; }
+    .voice-modes { display: flex; justify-content: space-between; width: 100%; font-size: 11px; color: #8d99ae; padding: 0 5px; }
+    .ptt-container { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 8px 0; }
     
     .ptt-btn {
-      width: 130px; height: 130px; border-radius: 50%;
+      width: 140px; height: 140px; border-radius: 50%;
       background: radial-gradient(circle, #e74c3c 0%, #990000 100%);
-      border: 4px solid #1d3557; display: flex; flex-direction: column;
+      border: 5px solid #1d3557; display: flex; flex-direction: column;
       align-items: center; justify-content: center; cursor: pointer;
-      box-shadow: 0 0 20px rgba(231, 76, 60, 0.4); transition: 0.2s; touch-action: none;
+      box-shadow: 0 0 25px rgba(231, 76, 60, 0.5); transition: 0.15s; touch-action: none;
     }
     .ptt-btn.active {
       background: radial-gradient(circle, #3498db 0%, #1d6fa5 100%);
-      box-shadow: 0 0 25px rgba(52, 152, 219, 0.6);
+      box-shadow: 0 0 30px rgba(52, 152, 219, 0.7);
       transform: scale(0.95);
     }
     .ptt-btn span { font-size: 12px; font-weight: bold; color: #fff; margin-top: 4px; }
@@ -44,23 +46,23 @@
     .msg-bubble { max-width: 75%; padding: 8px 12px; border-radius: 10px; font-size: 13px; line-height: 1.4; }
     .msg-bubble.received { background-color: #1c2541; align-self: flex-start; }
     .msg-bubble.sent { background-color: #1d3557; align-self: flex-end; }
-    .typing-indicator { font-size: 11px; color: #3498db; font-style: italic; padding: 0 15px 5px; display: none; }
+    .typing-indicator { font-size: 11px; color: #3498db; font-style: italic; padding: 0 15px 3px; display: block; }
 
-    /* قائمة المرفقات العائمة (تفتح وتغلق بزر الدبوس) */
+    /* قائمة أدوات المرفقات العائمة (تفتح بزر الدبوس 📎) */
     .tools-menu {
       position: absolute; bottom: 65px; left: 15px; right: 15px;
       background: #102137; border: 1px solid #3a506b; border-radius: 15px;
-      padding: 15px; display: none; grid-template-columns: repeat(3, 1fr); gap: 10px; z-index: 99;
+      padding: 12px; display: none; grid-template-columns: repeat(3, 1fr); gap: 8px; z-index: 99;
     }
-    .tool-item { background: #0b1726; border-radius: 10px; padding: 10px; text-align: center; font-size: 11px; color: #dcecff; cursor: pointer; border: 1px solid rgba(255,255,255,0.05); }
+    .tool-item { background: #0b1726; border-radius: 10px; padding: 8px; text-align: center; font-size: 11px; color: #dcecff; cursor: pointer; border: 1px solid rgba(255,255,255,0.05); }
 
-    /* شريط كتابة الرسائل السفلي */
-    .chat-input-bar { display: flex; align-items: center; background-color: #1c2541; padding: 10px; gap: 10px; border-top: 1px solid #3a506b; position: relative; }
+    /* شريط الكتابة والسفلي */
+    .chat-input-bar { display: flex; align-items: center; background-color: #1c2541; padding: 10px; gap: 8px; border-top: 1px solid #3a506b; position: relative; }
     .chat-input-bar input { flex: 1; background: #0b132b; border: 1px solid #3a506b; border-radius: 20px; padding: 8px 15px; color: #fff; outline: none; font-size: 12px; }
     .action-icon { font-size: 18px; cursor: pointer; color: #8d99ae; }
 
     /* 5. شريط التنقل السفلي */
-    .nav-bar { display: flex; justify-content: space-around; background-color: #131b2e; padding: 10px 0; border-top: 1px solid #1c2541; }
+    .nav-bar { display: flex; justify-content: space-around; background-color: #131b2e; padding: 8px 0; border-top: 1px solid #1c2541; }
     .nav-item { display: flex; flex-direction: column; align-items: center; font-size: 11px; color: #8d99ae; cursor: pointer; background: none; }
     .nav-item.active { color: #3498db; }
   </style>
@@ -78,60 +80,69 @@
     <div class="header-right">
       <span id="netStatusDot" class="status-dot"></span>
       <span id="netStatusText" style="font-size: 11px;">متصل</span>
-      <span style="cursor: pointer;" onclick="alert('تفاصيل الخادم نشطة')">⚙️</span>
+      <span style="cursor: pointer;" onclick="alert('تفاصيل الخادم نشطة')">⚙️ الخادم</span>
     </div>
   </div>
 
-  <!-- 2. شريط معلومات الغرفة والبطارية -->
+  <!-- 2. شريط العمليات والبطارية والشبكة -->
   <div class="room-bar">
     <div>
-      <div class="room-title">غرفة العمليات</div>
+      <div class="room-title">العمليات (أعضاء العملية - 1 موجة 5)</div>
       <div class="channel-id">7F3A موجة 1</div>
+      <div class="warning-msg">⚠️ سوف يتم خروجك من الغرفة عند تغيير الموجة</div>
     </div>
-    <div style="font-size: 11px; color: #8d99ae; display: flex; gap: 10px;">
-      <span id="networkType">4G</span>
-      <span>🔋 81%</span>
+    <div style="font-size: 11px; color: #8d99ae; display: flex; flex-direction: column; align-items: flex-end; gap: 2px;">
+      <div style="display: flex; gap: 6px;">
+        <span id="networkType">4G</span>
+        <span>🔋 81%</span>
+      </div>
+      <span style="color: #2ecc71; font-size: 10px;">متصل بالخادم</span>
     </div>
   </div>
 
   <!-- 3. أزرار التحكم الصوتي وزر PTT -->
   <div class="voice-section">
-    <div style="display: flex; justify-content: space-between; width: 100%; font-size: 11px; color: #8d99ae; padding: 0 10px;">
+    <div class="voice-modes">
       <span>الصوت الطبيعي [مفعل]</span>
       <span>الصوت اللاسلكي [متوقف]</span>
     </div>
     
     <div class="ptt-container">
-      <div style="color: #3498db; letter-spacing: 1px; font-size: 12px;">ılıll|</div>
+      <div style="color: #3498db; letter-spacing: 1px; font-size: 11px;">ılıll|</div>
       
-      <!-- زر التحدث الدائري (أحمر افتراضي، أزرق عند الضغط) -->
+      <!-- زر التحدث الدائري (أحمر -> أزرق عند الضغط) -->
       <div id="pttButton" class="ptt-btn">
-        <svg style="width:30px;height:30px;fill:#fff;" viewBox="0 0 24 24"><path d="M12,2A3,3 0 0,1 15,5V11A3,3 0 0,1 12,14A3,3 0 0,1 9,11V5A3,3 0 0,1 12,2M19,11C19,14.53 16.39,17.44 13,17.93V21H11V17.93C7.61,17.44 5,14.53 5,11H7A5,5 0 0,0 12,16A5,5 0 0,0 17,11H19Z"/></svg>
+        <svg style="width:28px;height:28px;fill:#fff;" viewBox="0 0 24 24"><path d="M12,2A3,3 0 0,1 15,5V11A3,3 0 0,1 12,14A3,3 0 0,1 9,11V5A3,3 0 0,1 12,2M19,11C19,14.53 16.39,17.44 13,17.93V21H11V17.93C7.61,17.44 5,14.53 5,11H7A5,5 0 0,0 12,16A5,5 0 0,0 17,11H19Z"/></svg>
         <span id="pttText">اضغط للتحدث</span>
       </div>
 
-      <div style="color: #3498db; letter-spacing: 1px; font-size: 12px;">|llili</div>
+      <div style="color: #3498db; letter-spacing: 1px; font-size: 11px;">|llili</div>
     </div>
     <div style="font-size: 10px; color: #8d99ae;">اضغط باستمرار للتحدث واترك الزر للاستماع.</div>
   </div>
 
   <!-- 4. قسم المحادثة والدردشة -->
   <div class="chat-section" id="chatBox">
+    <div class="msg-bubble sent">
+      تم استلام الرسالة بنجاح
+      <span style="display:block; font-size:9px; color:#a3c7ef; text-align: left;">09:32</span>
+    </div>
     <div class="msg-bubble received">
       <small style="display:block; color:#3498db; font-size:10px;">أحمد</small>
       جاهز للموقع
       <span style="display:block; font-size:9px; color:#8d99ae; text-align: left;">09:33</span>
     </div>
-    <div class="msg-bubble sent">
-      تم استلام الرسالة بنجاح
-      <span style="display:block; font-size:9px; color:#a3c7ef; text-align: left;">09:32</span>
+    <div class="msg-bubble received">
+      <small style="display:block; color:#3498db; font-size:10px;">خالد</small>
+      ننتظر الإشارة، موافق..
+      <span style="display:block; font-size:9px; color:#8d99ae; text-align: left;">09:34</span>
     </div>
   </div>
 
   <!-- مؤشر يكتب الان -->
   <div class="typing-indicator" id="typingIndicator">خالد يكتب الان...</div>
 
-  <!-- قائمة أدوات المرفقات العائمة (تفتح بالدبوس 📎) -->
+  <!-- قائمة أدوات المرفقات العائمة (تفتح بزر الدبوس 📎) -->
   <div class="tools-menu" id="toolsMenu">
     <div class="tool-item" onclick="triggerFile('image/*')">📷 إرسال صورة</div>
     <div class="tool-item" onclick="triggerFile('video/*')">🎥 إرسال فيديو</div>
@@ -144,12 +155,13 @@
   <!-- مخفي لرفع الملفات -->
   <input type="file" id="hiddenFileInput" style="display:none" onchange="handleFile(event)">
 
-  <!-- شريط الكتابة والسفلي -->
+  <!-- شريط الكتابة والسفلي الديناميكي -->
   <div class="chat-input-bar">
     <span class="action-icon">😊</span>
-    <input type="text" id="chatInput" placeholder="اكتب رسالة..." onkeydown="if(event.key==='Enter')sendMessage()">
+    <input type="text" id="chatInput" placeholder="اكتب رسالة..." oninput="handleInputType(this)" onkeydown="if(event.key==='Enter')sendMessage()">
     <span class="action-icon" onclick="toggleTools()" title="المرفقات">📎</span>
-    <span class="action-icon" style="color: #3498db;" onclick="sendMessage()">➤</span>
+    <!-- زر الميكروفون الذي يتحول إلى زر إرسال عند الكتابة -->
+    <span id="dynamicActionBtn" class="action-icon" style="color: #3498db;" onclick="sendMessage()">🎙️</span>
   </div>
 
   <!-- 5. شريط التنقل السفلي -->
@@ -178,11 +190,21 @@
   const netDot = document.getElementById('netStatusDot');
   const netText = document.getElementById('netStatusText');
   const toolsMenu = document.getElementById('toolsMenu');
+  const dynamicActionBtn = document.getElementById('dynamicActionBtn');
 
   function setStatus(ok, text) {
     if(ok) netDot.classList.remove('weak');
     else netDot.classList.add('weak');
     netText.textContent = text;
+  }
+
+  // التحكم بظهور زر الميكروفون أو زر الإرسال بناءً على الكتابة
+  function handleInputType(input) {
+    if(input.value.trim().length > 0) {
+      dynamicActionBtn.textContent = "➤"; // تحويل إلى زر إرسال
+    } else {
+      dynamicActionBtn.textContent = "🎙️"; // رجوع للميكروفون لتسجيل مقطع صوتي
+    }
   }
 
   // فتح وإغلاق قائمة المرفقات عبر زر الدبوس 📎
@@ -199,24 +221,24 @@
 
   function openContacts() {
     toolsMenu.style.display = "none";
-    navigator.share ? navigator.share({title: 'جهات الاتصال', text: 'رقم الطوارئ: +967-...'}) : alert("تم فتح جهات الاتصال بنجاح");
+    alert("تم فتح جهات الاتصال تلقائياً لنسخ أو إرسال الرقم.");
   }
 
   function sendVoiceNote() {
     toolsMenu.style.display = "none";
-    alert("تم تسجيل وإرسال مقطع صوتي داخل المحادثة");
+    alert("تم بدء تسجيل مقطع صوتي وإرساله للمحادثة.");
   }
 
   function handleFile(e) {
     const file = e.target.files[0];
-    if(file) alert("تم اختيار الملف: " + file.name);
+    if(file) alert("تم إرسال الملف بنجاح: " + file.name);
   }
 
   // اتصال سريع بـ LiveKit
   async function connectLiveKit() {
     if (livekitRoom && livekitRoom.state === "connected") return;
     try {
-      setStatus(false, "جاري الاتصال...");
+      setStatus(false, "ضعيف");
       const res = await fetch(`/token?room=${encodeURIComponent(activeRoomId)}`, { headers: { 'x-device-id': deviceId } });
       const data = await res.json();
       
@@ -229,7 +251,7 @@
       await livekitRoom.connect(data.url || 'wss://radioconnect-8uyh53qc.livekit.cloud', data.token);
       setStatus(true, "متصل");
     } catch(err) {
-      setStatus(false, "ضعف الإنترنت"); // التحويل للأحمر عند الضعف كما طلبت
+      setStatus(false, "ضعيف"); // يتحول للأحمر عند ضعف الإنترنت كما طلبتم
     }
   }
 
@@ -280,6 +302,7 @@
     msg.textContent = input.value;
     box.appendChild(msg);
     input.value = "";
+    dynamicActionBtn.textContent = "🎙️";
     box.scrollTop = box.scrollHeight;
   }
 
