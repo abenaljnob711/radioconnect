@@ -2,11 +2,11 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-  <meta name="theme-color" content="#030a16">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+  <meta name="theme-color" content="#030712">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <title>جهاز لاسلكي</title>
+  <title>Radio Connect - جهاز لاسلكى</title>
   <script src="https://unpkg.com/livekit-client@2.15.3/dist/livekit-client.umd.min.js"></script>
   <style>
     * {
@@ -513,6 +513,7 @@
     .modal-box { width: min(520px, 100%); max-height: 85vh; overflow: auto; padding: 16px; border-radius: 20px 20px 0 0; background: #06162d; }
     .modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
     .close { width: 32px; height: 32px; border-radius: 8px; background: #0d274c; color: #fff; cursor: pointer; }
+    .input-label { display: block; color: #8196ac; font-size: 11px; margin: 0 0 5px 3px; }
     .input { width: 100%; height: 44px; padding: 0 12px; border-radius: 12px; background: #030d1d; border: 1px solid rgba(255,255,255,0.1); color: #fff; margin-bottom: 10px; outline: none; }
     .primary { width: 100%; height: 44px; border-radius: 12px; background: #1a8cff; color: #fff; font-weight: 700; cursor: pointer; }
     .toast { position: fixed; bottom: 70px; left: 50%; transform: translateX(-50%); background: #0d2a52; color: #fff; padding: 8px 16px; border-radius: 20px; font-size: 11px; opacity: 0; transition: .2s; pointer-events: none; z-index: 200; border: 1px solid #1a8cff; }
@@ -708,7 +709,7 @@
     </div>
   </section>
 
-  <!-- الشريط السفلي (الرئيسية، المفضلة، الموجات، حسابي) -->
+  <!-- الشريط السفلي -->
   <nav class="bottom-nav">
     <button id="navRoom" class="nav-btn active" onclick="showScreen('room')">
       <span>🏠</span>
@@ -735,8 +736,11 @@
         <h4 style="margin:0;">إنشاء غرفة جديدة</h4>
         <button class="close" onclick="closeModal('createModal')">×</button>
       </div>
-      <input id="roomNameInput" class="input" placeholder="اسم الغرفة">
-      <button class="primary" onclick="createRoom()">إنشاء</button>
+      <label class="input-label">اسم الغرفة</label>
+      <input id="roomNameInput" class="input" placeholder="مثال: العمليات">
+      <label class="input-label">اسمك داخل الغرفة</label>
+      <input id="memberNameInput" class="input" placeholder="اكتب اسمك">
+      <button class="primary" onclick="createRoom()">إنشاء الغرفة</button>
     </div>
   </div>
 
@@ -746,7 +750,7 @@
         <h4 style="margin:0;">طلب انضمام</h4>
         <button class="close" onclick="closeModal('joinModal')">×</button>
       </div>
-      <input id="memberNameInput" class="input" placeholder="اسمك داخل الغرفة">
+      <input id="joinMemberNameInput" class="input" placeholder="اسمك داخل الغرفة">
       <button class="primary" onclick="sendJoinRequest()">إرسال الطلب</button>
     </div>
   </div>
@@ -1067,14 +1071,16 @@
 
   async function createRoom() {
     const name = $("roomNameInput").value.trim();
+    const memberName = $("memberNameInput").value.trim() || "مسؤول الغرفة";
     if (!name) return toast("أدخل اسم الغرفة");
     try {
       const response = await fetch(API + "/api/rooms", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ deviceId, name })
+        body: JSON.stringify({ deviceId, name, memberName })
       });
       const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "خطأ بالخادم");
       closeModal("createModal");
       toast("تم إنشاء الغرفة بنجاح");
       await loadRooms();
