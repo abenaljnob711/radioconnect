@@ -856,6 +856,186 @@
   }
 
   async function connectLiveKit() {
+  if (!currentRoom) return false;
+
+  $("connection").textContent = "⏳ جاري الاتصال...";
+
+  try {
+    if (!window.LivekitClient) {
+      throw new Error("مكتبة الاتصال لم تحمل");
+    }
+
+    if (livekitRoom) {
+      try {
+        await livekitRoom.disconnect();
+      } catch (e) {}
+      livekitRoom = null;
+    }
+
+    const identity =
+      deviceId ||
+      ("radio-" + crypto.randomUUID());
+
+    if (!deviceId) {
+      deviceId = identity;
+      localStorage.setItem("deviceId", deviceId);
+    }
+
+    const tokenUrl =
+      `/token?identity=${encodeURIComponent(identity)}` +
+      `&room=${encodeURIComponent(currentRoom.id)}` +
+      `&deviceId=${encodeURIComponent(deviceId)}`;
+
+    const response = await fetch(tokenUrl, {
+      method: "GET",
+      headers: {
+        "x-device-id": deviceId
+      }
+    });
+
+    let data = {};
+
+    try {
+      data = await response.json();
+    } catch (e) {}
+
+    if (!response.ok || !data.token || !data.url) {
+      console.error("LiveKit token error:", data);
+      throw new Error(
+        data.error || "تعذر إنشاء اتصال الغرفة"
+      );
+    }
+
+    livekitRoom = new LivekitClient.Room({
+      adaptiveStream: true,
+      dynacast: true
+    });
+
+    livekitRoom.on(
+      LivekitClient.RoomEvent.Connected,
+      () => {
+        $("connection").textContent = "📶 متصل";
+      }
+    );
+
+    livekitRoom.on(
+      LivekitClient.RoomEvent.Disconnected,
+      () => {
+        $("connection").textContent =
+          "❌ تعذر الاتصال";
+      }
+    );
+
+    // استقبال الصوت من الأجهزة الأخرى
+    livekitRoom.on(
+      LivekitClient.RoomEvent.TrackSubscribed,
+      (track) => {
+        try {
+          if (
+            track.kind ===
+            LivekitClient.Track.Kind.Audio
+          ) {
+            const audio = track.attach();
+
+            audio.autoplay = true;
+            audio.playsInline = true;
+            audio.setAttribute(
+              "data-livekit-audio",
+              "1"
+            );
+
+            document.body.appendChild(audio);
+
+            audio.play().catch(() => {});
+          }
+        } catch (e) {
+          console.error(
+            "Remote audio error:",
+            e
+          );
+        }
+      }
+    );
+
+    // إزالة الصوت عند انتهاء البث
+    livekitRoom.on(
+      LivekitClient.RoomEvent.TrackUnsubscribed,
+      (track) => {
+        try {
+          track
+            .detach()
+            .forEach((el) => el.remove());
+        } catch (e) {}
+      }
+    );
+
+    // استقبال رسائل الدردشة
+    livekitRoom.on(
+      LivekitClient.RoomEvent.DataReceived,
+      (payload, participant, kind, topic) => {
+        try {
+          if (
+            topic &&
+            topic !== "radio-chat"
+          ) {
+            return;
+          }
+
+          const text =
+            new TextDecoder().decode(payload);
+
+          const message = JSON.parse(text);
+
+          if (
+            message.type === "radio-chat" &&
+            message.senderDeviceId !== deviceId
+          ) {
+            appendRemoteChat(
+              message.text || "",
+              message.senderName ||
+                participant?.identity ||
+                "عضو",
+              message.time || Date.now()
+            );
+          }
+        } catch (e) {
+          console.error(
+            "Chat receive error:",
+            e
+          );
+        }
+      }
+    );
+
+    await livekitRoom.connect(
+      data.url,
+      data.token
+    );
+
+    $("connection").textContent = "📶 متصل";
+
+    console.log(
+      "LiveKit connected:",
+      currentRoom.id
+    );
+
+    return true;
+
+  } catch (error) {
+
+    console.error(
+      "LiveKit connection error:",
+      error
+    );
+
+    livekitRoom = null;
+
+    $("connection").textContent =
+      "❌ تعذر الاتصال";
+
+    return false;
+  }
+}
     if (!activeRoomId) return;
     try {
       await disconnectLiveKit();
