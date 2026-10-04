@@ -361,10 +361,30 @@ app.get("/token", async (req, res) => {
       return res.status(403).json({ error: "يجب الحصول على موافقة الانضمام للغرفة أولاً" });
     }
 
-    const livekitApiKey = process.env.LIVEKIT_API_KEY || "devkey";
-    const livekitApiSecret = process.env.LIVEKIT_API_SECRET || "secret";
-    const livekitUrl = process.env.LIVEKIT_URL || "wss://radioconnect-8uyh53qc.livekit.cloud";
+const apiKey = process.env.LIVEKIT_API_KEY;
+const apiSecret = process.env.LIVEKIT_API_SECRET;
+const livekitUrl = String(
+  process.env.LIVEKIT_URL || ""
+).trim().replace(/\/+$/, "");
 
+if (!apiKey || !apiSecret || !livekitUrl) {
+  console.error("LiveKit environment variables are missing");
+
+  return res.status(500).json({
+    error: "إعدادات LiveKit غير مكتملة"
+  });
+}
+
+if (
+  !livekitUrl.startsWith("wss://") &&
+  !livekitUrl.startsWith("ws://")
+) {
+  console.error("Invalid LIVEKIT_URL:", livekitUrl);
+
+  return res.status(500).json({
+    error: "رابط LiveKit غير صحيح"
+  });
+}
     // استخدام deviceId كهوية للمستخدم داخل الغرفة الصوتية
     const token = new AccessToken(livekitApiKey, livekitApiSecret, { identity: deviceId });
     token.addGrant({
