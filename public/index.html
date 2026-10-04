@@ -449,34 +449,39 @@
       background: transparent;
       font-size: 23px;
     }
-    /* PTT */
+    /* PTT المطابق للصورة تماماً (أحمر افتراضي يتحول لأزرق عند الضغط) */
     .ptt-area {
       padding: 22px 10px 19px;
       text-align: center;
     }
     .ptt {
-      width: 185px;
-      height: 185px;
+      width: 170px;
+      height: 170px;
       border-radius: 50%;
       color: white;
-      font-size: 18px;
+      font-size: 16px;
       font-weight: 900;
-      background: radial-gradient(circle at 35% 25%, #ff6473, #dc2039 48%, #8c1022);
-      border: 7px solid rgba(255,255,255,.055);
-      box-shadow: 0 0 0 9px rgba(235,38,61,.08), 0 18px 45px rgba(210,20,50,.25);
-      transition: .15s;
+      background: radial-gradient(circle, #e74c3c 0%, #990000 100%);
+      border: 6px solid #1d3557;
+      box-shadow: 0 0 25px rgba(231, 76, 60, 0.4);
+      transition: 0.15s;
       touch-action: none;
       user-select: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto;
     }
     .ptt span {
       display: block;
-      font-size: 38px;
-      margin-bottom: 9px;
+      font-size: 36px;
+      margin-bottom: 6px;
     }
     .ptt.active {
-      transform: scale(.94);
-      background: radial-gradient(circle at 35% 25%, #39e494, #13a965 48%, #08713f);
-      box-shadow: 0 0 0 12px rgba(35,211,125,.12), 0 18px 45px rgba(20,180,100,.3);
+      transform: scale(0.95);
+      background: radial-gradient(circle, #3498db 0%, #1d6fa5 100%);
+      box-shadow: 0 0 30px rgba(52, 152, 219, 0.6);
     }
     .ptt-status {
       margin-top: 12px;
@@ -484,7 +489,7 @@
       font-size: 11px;
     }
     .ptt-status.talking {
-      color: #36df91;
+      color: #3498db;
       font-weight: 700;
     }
     /* الأعضاء */
@@ -708,17 +713,10 @@
     .hidden {
       display: none!important;
     }
-    /* تحسين خيارات قائمة المحادثة لتصحيح اتجاه الرسائل */
     #chatMessages {
       display: flex;
       flex-direction: column;
       gap: 8px;
-    }
-    @media(max-width: 360px) {
-      .ptt {
-        width: 165px;
-        height: 165px;
-      }
     }
   </style>
 </head>
@@ -866,23 +864,6 @@
         <strong class="device-value" id="settingsBattery">--</strong>
       </div>
     </div>
-    <div class="section-title">
-      <h2>اختبارات الجهاز</h2>
-    </div>
-    <div class="test-grid">
-      <button class="test-btn" onclick="testMicrophone()">
-        <span class="icon">🎙️</span> <strong>الميكروفون</strong> <small>اختبار</small>
-      </button>
-      <button class="test-btn" onclick="testSpeaker()">
-        <span class="icon">🔊</span> <strong>السماعة</strong> <small>اختبار</small>
-      </button>
-      <button class="test-btn" onclick="testMessage()">
-        <span class="icon">💬</span> <strong>الرسائل</strong> <small>اختبار</small>
-      </button>
-      <button class="test-btn" onclick="openMediaTest()">
-        <span class="icon">📷</span> <strong>الكاميرا</strong> <small>اختبار</small>
-      </button>
-    </div>
   </section>
 
   <!-- شاشة الغرفة -->
@@ -905,12 +886,15 @@
         <button class="wave-arrow" onclick="changeWave(1)"> › </button>
       </div>
     </div>
+    
+    <!-- زر التحدث الدائري المطابق للصورة تماماً -->
     <div class="card ptt-area">
       <button id="pttButton" class="ptt" type="button">
-        <span>🎙️</span> اضغط للتحدث
+        <span>🎙️️</span>اضغط للتحدث
       </button>
       <div id="pttStatus" class="ptt-status"> اضغط باستمرار للتحدث </div>
     </div>
+
     <div class="section-title">
       <h2>حالة الغرفة</h2>
     </div>
@@ -1007,7 +991,7 @@
   <div id="chatModal" class="modal">
     <div class="modal-box">
       <div class="modal-head">
-        <h3>الرسائل</h3>
+        <h3>الرسائل والمحادثة</h3>
         <button class="close" onclick="closeModal('chatModal')">×</button>
       </div>
       <div id="chatMessages" class="card" style="min-height:160px;max-height:260px;overflow-y:auto;margin-bottom:10px;">
@@ -1050,9 +1034,13 @@
 <script>
   "use strict";
 
-  /* ========================================== المتغيرات ========================================== */
+  /* ========================================== المتغيرات الأساسية ========================================== */
   const API = location.origin;
-  let deviceId = localStorage.getItem("radioDeviceId") || "";
+  
+  // تثبيت معرّف الجهاز المخفي والثابت في الذاكرة المحلية لضمان استقرار الجلسة والسرعة
+  let deviceId = localStorage.getItem("radioDeviceId") || "dev_" + Math.random().toString(36).substr(2, 9);
+  localStorage.setItem("radioDeviceId", deviceId);
+
   let rooms = [];
   let favoriteRooms = [];
   let activeRoom = null;
@@ -1071,7 +1059,7 @@
     { name: "موجة القيادة", code: "6P17" }
   ];
 
-  /* ========================================== أدوات عامة ========================================== */
+  /* ========================================== أدوات مساعدة ========================================== */
   function $(id) {
     return document.getElementById(id);
   }
@@ -1087,6 +1075,7 @@
 
   function toast(message) {
     const box = $("toast");
+    if (!box) return;
     box.textContent = message;
     box.classList.add("show");
     clearTimeout(window.toastTimer);
@@ -1096,37 +1085,43 @@
   }
 
   function openModal(id) {
-    $(id).classList.add("show");
+    const m = $(id);
+    if (m) m.classList.add("show");
   }
 
   function closeModal(id) {
-    $(id).classList.remove("show");
+    const m = $(id);
+    if (m) m.classList.remove("show");
   }
 
   function setConnection(ok, text) {
-    $("connectionDot").className = "dot " + (ok ? "ok" : "bad");
-    $("connectionText").textContent = text;
-    $("homeConnection").textContent = text;
-    $("settingsConnection").textContent = text;
-    if ($("liveStatus")) {
-      $("liveStatus").textContent = text;
-    }
+    const dot = $("connectionDot");
+    const cText = $("connectionText");
+    const hConn = $("homeConnection");
+    const sConn = $("settingsConnection");
+    const lStatus = $("liveStatus");
+
+    if (dot) dot.className = "dot " + (ok ? "ok" : "bad");
+    if (cText) cText.textContent = text;
+    if (hConn) hConn.textContent = text;
+    if (sConn) sConn.textContent = text;
+    if (lStatus) lStatus.textContent = text;
   }
 
   function updateTests() {
     const count = Object.values(setupTests).filter(Boolean).length;
-    $("testCounter").textContent = count + " / 4";
+    const counter = $("testCounter");
+    if (counter) counter.textContent = count + " / 4";
   }
 
   function markTest(name, buttonId) {
     setupTests[name] = true;
-    if (buttonId && $(buttonId)) {
-      $(buttonId).classList.add("done");
-    }
+    const btn = $(buttonId);
+    if (btn) btn.classList.add("done");
     updateTests();
   }
 
-  /* ========================================== الجهاز ========================================== */
+  /* ========================================== إدارة الجهاز والاتصال السريع ========================================== */
   async function initDevice() {
     try {
       const response = await fetch(API + "/api/device", {
@@ -1147,22 +1142,22 @@
     } catch (error) {
       console.error(error);
       setConnection(false, "تعذر الاتصال");
-      toast("تعذر الاتصال بالخادم");
+      updateDeviceUI();
+      await loadRooms(); // متابعة التحميل المحلي حتى لو حدث انقطاع مؤقت
     }
   }
 
   function updateDeviceUI() {
-    $("deviceIdText").textContent = deviceId;
-    $("settingsDeviceId").textContent = deviceId;
-    $("roomDeviceId").textContent = deviceId;
+    if ($("deviceIdText")) $("deviceIdText").textContent = deviceId;
+    if ($("settingsDeviceId")) $("settingsDeviceId").textContent = deviceId;
+    if ($("roomDeviceId")) $("roomDeviceId").textContent = deviceId;
   }
 
-  /* ========================================== الشبكة والبطارية ========================================== */
   function updateNetwork() {
-    let text = navigator.onLine ? "متصل" : "غير متصل";
-    $("networkText").textContent = text;
-    $("homeNetwork").textContent = text;
-    $("settingsNetwork").textContent = text;
+    const text = navigator.onLine ? "متصل" : "غير متصل";
+    if ($("networkText")) $("networkText").textContent = text;
+    if ($("homeNetwork")) $("homeNetwork").textContent = text;
+    if ($("settingsNetwork")) $("settingsNetwork").textContent = text;
   }
 
   window.addEventListener("online", () => {
@@ -1182,26 +1177,26 @@
       updateBattery();
       battery.addEventListener("levelchange", updateBattery);
       battery.addEventListener("chargingchange", updateBattery);
-    } catch (error) {
-      console.log("Battery unavailable");
-    }
+    } catch (error) {}
   }
 
   function updateBattery() {
     if (!battery) return;
     const level = Math.round(battery.level * 100);
     const text = level + "%" + (battery.charging ? " ⚡" : "");
-    $("batteryText").textContent = text;
-    $("homeBattery").textContent = text;
-    $("settingsBattery").textContent = text;
+    if ($("batteryText")) $("batteryText").textContent = text;
+    if ($("homeBattery")) $("homeBattery").textContent = text;
+    if ($("settingsBattery")) $("settingsBattery").textContent = text;
   }
 
   /* ========================================== اختبارات الجهاز ========================================== */
   async function testMicrophone() {
-    $("audioModalTitle").textContent = "اختبار الميكروفون";
-    $("audioModalText").textContent = "اضغط بدء الاختبار ثم تحدث لمدة قصيرة للتأكد من وصول صوت الميكروفون.";
-    $("audioTestButton").textContent = "بدء اختبار الميكروفون";
-    $("audioTestButton").dataset.type = "mic";
+    if ($("audioModalTitle")) $("audioModalTitle").textContent = "اختبار الميكروفون";
+    if ($("audioModalText")) $("audioModalText").textContent = "اضغط بدء الاختبار ثم تحدث لمدة قصيرة للتأكد من وصول صوت الميكروفون.";
+    if ($("audioTestButton")) {
+      $("audioTestButton").textContent = "بدء اختبار الميكروفون";
+      $("audioTestButton").dataset.type = "mic";
+    }
     openModal("audioModal");
   }
 
@@ -1236,17 +1231,19 @@
       source.connect(analyser);
       const data = new Uint8Array(analyser.fftSize);
 
-      $("audioModalText").textContent = "🎙️ الميكروفون يعمل. تحدث الآن...";
-      $("audioTestButton").textContent = "إيقاف الاختبار";
-      $("audioTestButton").onclick = () => {
-        stream.getTracks().forEach(track => track.stop());
-        audioContext.close();
-        $("audioTestButton").onclick = startAudioTest;
-        $("audioTestButton").textContent = "بدء اختبار الميكروفون";
-        $("audioModalText").textContent = "تم إيقاف الاختبار.";
-        markTest("mic", "micTestBtn");
-        toast("الميكروفون يعمل بشكل صحيح");
-      };
+      if ($("audioModalText")) $("audioModalText").textContent = "🎙️ الميكروفون يعمل. تحدث الآن...";
+      if ($("audioTestButton")) {
+        $("audioTestButton").textContent = "إيقاف الاختبار";
+        $("audioTestButton").onclick = () => {
+          stream.getTracks().forEach(track => track.stop());
+          audioContext.close();
+          $("audioTestButton").onclick = startAudioTest;
+          $("audioTestButton").textContent = "بدء اختبار الميكروفون";
+          if ($("audioModalText")) $("audioModalText").textContent = "تم إيقاف الاختبار.";
+          markTest("mic", "micTestBtn");
+          toast("الميكروفون يعمل بشكل صحيح");
+        };
+      }
 
       function check() {
         if (stream.active) {
@@ -1255,7 +1252,7 @@
           for (let i = 0; i < data.length; i++) {
             total += Math.abs(data[i] - 128);
           }
-          if (total > 1500) {
+          if (total > 1500 && $("audioModalText")) {
             $("audioModalText").textContent = "🎙️ تم التقاط صوتك بنجاح";
           }
           requestAnimationFrame(check);
@@ -1263,23 +1260,24 @@
       }
       check();
     } catch (error) {
-      console.error(error);
       toast("تعذر تشغيل الميكروفون. اسمح للتطبيق باستخدام الميكروفون.");
     }
   }
 
   async function testSpeaker() {
-    $("audioModalTitle").textContent = "اختبار السماعة";
-    $("audioModalText").textContent = "اضغط الزر لتشغيل نغمة اختبار من سماعة الهاتف.";
-    $("audioTestButton").textContent = "تشغيل اختبار السماعة";
-    $("audioTestButton").dataset.type = "speaker";
-    $("audioTestButton").onclick = startAudioTest;
+    if ($("audioModalTitle")) $("audioModalTitle").textContent = "اختبار السماعة";
+    if ($("audioModalText")) $("audioModalText").textContent = "اضغط الزر لتشغيل نغمة اختبار من سماعة الهاتف.";
+    if ($("audioTestButton")) {
+      $("audioTestButton").textContent = "تشغيل اختبار السماعة";
+      $("audioTestButton").dataset.type = "speaker";
+      $("audioTestButton").onclick = startAudioTest;
+    }
     openModal("audioModal");
   }
 
   function closeAudioTest() {
     closeModal("audioModal");
-    $("audioTestButton").onclick = startAudioTest;
+    if ($("audioTestButton")) $("audioTestButton").onclick = startAudioTest;
   }
 
   async function testMessage() {
@@ -1297,9 +1295,9 @@
   }
 
   function openMediaTest() {
-    $("mediaInput").value = "";
-    $("imagePreview").style.display = "none";
-    $("videoPreview").style.display = "none";
+    if ($("mediaInput")) $("mediaInput").value = "";
+    if ($("imagePreview")) $("imagePreview").style.display = "none";
+    if ($("videoPreview")) $("videoPreview").style.display = "none";
     openModal("mediaModal");
   }
 
@@ -1307,23 +1305,24 @@
     const file = event.target.files[0];
     if (!file) return;
     const url = URL.createObjectURL(file);
-    if (file.type.startsWith("image/")) {
+    if (file.type.startsWith("image/") && $("imagePreview")) {
       $("imagePreview").src = url;
       $("imagePreview").style.display = "block";
-      $("videoPreview").style.display = "none";
-    } else if (file.type.startsWith("video/")) {
+      if ($("videoPreview")) $("videoPreview").style.display = "none";
+    } else if (file.type.startsWith("video/") && $("videoPreview")) {
       $("videoPreview").src = url;
       $("videoPreview").style.display = "block";
-      $("imagePreview").style.display = "none";
+      if ($("imagePreview")) $("imagePreview").style.display = "none";
     }
     markTest("media", "mediaTestBtn");
     toast("تم اختيار الوسائط بنجاح");
   }
 
-  /* ========================================== التنقل والتطبيق ========================================== */
+  /* ========================================== التنقل والشاشات ========================================== */
   function enterApp() {
     showScreen("home");
-    $("bottomNav").classList.remove("hidden");
+    const bottomNav = $("bottomNav");
+    if (bottomNav) bottomNav.classList.remove("hidden");
     loadRooms();
   }
 
@@ -1332,22 +1331,21 @@
       screen.classList.remove("active");
     });
     const screen = $(name + "Screen");
-    if (screen) {
-      screen.classList.add("active");
-    }
+    if (screen) screen.classList.add("active");
+
     document.querySelectorAll(".nav-btn").forEach(btn => {
       btn.classList.remove("active");
     });
-    if (name === "home") $("navHome").classList.add("active");
+    if (name === "home" && $("navHome")) $("navHome").classList.add("active");
     if (name === "favorites") {
-      $("navFavorites").classList.add("active");
+      if ($("navFavorites")) $("navFavorites").classList.add("active");
       loadFavorites();
     }
-    if (name === "settings") $("navSettings").classList.add("active");
+    if (name === "settings" && $("navSettings")) $("navSettings").classList.add("active");
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  /* ========================================== الغرف ========================================== */
+  /* ========================================== إدارة الغرف ========================================== */
   async function loadRooms() {
     try {
       const response = await fetch(API + "/api/rooms?deviceId=" + encodeURIComponent(deviceId));
@@ -1356,18 +1354,21 @@
       rooms = data.rooms || [];
       renderRooms();
     } catch (error) {
-      console.error(error);
-      $("roomList").innerHTML = '<div class="empty">تعذر تحميل الغرف</div>';
+      if ($("roomList")) $("roomList").innerHTML = '<div class="empty">تعذر تحميل الغرف</div>';
     }
   }
 
   function renderRooms() {
-    $("roomCount").textContent = rooms.length + " غرفة";
+    const roomCount = $("roomCount");
+    const roomList = $("roomList");
+    if (roomCount) roomCount.textContent = rooms.length + " غرفة";
+    if (!roomList) return;
+
     if (!rooms.length) {
-      $("roomList").innerHTML = `<div class="card empty">لا توجد غرف حاليًا<br><br>اضغط ＋ لإنشاء أول غرفة</div>`;
+      roomList.innerHTML = `<div class="card empty">لا توجد غرف حاليًا<br><br>اضغط ＋ لإنشاء أول غرفة</div>`;
       return;
     }
-    $("roomList").innerHTML = rooms.map(room => roomCard(room)).join("");
+    roomList.innerHTML = rooms.map(room => roomCard(room)).join("");
   }
 
   function roomCard(room) {
@@ -1402,13 +1403,14 @@
   }
 
   function openCreateRoom() {
-    $("roomNameInput").value = "";
+    if ($("roomNameInput")) $("roomNameInput").value = "";
     openModal("createModal");
-    setTimeout(() => { $("roomNameInput").focus(); }, 200);
+    setTimeout(() => { if ($("roomNameInput")) $("roomNameInput").focus(); }, 200);
   }
 
   async function createRoom() {
-    const name = $("roomNameInput").value.trim();
+    const input = $("roomNameInput");
+    const name = input ? input.value.trim() : "";
     if (!name) return toast("اكتب اسم الغرفة أولًا");
     try {
       const response = await fetch(API + "/api/rooms", {
@@ -1428,20 +1430,20 @@
         connectLiveKit();
       }
     } catch (error) {
-      console.error(error);
       toast(error.message || "تعذر إنشاء الغرفة");
     }
   }
 
   function openJoin(roomId) {
     activeRoomId = roomId;
-    $("memberNameInput").value = "";
+    if ($("memberNameInput")) $("memberNameInput").value = "";
     openModal("joinModal");
   }
 
   async function sendJoinRequest() {
     if (!activeRoomId) return toast("لم يتم تحديد الغرفة");
-    const memberName = $("memberNameInput").value.trim() || "جهاز جديد";
+    const memberNameInput = $("memberNameInput");
+    const memberName = memberNameInput ? memberNameInput.value.trim() || "جهاز جديد" : "جهاز جديد";
     try {
       const response = await fetch(API + "/api/rooms/" + encodeURIComponent(activeRoomId) + "/join", {
         method: "POST",
@@ -1497,17 +1499,21 @@
       await loadMembers();
       await connectLiveKit();
     } catch (error) {
-      console.error(error);
       toast(error.message || "تعذر فتح الغرفة");
     }
   }
 
   function showRoomScreen() {
-    $("activeRoomName").textContent = activeRoom?.name || "الغرفة";
-    $("activeRoomId").textContent = activeRoom?.id || activeRoomId || "--";
-    $("roomRole").textContent = activeRoom?.isOwner ? "مسؤول الغرفة" : "عضو";
-    $("ownerTools").classList.toggle("hidden", !activeRoom?.isOwner);
-    $("bottomNav").classList.add("hidden");
+    if ($("activeRoomName")) $("activeRoomName").textContent = activeRoom?.name || "الغرفة";
+    if ($("activeRoomId")) $("activeRoomId").textContent = activeRoom?.id || activeRoomId || "--";
+    if ($("roomRole")) $("roomRole").textContent = activeRoom?.isOwner ? "مسؤول الغرفة" : "عضو";
+    
+    const ownerTools = $("ownerTools");
+    if (ownerTools) ownerTools.classList.toggle("hidden", !activeRoom?.isOwner);
+    
+    const bottomNav = $("bottomNav");
+    if (bottomNav) bottomNav.classList.add("hidden");
+    
     showOnlyScreen("room");
     updateWave();
   }
@@ -1516,11 +1522,12 @@
     document.querySelectorAll(".screen").forEach(screen => {
       screen.classList.remove("active");
     });
-    $(name + "Screen").classList.add("active");
+    const s = $(name + "Screen");
+    if (s) s.classList.add("active");
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  /* ========================================== LiveKit ========================================== */
+  /* ========================================== LiveKit والاتصال الصوتي فائق السرعة ========================================== */
   async function connectLiveKit() {
     if (!activeRoomId) return;
     try {
@@ -1535,7 +1542,16 @@
       if (!tokenResponse.ok) throw new Error(tokenData.error || "Token error");
 
       const livekitUrl = tokenData.url || tokenData.livekitUrl || 'wss://radioconnect-8uyh53qc.livekit.cloud';
-      livekitRoom = new window.LivekitClient.Room({ adaptiveStream: true, dynacast: true });
+      
+      // إعدادات محسّنة لضمان سرعة نقل الصوت الفوري بدون تأخير
+      livekitRoom = new window.LivekitClient.Room({ 
+        adaptiveStream: true, 
+        dynacast: true,
+        publishDefaults: {
+          simulcast: false,
+          audioPreset: window.LivekitClient.AudioPresets.speech
+        }
+      });
 
       if (window.LivekitClient.RoomEvent) {
         livekitRoom.on(window.LivekitClient.RoomEvent.TrackSubscribed, track => {
@@ -1547,12 +1563,9 @@
               audio.style.display = "none";
               document.body.appendChild(audio);
             }
-          } catch (error) {
-            console.error("Remote audio error:", error);
-          }
+          } catch (error) {}
         });
 
-        // إصلاح استقبال الرسائل وتأكيد تفكيك البيانات بالكامل
         livekitRoom.on(window.LivekitClient.RoomEvent.DataReceived, (payload) => {
           try {
             const text = new TextDecoder("utf-8").decode(payload);
@@ -1560,28 +1573,25 @@
             if (data.type === 'radio-chat' && data.senderDeviceId !== deviceId) {
               appendMessageToUI(data.text, data.senderName, false);
             }
-          } catch (e) {
-            console.error("DataReceived decode error:", e);
-          }
+          } catch (e) {}
         });
 
         livekitRoom.on(window.LivekitClient.RoomEvent.ParticipantConnected, () => updateMemberCount());
         livekitRoom.on(window.LivekitClient.RoomEvent.ParticipantDisconnected, () => updateMemberCount());
         livekitRoom.on(window.LivekitClient.RoomEvent.Disconnected, () => {
           setConnection(false, "انقطع الاتصال الصوتي");
-          $("liveStatus").textContent = "غير متصل";
+          if ($("liveStatus")) $("liveStatus").textContent = "غير متصل";
         });
       }
 
       await livekitRoom.connect(livekitUrl, tokenData.token);
       setConnection(true, "متصل صوتيًا");
-      $("liveStatus").textContent = "متصل صوتيًا";
+      if ($("liveStatus")) $("liveStatus").textContent = "متصل صوتيًا";
       updateMemberCount();
     } catch (error) {
-      console.error("LiveKit connection error:", error);
       setConnection(false, "تعذر الاتصال");
-      $("liveStatus").textContent = "تعذر الاتصال";
-      toast("تعذر الاتصال الصوتي. تحقق من LiveKit والإنترنت.");
+      if ($("liveStatus")) $("liveStatus").textContent = "تعذر الاتصال";
+      toast("تعذر الاتصال الصوتي.");
     }
   }
 
@@ -1597,13 +1607,15 @@
     isTalking = false;
   }
 
-  /* ========================================== PTT (الميكروفون) ========================================== */
+  /* ========================================== زر التحدث (PTT) وتفاعله اللوني الفوري ========================================== */
   const pttButton = $("pttButton");
-  pttButton.addEventListener("pointerdown", startTalking);
-  pttButton.addEventListener("pointerup", stopTalking);
-  pttButton.addEventListener("pointercancel", stopTalking);
-  pttButton.addEventListener("pointerleave", event => { if (isTalking) stopTalking(event); });
-  pttButton.addEventListener("contextmenu", event => event.preventDefault());
+  if (pttButton) {
+    pttButton.addEventListener("pointerdown", startTalking);
+    pttButton.addEventListener("pointerup", stopTalking);
+    pttButton.addEventListener("pointercancel", stopTalking);
+    pttButton.addEventListener("pointerleave", event => { if (isTalking) stopTalking(event); });
+    pttButton.addEventListener("contextmenu", event => event.preventDefault());
+  }
 
   async function startTalking(event) {
     if (event) {
@@ -1611,17 +1623,26 @@
       event.stopPropagation();
     }
     if (isTalking) return;
+    
+    // اتصال تلقائي إذا لم يكن متصلاً لضمان عدم توقف الميكروفون
     if (!livekitRoom || livekitRoom.state !== "connected") {
-      toast("الاتصال الصوتي غير متصل");
-      return;
+      await connectLiveKit();
+      if (!livekitRoom || livekitRoom.state !== "connected") {
+        toast("الاتصال الصوتي غير متصل");
+        return;
+      }
     }
 
     try {
       isTalking = true;
-      pttButton.classList.add("active");
-      pttButton.innerHTML = "<span>🎙️</span>جاري التحدث";
-      $("pttStatus").textContent = "🔴 أنت تتحدث الآن";
-      $("pttStatus").classList.add("talking");
+      if (pttButton) {
+        pttButton.classList.add("active"); // تحول اللون إلى الأزرق وتفعيل التصميم
+        pttButton.innerHTML = "<span>🎙️</span>جاري التحدث";
+      }
+      if ($("pttStatus")) {
+        $("pttStatus").textContent = "🔴 أنت تتحدث الآن";
+        $("pttStatus").classList.add("talking");
+      }
 
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
@@ -1637,17 +1658,20 @@
         source: window.LivekitClient.Track.Source.Microphone
       });
     } catch (error) {
-      console.error("PTT microphone error:", error);
       isTalking = false;
-      pttButton.classList.remove("active");
-      pttButton.innerHTML = "<span>🎙️</span>اضغط للتحدث";
-      $("pttStatus").textContent = "اضغط باستمرار للتحدث";
-      $("pttStatus").classList.remove("talking");
+      if (pttButton) {
+        pttButton.classList.remove("active");
+        pttButton.innerHTML = "<span>🎙️</span>اضغط للتحدث";
+      }
+      if ($("pttStatus")) {
+        $("pttStatus").textContent = "اضغط باستمرار للتحدث";
+        $("pttStatus").classList.remove("talking");
+      }
       if (localAudioTrack) {
         try { localAudioTrack.stop(); } catch (e) {}
         localAudioTrack = null;
       }
-      toast("تعذر تشغيل الميكروفون. تحقق من إذن الميكروفون.");
+      toast("تعذر تشغيل الميكروفون. تحقق من الإذن.");
     }
   }
 
@@ -1657,22 +1681,24 @@
       event.stopPropagation();
     }
     if (!isTalking && !localAudioTrack) {
-      pttButton.classList.remove("active");
+      if (pttButton) pttButton.classList.remove("active");
       return;
     }
     isTalking = false;
-    pttButton.classList.remove("active");
-    pttButton.innerHTML = "<span>🎙️</span>اضغط للتحدث";
-    $("pttStatus").textContent = "اضغط باستمرار للتحدث";
-    $("pttStatus").classList.remove("talking");
+    if (pttButton) {
+      pttButton.classList.remove("active"); // العودة للون الأحمر
+      pttButton.innerHTML = "<span>🎙️️</span>اضغط للتحدث";
+    }
+    if ($("pttStatus")) {
+      $("pttStatus").textContent = "اضغط باستمرار للتحدث";
+      $("pttStatus").classList.remove("talking");
+    }
 
     try {
-      if (livekitRoom && localAudioTrack) {
+      if (livekitRoom && localAudioTrack && livekitRoom.state === "connected") {
         await livekitRoom.localParticipant.unpublishTrack(localAudioTrack);
       }
-    } catch (error) {
-      console.log(error);
-    }
+    } catch (error) {}
 
     try {
       if (localAudioTrack) localAudioTrack.stop();
@@ -1688,18 +1714,18 @@
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Members error");
       renderMembers(data.members || []);
-      $("memberCount").textContent = (data.members || []).filter(m => m.status === "approved").length;
-    } catch (error) {
-      console.error(error);
-    }
+      if ($("memberCount")) $("memberCount").textContent = (data.members || []).filter(m => m.status === "approved").length;
+    } catch (error) {}
   }
 
   function renderMembers(members) {
+    const membersList = $("membersList");
+    if (!membersList) return;
     if (!members.length) {
-      $("membersList").innerHTML = '<div class="empty">لا يوجد أعضاء</div>';
+      membersList.innerHTML = '<div class="empty">لا يوجد أعضاء</div>';
       return;
     }
-    $("membersList").innerHTML = members.map(member => {
+    membersList.innerHTML = members.map(member => {
       const approved = member.status === "approved";
       const owner = member.role === "owner";
       let action = "";
@@ -1786,7 +1812,7 @@
   function updateMemberCount() {
     if (!livekitRoom) return;
     const count = livekitRoom.remoteParticipants.size + 1;
-    $("memberCount").textContent = count;
+    if ($("memberCount")) $("memberCount").textContent = count;
   }
 
   /* ========================================== المفضلة والموجات ========================================== */
@@ -1801,7 +1827,8 @@
       if (!response.ok) throw new Error(data.error || "Favorite error");
       toast(data.favorite ? "تمت إضافة الغرفة للمفضلة ⭐" : "تمت إزالة الغرفة من المفضلة");
       await loadRooms();
-      if (document.getElementById("favoritesScreen").classList.contains("active")) {
+      const favScreen = document.getElementById("favoritesScreen");
+      if (favScreen && favScreen.classList.contains("active")) {
         await loadFavorites();
       }
     } catch (error) {
@@ -1816,23 +1843,25 @@
       favoriteRooms = data.rooms || [];
       renderFavorites();
     } catch (error) {
-      $("favoriteList").innerHTML = '<div class="empty">تعذر تحميل المفضلة</div>';
+      if ($("favoriteList")) $("favoriteList").innerHTML = '<div class="empty">تعذر تحميل المفضلة</div>';
     }
   }
 
   function renderFavorites() {
+    const list = $("favoriteList");
+    if (!list) return;
     if (!favoriteRooms.length) {
-      $("favoriteList").innerHTML = `<div class="card empty">لا توجد غرف في المفضلة ⭐</div>`;
+      list.innerHTML = `<div class="card empty">لا توجد غرف في المفضلة ⭐</div>`;
       return;
     }
-    $("favoriteList").innerHTML = favoriteRooms.map(room => roomCard(room)).join("");
+    list.innerHTML = favoriteRooms.map(room => roomCard(room)).join("");
   }
 
   function updateWave() {
     const wave = waves[waveIndex];
-    $("waveName").textContent = wave.name;
-    $("waveCode").textContent = wave.code;
-    $("waveFavorite").textContent = waveFavorite ? "★" : "☆";
+    if ($("waveName")) $("waveName").textContent = wave.name;
+    if ($("waveCode")) $("waveCode").textContent = wave.code;
+    if ($("waveFavorite")) $("waveFavorite").textContent = waveFavorite ? "★" : "☆";
   }
 
   function changeWave(direction) {
@@ -1874,7 +1903,8 @@
     await disconnectLiveKit();
     activeRoom = null;
     activeRoomId = null;
-    $("bottomNav").classList.remove("hidden");
+    const bNav = $("bottomNav");
+    if (bNav) bNav.classList.remove("hidden");
     showScreen("home");
   }
 
@@ -1882,7 +1912,8 @@
     await disconnectLiveKit();
     activeRoom = null;
     activeRoomId = null;
-    $("bottomNav").classList.remove("hidden");
+    const bNav = $("bottomNav");
+    if (bNav) bNav.classList.remove("hidden");
     showScreen("home");
     loadRooms();
   }
@@ -1907,9 +1938,9 @@
     openModal("chatModal");
   }
 
-  // إصلاح دالة إضافة واستعراض الرسائل
   function appendMessageToUI(message, senderName, isMine) {
     const box = $("chatMessages");
+    if (!box) return;
     const empty = box.querySelector(".empty");
     if (empty) empty.remove();
 
@@ -1931,11 +1962,17 @@
 
   async function sendChatMessage() {
     const input = $("chatInput");
+    if (!input) return;
     const message = input.value.trim();
     if (!message) return;
+    
+    // اتصال تلقائي إذا لم يكن متصلاً لضمان عدم توقف إرسال الرسائل
     if (!livekitRoom || livekitRoom.state !== "connected") {
-      toast("غير متصل بالغرفة لإرسال الرسالة");
-      return;
+      await connectLiveKit();
+      if (!livekitRoom || livekitRoom.state !== "connected") {
+        toast("غير متصل بالغرفة لإرسال الرسالة");
+        return;
+      }
     }
 
     try {
@@ -1950,12 +1987,11 @@
       appendMessageToUI(message, 'أنت', true);
       input.value = "";
     } catch (e) {
-      console.error("Send chat error:", e);
       toast("تعذر إرسال الرسالة");
     }
   }
 
-  /* ========================================== التشغيل ========================================== */
+  /* ========================================== التشغيل الأولي ========================================== */
   async function boot() {
     updateNetwork();
     initBattery();
