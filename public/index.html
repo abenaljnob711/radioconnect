@@ -2,145 +2,1142 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Radio Connect - جهاز لاسلكي</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <meta name="theme-color" content="#030a16">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>جهاز لاسلكي</title>
+  <script src="https://unpkg.com/livekit-client@2.15.3/dist/livekit-client.umd.min.js"></script>
   <style>
-    body {
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+    html, body {
       margin: 0;
       padding: 0;
-      background-color: #0b1120;
-      color: #ffffff;
-      font-family: Tahoma, Arial, sans-serif;
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-      justify-content: space-between;
-      align-items: center;
+      min-height: 100%;
+      background: #020611;
+      color: #edf5ff;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, "Noto Sans Arabic", sans-serif;
     }
-    .app-container {
+    body {
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    button, input {
+      font: inherit;
+    }
+    button {
+      border: 0;
+      cursor: pointer;
+    }
+    .app {
       width: 100%;
-      max-width: 480px;
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      background: #111827;
-      box-shadow: 0 0 20px rgba(0,0,0,0.8);
+      max-width: 520px;
+      min-height: 100vh;
+      margin: auto;
+      background: linear-gradient(180deg, #030a18 0%, #020712 100%);
       position: relative;
       overflow: hidden;
+      display: flex;
+      flex-direction: column;
     }
-    header {
-      padding: 15px;
-      background: #1f2937;
-      text-align: center;
-      font-size: 18px;
-      font-weight: bold;
-      border-bottom: 1px solid #374151;
+    
+    /* الهيدر العلوي */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      padding: 10px 14px;
+      background: #040e21;
+      border-bottom: 1px solid rgba(255,255,255,.05);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
-    .screen-body {
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .menu-btn {
+      background: transparent;
+      color: #7d96b3;
+      font-size: 22px;
+      padding: 2px;
+    }
+    .brand-icon {
+      font-size: 20px;
+      color: #1a8cff;
+    }
+    .brand-titles {
+      display: flex;
+      flex-direction: column;
+    }
+    .brand-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #ffffff;
+      line-height: 1.1;
+    }
+    .brand-sub {
+      color: #8da1b9;
+      font-size: 11px;
+    }
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(32,224,112,0.1);
+      padding: 4px 10px;
+      border-radius: 12px;
+      border: 1px solid rgba(32,224,112,0.2);
+    }
+    .status-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #20e070;
+      box-shadow: 0 0 8px #20e070;
+    }
+    .status-dot.bad {
+      background: #ff4d6d;
+      box-shadow: 0 0 8px #ff4d6d;
+    }
+    .status-text {
+      font-size: 11px;
+      color: #ffffff;
+      font-weight: 600;
+    }
+    .server-icon {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      color: #8da1b9;
+      font-size: 10px;
+    }
+    .server-icon span {
+      font-size: 16px;
+    }
+
+    /* الشاشات */
+    .screen {
+      display: none;
+      padding: 10px 12px 85px;
       flex: 1;
+    }
+    .screen.active {
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* كروت العلوي */
+    .dashboard-top-grid {
+      display: grid;
+      grid-template-columns: 1.1fr 1fr 1.1fr;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+    .dash-card {
+      background: #07152b;
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 12px;
+      padding: 8px 6px;
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      padding: 20px;
       text-align: center;
     }
-    /* إشارة المايك المخفية افتراضياً والتي تظهر عند الضغط */
-    #micIndicator {
-      display: none;
-      font-size: 24px;
-      color: #ef4444;
-      margin-bottom: 15px;
-      animation: pulse 1s infinite;
-    }
-    #micIndicator.active {
-      display: block;
-    }
-    @keyframes pulse {
-      0% { transform: scale(1); opacity: 1; }
-      50% { transform: scale(1.2); opacity: 0.7; }
-      100% { transform: scale(1); opacity: 1; }
-    }
-    .ptt-container {
-      padding: 30px;
+    .room-select-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: #ffb703;
       display: flex;
-      justify-content: center;
       align-items: center;
-      background: #1f2937;
-      border-top: 1px solid #374151;
-    }
-    #pttBtn {
-      width: 120px;
-      height: 120px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-      color: white;
-      border: none;
-      font-size: 16px;
-      font-weight: bold;
+      gap: 4px;
       cursor: pointer;
-      box-shadow: 0 5px 15px rgba(59, 130, 246, 0.4);
-      transition: all 0.1s ease;
-      outline: none;
+    }
+    .room-select-sub {
+      font-size: 9px;
+      color: #7b93af;
+      margin-top: 3px;
+    }
+    .wave-picker {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+    }
+    .wave-btn {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #0f284a;
+      color: #3898ff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+    }
+    .wave-code-display {
+      font-size: 13px;
+      font-weight: 800;
+      color: #ffffff;
+      letter-spacing: 1px;
+    }
+    .wave-sub-title {
+      font-size: 10px;
+      color: #7b93af;
+      margin-top: 2px;
+    }
+    .system-stats {
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      width: 100%;
+    }
+    .stat-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .stat-icon {
+      font-size: 12px;
+      color: #20e070;
+    }
+    .stat-val {
+      font-size: 10px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-top: 2px;
+    }
+    .stat-lbl {
+      font-size: 8px;
+      color: #6a829e;
+      margin-top: 1px;
+    }
+
+    /* PTT وزر التحدث */
+    .ptt-section {
+      display: grid;
+      grid-template-columns: 1.1fr 1.4fr 1.1fr;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 12px;
+      background: #051124;
+      border-radius: 16px;
+      padding: 10px 8px;
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+    .audio-mode-card {
+      background: #081a33;
+      border-radius: 12px;
+      padding: 8px;
+      text-align: center;
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+    .audio-mode-title {
+      font-size: 10px;
+      font-weight: 700;
+      color: #ffffff;
+    }
+    .audio-mode-status {
+      font-size: 9px;
+      color: #6a829e;
+      margin-top: 4px;
+    }
+    .toggle-switch-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      margin-top: 6px;
+    }
+    .toggle-switch {
+      width: 28px;
+      height: 15px;
+      border-radius: 10px;
+      background: #112a4a;
+      position: relative;
+    }
+    .toggle-switch.active::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      background: #20e070;
+    }
+    .toggle-switch.off::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      background: #6a829e;
+    }
+
+    .side-waves {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      height: 25px;
+    }
+    .s-wave {
+      width: 3px;
+      background: #1a8cff;
+      border-radius: 2px;
+      animation: pulseWave 1.2s infinite ease-in-out;
+    }
+    .s-wave:nth-child(1) { height: 10px; animation-delay: 0.1s; }
+    .s-wave:nth-child(2) { height: 18px; animation-delay: 0.3s; }
+    .s-wave:nth-child(3) { height: 25px; animation-delay: 0.2s; }
+    .s-wave:nth-child(4) { height: 15px; animation-delay: 0.4s; }
+    .s-wave:nth-child(5) { height: 8px; animation-delay: 0.5s; }
+
+    @keyframes pulseWave {
+      0%, 100% { opacity: 0.4; transform: scaleY(0.7); }
+      50% { opacity: 1; transform: scaleY(1.2); }
+    }
+
+    .ptt-center {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .ptt-btn {
+      width: 96px;
+      height: 96px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #0b4b8c 0%, #062b54 70%, #031833 100%);
+      border: 3px solid #1a8cff;
+      box-shadow: 0 0 20px rgba(26,140,255,0.3);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+      touch-action: none;
       user-select: none;
+      cursor: pointer;
     }
-    #pttBtn:active, #pttBtn.pressed {
-      background: linear-gradient(135deg, #ef4444, #b91c1c);
-      box-shadow: 0 2px 8px rgba(239, 68, 68, 0.6);
-      transform: scale(0.95);
+    .ptt-btn span {
+      font-size: 26px;
     }
+    .ptt-btn small {
+      font-size: 8px;
+      margin-top: 4px;
+      color: #c2e0ff;
+    }
+    .ptt-btn.active {
+      background: radial-gradient(circle, #20e070 0%, #118c43 70%, #084a22 100%);
+      border-color: #20e070;
+      box-shadow: 0 0 25px rgba(32,224,112,0.5);
+    }
+
+    /* المحادثة */
+    .chat-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 8px;
+      padding: 0 4px;
+    }
+    .chat-box {
+      flex: 1;
+      min-height: 180px;
+      background: #040d1c;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.05);
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      overflow-y: auto;
+      margin-bottom: 8px;
+    }
+    .msg-bubble {
+      max-width: 85%;
+      padding: 9px 12px;
+      border-radius: 11px;
+      font-size: 12px;
+      margin: 3px 0;
+      word-break: break-word;
+    }
+    .msg-bubble.sent {
+      background: #086dd7;
+      color: #fff;
+      margin-left: auto;
+      margin-right: 0;
+    }
+    .msg-bubble.received {
+      background: #10243a;
+      color: #d0e4ff;
+      margin-left: 0;
+      margin-right: auto;
+    }
+    .msg-sender {
+      display: block;
+      color: #a3c7ef;
+      font-size: 10px;
+      margin-bottom: 2px;
+    }
+
+    /* أدوات المرفقات */
+    .tools-popup-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      background: #051329;
+      border-radius: 16px;
+      padding: 12px;
+      border: 1px solid rgba(26,140,255,0.2);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+      margin-bottom: 8px;
+    }
+    .tool-pop-btn {
+      background: #0a1f3d;
+      border-radius: 12px;
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #ffffff;
+      font-size: 11px;
+      border: 1px solid rgba(255,255,255,0.05);
+      cursor: pointer;
+    }
+    .tool-pop-btn span {
+      font-size: 18px;
+      color: #3898ff;
+    }
+
+    /* شريط الإدخال */
+    .chat-input-bar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: #051224;
+      border-radius: 20px;
+      padding: 4px 10px;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .input-icon-btn {
+      background: transparent;
+      color: #6a829e;
+      font-size: 18px;
+      padding: 6px;
+      cursor: pointer;
+    }
+    .chat-input-field {
+      flex: 1;
+      background: transparent;
+      border: 0;
+      outline: none;
+      color: #ffffff;
+      font-size: 12px;
+      padding: 6px 4px;
+    }
+    .send-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #1a8cff;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    /* الشريط السفلي */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(520px, 100%);
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      padding: 8px 6px calc(8px + env(safe-area-inset-bottom));
+      background: #030b1a;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      z-index: 60;
+    }
+    .nav-btn {
+      height: 44px;
+      background: transparent;
+      color: #5c7490;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      cursor: pointer;
+    }
+    .nav-btn span {
+      font-size: 18px;
+    }
+    .nav-btn small {
+      font-size: 9px;
+    }
+    .nav-btn.active {
+      color: #1a8cff;
+    }
+
+    /* كروت الغرف وقائمة الغرف */
+    .card { background: #06162d; border-radius: 16px; padding: 14px; margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.05); }
+    .room-card { background: #071a36; border-radius: 14px; padding: 12px; margin-bottom: 8px; border: 1px solid rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: space-between; }
+    .small-btn { padding: 6px 12px; border-radius: 8px; background: #0d325e; color: #fff; font-size: 11px; cursor: pointer; }
+    .small-btn.join { background: #1a8cff; }
+    .small-btn.danger { background: rgba(255,77,109,0.2); color: #ff4d6d; }
+    .modal { position: fixed; inset: 0; z-index: 100; display: none; align-items: flex-end; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); }
+    .modal.show { display: flex; }
+    .modal-box { width: min(520px, 100%); max-height: 85vh; overflow: auto; padding: 16px; border-radius: 20px 20px 0 0; background: #06162d; }
+    .modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .close { width: 32px; height: 32px; border-radius: 8px; background: #0d274c; color: #fff; cursor: pointer; }
+    .input { width: 100%; height: 44px; padding: 0 12px; border-radius: 12px; background: #030d1d; border: 1px solid rgba(255,255,255,0.1); color: #fff; margin-bottom: 10px; outline: none; }
+    .primary { width: 100%; height: 44px; border-radius: 12px; background: #1a8cff; color: #fff; font-weight: 700; cursor: pointer; }
+    .toast { position: fixed; bottom: 70px; left: 50%; transform: translateX(-50%); background: #0d2a52; color: #fff; padding: 8px 16px; border-radius: 20px; font-size: 11px; opacity: 0; transition: .2s; pointer-events: none; z-index: 200; border: 1px solid #1a8cff; }
+    .toast.show { opacity: 1; }
+    .hidden { display: none !important; }
+    .empty { text-align: center; color: #5c7490; font-size: 11px; padding: 20px; }
+    .members { display: flex; flex-direction: column; gap: 7px; }
+    .member { display: flex; align-items: center; gap: 10px; padding: 11px; border-radius: 14px; background: #0a1726; }
   </style>
 </head>
 <body>
+<div class="app">
+  <!-- الهيدر العلوي -->
+  <header class="topbar">
+    <div class="topbar-right">
+      <button class="menu-btn" onclick="openModal('createModal')">☰</button>
+      <div class="brand-icon">📡</div>
+      <div class="brand-titles">
+        <span class="brand-title">Radio Connect</span>
+        <span class="brand-sub">جهاز لاسلكي</span>
+      </div>
+    </div>
+    <div class="topbar-left">
+      <div class="status-badge">
+        <span id="connectionDot" class="status-dot"></span>
+        <span id="connectionText" class="status-text">متصل</span>
+      </div>
+      <div class="server-icon">
+        <span>🖥️</span>
+        <small>الخادم</small>
+      </div>
+    </div>
+  </header>
 
-  <div class="app-container">
-    <header>Radio Connect - جهاز لاسلكي</header>
+  <!-- شاشة الغرفة / الرئيسية -->
+  <section id="roomScreen" class="screen active">
+    <div class="dashboard-top-grid">
+      <!-- كرت الغرفة -->
+      <div class="dash-card">
+        <div class="room-select-title" onclick="showScreen('home')">
+          <span>⭐</span>
+          <span id="activeRoomName">غرفة القيادة</span>
+          <small>∨</small>
+        </div>
+        <div class="room-select-sub" id="roomRole">موجة 1 - أعضاء الغرفة (5)</div>
+      </div>
 
-    <div class="screen-body">
-      <!-- هنا تظهر إشارة المايك فقط عند الضغط -->
-      <div id="micIndicator">🎙️ جاري التحدث...</div>
-      <div id="statusText" style="color: #9ca3af; font-size: 14px;">متصل بالغرفة وجاهز</div>
+      <!-- كرت الموجة -->
+      <div class="dash-card">
+        <div class="wave-picker">
+          <button class="wave-btn" onclick="changeWave(-1)">‹</button>
+          <div>
+            <div class="wave-code-display" id="waveCode">7F3A</div>
+            <div class="wave-sub-title" id="waveName">موجة 1</div>
+          </div>
+          <button class="wave-btn" onclick="changeWave(1)">›</button>
+        </div>
+      </div>
+
+      <!-- كرت الشبكة والبطارية -->
+      <div class="dash-card">
+        <div class="system-stats">
+          <div class="stat-item">
+            <span class="stat-icon">🔋</span>
+            <span class="stat-val" id="batteryText">81%</span>
+            <span class="stat-lbl">البطارية</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-icon">📶</span>
+            <span class="stat-val" id="networkText">4G</span>
+            <span class="stat-lbl">الشبكة</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-icon">✔</span>
+            <span class="stat-val" id="liveStatus">متصل</span>
+            <span class="stat-lbl">بالخادم</span>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <div class="ptt-container">
-      <!-- زر التحدث PTT -->
-      <button id="pttBtn">اضغط للتحدث</button>
+    <!-- PTT وزر التحدث الحقيقي بالمايكروفون -->
+    <div class="ptt-section">
+      <div class="audio-mode-card">
+        <div class="audio-mode-title">الصوت الطبيعي</div>
+        <div class="audio-mode-status">مفعل</div>
+        <div class="toggle-switch-wrap">
+          <div class="toggle-switch active"></div>
+        </div>
+      </div>
+
+      <div class="ptt-center">
+        <div class="side-waves" style="margin-bottom: 4px;">
+          <div class="s-wave"></div>
+          <div class="s-wave"></div>
+          <div class="s-wave"></div>
+          <div class="s-wave"></div>
+          <div class="s-wave"></div>
+        </div>
+        <button id="pttButton" class="ptt-btn" type="button">
+          <span>🎙️</span>
+          <small id="pttLabel">اضغط للتحدث</small>
+        </button>
+      </div>
+
+      <div class="audio-mode-card">
+        <div class="audio-mode-title">الصوت اللاسلكي</div>
+        <div class="audio-mode-status">متوقف</div>
+        <div class="toggle-switch-wrap">
+          <div class="toggle-switch off"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- المحادثة -->
+    <div class="chat-header">
+      <span>💬</span>
+      <span>المحادثة</span>
+    </div>
+    
+    <div id="chatMessages" class="chat-box">
+      <div class="msg-bubble received">
+        <span class="msg-sender">أحمد</span>
+        جاهز للموقع
+      </div>
+      <div class="msg-bubble received">
+        <span class="msg-sender">خالد</span>
+        موافق ، ننتظر الإشارة
+      </div>
+      <div class="msg-bubble sent">
+        تم استلام الرسالة بنجاح
+      </div>
+    </div>
+
+    <!-- قائمة المرفقات -->
+    <div id="toolsMenu" class="tools-popup-grid hidden">
+      <button class="tool-pop-btn" onclick="triggerFileInput('image/*')"><span>🖼️</span> إرسال صورة</button>
+      <button class="tool-pop-btn" onclick="triggerFileInput('video/*')"><span>📹</span> إرسال فيديو</button>
+      <button class="tool-pop-btn" onclick="openMembers()"><span>👥</span> جهات الاتصال</button>
+      <button class="tool-pop-btn" onclick="triggerFileInput('.pdf,.doc,.docx,.txt')"><span>📄</span> إرسال مستند</button>
+      <button class="tool-pop-btn" onclick="testMicrophone()"><span>🎵</span> إرسال صوت</button>
+      <button class="tool-pop-btn" onclick="openMembers()"><span>👥</span> أعضاء الغرفة</button>
+    </div>
+
+    <!-- شريط إدخال الرسالة -->
+    <div class="chat-input-bar">
+      <button class="input-icon-btn" onclick="toggleToolsMenu()">📎</button>
+      <input id="chatInput" class="chat-input-field" placeholder="اكتب رسالة..." onkeydown="if(event.key==='Enter')sendChatMessage()">
+      <button class="send-btn" onclick="sendChatMessage()">▲</button>
+      <button class="input-icon-btn">😊</button>
+    </div>
+
+    <input type="file" id="hiddenFileInput" style="display:none;" onchange="handleFileSelect(event)">
+  </section>
+
+  <!-- شاشة الغرف (الموجات) -->
+  <section id="homeScreen" class="screen">
+    <div class="dashboard-head card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <h3 style="margin:0;">الغرف اللاسلكية</h3>
+        <button class="small-btn join" onclick="openModal('createModal')">＋ غرفة جديدة</button>
+      </div>
+      <div id="roomList">
+        <div class="empty">جاري تحميل الغرف...</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- شاشة المفضلة -->
+  <section id="favoritesScreen" class="screen">
+    <div class="card">
+      <h3 style="margin:0 0 10px 0;">الغرف المفضلة ⭐</h3>
+      <div id="favoriteList">
+        <div class="empty">لا توجد غرف مفضلة</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- شاشة حسابي والإعدادات -->
+  <section id="settingsScreen" class="screen">
+    <div class="card">
+      <h3 style="margin:0 0 10px 0;">حسابي ومعلومات الجهاز</h3>
+      <div style="font-size:12px;color:#8da1b9;line-height:2;">
+        <div>معرف الجهاز: <strong id="settingsDeviceId" style="color:#fff;">--</strong></div>
+        <div>الحالة: <strong id="settingsConnection" style="color:#fff;">متصل</strong></div>
+        <div>الشبكة: <strong id="settingsNetwork" style="color:#fff;">4G</strong></div>
+      </div>
+    </div>
+    <div class="card">
+      <button class="primary" onclick="testMicrophone()" style="margin-bottom:8px;">🎙️ اختبار الميكروفون</button>
+      <button class="primary" onclick="testSpeaker()" style="margin-bottom:8px;">🔊 اختبار السماعة</button>
+      <button class="small-btn danger" style="width:100%;padding:10px" onclick="leaveRoom()">🚪 مغادرة الغرفة</button>
+    </div>
+  </section>
+
+  <!-- الشريط السفلي (الرئيسية، المفضلة، الموجات، حسابي) -->
+  <nav class="bottom-nav">
+    <button id="navRoom" class="nav-btn active" onclick="showScreen('room')">
+      <span>🏠</span>
+      <small>الرئيسية</small>
+    </button>
+    <button id="navFavorites" class="nav-btn" onclick="showScreen('favorites')">
+      <span>⭐</span>
+      <small>المفضلة</small>
+    </button>
+    <button id="navHome" class="nav-btn" onclick="showScreen('home')">
+      <span>📶</span>
+      <small>الموجات</small>
+    </button>
+    <button id="navSettings" class="nav-btn" onclick="showScreen('settings')">
+      <span>👤</span>
+      <small>حسابي</small>
+    </button>
+  </nav>
+
+  <!-- النوافذ المنبثقة -->
+  <div id="createModal" class="modal">
+    <div class="modal-box">
+      <div class="modal-head">
+        <h4 style="margin:0;">إنشاء غرفة جديدة</h4>
+        <button class="close" onclick="closeModal('createModal')">×</button>
+      </div>
+      <input id="roomNameInput" class="input" placeholder="اسم الغرفة">
+      <button class="primary" onclick="createRoom()">إنشاء</button>
     </div>
   </div>
 
-  <script>
-    const API = location.origin;
-    const pttBtn = document.getElementById("pttBtn");
-    const micIndicator = document.getElementById("micIndicator");
-    const statusText = document.getElementById("statusText");
+  <div id="joinModal" class="modal">
+    <div class="modal-box">
+      <div class="modal-head">
+        <h4 style="margin:0;">طلب انضمام</h4>
+        <button class="close" onclick="closeModal('joinModal')">×</button>
+      </div>
+      <input id="memberNameInput" class="input" placeholder="اسمك داخل الغرفة">
+      <button class="primary" onclick="sendJoinRequest()">إرسال الطلب</button>
+    </div>
+  </div>
 
-    // وظيفة إظهار المايك عند الضغط (للماوس واللمس)
-    function startSpeaking(e) {
-      if(e) e.preventDefault();
-      pttBtn.classList.add("pressed");
-      micIndicator.classList.add("active");
-      statusText.innerText = "المرسل: يتحدث الآن...";
-      // هنا يتم تفعيل بث الصوت الفعلي عبر LiveKit لديك
+  <div id="membersModal" class="modal">
+    <div class="modal-box">
+      <div class="modal-head">
+        <h4 style="margin:0;">أعضاء الغرفة</h4>
+        <button class="close" onclick="closeModal('membersModal')">×</button>
+      </div>
+      <div id="membersList" class="members"><div class="empty">لا توجد تفاصيل حالياً</div></div>
+    </div>
+  </div>
+
+  <div id="audioModal" class="modal">
+    <div class="modal-box">
+      <div class="modal-head">
+        <h4 id="audioModalTitle" style="margin:0;">اختبار الصوت</h4>
+        <button class="close" onclick="closeModal('audioModal')">×</button>
+      </div>
+      <p id="audioModalText" style="font-size:12px;color:#8da1b9;"></p>
+      <button id="audioTestButton" class="primary" onclick="startAudioTest()">بدء الاختبار</button>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+</div>
+
+<script>
+  "use strict";
+
+  const API = location.origin;
+  let deviceId = localStorage.getItem("radioDeviceId") || "";
+  let rooms = [];
+  let favoriteRooms = [];
+  let activeRoom = null;
+  let activeRoomId = null;
+  let livekitRoom = null;
+  let localAudioTrack = null;
+  let isTalking = false;
+  let waveIndex = 0;
+  let battery = null;
+  const waves = [
+    { name: "موجة 1", code: "7F3A" },
+    { name: "موجة 2", code: "9K21" },
+    { name: "موجة 3", code: "4M88" },
+    { name: "موجة 4", code: "6P17" }
+  ];
+
+  function $(id) { return document.getElementById(id); }
+
+  function escapeHtml(value) {
+    return String(value || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+  }
+
+  function toast(message) {
+    const box = $("toast");
+    box.textContent = message;
+    box.classList.add("show");
+    clearTimeout(window.toastTimer);
+    window.toastTimer = setTimeout(() => { box.classList.remove("show"); }, 2800);
+  }
+
+  function openModal(id) { $(id).classList.add("show"); }
+  function closeModal(id) { $(id).classList.remove("show"); }
+  function toggleToolsMenu() { $("toolsMenu").classList.toggle("hidden"); }
+
+  function setConnection(ok, text) {
+    $("connectionDot").className = "status-dot " + (ok ? "" : "bad");
+    $("connectionText").textContent = text;
+    if ($("settingsConnection")) $("settingsConnection").textContent = text;
+    if ($("liveStatus")) $("liveStatus").textContent = text;
+  }
+
+  async function initDevice() {
+    try {
+      const response = await fetch(API + "/api/device", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ deviceId: deviceId })
+      });
+      const data = await response.json();
+      if (data.deviceId) {
+        deviceId = data.deviceId;
+        localStorage.setItem("radioDeviceId", deviceId);
+        if ($("settingsDeviceId")) $("settingsDeviceId").textContent = deviceId;
+        setConnection(true, "متصل");
+        await loadRooms();
+      }
+    } catch (error) { setConnection(false, "غير متصل"); }
+  }
+
+  function showScreen(name) {
+    document.querySelectorAll(".screen").forEach(screen => screen.classList.remove("active"));
+    const screen = $(name + "Screen");
+    if (screen) screen.classList.add("active");
+
+    document.querySelectorAll(".nav-btn").forEach(btn => btn.classList.remove("active"));
+    if (name === "room") $("navRoom").classList.add("active");
+    if (name === "favorites") { $("navFavorites").classList.add("active"); loadFavorites(); }
+    if (name === "home") $("navHome").classList.add("active");
+    if (name === "settings") $("navSettings").classList.add("active");
+  }
+
+  async function connectLiveKit() {
+    if (!activeRoomId) return;
+    try {
+      await disconnectLiveKit();
+      setConnection(false, "جاري الاتصال...");
+
+      const tokenResponse = await fetch(API + "/token?room=" + encodeURIComponent(activeRoomId), {
+        headers: { 'x-device-id': deviceId || '' }
+      });
+      const tokenData = await tokenResponse.json();
+      const livekitUrl = tokenData.url || tokenData.livekitUrl || 'wss://radioconnect-8uyh53qc.livekit.cloud';
+
+      livekitRoom = new window.LivekitClient.Room({ adaptiveStream: true, dynacast: true });
+
+      livekitRoom.on(window.LivekitClient.RoomEvent.TrackSubscribed, track => {
+        if (track.kind === window.LivekitClient.Track.Kind.Audio) {
+          const audio = track.attach();
+          audio.autoplay = true;
+          audio.style.display = "none";
+          document.body.appendChild(audio);
+        }
+      });
+
+      livekitRoom.on(window.LivekitClient.RoomEvent.DataReceived, (payload) => {
+        try {
+          const text = new TextDecoder("utf-8").decode(payload);
+          const data = JSON.parse(text);
+          if (data.type === 'radio-chat' && data.senderDeviceId !== deviceId) {
+            appendMessageToUI(data.text, data.senderName, false, data.fileType, data.fileData);
+          }
+        } catch (e) {}
+      });
+
+      await livekitRoom.connect(livekitUrl, tokenData.token);
+      setConnection(true, "متصل");
+    } catch (error) { setConnection(false, "تعذر الاتصال"); }
+  }
+
+  async function disconnectLiveKit() {
+    try { if (livekitRoom) await livekitRoom.disconnect(); } catch (error) {}
+    livekitRoom = null;
+    if (localAudioTrack) { try { localAudioTrack.stop(); } catch (e) {} localAudioTrack = null; }
+    isTalking = false;
+  }
+
+  const pttButton = $("pttButton");
+  pttButton.addEventListener("pointerdown", startTalking);
+  pttButton.addEventListener("pointerup", stopTalking);
+  pttButton.addEventListener("pointercancel", stopTalking);
+
+  async function startTalking(event) {
+    if (event) event.preventDefault();
+    if (isTalking) return;
+    if (!livekitRoom || livekitRoom.state !== "connected") {
+      toast("غير متصل بالغرفة الصوتية");
+      return;
     }
 
-    // وظيفة إخفاء المايك عند رفع الإصبع أو ترك الزر
-    function stopSpeaking(e) {
-      if(e) e.preventDefault();
-      pttBtn.classList.remove("pressed");
-      micIndicator.classList.remove("active");
-      statusText.innerText = "متصل بالغرفة وجاهز";
-      // هنا يتم إيقاف بث الصوت عبر LiveKit لديك
+    try {
+      isTalking = true;
+      pttButton.classList.add("active");
+      $("pttLabel").textContent = "جاري التحدث...";
+
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const rawTrack = stream.getAudioTracks()[0];
+      localAudioTrack = new window.LivekitClient.LocalAudioTrack(rawTrack);
+      await localAudioTrack.enable();
+
+      await livekitRoom.localParticipant.publishTrack(localAudioTrack, {
+        name: 'radio-microphone',
+        source: window.LivekitClient.Track.Source.Microphone
+      });
+    } catch (error) {
+      isTalking = false;
+      pttButton.classList.remove("active");
+      $("pttLabel").textContent = "اضغط للتحدث";
+      toast("تعذر تشغيل الميكروفون");
+    }
+  }
+
+  async function stopTalking(event) {
+    if (event) event.preventDefault();
+    if (!isTalking && !localAudioTrack) return;
+    isTalking = false;
+    pttButton.classList.remove("active");
+    $("pttLabel").textContent = "اضغط للتحدث";
+
+    try {
+      if (livekitRoom && localAudioTrack) {
+        await livekitRoom.localParticipant.unpublishTrack(localAudioTrack);
+      }
+    } catch (error) {}
+
+    if (localAudioTrack) { try { localAudioTrack.stop(); } catch (e) {} localAudioTrack = null; }
+  }
+
+  function updateWave() {
+    const wave = waves[waveIndex];
+    $("waveName").textContent = wave.name;
+    $("waveCode").textContent = wave.code;
+  }
+
+  function changeWave(direction) {
+    waveIndex += direction;
+    if (waveIndex < 0) waveIndex = waves.length - 1;
+    if (waveIndex >= waves.length) waveIndex = 0;
+    updateWave();
+    toast("الانتقال إلى: " + waves[waveIndex].name);
+  }
+
+  function appendMessageToUI(message, senderName, isMine, fileType = null, fileData = null) {
+    const box = $("chatMessages");
+    const empty = box.querySelector(".empty");
+    if (empty) empty.remove();
+
+    const item = document.createElement("div");
+    item.className = "msg-bubble " + (isMine ? "sent" : "received");
+
+    let bodyContent = escapeHtml(message);
+    if (fileType && fileData) {
+      if (fileType.startsWith("image/")) {
+        bodyContent += `<br><img src="${fileData}" style="max-width:100%;border-radius:8px;margin-top:4px;" />`;
+      } else if (fileType.startsWith("video/")) {
+        bodyContent += `<br><video src="${fileData}" controls style="max-width:100%;border-radius:8px;margin-top:4px;"></video>`;
+      } else {
+        bodyContent += `<br><a href="${fileData}" download="file" style="color:#3898ff;">📎 تنزيل الملف</a>`;
+      }
     }
 
-    // ربط الأحداث للكمبيوتر والهواتف الذكية
-    pttBtn.addEventListener("mousedown", startSpeaking);
-    pttBtn.addEventListener("mouseup", stopSpeaking);
-    pttBtn.addEventListener("mouseleave", stopSpeaking);
+    item.innerHTML = (senderName && !isMine ? `<span class="msg-sender">${escapeHtml(senderName)}</span>` : '') + bodyContent;
+    box.appendChild(item);
+    box.scrollTop = box.scrollHeight;
+  }
 
-    pttBtn.addEventListener("touchstart", startSpeaking);
-    pttBtn.addEventListener("touchend", stopSpeaking);
-  </script>
+  async function sendChatMessage() {
+    const input = $("chatInput");
+    const message = input.value.trim();
+    if (!message) return;
+    if (!livekitRoom || livekitRoom.state !== "connected") {
+      toast("غير متصل بالغرفة");
+      return;
+    }
 
+    try {
+      const data = {
+        type: 'radio-chat',
+        text: message,
+        senderDeviceId: deviceId,
+        senderName: activeRoom?.memberName || 'أنت'
+      };
+      const payload = new TextEncoder().encode(JSON.stringify(data));
+      await livekitRoom.localParticipant.publishData(payload, { reliable: true });
+      appendMessageToUI(message, 'أنت', true);
+      input.value = "";
+    } catch (e) { toast("تعذر الإرسال"); }
+  }
+
+  function triggerFileInput(acceptType) {
+    const fileInput = $("hiddenFileInput");
+    fileInput.accept = acceptType;
+    fileInput.click();
+    toggleToolsMenu();
+  }
+
+  function handleFileSelect(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async function (e) {
+      const base64Data = e.target.result;
+      if (!livekitRoom || livekitRoom.state !== "connected") return;
+      try {
+        const data = {
+          type: 'radio-chat',
+          text: `ملف: ${file.name}`,
+          fileType: file.type,
+          fileData: base64Data,
+          senderDeviceId: deviceId,
+          senderName: activeRoom?.memberName || 'أنت'
+        };
+        const payload = new TextEncoder().encode(JSON.stringify(data));
+        await livekitRoom.localParticipant.publishData(payload, { reliable: true });
+        appendMessageToUI(`ملف: ${file.name}`, 'أنت', true, file.type, base64Data);
+        toast("تم إرسال الملف بنجاح");
+      } catch (err) { toast("تعذر إرسال الملف"); }
+    };
+    reader.readAsDataURL(file);
+  }
+
+  async function loadRooms() {
+    try {
+      const response = await fetch(API + "/api/rooms?deviceId=" + encodeURIComponent(deviceId));
+      const data = await response.json();
+      rooms = data.rooms || [];
+      renderRooms();
+    } catch (error) {}
+  }
+
+  function renderRooms() {
+    if (!rooms.length) {
+      $("roomList").innerHTML = `<div class="empty">لا توجد غرف متاحة حالياً</div>`;
+      return;
+    }
+    $("roomList").innerHTML = rooms.map(room => `
+      <div class="room-card">
+        <div>
+          <strong style="font-size:13px;">${escapeHtml(room.name)}</strong>
+          <small style="display:block;color:#8da1b9;font-size:10px;">${escapeHtml(room.id)}</small>
+        </div>
+        <button class="small-btn join" onclick="openRoom('${escapeHtml(room.id)}')">دخول</button>
+      </div>
+    `).join("");
+  }
+
+  async function createRoom() {
+    const name = $("roomNameInput").value.trim();
+    if (!name) return toast("أدخل اسم الغرفة");
+    try {
+      const response = await fetch(API + "/api/rooms", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ deviceId, name })
+      });
+      const data = await response.json();
+      closeModal("createModal");
+      toast("تم إنشاء الغرفة بنجاح");
+      await loadRooms();
+      if (data.room) {
+        activeRoom = data.room;
+        activeRoomId = data.room.id;
+        showRoomScreen();
+        connectLiveKit();
+      }
+    } catch (error) { toast("تعذر إنشاء الغرفة"); }
+  }
+
+  async function openRoom(roomId) {
+    try {
+      const response = await fetch(API + "/api/rooms/" + encodeURIComponent(roomId) + "?deviceId=" + encodeURIComponent(deviceId));
+      const data = await response.json();
+      activeRoom = data.room;
+      activeRoomId = roomId;
+      showRoomScreen();
+      await connectLiveKit();
+      toast("تم فتح الغرفة بنجاح");
+    } catch (error) { toast("تعذر فتح الغرفة"); }
+  }
+
+  function showRoomScreen() {
+    $("activeRoomName").textContent = activeRoom?.name || "غرفة القيادة";
+    showScreen("room");
+    updateWave();
+  }
+
+  async function leaveRoom() {
+    await disconnectLiveKit();
+    activeRoom = null;
+    activeRoomId = null;
+    showScreen("home");
+    toast("تمت مغادرة الغرفة");
+  }
+
+  function openMembers() { openModal("membersModal"); }
+  async function testMicrophone() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      toast("الميكروفون يعمل بنجاح ✅");
+      stream.getTracks().forEach(t => t.stop());
+    } catch (e) {
+      toast("تعذر الوصول للميكروفون");
+    }
+  }
+  async function testSpeaker() {
+    const context = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = context.createOscillator();
+    osc.connect(context.destination);
+    osc.start();
+    setTimeout(() => { osc.stop(); context.close(); }, 300);
+    toast("تم اختبار السماعة بنجاح 🔊");
+  }
+  async function loadFavorites() { $("favoriteList").innerHTML = `<div class="empty">لا توجد مفضلة</div>`; }
+
+  async function boot() {
+    await initDevice();
+  }
+
+  boot();
+</script>
 </body>
 </html>
