@@ -3,2003 +3,292 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-  <meta name="theme-color" content="#07111f">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <title>جهاز لاسلكي</title>
+  <title>Radio Connect - جهاز لاسلكي</title>
   <script src="https://unpkg.com/livekit-client@2.15.3/dist/livekit-client.umd.min.js"></script>
   <style>
-    * {
-      box-sizing: border-box;
-      -webkit-tap-highlight-color: transparent;
-    }
-    html, body {
-      margin: 0;
-      padding: 0;
-      min-height: 100%;
-      background: #050b14;
-      color: #edf5ff;
-      font-family: Arial, "Noto Sans Arabic", sans-serif;
-    }
-    body {
-      min-height: 100vh;
-      overflow-x: hidden;
-    }
-    button, input {
-      font: inherit;
-    }
-    button {
-      border: 0;
-      cursor: pointer;
-    }
-    .app {
-      width: 100%;
-      max-width: 520px;
-      min-height: 100vh;
-      margin: auto;
-      background: radial-gradient(circle at 50% -10%, rgba(0,130,255,.16), transparent 35%),
-                  linear-gradient(180deg, #07111f 0%, #050a13 100%);
-      position: relative;
-      overflow: hidden;
-    }
-    /* الهيدر */
-    .topbar {
-      position: sticky;
-      top: 0;
-      z-index: 50;
-      padding: 14px 16px 12px;
-      background: rgba(5,11,20,.9);
-      backdrop-filter: blur(18px);
-      border-bottom: 1px solid rgba(255,255,255,.06);
-    }
-    .topbar-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-    }
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 11px;
-    }
-    .brand-icon {
-      width: 43px;
-      height: 43px;
-      border-radius: 14px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 23px;
-      background: linear-gradient(145deg, #12345d, #071321);
-      border: 1px solid rgba(64,163,255,.25);
-      box-shadow: 0 8px 25px rgba(0,0,0,.25);
-    }
-    .brand-title {
-      font-size: 18px;
-      font-weight: 800;
-    }
-    .brand-sub {
-      color: #7f95ad;
-      font-size: 11px;
-      margin-top: 3px;
-    }
-    .connection {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 8px 10px;
-      border-radius: 12px;
-      background: #0b1726;
-      border: 1px solid rgba(255,255,255,.06);
-      font-size: 11px;
-      color: #91a6bd;
-    }
-    .dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: #718096;
-    }
-    .dot.ok {
-      background: #29d17d;
-      box-shadow: 0 0 10px rgba(41,209,125,.65);
-    }
-    .dot.bad {
-      background: #ff5267;
-      box-shadow: 0 0 10px rgba(255,82,103,.5);
-    }
-    /* الشاشات */
-    .screen {
-      display: none;
-      padding: 18px 15px 95px;
-    }
-    .screen.active {
-      display: block;
-    }
-    /* بطاقات */
-    .card {
-      background: linear-gradient(145deg, rgba(17,31,49,.96), rgba(8,17,29,.96));
-      border: 1px solid rgba(255,255,255,.065);
-      border-radius: 20px;
-      padding: 16px;
-      box-shadow: 0 14px 35px rgba(0,0,0,.18);
-    }
-    .section-title {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin: 20px 3px 10px;
-    }
-    .section-title h2 {
-      margin: 0;
-      font-size: 15px;
-    }
-    .section-title span {
-      color: #6f879f;
-      font-size: 11px;
-    }
-    /* شاشة الاختبار */
-    .welcome {
-      text-align: center;
-      padding: 25px 8px 18px;
-    }
-    .big-radio {
-      width: 94px;
-      height: 94px;
-      margin: 0 auto 18px;
-      border-radius: 30px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 45px;
-      background: linear-gradient(145deg, #124a82, #071a2e);
-      border: 1px solid rgba(57,161,255,.25);
-      box-shadow: 0 18px 45px rgba(0,84,170,.2);
-    }
-    .welcome h1 {
-      margin: 0;
-      font-size: 25px;
-    }
-    .welcome p {
-      color: #8095ab;
-      font-size: 13px;
-      line-height: 1.8;
-      margin: 8px auto 0;
-      max-width: 350px;
-    }
-    .device-card {
-      margin-top: 12px;
-    }
-    .device-line {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 11px 0;
-      border-bottom: 1px solid rgba(255,255,255,.05);
-    }
-    .device-line:last-child {
-      border-bottom: 0;
-    }
-    .device-label {
-      color: #7f95ad;
-      font-size: 12px;
-    }
-    .device-value {
-      font-size: 12px;
-      font-weight: 700;
-    }
-    .test-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-top: 12px;
-    }
-    .test-btn {
-      min-height: 86px;
-      border-radius: 17px;
-      color: #eaf4ff;
-      background: #0b1726;
-      border: 1px solid rgba(255,255,255,.06);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 7px;
-    }
-    .test-btn .icon {
-      font-size: 25px;
-    }
-    .test-btn small {
-      color: #7890a8;
-    }
-    .test-btn.done {
-      border-color: rgba(38,211,126,.3);
-      background: rgba(22,76,54,.25);
-    }
-    .primary {
-      width: 100%;
-      min-height: 52px;
-      border-radius: 16px;
-      color: white;
-      font-weight: 800;
-      background: linear-gradient(135deg, #168cff, #0055d4);
-      box-shadow: 0 10px 25px rgba(0,100,255,.22);
-    }
-    .primary:active {
-      transform: scale(.98);
-    }
-    /* الصفحة الرئيسية */
-    .dashboard-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 14px;
-    }
-    .dashboard-head h1 {
-      margin: 0;
-      font-size: 22px;
-    }
-    .dashboard-head p {
-      margin: 5px 0 0;
-      color: #7289a0;
-      font-size: 12px;
-    }
-    .icon-button {
-      width: 43px;
-      height: 43px;
-      border-radius: 14px;
-      color: #d9eaff;
-      background: #0d1b2d;
-      border: 1px solid rgba(255,255,255,.06);
-      font-size: 19px;
-    }
-    .status-strip {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-    }
-    .status-box {
-      padding: 12px 8px;
-      text-align: center;
-      border-radius: 15px;
-      background: #0a1625;
-      border: 1px solid rgba(255,255,255,.05);
-    }
-    .status-box strong {
-      display: block;
-      font-size: 14px;
-      margin-top: 4px;
-    }
-    .status-box small {
-      color: #71879e;
-      font-size: 9px;
-    }
-    /* الغرف */
-    .room-list {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-    .room-card {
-      position: relative;
-      padding: 15px;
-      border-radius: 18px;
-      background: linear-gradient(145deg, #102137, #091422);
-      border: 1px solid rgba(255,255,255,.065);
-    }
-    .room-top {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    .room-icon {
-      width: 46px;
-      height: 46px;
-      border-radius: 15px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 23px;
-      background: linear-gradient(145deg, #114d83, #0a2038);
-    }
-    .room-info {
-      flex: 1;
-      min-width: 0;
-    }
-    .room-name {
-      font-weight: 800;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .room-id {
-      color: #66809b;
-      font-size: 10px;
-      margin-top: 4px;
-    }
-    .favorite {
-      background: transparent;
-      color: #657d95;
-      font-size: 22px;
-      padding: 4px;
-    }
-    .favorite.active {
-      color: #ffc94d;
-    }
-    .room-bottom {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-top: 13px;
-      gap: 8px;
-    }
-    .room-meta {
-      color: #7189a1;
-      font-size: 10px;
-    }
-    .room-actions {
-      display: flex;
-      gap: 7px;
-    }
-    .small-btn {
-      padding: 9px 13px;
-      border-radius: 11px;
-      background: #10243a;
-      color: #cce5ff;
-      border: 1px solid rgba(57,155,255,.12);
-      font-size: 11px;
-    }
-    .small-btn.join {
-      background: #086dd7;
-      color: #fff;
-    }
-    .small-btn.danger {
-      background: rgba(200,43,61,.15);
-      color: #ff7583;
-    }
-    /* إنشاء غرفة */
-    .input-wrap {
-      margin-bottom: 12px;
-    }
-    .input-label {
-      display: block;
-      color: #8196ac;
-      font-size: 11px;
-      margin: 0 0 7px 3px;
-    }
-    .input {
-      width: 100%;
-      height: 51px;
-      padding: 0 15px;
-      border-radius: 15px;
-      outline: none;
-      color: #edf6ff;
-      background: #081422;
-      border: 1px solid rgba(255,255,255,.07);
-    }
-    .input:focus {
-      border-color: rgba(37,145,255,.55);
-    }
-    /* شاشة الغرفة */
-    .room-header {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 15px;
-    }
-    .back {
-      width: 42px;
-      height: 42px;
-      border-radius: 13px;
-      color: #dcecff;
-      background: #0c1a2a;
-    }
-    .room-header-info {
-      flex: 1;
-    }
-    .room-header-info strong {
-      display: block;
-      font-size: 17px;
-    }
-    .room-header-info small {
-      display: block;
-      color: #688199;
-      margin-top: 4px;
-    }
-    .wave-card {
-      text-align: center;
-      padding: 20px 15px;
-      margin-bottom: 13px;
-    }
-    .wave-label {
-      color: #718aa3;
-      font-size: 11px;
-    }
-    .wave-name {
-      font-size: 19px;
-      font-weight: 800;
-      margin: 8px 0;
-    }
-    .wave-code {
-      display: inline-block;
-      padding: 6px 13px;
-      border-radius: 20px;
-      background: #071a2e;
-      color: #49aaff;
-      font-family: monospace;
-      letter-spacing: 2px;
-    }
-    .wave-controls {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-top: 16px;
-    }
-    .wave-arrow {
-      width: 43px;
-      height: 43px;
-      border-radius: 14px;
-      background: #0d1d30;
-      color: #b7d9f8;
-      font-size: 20px;
-    }
-    .wave-favorite {
-      color: #ffc94d;
-      background: transparent;
-      font-size: 23px;
-    }
-    /* PTT المطابق للصورة تماماً (أحمر افتراضي يتحول لأزرق عند الضغط) */
-    .ptt-area {
-      padding: 22px 10px 19px;
-      text-align: center;
-    }
-    .ptt {
-      width: 170px;
-      height: 170px;
-      border-radius: 50%;
-      color: white;
-      font-size: 16px;
-      font-weight: 900;
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; font-family: Arial, "Noto Sans Arabic", sans-serif; }
+    body, html { width: 100%; height: 100%; background: #050b14; color: #edf5ff; overflow: hidden; }
+    .app { width: 100%; max-width: 520px; height: 100vh; margin: auto; background: linear-gradient(180deg, #07111f 0%, #050a13 100%); display: flex; flex-direction: column; position: relative; }
+    
+    /* 1. شريط العنوان العلوي */
+    .header { display: flex; justify-content: space-between; align-items: center; background-color: #1c2541; padding: 10px 15px; border-bottom: 1px solid #3a506b; }
+    .header-left, .header-right { display: flex; align-items: center; gap: 10px; }
+    .status-dot { width: 10px; height: 10px; border-radius: 50%; background-color: #2ecc71; display: inline-block; }
+    .status-dot.weak { background-color: #e74c3c; }
+
+    /* 2. شريط معلومات الغرفة والبطارية */
+    .room-bar { background-color: #131b2e; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1c2541; }
+    .room-title { font-size: 14px; font-weight: bold; }
+    .channel-id { font-size: 11px; color: #8d99ae; }
+
+    /* 3. أزرار التحكم الصوتي وزر PTT */
+    .voice-section { background-color: #0b132b; padding: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-bottom: 1px solid #1c2541; }
+    .ptt-container { display: flex; align-items: center; justify-content: center; gap: 15px; margin: 10px 0; }
+    
+    .ptt-btn {
+      width: 130px; height: 130px; border-radius: 50%;
       background: radial-gradient(circle, #e74c3c 0%, #990000 100%);
-      border: 6px solid #1d3557;
-      box-shadow: 0 0 25px rgba(231, 76, 60, 0.4);
-      transition: 0.15s;
-      touch-action: none;
-      user-select: none;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto;
+      border: 4px solid #1d3557; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; cursor: pointer;
+      box-shadow: 0 0 20px rgba(231, 76, 60, 0.4); transition: 0.2s; touch-action: none;
     }
-    .ptt span {
-      display: block;
-      font-size: 36px;
-      margin-bottom: 6px;
-    }
-    .ptt.active {
-      transform: scale(0.95);
+    .ptt-btn.active {
       background: radial-gradient(circle, #3498db 0%, #1d6fa5 100%);
-      box-shadow: 0 0 30px rgba(52, 152, 219, 0.6);
+      box-shadow: 0 0 25px rgba(52, 152, 219, 0.6);
+      transform: scale(0.95);
     }
-    .ptt-status {
-      margin-top: 12px;
-      color: #738aa2;
-      font-size: 11px;
+    .ptt-btn span { font-size: 12px; font-weight: bold; color: #fff; margin-top: 4px; }
+
+    /* 4. قسم المحادثة والدردشة */
+    .chat-section { flex: 1; overflow-y: auto; padding: 10px 15px; display: flex; flex-direction: column; gap: 8px; }
+    .msg-bubble { max-width: 75%; padding: 8px 12px; border-radius: 10px; font-size: 13px; line-height: 1.4; }
+    .msg-bubble.received { background-color: #1c2541; align-self: flex-start; }
+    .msg-bubble.sent { background-color: #1d3557; align-self: flex-end; }
+    .typing-indicator { font-size: 11px; color: #3498db; font-style: italic; padding: 0 15px 5px; display: none; }
+
+    /* قائمة المرفقات العائمة (تفتح وتغلق بزر الدبوس) */
+    .tools-menu {
+      position: absolute; bottom: 65px; left: 15px; right: 15px;
+      background: #102137; border: 1px solid #3a506b; border-radius: 15px;
+      padding: 15px; display: none; grid-template-columns: repeat(3, 1fr); gap: 10px; z-index: 99;
     }
-    .ptt-status.talking {
-      color: #3498db;
-      font-weight: 700;
-    }
-    /* الأعضاء */
-    .info-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 9px;
-    }
-    .info-item {
-      padding: 13px;
-      border-radius: 15px;
-      background: #0a1726;
-    }
-    .info-item small {
-      color: #7188a0;
-      font-size: 10px;
-    }
-    .info-item strong {
-      display: block;
-      margin-top: 5px;
-      font-size: 12px;
-    }
-    .members {
-      display: flex;
-      flex-direction: column;
-      gap: 7px;
-    }
-    .member {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 11px;
-      border-radius: 14px;
-      background: #0a1726;
-    }
-    .member-avatar {
-      width: 36px;
-      height: 36px;
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: #11385e;
-    }
-    .member-info {
-      flex: 1;
-    }
-    .member-info strong {
-      display: block;
-      font-size: 12px;
-    }
-    .member-info small {
-      color: #7189a1;
-      font-size: 9px;
-    }
-    .member-status {
-      font-size: 10px;
-      color: #31d987;
-    }
-    .pending {
-      color: #ffc44d;
-    }
-    /* أدوات الغرفة */
-    .tools-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-    }
-    .tool {
-      min-height: 70px;
-      border-radius: 15px;
-      background: #0a1726;
-      color: #dcecff;
-      border: 1px solid rgba(255,255,255,.05);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 5px;
-    }
-    .tool span {
-      font-size: 21px;
-    }
-    .tool small {
-      color: #748aa1;
-      font-size: 9px;
-    }
-    /* التنقل السفلي */
-    .bottom-nav {
-      position: fixed;
-      z-index: 60;
-      bottom: 0;
-      left: 50%;
-      transform: translateX(-50%);
-      width: min(520px, 100%);
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 5px;
-      padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
-      background: rgba(5,11,20,.94);
-      backdrop-filter: blur(18px);
-      border-top: 1px solid rgba(255,255,255,.06);
-    }
-    .nav-btn {
-      height: 52px;
-      border-radius: 15px;
-      background: transparent;
-      color: #60788f;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 3px;
-    }
-    .nav-btn span {
-      font-size: 19px;
-    }
-    .nav-btn small {
-      font-size: 9px;
-    }
-    .nav-btn.active {
-      color: #43a9ff;
-      background: rgba(21,118,215,.09);
-    }
-    /* النوافذ */
-    .modal {
-      position: fixed;
-      z-index: 100;
-      inset: 0;
-      display: none;
-      align-items: flex-end;
-      justify-content: center;
-      background: rgba(0,0,0,.68);
-      backdrop-filter: blur(5px);
-    }
-    .modal.show {
-      display: flex;
-    }
-    .modal-box {
-      width: min(520px, 100%);
-      max-height: 88vh;
-      overflow: auto;
-      padding: 20px 16px calc(20px + env(safe-area-inset-bottom));
-      border-radius: 25px 25px 0 0;
-      background: #091523;
-      border: 1px solid rgba(255,255,255,.07);
-      box-shadow: 0 -20px 60px rgba(0,0,0,.35);
-    }
-    .modal-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 18px;
-    }
-    .modal-head h3 {
-      margin: 0;
-      font-size: 17px;
-    }
-    .close {
-      width: 38px;
-      height: 38px;
-      border-radius: 12px;
-      background: #101f31;
-      color: #d6e8fa;
-    }
-    .notice {
-      padding: 12px;
-      border-radius: 13px;
-      color: #9ab0c6;
-      background: #0a1828;
-      font-size: 11px;
-      line-height: 1.7;
-      margin-bottom: 12px;
-    }
-    .preview {
-      width: 100%;
-      max-height: 230px;
-      object-fit: contain;
-      border-radius: 15px;
-      background: #03070c;
-      display: none;
-      margin-top: 10px;
-    }
-    .video {
-      width: 100%;
-      border-radius: 15px;
-      display: none;
-      background: #03070c;
-    }
-    /* Toast */
-    .toast {
-      position: fixed;
-      z-index: 200;
-      left: 50%;
-      bottom: 82px;
-      transform: translate(-50%, 20px);
-      width: calc(100% - 32px);
-      max-width: 450px;
-      padding: 13px 15px;
-      border-radius: 14px;
-      background: #10243a;
-      color: #eaf5ff;
-      border: 1px solid rgba(255,255,255,.08);
-      box-shadow: 0 15px 40px rgba(0,0,0,.35);
-      font-size: 12px;
-      text-align: center;
-      opacity: 0;
-      pointer-events: none;
-      transition: .25s;
-    }
-    .toast.show {
-      opacity: 1;
-      transform: translate(-50%, 0);
-    }
-    .empty {
-      text-align: center;
-      padding: 30px 15px;
-      color: #6e849b;
-      font-size: 12px;
-    }
-    .hidden {
-      display: none!important;
-    }
-    #chatMessages {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
+    .tool-item { background: #0b1726; border-radius: 10px; padding: 10px; text-align: center; font-size: 11px; color: #dcecff; cursor: pointer; border: 1px solid rgba(255,255,255,0.05); }
+
+    /* شريط كتابة الرسائل السفلي */
+    .chat-input-bar { display: flex; align-items: center; background-color: #1c2541; padding: 10px; gap: 10px; border-top: 1px solid #3a506b; position: relative; }
+    .chat-input-bar input { flex: 1; background: #0b132b; border: 1px solid #3a506b; border-radius: 20px; padding: 8px 15px; color: #fff; outline: none; font-size: 12px; }
+    .action-icon { font-size: 18px; cursor: pointer; color: #8d99ae; }
+
+    /* 5. شريط التنقل السفلي */
+    .nav-bar { display: flex; justify-content: space-around; background-color: #131b2e; padding: 10px 0; border-top: 1px solid #1c2541; }
+    .nav-item { display: flex; flex-direction: column; align-items: center; font-size: 11px; color: #8d99ae; cursor: pointer; background: none; }
+    .nav-item.active { color: #3498db; }
   </style>
 </head>
 <body>
+
 <div class="app">
-  <!-- الهيدر -->
-  <header class="topbar">
-    <div class="topbar-row">
-      <div class="brand">
-        <div class="brand-icon">📡</div>
-        <div>
-          <div class="brand-title">جهاز لاسلكي</div>
-          <div class="brand-sub">اتصال صوتي مباشر</div>
-        </div>
-      </div>
-      <div class="connection">
-        <span id="connectionDot" class="dot"></span>
-        <span id="connectionText">غير متصل</span>
-      </div>
+  <!-- 1. شريط العنوان العلوي -->
+  <div class="header">
+    <div class="header-left">
+      <span>☰</span>
+      <span>📻</span>
+      <span style="font-size: 13px; font-weight: bold;">Radio Connect جهاز لاسلكي</span>
     </div>
-  </header>
+    <div class="header-right">
+      <span id="netStatusDot" class="status-dot"></span>
+      <span id="netStatusText" style="font-size: 11px;">متصل</span>
+      <span style="cursor: pointer;" onclick="alert('تفاصيل الخادم نشطة')">⚙️</span>
+    </div>
+  </div>
 
-  <!-- شاشة الاختبار -->
-  <section id="setupScreen" class="screen active">
-    <div class="welcome">
-      <div class="big-radio">📡</div>
-      <h1>مرحبًا بك</h1>
-      <p> اختبر جهازك قبل الدخول إلى الغرف الصوتية وتأكد من عمل الميكروفون والسماعة. </p>
+  <!-- 2. شريط معلومات الغرفة والبطارية -->
+  <div class="room-bar">
+    <div>
+      <div class="room-title">غرفة العمليات</div>
+      <div class="channel-id">7F3A موجة 1</div>
     </div>
-    <div class="card device-card">
-      <div class="device-line">
-        <span class="device-label">معرف الجهاز</span>
-        <strong class="device-value" id="deviceIdText">جاري الإنشاء...</strong>
-      </div>
-      <div class="device-line">
-        <span class="device-label">الشبكة</span>
-        <strong class="device-value" id="networkText">جاري الفحص...</strong>
-      </div>
-      <div class="device-line">
-        <span class="device-label">البطارية</span>
-        <strong class="device-value" id="batteryText">--</strong>
-      </div>
+    <div style="font-size: 11px; color: #8d99ae; display: flex; gap: 10px;">
+      <span id="networkType">4G</span>
+      <span>🔋 81%</span>
     </div>
-    <div class="section-title">
-      <h2>اختبار الجهاز</h2>
-      <span id="testCounter">0 / 4</span>
-    </div>
-    <div class="test-grid">
-      <button class="test-btn" id="micTestBtn" onclick="testMicrophone()">
-        <span class="icon">🎙️</span>
-        <strong>الميكروفون</strong>
-        <small>اختبار الصوت</small>
-      </button>
-      <button class="test-btn" id="speakerTestBtn" onclick="testSpeaker()">
-        <span class="icon">🔊</span>
-        <strong>السماعة</strong>
-        <small>اختبار الصوت</small>
-      </button>
-      <button class="test-btn" id="messageTestBtn" onclick="testMessage()">
-        <span class="icon">💬</span>
-        <strong>الرسائل</strong>
-        <small>اختبار الاتصال</small>
-      </button>
-      <button class="test-btn" id="mediaTestBtn" onclick="openMediaTest()">
-        <span class="icon">📷</span>
-        <strong>الصور والفيديو</strong>
-        <small>اختبار الكاميرا</small>
-      </button>
-    </div>
-    <div style="height:14px"></div>
-    <button class="primary" onclick="enterApp()"> دخول إلى جهاز لاسلكي </button>
-  </section>
+  </div>
 
-  <!-- الشاشة الرئيسية -->
-  <section id="homeScreen" class="screen">
-    <div class="dashboard-head">
-      <div>
-        <h1>الغرف اللاسلكية</h1>
-        <p>أنشئ غرفة أو انضم إلى غرفة موجودة</p>
-      </div>
-      <button class="icon-button" onclick="openCreateRoom()"> ＋ </button>
-    </div>
-    <div class="status-strip">
-      <div class="status-box">
-        <span>📡</span>
-        <strong id="homeConnection">غير متصل</strong>
-        <small>الاتصال</small>
-      </div>
-      <div class="status-box">
-        <span>🔋</span>
-        <strong id="homeBattery">--</strong>
-        <small>البطارية</small>
-      </div>
-      <div class="status-box">
-        <span>📶</span>
-        <strong id="homeNetwork">--</strong>
-        <small>الشبكة</small>
-      </div>
-    </div>
-    <div class="section-title">
-      <h2>الغرف</h2>
-      <span id="roomCount">0 غرفة</span>
-    </div>
-    <div id="roomList" class="room-list">
-      <div class="empty">جاري تحميل الغرف...</div>
-    </div>
-  </section>
-
-  <!-- شاشة المفضلة -->
-  <section id="favoritesScreen" class="screen">
-    <div class="dashboard-head">
-      <div>
-        <h1>المفضلة ⭐</h1>
-        <p>الغرف التي حفظتها للوصول السريع</p>
-      </div>
-    </div>
-    <div id="favoriteList" class="room-list">
-      <div class="empty">جاري تحميل المفضلة...</div>
-    </div>
-  </section>
-
-  <!-- شاشة الإعدادات -->
-  <section id="settingsScreen" class="screen">
-    <div class="dashboard-head">
-      <div>
-        <h1>الإعدادات</h1>
-        <p>إعدادات جهاز لاسلكي</p>
-      </div>
-    </div>
-    <div class="card">
-      <div class="device-line">
-        <span class="device-label">معرف الجهاز</span>
-        <strong class="device-value" id="settingsDeviceId">--</strong>
-      </div>
-      <div class="device-line">
-        <span class="device-label">حالة الاتصال</span>
-        <strong class="device-value" id="settingsConnection">غير متصل</strong>
-      </div>
-      <div class="device-line">
-        <span class="device-label">الشبكة</span>
-        <strong class="device-value" id="settingsNetwork">--</strong>
-      </div>
-      <div class="device-line">
-        <span class="device-label">البطارية</span>
-        <strong class="device-value" id="settingsBattery">--</strong>
-      </div>
-    </div>
-  </section>
-
-  <!-- شاشة الغرفة -->
-  <section id="roomScreen" class="screen">
-    <div class="room-header">
-      <button class="back" onclick="leaveRoom()"> ← </button>
-      <div class="room-header-info">
-        <strong id="activeRoomName">الغرفة</strong>
-        <small id="activeRoomId">RAD---------</small>
-      </div>
-      <button class="icon-button" onclick="openMembers()"> 👥 </button>
-    </div>
-    <div class="card wave-card">
-      <div class="wave-label">موجة العمليات</div>
-      <div class="wave-name" id="waveName"> موجة العمليات </div>
-      <div class="wave-code" id="waveCode"> 7F3A </div>
-      <div class="wave-controls">
-        <button class="wave-arrow" onclick="changeWave(-1)"> ‹ </button>
-        <button class="wave-favorite" id="waveFavorite" onclick="toggleWaveFavorite()"> ☆ </button>
-        <button class="wave-arrow" onclick="changeWave(1)"> › </button>
-      </div>
+  <!-- 3. أزرار التحكم الصوتي وزر PTT -->
+  <div class="voice-section">
+    <div style="display: flex; justify-content: space-between; width: 100%; font-size: 11px; color: #8d99ae; padding: 0 10px;">
+      <span>الصوت الطبيعي [مفعل]</span>
+      <span>الصوت اللاسلكي [متوقف]</span>
     </div>
     
-    <!-- زر التحدث الدائري المطابق للصورة تماماً -->
-    <div class="card ptt-area">
-      <button id="pttButton" class="ptt" type="button">
-        <span>🎙️️</span>اضغط للتحدث
-      </button>
-      <div id="pttStatus" class="ptt-status"> اضغط باستمرار للتحدث </div>
-    </div>
+    <div class="ptt-container">
+      <div style="color: #3498db; letter-spacing: 1px; font-size: 12px;">ılıll|</div>
+      
+      <!-- زر التحدث الدائري (أحمر افتراضي، أزرق عند الضغط) -->
+      <div id="pttButton" class="ptt-btn">
+        <svg style="width:30px;height:30px;fill:#fff;" viewBox="0 0 24 24"><path d="M12,2A3,3 0 0,1 15,5V11A3,3 0 0,1 12,14A3,3 0 0,1 9,11V5A3,3 0 0,1 12,2M19,11C19,14.53 16.39,17.44 13,17.93V21H11V17.93C7.61,17.44 5,14.53 5,11H7A5,5 0 0,0 12,16A5,5 0 0,0 17,11H19Z"/></svg>
+        <span id="pttText">اضغط للتحدث</span>
+      </div>
 
-    <div class="section-title">
-      <h2>حالة الغرفة</h2>
+      <div style="color: #3498db; letter-spacing: 1px; font-size: 12px;">|llili</div>
     </div>
-    <div class="info-grid">
-      <div class="info-item">
-        <small>الاتصال الصوتي</small>
-        <strong id="liveStatus">غير متصل</strong>
-      </div>
-      <div class="info-item">
-        <small>الأعضاء</small>
-        <strong id="memberCount">0</strong>
-      </div>
-      <div class="info-item">
-        <small>معرف الجهاز</small>
-        <strong id="roomDeviceId">--</strong>
-      </div>
-      <div class="info-item">
-        <small>الدور</small>
-        <strong id="roomRole">عضو</strong>
-      </div>
-    </div>
-    <div class="section-title">
-      <h2>أدوات الغرفة</h2>
-    </div>
-    <div class="tools-grid">
-      <button class="tool" onclick="openMembers()"> <span>👥</span> <small>الأعضاء</small> </button>
-      <button class="tool" onclick="openChat()"> <span>💬</span> <small>الرسائل</small> </button>
-      <button class="tool" onclick="openMediaTest()"> <span>📷</span> <small>الوسائط</small> </button>
-      <button class="tool" onclick="testMicrophone()"> <span>🎙</span> <small>الميكروفون</small> </button>
-      <button class="tool" onclick="testSpeaker()"> <span>🔊</span> <small>السماعة</small> </button>
-      <button class="tool" onclick="refreshRoom()"> <span>🔄</span> <small>تحديث</small> </button>
-    </div>
-    <div id="ownerTools" class="hidden">
-      <div class="section-title">
-        <h2>تحكم المسؤول</h2>
-        <span>مسؤول الغرفة</span>
-      </div>
-      <div class="card">
-        <button class="small-btn danger" style="width:100%;padding:13px" onclick="deleteCurrentRoom()"> 🗑️ حذف الغرفة </button>
-      </div>
-    </div>
-  </section>
+    <div style="font-size: 10px; color: #8d99ae;">اضغط باستمرار للتحدث واترك الزر للاستماع.</div>
+  </div>
 
-  <!-- التنقل السفلي -->
-  <nav id="bottomNav" class="bottom-nav hidden">
-    <button id="navHome" class="nav-btn active" onclick="showScreen('home')"> <span>📻</span> <small>الغرف</small> </button>
-    <button id="navFavorites" class="nav-btn" onclick="showScreen('favorites')"> <span>⭐</span> <small>المفضلة</small> </button>
-    <button id="navSettings" class="nav-btn" onclick="showScreen('settings')"> <span>⚙</span> <small>الإعدادات</small> </button>
-  </nav>
-
-  <!-- النوافذ المنبثقة -->
-  <div id="createModal" class="modal">
-    <div class="modal-box">
-      <div class="modal-head">
-        <h3>إنشاء غرفة جديدة</h3>
-        <button class="close" onclick="closeModal('createModal')">×</button>
-      </div>
-      <div class="notice"> اكتب اسم الغرفة فقط. سيتم إنشاء رقم الغرفة تلقائيًا بواسطة الخادم. </div>
-      <div class="input-wrap">
-        <label class="input-label">اسم الغرفة</label>
-        <input id="roomNameInput" class="input" maxlength="60" placeholder="مثال: غرفة العمليات">
-      </div>
-      <button class="primary" onclick="createRoom()"> إنشاء الغرفة </button>
+  <!-- 4. قسم المحادثة والدردشة -->
+  <div class="chat-section" id="chatBox">
+    <div class="msg-bubble received">
+      <small style="display:block; color:#3498db; font-size:10px;">أحمد</small>
+      جاهز للموقع
+      <span style="display:block; font-size:9px; color:#8d99ae; text-align: left;">09:33</span>
+    </div>
+    <div class="msg-bubble sent">
+      تم استلام الرسالة بنجاح
+      <span style="display:block; font-size:9px; color:#a3c7ef; text-align: left;">09:32</span>
     </div>
   </div>
 
-  <div id="joinModal" class="modal">
-    <div class="modal-box">
-      <div class="modal-head">
-        <h3>طلب الانضمام</h3>
-        <button class="close" onclick="closeModal('joinModal')">×</button>
-      </div>
-      <div class="notice"> سيصل طلب الانضمام إلى مسؤول الغرفة. بعد الموافقة ستتمكن من الدخول صوتيًا. </div>
-      <div class="input-wrap">
-        <label class="input-label">اسمك داخل الغرفة</label>
-        <input id="memberNameInput" class="input" maxlength="50" placeholder="اكتب اسمك">
-      </div>
-      <button class="primary" onclick="sendJoinRequest()"> إرسال طلب الانضمام </button>
-    </div>
+  <!-- مؤشر يكتب الان -->
+  <div class="typing-indicator" id="typingIndicator">خالد يكتب الان...</div>
+
+  <!-- قائمة أدوات المرفقات العائمة (تفتح بالدبوس 📎) -->
+  <div class="tools-menu" id="toolsMenu">
+    <div class="tool-item" onclick="triggerFile('image/*')">📷 إرسال صورة</div>
+    <div class="tool-item" onclick="triggerFile('video/*')">🎥 إرسال فيديو</div>
+    <div class="tool-item" onclick="openContacts()">👤 جهات الاتصال</div>
+    <div class="tool-item" onclick="triggerFile('.pdf,.doc,.docx')">📄 إرسال مستند</div>
+    <div class="tool-item" onclick="sendVoiceNote()">🎙️ إرسال صوت</div>
+    <div class="tool-item" onclick="alert('أعضاء الغرفة (5)')">👥 أعضاء الغرفة</div>
   </div>
 
-  <div id="membersModal" class="modal">
-    <div class="modal-box">
-      <div class="modal-head">
-        <h3>أعضاء الغرفة</h3>
-        <button class="close" onclick="closeModal('membersModal')">×</button>
-      </div>
-      <div id="membersList" class="members">
-        <div class="empty">جاري التحميل...</div>
-      </div>
-    </div>
+  <!-- مخفي لرفع الملفات -->
+  <input type="file" id="hiddenFileInput" style="display:none" onchange="handleFile(event)">
+
+  <!-- شريط الكتابة والسفلي -->
+  <div class="chat-input-bar">
+    <span class="action-icon">😊</span>
+    <input type="text" id="chatInput" placeholder="اكتب رسالة..." onkeydown="if(event.key==='Enter')sendMessage()">
+    <span class="action-icon" onclick="toggleTools()" title="المرفقات">📎</span>
+    <span class="action-icon" style="color: #3498db;" onclick="sendMessage()">➤</span>
   </div>
 
-  <div id="chatModal" class="modal">
-    <div class="modal-box">
-      <div class="modal-head">
-        <h3>الرسائل والمحادثة</h3>
-        <button class="close" onclick="closeModal('chatModal')">×</button>
-      </div>
-      <div id="chatMessages" class="card" style="min-height:160px;max-height:260px;overflow-y:auto;margin-bottom:10px;">
-        <div class="empty">لا توجد رسائل</div>
-      </div>
-      <div style="display:flex;gap:8px">
-        <input id="chatInput" class="input" placeholder="اكتب رسالة..." style="flex:1" onkeydown="if(event.key==='Enter')sendChatMessage()">
-        <button class="small-btn join" onclick="sendChatMessage()"> إرسال </button>
-      </div>
-    </div>
+  <!-- 5. شريط التنقل السفلي -->
+  <div class="nav-bar">
+    <button class="nav-item active" onclick="switchNav(this)"><span>🏠</span><small>الرئيسية</small></button>
+    <button class="nav-item" onclick="switchNav(this)"><span>⭐</span><small>المفضلة</small></button>
+    <button class="nav-item" onclick="switchNav(this)" id="wavesNavBtn"><span>📶</span><small>الموجات</small></button>
+    <button class="nav-item" onclick="switchNav(this)"><span>👤</span><small>حسابي</small></button>
   </div>
-
-  <div id="mediaModal" class="modal">
-    <div class="modal-box">
-      <div class="modal-head">
-        <h3>اختبار الصور والفيديو</h3>
-        <button class="close" onclick="closeModal('mediaModal')">×</button>
-      </div>
-      <div class="notice"> اختر صورة أو فيديو من الهاتف للتأكد من أن اختيار الوسائط يعمل. </div>
-      <input id="mediaInput" type="file" accept="image/*,video/*" style="width:100%;color:#9bb1c7" onchange="previewMedia(event)">
-      <img id="imagePreview" class="preview">
-      <video id="videoPreview" class="video" controls playsinline></video>
-    </div>
-  </div>
-
-  <div id="audioModal" class="modal">
-    <div class="modal-box">
-      <div class="modal-head">
-        <h3 id="audioModalTitle">اختبار الميكروفون</h3>
-        <button class="close" onclick="closeAudioTest()">×</button>
-      </div>
-      <div id="audioModalText" class="notice"> اضغط بدء الاختبار ثم تحدث. </div>
-      <button id="audioTestButton" class="primary" onclick="startAudioTest()"> بدء الاختبار </button>
-    </div>
-  </div>
-
-  <div id="toast" class="toast"></div>
 </div>
 
 <script>
   "use strict";
 
-  /* ========================================== المتغيرات الأساسية ========================================== */
-  const API = location.origin;
-  
-  // تثبيت معرّف الجهاز المخفي والثابت في الذاكرة المحلية لضمان استقرار الجلسة والسرعة
-  let deviceId = localStorage.getItem("radioDeviceId") || "dev_" + Math.random().toString(36).substr(2, 9);
+  // معرّف الجهاز المخفي والثابت في الذاكرة المحلية
+  const deviceId = localStorage.getItem("radioDeviceId") || "dev_" + Math.random().toString(36).substr(2, 9);
   localStorage.setItem("radioDeviceId", deviceId);
 
-  let rooms = [];
-  let favoriteRooms = [];
-  let activeRoom = null;
-  let activeRoomId = null;
+  const activeRoomId = "default-operations-room";
   let livekitRoom = null;
   let localAudioTrack = null;
   let isTalking = false;
-  let setupTests = { mic: false, speaker: false, message: false, media: false };
-  let waveIndex = 0;
-  let waveFavorite = false;
-  let battery = null;
-  const waves = [
-    { name: "موجة العمليات", code: "7F3A" },
-    { name: "موجة الطوارئ", code: "9K21" },
-    { name: "موجة المساندة", code: "4M88" },
-    { name: "موجة القيادة", code: "6P17" }
-  ];
 
-  /* ========================================== أدوات مساعدة ========================================== */
-  function $(id) {
-    return document.getElementById(id);
+  const pttBtn = document.getElementById('pttButton');
+  const pttText = document.getElementById('pttText');
+  const netDot = document.getElementById('netStatusDot');
+  const netText = document.getElementById('netStatusText');
+  const toolsMenu = document.getElementById('toolsMenu');
+
+  function setStatus(ok, text) {
+    if(ok) netDot.classList.remove('weak');
+    else netDot.classList.add('weak');
+    netText.textContent = text;
   }
 
-  function escapeHtml(value) {
-    return String(value || "")
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;");
+  // فتح وإغلاق قائمة المرفقات عبر زر الدبوس 📎
+  function toggleTools() {
+    toolsMenu.style.display = toolsMenu.style.display === "grid" ? "none" : "grid";
   }
 
-  function toast(message) {
-    const box = $("toast");
-    if (!box) return;
-    box.textContent = message;
-    box.classList.add("show");
-    clearTimeout(window.toastTimer);
-    window.toastTimer = setTimeout(() => {
-      box.classList.remove("show");
-    }, 2800);
+  function triggerFile(type) {
+    const input = document.getElementById('hiddenFileInput');
+    input.accept = type;
+    input.click();
+    toolsMenu.style.display = "none";
   }
 
-  function openModal(id) {
-    const m = $(id);
-    if (m) m.classList.add("show");
+  function openContacts() {
+    toolsMenu.style.display = "none";
+    navigator.share ? navigator.share({title: 'جهات الاتصال', text: 'رقم الطوارئ: +967-...'}) : alert("تم فتح جهات الاتصال بنجاح");
   }
 
-  function closeModal(id) {
-    const m = $(id);
-    if (m) m.classList.remove("show");
+  function sendVoiceNote() {
+    toolsMenu.style.display = "none";
+    alert("تم تسجيل وإرسال مقطع صوتي داخل المحادثة");
   }
 
-  function setConnection(ok, text) {
-    const dot = $("connectionDot");
-    const cText = $("connectionText");
-    const hConn = $("homeConnection");
-    const sConn = $("settingsConnection");
-    const lStatus = $("liveStatus");
-
-    if (dot) dot.className = "dot " + (ok ? "ok" : "bad");
-    if (cText) cText.textContent = text;
-    if (hConn) hConn.textContent = text;
-    if (sConn) sConn.textContent = text;
-    if (lStatus) lStatus.textContent = text;
+  function handleFile(e) {
+    const file = e.target.files[0];
+    if(file) alert("تم اختيار الملف: " + file.name);
   }
 
-  function updateTests() {
-    const count = Object.values(setupTests).filter(Boolean).length;
-    const counter = $("testCounter");
-    if (counter) counter.textContent = count + " / 4";
-  }
-
-  function markTest(name, buttonId) {
-    setupTests[name] = true;
-    const btn = $(buttonId);
-    if (btn) btn.classList.add("done");
-    updateTests();
-  }
-
-  /* ========================================== إدارة الجهاز والاتصال السريع ========================================== */
-  async function initDevice() {
-    try {
-      const response = await fetch(API + "/api/device", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ deviceId: deviceId })
-      });
-      const data = await response.json();
-      if (data.deviceId) {
-        deviceId = data.deviceId;
-        localStorage.setItem("radioDeviceId", deviceId);
-        updateDeviceUI();
-        setConnection(true, "متصل بالخادم");
-        await loadRooms();
-      } else {
-        throw new Error("No device id");
-      }
-    } catch (error) {
-      console.error(error);
-      setConnection(false, "تعذر الاتصال");
-      updateDeviceUI();
-      await loadRooms(); // متابعة التحميل المحلي حتى لو حدث انقطاع مؤقت
-    }
-  }
-
-  function updateDeviceUI() {
-    if ($("deviceIdText")) $("deviceIdText").textContent = deviceId;
-    if ($("settingsDeviceId")) $("settingsDeviceId").textContent = deviceId;
-    if ($("roomDeviceId")) $("roomDeviceId").textContent = deviceId;
-  }
-
-  function updateNetwork() {
-    const text = navigator.onLine ? "متصل" : "غير متصل";
-    if ($("networkText")) $("networkText").textContent = text;
-    if ($("homeNetwork")) $("homeNetwork").textContent = text;
-    if ($("settingsNetwork")) $("settingsNetwork").textContent = text;
-  }
-
-  window.addEventListener("online", () => {
-    updateNetwork();
-    toast("تم استعادة الاتصال بالشبكة");
-  });
-
-  window.addEventListener("offline", () => {
-    updateNetwork();
-    toast("انقطع اتصال الشبكة");
-  });
-
-  async function initBattery() {
-    try {
-      if (!navigator.getBattery) return;
-      battery = await navigator.getBattery();
-      updateBattery();
-      battery.addEventListener("levelchange", updateBattery);
-      battery.addEventListener("chargingchange", updateBattery);
-    } catch (error) {}
-  }
-
-  function updateBattery() {
-    if (!battery) return;
-    const level = Math.round(battery.level * 100);
-    const text = level + "%" + (battery.charging ? " ⚡" : "");
-    if ($("batteryText")) $("batteryText").textContent = text;
-    if ($("homeBattery")) $("homeBattery").textContent = text;
-    if ($("settingsBattery")) $("settingsBattery").textContent = text;
-  }
-
-  /* ========================================== اختبارات الجهاز ========================================== */
-  async function testMicrophone() {
-    if ($("audioModalTitle")) $("audioModalTitle").textContent = "اختبار الميكروفون";
-    if ($("audioModalText")) $("audioModalText").textContent = "اضغط بدء الاختبار ثم تحدث لمدة قصيرة للتأكد من وصول صوت الميكروفون.";
-    if ($("audioTestButton")) {
-      $("audioTestButton").textContent = "بدء اختبار الميكروفون";
-      $("audioTestButton").dataset.type = "mic";
-    }
-    openModal("audioModal");
-  }
-
-  async function startAudioTest() {
-    const type = $("audioTestButton").dataset.type;
-    if (type === "speaker") {
-      const context = new (window.AudioContext || window.webkitAudioContext)();
-      const oscillator = context.createOscillator();
-      const gain = context.createGain();
-      oscillator.frequency.value = 700;
-      gain.gain.value = 0.08;
-      oscillator.connect(gain);
-      gain.connect(context.destination);
-      oscillator.start();
-      setTimeout(() => {
-        oscillator.stop();
-        context.close();
-      }, 500);
-      markTest("speaker", "speakerTestBtn");
-      toast("تم اختبار السماعة");
-      return;
-    }
-
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
-      });
-      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      const source = audioContext.createMediaStreamSource(stream);
-      const analyser = audioContext.createAnalyser();
-      analyser.fftSize = 512;
-      source.connect(analyser);
-      const data = new Uint8Array(analyser.fftSize);
-
-      if ($("audioModalText")) $("audioModalText").textContent = "🎙️ الميكروفون يعمل. تحدث الآن...";
-      if ($("audioTestButton")) {
-        $("audioTestButton").textContent = "إيقاف الاختبار";
-        $("audioTestButton").onclick = () => {
-          stream.getTracks().forEach(track => track.stop());
-          audioContext.close();
-          $("audioTestButton").onclick = startAudioTest;
-          $("audioTestButton").textContent = "بدء اختبار الميكروفون";
-          if ($("audioModalText")) $("audioModalText").textContent = "تم إيقاف الاختبار.";
-          markTest("mic", "micTestBtn");
-          toast("الميكروفون يعمل بشكل صحيح");
-        };
-      }
-
-      function check() {
-        if (stream.active) {
-          analyser.getByteTimeDomainData(data);
-          let total = 0;
-          for (let i = 0; i < data.length; i++) {
-            total += Math.abs(data[i] - 128);
-          }
-          if (total > 1500 && $("audioModalText")) {
-            $("audioModalText").textContent = "🎙️ تم التقاط صوتك بنجاح";
-          }
-          requestAnimationFrame(check);
-        }
-      }
-      check();
-    } catch (error) {
-      toast("تعذر تشغيل الميكروفون. اسمح للتطبيق باستخدام الميكروفون.");
-    }
-  }
-
-  async function testSpeaker() {
-    if ($("audioModalTitle")) $("audioModalTitle").textContent = "اختبار السماعة";
-    if ($("audioModalText")) $("audioModalText").textContent = "اضغط الزر لتشغيل نغمة اختبار من سماعة الهاتف.";
-    if ($("audioTestButton")) {
-      $("audioTestButton").textContent = "تشغيل اختبار السماعة";
-      $("audioTestButton").dataset.type = "speaker";
-      $("audioTestButton").onclick = startAudioTest;
-    }
-    openModal("audioModal");
-  }
-
-  function closeAudioTest() {
-    closeModal("audioModal");
-    if ($("audioTestButton")) $("audioTestButton").onclick = startAudioTest;
-  }
-
-  async function testMessage() {
-    try {
-      const response = await fetch(API + "/health");
-      if (response.ok) {
-        markTest("message", "messageTestBtn");
-        toast("اختبار الاتصال بالرسائل نجح");
-      } else {
-        toast("تعذر اختبار الاتصال");
-      }
-    } catch (error) {
-      toast("لا يوجد اتصال بالخادم");
-    }
-  }
-
-  function openMediaTest() {
-    if ($("mediaInput")) $("mediaInput").value = "";
-    if ($("imagePreview")) $("imagePreview").style.display = "none";
-    if ($("videoPreview")) $("videoPreview").style.display = "none";
-    openModal("mediaModal");
-  }
-
-  function previewMedia(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    const url = URL.createObjectURL(file);
-    if (file.type.startsWith("image/") && $("imagePreview")) {
-      $("imagePreview").src = url;
-      $("imagePreview").style.display = "block";
-      if ($("videoPreview")) $("videoPreview").style.display = "none";
-    } else if (file.type.startsWith("video/") && $("videoPreview")) {
-      $("videoPreview").src = url;
-      $("videoPreview").style.display = "block";
-      if ($("imagePreview")) $("imagePreview").style.display = "none";
-    }
-    markTest("media", "mediaTestBtn");
-    toast("تم اختيار الوسائط بنجاح");
-  }
-
-  /* ========================================== التنقل والشاشات ========================================== */
-  function enterApp() {
-    showScreen("home");
-    const bottomNav = $("bottomNav");
-    if (bottomNav) bottomNav.classList.remove("hidden");
-    loadRooms();
-  }
-
-  function showScreen(name) {
-    document.querySelectorAll(".screen").forEach(screen => {
-      screen.classList.remove("active");
-    });
-    const screen = $(name + "Screen");
-    if (screen) screen.classList.add("active");
-
-    document.querySelectorAll(".nav-btn").forEach(btn => {
-      btn.classList.remove("active");
-    });
-    if (name === "home" && $("navHome")) $("navHome").classList.add("active");
-    if (name === "favorites") {
-      if ($("navFavorites")) $("navFavorites").classList.add("active");
-      loadFavorites();
-    }
-    if (name === "settings" && $("navSettings")) $("navSettings").classList.add("active");
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }
-
-  /* ========================================== إدارة الغرف ========================================== */
-  async function loadRooms() {
-    try {
-      const response = await fetch(API + "/api/rooms?deviceId=" + encodeURIComponent(deviceId));
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Failed");
-      rooms = data.rooms || [];
-      renderRooms();
-    } catch (error) {
-      if ($("roomList")) $("roomList").innerHTML = '<div class="empty">تعذر تحميل الغرف</div>';
-    }
-  }
-
-  function renderRooms() {
-    const roomCount = $("roomCount");
-    const roomList = $("roomList");
-    if (roomCount) roomCount.textContent = rooms.length + " غرفة";
-    if (!roomList) return;
-
-    if (!rooms.length) {
-      roomList.innerHTML = `<div class="card empty">لا توجد غرف حاليًا<br><br>اضغط ＋ لإنشاء أول غرفة</div>`;
-      return;
-    }
-    roomList.innerHTML = rooms.map(room => roomCard(room)).join("");
-  }
-
-  function roomCard(room) {
-    const isFavorite = room.favorite === true;
-    let action = "";
-    if (room.isOwner || room.isMember) {
-      action = `<button class="small-btn join" onclick="openRoom('${escapeHtml(room.id)}')">دخول</button>`;
-    } else if (room.isPending) {
-      action = `<button class="small-btn" onclick="checkJoinStatus('${escapeHtml(room.id)}')">قيد الانتظار</button>`;
-    } else {
-      action = `<button class="small-btn join" onclick="openJoin('${escapeHtml(room.id)}')">انضمام</button>`;
-    }
-    const deleteButton = room.isOwner ? `<button class="small-btn danger" onclick="deleteRoom('${escapeHtml(room.id)}')">حذف</button>` : "";
-    return `
-      <div class="room-card">
-        <div class="room-top">
-          <div class="room-icon">📻</div>
-          <div class="room-info">
-            <div class="room-name">${escapeHtml(room.name)}</div>
-            <div class="room-id">${escapeHtml(room.id)}</div>
-          </div>
-          <button class="favorite ${isFavorite ? "active" : ""}" onclick="toggleFavorite('${escapeHtml(room.id)}')">
-            ${isFavorite ? "★" : "☆"}
-          </button>
-        </div>
-        <div class="room-bottom">
-          <div class="room-meta">👥 ${room.memberCount || 0} أعضاء ${room.pendingCount ? " · ⏳ " + room.pendingCount + " طلب" : ""}</div>
-          <div class="room-actions">${deleteButton} ${action}</div>
-        </div>
-      </div>
-    `;
-  }
-
-  function openCreateRoom() {
-    if ($("roomNameInput")) $("roomNameInput").value = "";
-    openModal("createModal");
-    setTimeout(() => { if ($("roomNameInput")) $("roomNameInput").focus(); }, 200);
-  }
-
-  async function createRoom() {
-    const input = $("roomNameInput");
-    const name = input ? input.value.trim() : "";
-    if (!name) return toast("اكتب اسم الغرفة أولًا");
-    try {
-      const response = await fetch(API + "/api/rooms", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ deviceId, name })
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Create failed");
-      closeModal("createModal");
-      toast("تم إنشاء الغرفة " + data.roomId);
-      await loadRooms();
-      if (data.room) {
-        activeRoom = data.room;
-        activeRoomId = data.room.id;
-        showRoomScreen();
-        connectLiveKit();
-      }
-    } catch (error) {
-      toast(error.message || "تعذر إنشاء الغرفة");
-    }
-  }
-
-  function openJoin(roomId) {
-    activeRoomId = roomId;
-    if ($("memberNameInput")) $("memberNameInput").value = "";
-    openModal("joinModal");
-  }
-
-  async function sendJoinRequest() {
-    if (!activeRoomId) return toast("لم يتم تحديد الغرفة");
-    const memberNameInput = $("memberNameInput");
-    const memberName = memberNameInput ? memberNameInput.value.trim() || "جهاز جديد" : "جهاز جديد";
-    try {
-      const response = await fetch(API + "/api/rooms/" + encodeURIComponent(activeRoomId) + "/join", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ deviceId, memberName })
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Join failed");
-      closeModal("joinModal");
-      if (data.status === "approved") {
-        toast("تم قبول دخولك");
-        await loadRooms();
-        openRoom(activeRoomId);
-      } else {
-        toast("تم إرسال طلب الانضمام للمسؤول");
-        await loadRooms();
-      }
-    } catch (error) {
-      toast(error.message || "تعذر إرسال الطلب");
-    }
-  }
-
-  async function checkJoinStatus(roomId) {
-    try {
-      const response = await fetch(API + "/api/rooms/" + encodeURIComponent(roomId) + "/status?deviceId=" + encodeURIComponent(deviceId));
-      const data = await response.json();
-      if (data.status === "approved") {
-        toast("تمت الموافقة على طلبك");
-        await loadRooms();
-      } else if (data.status === "pending") {
-        toast("طلبك ما زال بانتظار المسؤول");
-      } else {
-        toast("لا يوجد طلب انضمام");
-      }
-    } catch (error) {
-      toast("تعذر التحقق من الحالة");
-    }
-  }
-
-  async function openRoom(roomId) {
-    try {
-      const response = await fetch(API + "/api/rooms/" + encodeURIComponent(roomId) + "?deviceId=" + encodeURIComponent(deviceId));
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Room error");
-      activeRoom = data.room;
-      activeRoomId = roomId;
-      if (!activeRoom.isOwner && !activeRoom.isMember) {
-        if (activeRoom.isPending) toast("طلبك ما زال بانتظار المسؤول");
-        else openJoin(roomId);
-        return;
-      }
-      showRoomScreen();
-      await loadMembers();
-      await connectLiveKit();
-    } catch (error) {
-      toast(error.message || "تعذر فتح الغرفة");
-    }
-  }
-
-  function showRoomScreen() {
-    if ($("activeRoomName")) $("activeRoomName").textContent = activeRoom?.name || "الغرفة";
-    if ($("activeRoomId")) $("activeRoomId").textContent = activeRoom?.id || activeRoomId || "--";
-    if ($("roomRole")) $("roomRole").textContent = activeRoom?.isOwner ? "مسؤول الغرفة" : "عضو";
-    
-    const ownerTools = $("ownerTools");
-    if (ownerTools) ownerTools.classList.toggle("hidden", !activeRoom?.isOwner);
-    
-    const bottomNav = $("bottomNav");
-    if (bottomNav) bottomNav.classList.add("hidden");
-    
-    showOnlyScreen("room");
-    updateWave();
-  }
-
-  function showOnlyScreen(name) {
-    document.querySelectorAll(".screen").forEach(screen => {
-      screen.classList.remove("active");
-    });
-    const s = $(name + "Screen");
-    if (s) s.classList.add("active");
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }
-
-  /* ========================================== LiveKit والاتصال الصوتي فائق السرعة ========================================== */
+  // اتصال سريع بـ LiveKit
   async function connectLiveKit() {
-    if (!activeRoomId) return;
+    if (livekitRoom && livekitRoom.state === "connected") return;
     try {
-      if (!window.LivekitClient) throw new Error("LiveKit library unavailable");
-      await disconnectLiveKit();
-      setConnection(false, "جاري الاتصال الصوتي...");
-
-      const tokenResponse = await fetch(API + "/token?room=" + encodeURIComponent(activeRoomId), {
-        headers: { 'x-device-id': deviceId || '' }
-      });
-      const tokenData = await tokenResponse.json();
-      if (!tokenResponse.ok) throw new Error(tokenData.error || "Token error");
-
-      const livekitUrl = tokenData.url || tokenData.livekitUrl || 'wss://radioconnect-8uyh53qc.livekit.cloud';
+      setStatus(false, "جاري الاتصال...");
+      const res = await fetch(`/token?room=${encodeURIComponent(activeRoomId)}`, { headers: { 'x-device-id': deviceId } });
+      const data = await res.json();
       
-      // إعدادات محسّنة لضمان سرعة نقل الصوت الفوري بدون تأخير
-      livekitRoom = new window.LivekitClient.Room({ 
-        adaptiveStream: true, 
-        dynacast: true,
-        publishDefaults: {
-          simulcast: false,
-          audioPreset: window.LivekitClient.AudioPresets.speech
+      livekitRoom = new window.LivekitClient.Room({ adaptiveStream: true, dynacast: true });
+      livekitRoom.on(window.LivekitClient.RoomEvent.TrackSubscribed, track => {
+        if (track.kind === window.LivekitClient.Track.Kind.Audio) {
+          const audio = track.attach(); audio.autoplay = true; document.body.appendChild(audio);
         }
       });
-
-      if (window.LivekitClient.RoomEvent) {
-        livekitRoom.on(window.LivekitClient.RoomEvent.TrackSubscribed, track => {
-          try {
-            if (track.kind === window.LivekitClient.Track.Kind.Audio) {
-              const audio = track.attach();
-              audio.autoplay = true;
-              audio.controls = false;
-              audio.style.display = "none";
-              document.body.appendChild(audio);
-            }
-          } catch (error) {}
-        });
-
-        livekitRoom.on(window.LivekitClient.RoomEvent.DataReceived, (payload) => {
-          try {
-            const text = new TextDecoder("utf-8").decode(payload);
-            const data = JSON.parse(text);
-            if (data.type === 'radio-chat' && data.senderDeviceId !== deviceId) {
-              appendMessageToUI(data.text, data.senderName, false);
-            }
-          } catch (e) {}
-        });
-
-        livekitRoom.on(window.LivekitClient.RoomEvent.ParticipantConnected, () => updateMemberCount());
-        livekitRoom.on(window.LivekitClient.RoomEvent.ParticipantDisconnected, () => updateMemberCount());
-        livekitRoom.on(window.LivekitClient.RoomEvent.Disconnected, () => {
-          setConnection(false, "انقطع الاتصال الصوتي");
-          if ($("liveStatus")) $("liveStatus").textContent = "غير متصل";
-        });
-      }
-
-      await livekitRoom.connect(livekitUrl, tokenData.token);
-      setConnection(true, "متصل صوتيًا");
-      if ($("liveStatus")) $("liveStatus").textContent = "متصل صوتيًا";
-      updateMemberCount();
-    } catch (error) {
-      setConnection(false, "تعذر الاتصال");
-      if ($("liveStatus")) $("liveStatus").textContent = "تعذر الاتصال";
-      toast("تعذر الاتصال الصوتي.");
+      await livekitRoom.connect(data.url || 'wss://radioconnect-8uyh53qc.livekit.cloud', data.token);
+      setStatus(true, "متصل");
+    } catch(err) {
+      setStatus(false, "ضعف الإنترنت"); // التحويل للأحمر عند الضعف كما طلبت
     }
   }
 
-  async function disconnectLiveKit() {
-    try {
-      if (livekitRoom) await livekitRoom.disconnect();
-    } catch (error) {}
-    livekitRoom = null;
-    if (localAudioTrack) {
-      try { localAudioTrack.stop(); } catch (error) {}
-      localAudioTrack = null;
-    }
-    isTalking = false;
-  }
-
-  /* ========================================== زر التحدث (PTT) وتفاعله اللوني الفوري ========================================== */
-  const pttButton = $("pttButton");
-  if (pttButton) {
-    pttButton.addEventListener("pointerdown", startTalking);
-    pttButton.addEventListener("pointerup", stopTalking);
-    pttButton.addEventListener("pointercancel", stopTalking);
-    pttButton.addEventListener("pointerleave", event => { if (isTalking) stopTalking(event); });
-    pttButton.addEventListener("contextmenu", event => event.preventDefault());
-  }
-
-  async function startTalking(event) {
-    if (event) {
-      event.preventDefault();
-      event.stopPropagation();
-    }
-    if (isTalking) return;
-    
-    // اتصال تلقائي إذا لم يكن متصلاً لضمان عدم توقف الميكروفون
-    if (!livekitRoom || livekitRoom.state !== "connected") {
-      await connectLiveKit();
-      if (!livekitRoom || livekitRoom.state !== "connected") {
-        toast("الاتصال الصوتي غير متصل");
-        return;
-      }
-    }
+  // تفاعل زر التحدث (أحمر -> أزرق عند الضغط)
+  async function startTalking(e) {
+    if(e) e.preventDefault();
+    if(isTalking) return;
+    if(!livekitRoom || livekitRoom.state !== "connected") await connectLiveKit();
 
     try {
       isTalking = true;
-      if (pttButton) {
-        pttButton.classList.add("active"); // تحول اللون إلى الأزرق وتفعيل التصميم
-        pttButton.innerHTML = "<span>🎙️</span>جاري التحدث";
-      }
-      if ($("pttStatus")) {
-        $("pttStatus").textContent = "🔴 أنت تتحدث الآن";
-        $("pttStatus").classList.add("talking");
-      }
-
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
-      });
-      const rawTrack = stream.getAudioTracks()[0];
-      if (!rawTrack) throw new Error("MIC_NOT_FOUND");
-
-      localAudioTrack = new window.LivekitClient.LocalAudioTrack(rawTrack);
+      pttBtn.classList.add('active');
+      pttText.textContent = "تحدث الآن";
+      
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      localAudioTrack = new window.LivekitClient.LocalAudioTrack(stream.getAudioTracks()[0]);
       await localAudioTrack.enable();
-
-      await livekitRoom.localParticipant.publishTrack(localAudioTrack, {
-        name: 'radio-microphone',
-        source: window.LivekitClient.Track.Source.Microphone
-      });
-    } catch (error) {
-      isTalking = false;
-      if (pttButton) {
-        pttButton.classList.remove("active");
-        pttButton.innerHTML = "<span>🎙️</span>اضغط للتحدث";
-      }
-      if ($("pttStatus")) {
-        $("pttStatus").textContent = "اضغط باستمرار للتحدث";
-        $("pttStatus").classList.remove("talking");
-      }
-      if (localAudioTrack) {
-        try { localAudioTrack.stop(); } catch (e) {}
-        localAudioTrack = null;
-      }
-      toast("تعذر تشغيل الميكروفون. تحقق من الإذن.");
-    }
+      await livekitRoom.localParticipant.publishTrack(localAudioTrack);
+    } catch(err) { stopTalking(); }
   }
 
-  async function stopTalking(event) {
-    if (event) {
-      event.preventDefault();
-      event.stopPropagation();
-    }
-    if (!isTalking && !localAudioTrack) {
-      if (pttButton) pttButton.classList.remove("active");
-      return;
-    }
+  async function stopTalking(e) {
+    if(e) e.preventDefault();
+    if(!isTalking) return;
     isTalking = false;
-    if (pttButton) {
-      pttButton.classList.remove("active"); // العودة للون الأحمر
-      pttButton.innerHTML = "<span>🎙️️</span>اضغط للتحدث";
-    }
-    if ($("pttStatus")) {
-      $("pttStatus").textContent = "اضغط باستمرار للتحدث";
-      $("pttStatus").classList.remove("talking");
-    }
+    pttBtn.classList.remove('active');
+    pttText.textContent = "اضغط للتحدث";
 
     try {
-      if (livekitRoom && localAudioTrack && livekitRoom.state === "connected") {
-        await livekitRoom.localParticipant.unpublishTrack(localAudioTrack);
-      }
-    } catch (error) {}
-
-    try {
-      if (localAudioTrack) localAudioTrack.stop();
-    } catch (error) {}
-    localAudioTrack = null;
+      if(livekitRoom && localAudioTrack) await livekitRoom.localParticipant.unpublishTrack(localAudioTrack);
+    } catch(err){}
+    if(localAudioTrack) { try{localAudioTrack.stop();}catch(e){} localAudioTrack = null; }
   }
 
-  /* ========================================== الأعضاء ========================================== */
-  async function loadMembers() {
-    if (!activeRoomId) return;
-    try {
-      const response = await fetch(API + "/api/rooms/" + encodeURIComponent(activeRoomId) + "/members?deviceId=" + encodeURIComponent(deviceId));
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Members error");
-      renderMembers(data.members || []);
-      if ($("memberCount")) $("memberCount").textContent = (data.members || []).filter(m => m.status === "approved").length;
-    } catch (error) {}
+  if(pttBtn) {
+    pttBtn.addEventListener("pointerdown", startTalking);
+    pttBtn.addEventListener("pointerup", stopTalking);
+    pttBtn.addEventListener("pointercancel", stopTalking);
+    pttBtn.addEventListener("pointerleave", stopTalking);
   }
 
-  function renderMembers(members) {
-    const membersList = $("membersList");
-    if (!membersList) return;
-    if (!members.length) {
-      membersList.innerHTML = '<div class="empty">لا يوجد أعضاء</div>';
-      return;
-    }
-    membersList.innerHTML = members.map(member => {
-      const approved = member.status === "approved";
-      const owner = member.role === "owner";
-      let action = "";
-      if (activeRoom?.isOwner && !owner) {
-        if (!approved) {
-          action += `<button class="small-btn join" onclick="approveMember('${escapeHtml(member.deviceId)}')">موافقة</button> 
-                     <button class="small-btn danger" onclick="rejectMember('${escapeHtml(member.deviceId)}')">رفض</button>`;
-        } else {
-          action += `<button class="small-btn danger" onclick="removeMember('${escapeHtml(member.deviceId)}')">حذف</button>`;
-        }
-      }
-      return `
-        <div class="member">
-          <div class="member-avatar">${owner ? "👑" : "👤"}</div>
-          <div class="member-info">
-            <strong>${escapeHtml(member.name || "عضو")}</strong>
-            <small>${escapeHtml(member.deviceId)}</small>
-          </div>
-          <span class="member-status ${approved ? "" : "pending"}">
-            ${owner ? "مسؤول" : approved ? "متصل" : "بانتظار الموافقة"}
-          </span>
-          ${action}
-        </div>
-      `;
-    }).join("");
-  }
-
-  function openMembers() {
-    if (!activeRoomId) return toast("افتح غرفة أولًا");
-    openModal("membersModal");
-    loadMembers();
-  }
-
-  async function approveMember(targetDeviceId) {
-    try {
-      const response = await fetch(API + "/api/rooms/" + encodeURIComponent(activeRoomId) + "/members/" + encodeURIComponent(targetDeviceId) + "/approve", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ deviceId })
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Approve failed");
-      toast("تمت الموافقة على العضو");
-      loadMembers();
-      loadRooms();
-    } catch (error) {
-      toast(error.message || "تعذر قبول العضو");
-    }
-  }
-
-  async function rejectMember(targetDeviceId) {
-    try {
-      const response = await fetch(API + "/api/rooms/" + encodeURIComponent(activeRoomId) + "/members/" + encodeURIComponent(targetDeviceId) + "/reject", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ deviceId })
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Reject failed");
-      toast("تم رفض الطلب");
-      loadMembers();
-      loadRooms();
-    } catch (error) {
-      toast(error.message || "تعذر رفض الطلب");
-    }
-  }
-
-  async function removeMember(targetDeviceId) {
-    if (!confirm("هل تريد حذف هذا العضو من الغرفة؟")) return;
-    try {
-      const response = await fetch(API + "/api/rooms/" + encodeURIComponent(activeRoomId) + "/members/" + encodeURIComponent(targetDeviceId) + "?deviceId=" + encodeURIComponent(deviceId), {
-        method: "DELETE"
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Remove failed");
-      toast("تم حذف العضو");
-      loadMembers();
-      loadRooms();
-    } catch (error) {
-      toast(error.message || "تعذر حذف العضو");
-    }
-  }
-
-  function updateMemberCount() {
-    if (!livekitRoom) return;
-    const count = livekitRoom.remoteParticipants.size + 1;
-    if ($("memberCount")) $("memberCount").textContent = count;
-  }
-
-  /* ========================================== المفضلة والموجات ========================================== */
-  async function toggleFavorite(roomId) {
-    try {
-      const response = await fetch(API + "/api/rooms/" + encodeURIComponent(roomId) + "/favorite", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ deviceId })
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Favorite error");
-      toast(data.favorite ? "تمت إضافة الغرفة للمفضلة ⭐" : "تمت إزالة الغرفة من المفضلة");
-      await loadRooms();
-      const favScreen = document.getElementById("favoritesScreen");
-      if (favScreen && favScreen.classList.contains("active")) {
-        await loadFavorites();
-      }
-    } catch (error) {
-      toast(error.message || "تعذر تحديث المفضلة");
-    }
-  }
-
-  async function loadFavorites() {
-    try {
-      const response = await fetch(API + "/api/favorites?deviceId=" + encodeURIComponent(deviceId));
-      const data = await response.json();
-      favoriteRooms = data.rooms || [];
-      renderFavorites();
-    } catch (error) {
-      if ($("favoriteList")) $("favoriteList").innerHTML = '<div class="empty">تعذر تحميل المفضلة</div>';
-    }
-  }
-
-  function renderFavorites() {
-    const list = $("favoriteList");
-    if (!list) return;
-    if (!favoriteRooms.length) {
-      list.innerHTML = `<div class="card empty">لا توجد غرف في المفضلة ⭐</div>`;
-      return;
-    }
-    list.innerHTML = favoriteRooms.map(room => roomCard(room)).join("");
-  }
-
-  function updateWave() {
-    const wave = waves[waveIndex];
-    if ($("waveName")) $("waveName").textContent = wave.name;
-    if ($("waveCode")) $("waveCode").textContent = wave.code;
-    if ($("waveFavorite")) $("waveFavorite").textContent = waveFavorite ? "★" : "☆";
-  }
-
-  function changeWave(direction) {
-    if (activeRoom && !activeRoom.isOwner) {
-      toast("تغيير الموجة متاح لمسؤول الغرفة");
-      return;
-    }
-    waveIndex += direction;
-    if (waveIndex < 0) waveIndex = waves.length - 1;
-    if (waveIndex >= waves.length) waveIndex = 0;
-    updateWave();
-  }
-
-  function toggleWaveFavorite() {
-    waveFavorite = !waveFavorite;
-    updateWave();
-    toast(waveFavorite ? "تم حفظ الموجة في المفضلة" : "تم إلغاء حفظ الموجة");
-  }
-
-  /* ========================================== إدارة الغرفة والرسائل ========================================== */
-  async function deleteRoom(roomId) {
-    if (!confirm("هل أنت متأكد من حذف هذه الغرفة؟")) return;
-    try {
-      const response = await fetch(API + "/api/rooms/" + encodeURIComponent(roomId) + "?deviceId=" + encodeURIComponent(deviceId), {
-        method: "DELETE"
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Delete failed");
-      toast("تم حذف الغرفة");
-      await loadRooms();
-    } catch (error) {
-      toast(error.message || "تعذر حذف الغرفة");
-    }
-  }
-
-  async function deleteCurrentRoom() {
-    if (!activeRoomId) return;
-    await deleteRoom(activeRoomId);
-    await disconnectLiveKit();
-    activeRoom = null;
-    activeRoomId = null;
-    const bNav = $("bottomNav");
-    if (bNav) bNav.classList.remove("hidden");
-    showScreen("home");
-  }
-
-  async function leaveRoom() {
-    await disconnectLiveKit();
-    activeRoom = null;
-    activeRoomId = null;
-    const bNav = $("bottomNav");
-    if (bNav) bNav.classList.remove("hidden");
-    showScreen("home");
-    loadRooms();
-  }
-
-  async function refreshRoom() {
-    if (!activeRoomId) return;
-    try {
-      const response = await fetch(API + "/api/rooms/" + encodeURIComponent(activeRoomId) + "?deviceId=" + encodeURIComponent(deviceId));
-      const data = await response.json();
-      if (response.ok) {
-        activeRoom = data.room;
-        showRoomScreen();
-        loadMembers();
-        toast("تم تحديث الغرفة");
-      }
-    } catch (error) {
-      toast("تعذر تحديث الغرفة");
-    }
-  }
-
-  function openChat() {
-    openModal("chatModal");
-  }
-
-  function appendMessageToUI(message, senderName, isMine) {
-    const box = $("chatMessages");
-    if (!box) return;
-    const empty = box.querySelector(".empty");
-    if (empty) empty.remove();
-
-    const item = document.createElement("div");
-    item.style.padding = "9px 12px";
-    item.style.borderRadius = "11px";
-    item.style.background = isMine ? "#086dd7" : "#10243a";
-    item.style.fontSize = "12px";
-    item.style.margin = "3px 0";
-    item.style.maxWidth = "85%";
-    item.style.marginLeft = isMine ? "0" : "auto";
-    item.style.marginRight = isMine ? "auto" : "0";
-    
-    item.innerHTML = (senderName ? `<small style="display:block;color:#a3c7ef;font-size:10px;margin-bottom:2px">${escapeHtml(senderName)}</small>` : '') + escapeHtml(message);
-
-    box.appendChild(item);
+  function sendMessage() {
+    const input = document.getElementById('chatInput');
+    if(!input.value.trim()) return;
+    const box = document.getElementById('chatBox');
+    const msg = document.createElement('div');
+    msg.className = "msg-bubble sent";
+    msg.textContent = input.value;
+    box.appendChild(msg);
+    input.value = "";
     box.scrollTop = box.scrollHeight;
   }
 
-  async function sendChatMessage() {
-    const input = $("chatInput");
-    if (!input) return;
-    const message = input.value.trim();
-    if (!message) return;
-    
-    // اتصال تلقائي إذا لم يكن متصلاً لضمان عدم توقف إرسال الرسائل
-    if (!livekitRoom || livekitRoom.state !== "connected") {
-      await connectLiveKit();
-      if (!livekitRoom || livekitRoom.state !== "connected") {
-        toast("غير متصل بالغرفة لإرسال الرسالة");
-        return;
-      }
-    }
-
-    try {
-      const data = {
-        type: 'radio-chat',
-        text: message,
-        senderDeviceId: deviceId,
-        senderName: activeRoom?.memberName || 'أنت'
-      };
-      const payload = new TextEncoder().encode(JSON.stringify(data));
-      await livekitRoom.localParticipant.publishData(payload, { reliable: true });
-      appendMessageToUI(message, 'أنت', true);
-      input.value = "";
-    } catch (e) {
-      toast("تعذر إرسال الرسالة");
-    }
+  function switchNav(btn) {
+    document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
   }
 
-  /* ========================================== التشغيل الأولي ========================================== */
-  async function boot() {
-    updateNetwork();
-    initBattery();
-    await initDevice();
-    updateTests();
-  }
-
-  boot();
+  connectLiveKit();
 </script>
 </body>
 </html>
