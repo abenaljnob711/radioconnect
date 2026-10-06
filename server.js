@@ -1,370 +1,627 @@
+"use strict";
+
+/* ==========================================
+   Radio Connect - السيرفر الكامل
+   مع نظام الأرقام الشخصية الثابتة
+   ========================================== */
+
 const express = require("express");
+const cors = require("cors");
+const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
+require("dotenv").config();
+
 const { AccessToken } = require("livekit-server-sdk");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+const LIVEKIT_URL = process.env.LIVEKIT_URL || "";
+const LIVEKIT_API_KEY = process.env.LIVEKIT_API_KEY || "";
+const LIVEKIT_API_SECRET = process.env.LIVEKIT_API_SECRET || "";
+
+const DATA_FILE = path.join(__dirname, "rooms.json");
+
+app.use(cors());
 app.use(express.json({ limit: "10mb" }));
 app.use(express.static(path.join(__dirname, "public")));
 
-const rooms = new Map();
-const devices = new Map();
+/* ==========================================
+   قاعدة البيانات البسيطة
+   ========================================== */
+let db = {
+  devices: {},   // { deviceId: { createdAt } }
+  rooms: {}      // { roomId: { id, name, owner, members[], createdAt } }
+};
 
-function createId(length = 16) {
-  return crypto.randomBytes(length).toString("hex").slice(0, length);
+function loadDb() {
+  try {
+    if (fs.existsSync(DATA_FILE)) {
+      const parsed = JSON.parse(fs.readFileSync(DATA_FILE, "utf8"));
+      db.devices = parsed.devices || {};
+      db.rooms = parsed.rooms || {};
+    }
+  } catch (e) { console.error("loadDb error:", e.message); }
 }
 
-function generateUserAdminCode() {
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-  const nums = "0123456789";
-  const prefix = chars[Math.floor(Math.random() * chars.length)] + chars[Math.floor(Math.random() * chars.length)];
-  let digits = "";
-  for (let i = 0; i < 5; i++) {
-    digits += nums[Math.floor(Math.random() * nums.length)];
+function saveDb() {
+  try {
+    fs.writeFileSync(DATA_FILE, JSON.stringify(db, null, 2), "utf8");
+  } catch (e) { console.error("saveDb error:", e.message); }
+}
+
+loadDb();
+
+/* ==========================================
+   أدوات عامة
+   ========================================== */
+function generateDeviceId() {
+  return "dev_" + crypto.randomBytes(8).toString("hex");
+}
+
+function generateRoomId() {
+  return "RAD-" + crypto.randomBytes(3).toString("hex").toUpperCase();
+}
+
+/**
+ * يولّد رقماً شخصياً من 6 خانات (hex)
+ * يُستخدم مرة واحدة لكل عضو — لا يتغير أبداً
+ */
+function generatePersonalCode() {
+  let code;
+  let attempts = 0;
+  do {
+    code = crypto.randomBytes(3).toString("hex").toUpperCase(); // 6 خانات
+    attempts++;
+  } while (isCodeTaken(code) && attempts < 100);
+  return code;
+}
+
+/**
+ * هل الرقم مستخدم في أي غرفة؟
+ */
+function isCodeTaken(code) {
+  for (const room of Object.values(db.rooms)) {
+    for (const m of room.members || []) {
+      if (m.personalCode === code) return true;
+    }
   }
-  return prefix + digits;
+  return false;
 }
 
-function cleanText(value, max = 100) {
-  return String(value || "").trim().replace(/[<>]/g, "").slice(0, max);
+function getDeviceIdFromReq(req) {
+  return req.headers["x-device-id"] || req.query.deviceId || req.body?.deviceId || null;
 }
 
-function getDeviceId(req) {
-  const value = req.body?.deviceId || req.query?.deviceId || req.headers["x-device-id"];
-  return cleanText(value, 100);
-}
+function now() { return Date.now(); }
 
-function ensureDevice(deviceId) {
-  if (!deviceId) return null;
-  if (!devices.has(deviceId)) {
-    devices.set(deviceId, {
-      deviceId,
-      adminCode: generateUserAdminCode(),
-      favorites: [],
-      createdAt: new Date().toISOString()
-    });
-  }
-  return devices.get(deviceId);
-}
-
-function findMember(room, deviceId) {
-  if (!room || !deviceId) return null;
-  return room.members.find(member => member.deviceId === deviceId);
-}
-
-function findMemberByKey(room, memberKey) {
-  if (!room || !memberKey) return null;
-  return room.members.find(member => member.memberKey === memberKey);
-}
-
-function isUserAdminOrOwner(room, deviceId) {
-  if (!room || !deviceId) return false;
-  const member = findMember(room, deviceId);
-  return member && member.status === "approved" && (member.role === "owner" || member.role === "admin");
-}
-
-function safeMember(member, isRequesterAdmin) {
-  const isMemberAdmin = member.role === "owner" || member.role === "admin";
-  return {
-    memberKey: member.memberKey,
-    name: member.name,
-    role: member.role,
-    status: member.status,
-    adminCode: isMemberAdmin ? member.adminCode : null,
-    joinedAt: member.joinedAt || null,
-    requestedAt: member.requestedAt || null,
-    approvedAt: member.approvedAt || null
-  };
-}
-
-function publicRoom(room, deviceId = null) {
-  const member = findMember(room, deviceId);
-  const isAdmin = isUserAdminOrOwner(room, deviceId);
-  const userDev = ensureDevice(deviceId);
-
-  return {
-    id: room.id,
-    name: room.name,
-    roomCode: isAdmin ? room.code : null,
-    adminCode: (isAdmin && userDev) ? userDev.adminCode : null,
-    createdAt: room.createdAt,
-    memberCount: room.members.filter(m => m.status === "approved").length,
-    pendingCount: room.members.filter(m => m.status === "pending").length,
-    isOwner: member?.role === "owner",
-    isAdmin: isAdmin,
-    isMember: !!member && member.status === "approved",
-    isPending: !!member && member.status === "pending",
-    favorite: !!deviceId && userDev?.favorites?.includes(room.id) === true
-  };
-}
-
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
-});
-
-app.post("/api/device", (req, res) => {
-  let deviceId = getDeviceId(req);
-  if (!deviceId) {
-    deviceId = "DEV-" + createId(16);
-  }
-  const device = ensureDevice(deviceId);
-
+/* ==========================================
+   Health
+   ========================================== */
+app.get("/health", (req, res) => {
   res.json({
-    success: true,
-    deviceId: device.deviceId,
-    deviceReady: true
+    ok: true,
+    uptime: process.uptime(),
+    livekit: !!LIVEKIT_API_KEY,
+    rooms: Object.keys(db.rooms).length,
+    devices: Object.keys(db.devices).length
   });
 });
 
+/* ==========================================
+   POST /api/device
+   تسجيل جهاز جديد
+   ========================================== */
+app.post("/api/device", (req, res) => {
+  try {
+    let { deviceId } = req.body || {};
+    if (!deviceId || !db.devices[deviceId]) {
+      deviceId = deviceId || generateDeviceId();
+      db.devices[deviceId] = { createdAt: now() };
+      saveDb();
+    }
+    res.json({ deviceId, createdAt: db.devices[deviceId].createdAt });
+  } catch (e) {
+    console.error("device error:", e);
+    res.status(500).json({ error: "server_error" });
+  }
+});
+
+/* ==========================================
+   GET /api/rooms
+   قائمة الغرف (مع حالة المستخدم)
+   ========================================== */
+app.get("/api/rooms", (req, res) => {
+  try {
+    const deviceId = getDeviceIdFromReq(req);
+    const roomsList = Object.values(db.rooms).map(room => {
+      const member = (room.members || []).find(m => m.deviceId === deviceId);
+      const approved = (room.members || []).filter(m => m.status === "approved").length;
+
+      return {
+        id: room.id,
+        name: room.name,
+        isOwner: room.owner === deviceId,
+        isMember: !!member && member.status === "approved",
+        isAdmin: !!member && member.role === "admin" && member.status === "approved",
+        role: member?.role || null,
+        memberCount: approved,
+        // ⚠️ لا نُرسل الرقم الشخصي هنا إطلاقاً
+        createdAt: room.createdAt
+      };
+    });
+
+    roomsList.sort((a, b) => {
+      if (a.isOwner !== b.isOwner) return a.isOwner ? -1 : 1;
+      if (a.isAdmin !== b.isAdmin) return a.isAdmin ? -1 : 1;
+      if (a.isMember !== b.isMember) return a.isMember ? -1 : 1;
+      return (b.createdAt || 0) - (a.createdAt || 0);
+    });
+
+    res.json({ rooms: roomsList });
+  } catch (e) {
+    console.error("rooms error:", e);
+    res.status(500).json({ error: "server_error" });
+  }
+});
+
+/* ==========================================
+   POST /api/rooms
+   إنشاء غرفة جديدة
+   ========================================== */
 app.post("/api/rooms", (req, res) => {
   try {
-    const deviceId = getDeviceId(req);
-    const name = cleanText(req.body.name, 60);
+    const deviceId = getDeviceIdFromReq(req);
+    const { name } = req.body || {};
 
-    if (!deviceId) return res.status(400).json({ error: "Device ID required" });
-    if (!name) return res.status(400).json({ error: "Room name required" });
+    if (!deviceId) return res.status(401).json({ error: "device_required" });
+    if (!name || !name.trim()) return res.status(400).json({ error: "name_required" });
 
-    const device = ensureDevice(deviceId);
-    const roomId = "RAD-" + createId(8).toUpperCase();
-    const roomCode = createId(6).toUpperCase();
+    let roomId = generateRoomId();
+    while (db.rooms[roomId]) roomId = generateRoomId();
 
-    const ownerMember = {
-      memberKey: "M-" + createId(12),
-      deviceId,
-      adminCode: device.adminCode,
-      name: cleanText(req.body.memberName, 50) || "مالك الغرفة",
-      role: "owner",
-      status: "approved",
-      joinedAt: new Date().toISOString()
-    };
+    const ownerPersonalCode = generatePersonalCode();
 
     const room = {
       id: roomId,
-      code: roomCode,
-      name,
-      ownerDeviceId: deviceId,
-      createdAt: new Date().toISOString(),
-      members: [ownerMember]
+      name: name.trim(),
+      owner: deviceId,
+      createdAt: now(),
+      members: [{
+        deviceId,
+        name: "المالك",
+        role: "owner",
+        status: "approved",
+        personalCode: ownerPersonalCode,   // رقم شخصي ثابت
+        isCodeVisible: true,               // المالك يرى رقمه
+        invitedBy: null,
+        invitedMembers: [],
+        joinedAt: now()
+      }]
     };
 
-    rooms.set(roomId, room);
+    db.rooms[roomId] = room;
+    saveDb();
 
     res.json({
-      success: true,
-      room: publicRoom(room, deviceId),
-      roomId,
-      adminCode: device.adminCode
+      roomId: room.id,
+      room: {
+        id: room.id,
+        name: room.name,
+        isOwner: true,
+        isMember: true,
+        isAdmin: false,
+        role: "owner",
+        memberCount: 1,
+        personalCode: ownerPersonalCode  // يُرسل فقط للمالك
+      }
     });
-  } catch (error) {
-    res.status(500).json({ error: "Failed to create room" });
+  } catch (e) {
+    console.error("create room error:", e);
+    res.status(500).json({ error: "server_error" });
   }
 });
 
-app.get("/api/rooms", (req, res) => {
-  const deviceId = getDeviceId(req);
-  const result = Array.from(rooms.values()).map(room => publicRoom(room, deviceId));
-  res.json({ success: true, rooms: result });
-});
+/* ==========================================
+   GET /api/rooms/:id
+   تفاصيل غرفة واحدة
+   ========================================== */
+app.get("/api/rooms/:id", (req, res) => {
+  try {
+    const deviceId = getDeviceIdFromReq(req);
+    const room = db.rooms[req.params.id];
+    if (!room) return res.status(404).json({ error: "room_not_found" });
 
-app.delete("/api/rooms/:roomId", (req, res) => {
-  const roomId = cleanText(req.params.roomId, 64);
-  const deviceId = getDeviceId(req);
-  const room = rooms.get(roomId);
+    const member = (room.members || []).find(m => m.deviceId === deviceId);
+    const approved = (room.members || []).filter(m => m.status === "approved").length;
 
-  if (!room) return res.status(404).json({ error: "Room not found" });
+    const canSeeCode = member && (member.role === "owner" || member.role === "admin");
 
-  if (room.ownerDeviceId !== deviceId) {
-    return res.status(403).json({ error: "مالك الغرفة الأصلي فقط هو من يستطيع حذف الغرفة" });
-  }
-
-  rooms.delete(roomId);
-
-  for (const device of devices.values()) {
-    device.favorites = device.favorites.filter(id => id !== roomId);
-  }
-
-  res.json({ success: true, message: "تم حذف الغرفة بنجاح" });
-});
-
-app.post("/api/rooms/join", (req, res) => {
-  const deviceId = getDeviceId(req);
-  const code = cleanText(req.body.code, 20).toUpperCase();
-  const inputAdminCode = cleanText(req.body.adminCode, 20).toUpperCase();
-  const memberName = cleanText(req.body.memberName, 50) || "عضو جديد";
-
-  if (!deviceId) return res.status(400).json({ error: "Device ID required" });
-
-  const device = ensureDevice(deviceId);
-  let room = Array.from(rooms.values()).find(r => r.code === code);
-
-  if (!room && inputAdminCode) {
-    room = Array.from(rooms.values()).find(r => {
-      return r.members.some(m => (m.role === "owner" || m.role === "admin") && m.adminCode === inputAdminCode);
+    res.json({
+      room: {
+        id: room.id,
+        name: room.name,
+        isOwner: room.owner === deviceId,
+        isMember: !!member && member.status === "approved",
+        isAdmin: !!member && member.role === "admin" && member.status === "approved",
+        role: member?.role || null,
+        memberCount: approved,
+        // ⚠️ الرقم الشخصي يُرسل فقط إذا كان مشرفاً أو مالكاً
+        personalCode: canSeeCode ? member.personalCode : null
+      }
     });
+  } catch (e) {
+    console.error("room details error:", e);
+    res.status(500).json({ error: "server_error" });
   }
+});
 
-  if (!room) {
-    return res.status(404).json({ error: "رمز الغرفة أو رقم التعريف غير صحيح" });
-  }
+/* ==========================================
+   POST /api/rooms/join-by-code
+   الانضمام لغرفة عن طريق رقم مشرف/مالك
+   ========================================== */
+app.post("/api/rooms/join-by-code", (req, res) => {
+  try {
+    const newMemberId = getDeviceIdFromReq(req);
+    const { code, memberName } = req.body || {};
 
-  if (isUserAdminOrOwner(room, deviceId)) {
-    return res.json({
-      success: true,
+    if (!newMemberId) return res.status(401).json({ error: "device_required" });
+    if (!code || !code.trim()) return res.status(400).json({ error: "code_required" });
+    if (!memberName || !memberName.trim()) return res.status(400).json({ error: "name_required" });
+
+    const cleanCode = code.trim().toUpperCase();
+
+    // ابحث عن الغرفة التي فيها عضو بهذا الرقم (مشرف أو مالك)
+    let targetRoom = null;
+    let inviter = null;
+
+    for (const room of Object.values(db.rooms)) {
+      const m = (room.members || []).find(
+        mem => mem.personalCode === cleanCode &&
+               (mem.role === "owner" || mem.role === "admin") &&
+               mem.status === "approved"
+      );
+      if (m) {
+        targetRoom = room;
+        inviter = m;
+        break;
+      }
+    }
+
+    if (!targetRoom) {
+      return res.status(404).json({ error: "invalid_code" });
+    }
+
+    // هل المستخدم عضو بالفعل؟
+    const existing = (targetRoom.members || []).find(m => m.deviceId === newMemberId);
+    if (existing) {
+      return res.json({
+        status: existing.status,
+        roomId: targetRoom.id,
+        message: "أنت بالفعل في هذه الغرفة"
+      });
+    }
+
+    // رقم شخصي جديد للعضو (سري!)
+    const newPersonalCode = generatePersonalCode();
+
+    const newMember = {
+      deviceId: newMemberId,
+      name: memberName.trim().substring(0, 40),
+      role: "member",
+      status: "approved",              // مباشرة — لا حاجة لموافقة
+      personalCode: newPersonalCode,   // مخفي عن العضو
+      isCodeVisible: false,
+      invitedBy: inviter.deviceId,     // من ضمّه
+      invitedByCode: cleanCode,
+      invitedMembers: [],
+      joinedAt: now()
+    };
+
+    targetRoom.members.push(newMember);
+
+    // سجل المضمومين عند المشرف/المالك
+    if (!inviter.invitedMembers) inviter.invitedMembers = [];
+    inviter.invitedMembers.push(newMemberId);
+
+    saveDb();
+
+    res.json({
       status: "approved",
-      roomId: room.id,
-      message: "مرحباً بك، أنت محدد كـ " + (findMember(room, deviceId)?.role === "owner" ? "مالك" : "مشرف")
+      roomId: targetRoom.id,
+      roomName: targetRoom.name,
+      message: "تم الانضمام بنجاح ✅"
     });
+  } catch (e) {
+    console.error("join-by-code error:", e);
+    res.status(500).json({ error: "server_error" });
   }
+});
+/* ==========================================
+   GET /api/rooms/:id/members
+   قائمة الأعضاء (مع الرقم فقط للمشرف/المالك)
+   ========================================== */
+app.get("/api/rooms/:id/members", (req, res) => {
+  try {
+    const deviceId = getDeviceIdFromReq(req);
+    const room = db.rooms[req.params.id];
+    if (!room) return res.status(404).json({ error: "room_not_found" });
 
-  let member = findMember(room, deviceId);
-  if (member) {
-    return res.json({
-      success: true,
-      status: member.status,
-      roomId: room.id,
-      message: member.status === "approved" ? "أنت عضو مقبول بالفعل" : "طلبك بانتظار موافقة المشرفين"
+    const requester = (room.members || []).find(m => m.deviceId === deviceId);
+    if (!requester || requester.status !== "approved") {
+      return res.status(403).json({ error: "not_a_member" });
+    }
+
+    const canSeeCodes = requester.role === "owner" || requester.role === "admin";
+
+    const members = (room.members || []).map(m => ({
+      deviceId: m.deviceId,
+      name: m.name,
+      role: m.role,
+      status: m.status,
+      joinedAt: m.joinedAt,
+      invitedBy: m.invitedBy,
+      // ⚠️ الرقم يُرسَل فقط للمشرف/المالك (وللشخص نفسه إن كان مشرفاً)
+      personalCode: canSeeCodes || m.deviceId === deviceId
+        ? (m.isCodeVisible ? m.personalCode : null)
+        : null,
+      isCodeVisible: m.isCodeVisible
+    }));
+
+    res.json({
+      members,
+      myRole: requester.role,
+      canSeeCodes
     });
+  } catch (e) {
+    console.error("members error:", e);
+    res.status(500).json({ error: "server_error" });
   }
-
-  member = {
-    memberKey: "M-" + createId(12),
-    deviceId,
-    adminCode: device.adminCode,
-    name: memberName,
-    role: "member",
-    status: "pending",
-    requestedAt: new Date().toISOString()
-  };
-
-  room.members.push(member);
-
-  res.json({
-    success: true,
-    status: "pending",
-    roomId: room.id,
-    message: "تم إرسال طلب الانضمام للمشرفين كعضو"
-  });
 });
 
-app.get("/api/rooms/:roomId/members", (req, res) => {
-  const roomId = cleanText(req.params.roomId, 64);
-  const deviceId = getDeviceId(req);
-  const room = rooms.get(roomId);
+/* ==========================================
+   GET /api/rooms/:id/my-code
+   الرقم الشخصي الحالي (يُرسَل فقط إن كان مرئياً)
+   ========================================== */
+app.get("/api/rooms/:id/my-code", (req, res) => {
+  try {
+    const deviceId = getDeviceIdFromReq(req);
+    const room = db.rooms[req.params.id];
+    if (!room) return res.status(404).json({ error: "room_not_found" });
 
-  if (!room) return res.status(404).json({ error: "Room not found" });
+    const member = (room.members || []).find(m => m.deviceId === deviceId);
+    if (!member) return res.status(404).json({ error: "not_a_member" });
 
-  const currentMember = findMember(room, deviceId);
-  const isAdmin = isUserAdminOrOwner(room, deviceId);
+    const canSee = member.role === "owner" || member.role === "admin";
 
-  if (!isAdmin && (!currentMember || currentMember.status !== "approved")) {
-    return res.status(403).json({ error: "Access denied" });
+    res.json({
+      personalCode: canSee ? member.personalCode : null,
+      isVisible: canSee,
+      role: member.role
+    });
+  } catch (e) {
+    res.status(500).json({ error: "server_error" });
   }
-
-  res.json({
-    success: true,
-    members: room.members.map(m => safeMember(m, isAdmin))
-  });
 });
 
-app.post("/api/rooms/:roomId/members/:memberKey/approve", (req, res) => {
-  const roomId = cleanText(req.params.roomId, 64);
-  const memberKey = cleanText(req.params.memberKey, 100);
-  const deviceId = getDeviceId(req);
-  const room = rooms.get(roomId);
+/* ==========================================
+   POST /api/rooms/:id/promote
+   ترقية عضو إلى مشرف (المالك فقط)
+   ========================================== */
+app.post("/api/rooms/:id/promote", (req, res) => {
+  try {
+    const requesterId = getDeviceIdFromReq(req);
+    const { targetDeviceId } = req.body || {};
+    const room = db.rooms[req.params.id];
+    if (!room) return res.status(404).json({ error: "room_not_found" });
 
-  if (!room) return res.status(404).json({ error: "Room not found" });
-  if (!isUserAdminOrOwner(room, deviceId)) {
-    return res.status(403).json({ error: "هذه الخدمة متاحة للمشرفين فقط" });
+    // التحقق: الطالب هو المالك
+    if (room.owner !== requesterId) {
+      return res.status(403).json({ error: "owner_only" });
+    }
+
+    const target = (room.members || []).find(m => m.deviceId === targetDeviceId);
+    if (!target) return res.status(404).json({ error: "member_not_found" });
+    if (target.role === "owner") return res.status(400).json({ error: "cannot_promote_owner" });
+    if (target.role === "admin") return res.status(400).json({ error: "already_admin" });
+
+    // ترقية
+    target.role = "admin";
+    target.isCodeVisible = true;
+    target.promotedAt = now();
+    saveDb();
+
+    res.json({
+      message: "تم الترقية بنجاح 🎉",
+      personalCode: target.personalCode,  // يُرسل لصاحب الرقم فقط
+      member: {
+        deviceId: target.deviceId,
+        name: target.name,
+        role: target.role,
+        isCodeVisible: true
+      }
+    });
+  } catch (e) {
+    console.error("promote error:", e);
+    res.status(500).json({ error: "server_error" });
   }
-
-  const member = findMemberByKey(room, memberKey);
-  if (!member) return res.status(404).json({ error: "Member not found" });
-
-  member.status = "approved";
-  member.approvedAt = new Date().toISOString();
-
-  res.json({ success: true, message: "تمت الموافقة على العضو" });
 });
 
-app.delete("/api/rooms/:roomId/members/:memberKey", (req, res) => {
-  const roomId = cleanText(req.params.roomId, 64);
-  const memberKey = cleanText(req.params.memberKey, 100);
-  const deviceId = getDeviceId(req);
-  const room = rooms.get(roomId);
+/* ==========================================
+   POST /api/rooms/:id/demote
+   سحب الإشراف (المالك فقط)
+   ========================================== */
+app.post("/api/rooms/:id/demote", (req, res) => {
+  try {
+    const requesterId = getDeviceIdFromReq(req);
+    const { targetDeviceId } = req.body || {};
+    const room = db.rooms[req.params.id];
+    if (!room) return res.status(404).json({ error: "room_not_found" });
 
-  if (!room) return res.status(404).json({ error: "Room not found" });
-  if (!isUserAdminOrOwner(room, deviceId)) {
-    return res.status(403).json({ error: "هذه الخدمة متاحة للمشرفين فقط" });
+    // التحقق: الطالب هو المالك
+    if (room.owner !== requesterId) {
+      return res.status(403).json({ error: "owner_only" });
+    }
+
+    const target = (room.members || []).find(m => m.deviceId === targetDeviceId);
+    if (!target) return res.status(404).json({ error: "member_not_found" });
+    if (target.role === "owner") return res.status(400).json({ error: "cannot_demote_owner" });
+    if (target.role !== "admin") return res.status(400).json({ error: "not_admin" });
+
+    // سحب الإشراف — الرقم يبقى محفوظاً لكن يُخفى
+    target.role = "member";
+    target.isCodeVisible = false;   // ⚠️ نُخفي الرقم فقط، لا نحذفه
+    target.demotedAt = now();
+    saveDb();
+
+    res.json({
+      message: "تم سحب الإشراف — الأعضاء الذين ضمّهم يبقون في الغرفة",
+      member: {
+        deviceId: target.deviceId,
+        name: target.name,
+        role: target.role,
+        isCodeVisible: false
+      }
+    });
+  } catch (e) {
+    console.error("demote error:", e);
+    res.status(500).json({ error: "server_error" });
   }
-
-  const member = findMemberByKey(room, memberKey);
-  if (!member) return res.status(404).json({ error: "Member not found" });
-
-  if (member.role === "owner") {
-    return res.status(400).json({ error: "لا يمكن حذف مالك الغرفة الأصلي" });
-  }
-
-  const index = room.members.findIndex(m => m.memberKey === memberKey);
-  room.members.splice(index, 1);
-
-  res.json({ success: true, message: "تم حذف العضو من الغرفة" });
 });
 
-/* =========================
-   توليد LiveKit Token
-========================= */
+/* ==========================================
+   DELETE /api/rooms/:id/members/:deviceId
+   حذف/طرد عضو (المالك فقط، أو المشرف لأعضاء ضمّهم)
+   ========================================== */
+app.delete("/api/rooms/:id/members/:deviceId", (req, res) => {
+  try {
+    const requesterId = getDeviceIdFromReq(req);
+    const room = db.rooms[req.params.id];
+    if (!room) return res.status(404).json({ error: "room_not_found" });
+
+    const requester = (room.members || []).find(m => m.deviceId === requesterId);
+    if (!requester) return res.status(403).json({ error: "not_a_member" });
+
+    const targetId = req.params.deviceId;
+    const target = (room.members || []).find(m => m.deviceId === targetId);
+    if (!target) return res.status(404).json({ error: "member_not_found" });
+
+    if (target.role === "owner") {
+      return res.status(400).json({ error: "cannot_remove_owner" });
+    }
+
+    const isOwner = requester.role === "owner";
+    const isAdminWhoInvited = requester.role === "admin" && target.invitedBy === requesterId;
+
+    if (!isOwner && !isAdminWhoInvited) {
+      return res.status(403).json({ error: "no_permission" });
+    }
+
+    // حذف العضو
+    const idx = room.members.findIndex(m => m.deviceId === targetId);
+    room.members.splice(idx, 1);
+
+    // إزالة من قائمة invitedMembers عند من ضمّه
+    const inviter = room.members.find(m => m.deviceId === target.invitedBy);
+    if (inviter && inviter.invitedMembers) {
+      inviter.invitedMembers = inviter.invitedMembers.filter(id => id !== targetId);
+    }
+
+    saveDb();
+    res.json({ message: "تم حذف العضو" });
+  } catch (e) {
+    console.error("remove member error:", e);
+    res.status(500).json({ error: "server_error" });
+  }
+});
+
+/* ==========================================
+   DELETE /api/rooms/:id
+   حذف الغرفة (المالك فقط)
+   ========================================== */
+app.delete("/api/rooms/:id", (req, res) => {
+  try {
+    const deviceId = getDeviceIdFromReq(req);
+    const room = db.rooms[req.params.id];
+    if (!room) return res.status(404).json({ error: "room_not_found" });
+    if (room.owner !== deviceId) return res.status(403).json({ error: "owner_only" });
+
+    delete db.rooms[req.params.id];
+    saveDb();
+    res.json({ message: "تم حذف الغرفة" });
+  } catch (e) {
+    res.status(500).json({ error: "server_error" });
+  }
+});
+
+/* ==========================================
+   GET /token
+   توكن LiveKit
+   ========================================== */
 app.get("/token", async (req, res) => {
   try {
-    const deviceId = getDeviceId(req);
-    const roomId = cleanText(req.query.room || "", 64);
+    const deviceId = getDeviceIdFromReq(req);
+    const roomId = req.query.room;
 
-    if (!deviceId || !roomId) {
-      return res.status(400).json({ error: "DeviceId and Room ID are required" });
+    if (!deviceId) return res.status(401).json({ error: "device_required" });
+    if (!roomId) return res.status(400).json({ error: "room_required" });
+    if (!LIVEKIT_API_KEY || !LIVEKIT_API_SECRET) {
+      return res.status(500).json({ error: "livekit_not_configured" });
     }
 
-    const room = rooms.get(roomId);
-    if (!room) return res.status(404).json({ error: "الغرفة غير موجودة" });
-
-    const member = findMember(room, deviceId);
-    if (!member || member.status !== "approved") {
-      return res.status(403).json({ error: "يجب الحصول على موافقة الانضمام للغرفة أولاً" });
+    const room = db.rooms[roomId];
+    if (room) {
+      const member = (room.members || []).find(m => m.deviceId === deviceId);
+      if (!member || member.status !== "approved") {
+        return res.status(403).json({ error: "not_a_member" });
+      }
     }
 
-    const apiKey = process.env.LIVEKIT_API_KEY;
-    const apiSecret = process.env.LIVEKIT_API_SECRET;
-    const livekitUrl = String(process.env.LIVEKIT_URL || "").trim().replace(/\/+$/, "");
+    const at = new AccessToken(LIVEKIT_API_KEY, LIVEKIT_API_SECRET, {
+      identity: deviceId,
+      ttl: "6h",
+      name: deviceId.substring(0, 12)
+    });
 
-    if (!apiKey || !apiSecret || !livekitUrl) {
-      console.error("LiveKit environment variables are missing");
-      return res.status(500).json({ error: "إعدادات LiveKit غير مكتملة" });
-    }
-
-    if (!livekitUrl.startsWith("wss://") && !livekitUrl.startsWith("ws://")) {
-      console.error("Invalid LIVEKIT_URL:", livekitUrl);
-      return res.status(500).json({ error: "رابط LiveKit غير صحيح" });
-    }
-
-    const token = new AccessToken(apiKey, apiSecret, { identity: deviceId });
-    token.addGrant({
+    at.addGrant({
       roomJoin: true,
       room: roomId,
       canPublish: true,
-      canSubscribe: true
+      canSubscribe: true,
+      canPublishData: true
     });
 
-    const jwt = await token.toJwt();
-    res.json({ success: true, token: jwt, url: livekitUrl, room: roomId, identity: deviceId });
-  } catch (error) {
-    console.error("Token generation error:", error);
-    res.status(500).json({ error: "Failed to generate LiveKit token" });
+    const token = await at.toJwt();
+
+    res.json({
+      token,
+      url: LIVEKIT_URL || "wss://radioconnect-8uyh53qc.livekit.cloud"
+    });
+  } catch (e) {
+    console.error("token error:", e);
+    res.status(500).json({ error: "token_generation_failed" });
   }
 });
 
+/* ==========================================
+   404 fallback — SPA
+   ========================================== */
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
+
+/* ==========================================
+   تشغيل السيرفر
+   ========================================== */
 app.listen(PORT, () => {
-  console.log("=================================");
-  console.log("جهاز لاسلكي - Radio Connect");
-  console.log(`Server running on port ${PORT}`);
-  console.log("=================================");
+  console.log("");
+  console.log("========================================");
+  console.log("📡  Radio Connect Server");
+  console.log("========================================");
+  console.log("✅  يعمل على المنفذ: " + PORT);
+  console.log("🔑  LiveKit: " + (LIVEKIT_API_KEY ? "مفعّل ✅" : "غير مُعدّ ❌"));
+  console.log("📦  عدد الغرف: " + Object.keys(db.rooms).length);
+  console.log("========================================");
+  console.log("");
 });
