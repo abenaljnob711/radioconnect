@@ -794,3 +794,1222 @@ body{display:flex;justify-content:center;align-items:center}
   </div>
 
     </body>
+<script>
+"use strict";
+
+/* ==========================================
+   الإعدادات العامة
+   ========================================== */
+const API = location.origin;
+const L = window.LivekitClient;
+
+/* 50 موجة - 6 خانات hex */
+const waves = [];
+for (let i = 0; i < 50; i++) {
+  const code = Math.floor(Math.random() * 0xFFFFFF).toString(16).toUpperCase().padStart(6, "0");
+  waves.push({ code, name: "موجة " + (i + 1) });
+}
+
+let waveIndex = 0;
+let currentWave = waves[0];
+let deviceId = localStorage.getItem("radioDeviceId") || "";
+let activeRoomId = localStorage.getItem("radioActiveRoomId") || "";
+
+let livekitRoom = null;
+let localAudioTrack = null;
+let isTalking = false;
+let naturalOn = true;
+let radioOn = false;
+let radioPreset = "basic";
+let roomsCache = [];
+
+/* بياناتي في الغرفة */
+let myRole = null;
+let myPersonalCode = null;
+let membersCache = [];
+
+/* فلتر الصوت */
+let audioContext = null;
+let mediaStreamDest = null;
+let filterChain = null;
+let rawMicStream = null;
+
+/* رسائل صوتية */
+let mediaRecorder = null;
+let recordedChunks = [];
+let recStart = 0;
+let recInterval = null;
+let isRecording = false;
+
+/* تحديث دوري */
+let membersInterval = null;
+
+const $ = id => document.getElementById(id);
+
+/* ==========================================
+   أدوات مساعدة
+   ========================================== */
+function toast(msg){
+  const t = $("toast");
+  if(!t) return;
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(window.__toast);
+  window.__toast = setTimeout(() => t.classList.remove("show"), 2600);
+}
+
+function escapeHtml(s){
+  return String(s || "").replace(/[&<>"']/g, m => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[m]));
+}
+
+function formatDuration(sec){
+  sec = Math.max(0, Math.round(sec));
+  return Math.floor(sec / 60) + ":" + String(sec % 60).padStart(2, "0");
+}
+
+/* ==========================================
+   البطارية الحقيقية
+   ========================================== */
+async function initBattery(){
+  try{
+    if(!navigator.getBattery) return;
+    const bat = await navigator.getBattery();
+    const upd = () => {
+      const level = Math.round(bat.level * 100);
+      const el = $("batteryReal");
+      if(el){
+        el.textContent = level + "%" + (bat.charging ? "⚡" : "");
+        el.style.color = level <= 15 ? "#ff4d5e" : level <= 30 ? "#ffc44d" : "#5be58a";
+      }
+    };
+    upd();
+    bat.addEventListener("levelchange", upd);
+    bat.addEventListener("chargingchange", upd);
+  }catch(e){}
+}
+initBattery();
+
+/* ==========================================
+   الشبكة الحقيقية
+   ========================================== */
+function updateNetwork(){
+  const on = navigator.onLine;
+  let type = on ? "4G" : "غير متصل";
+  try{
+    const c = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    if(c && c.effectiveType) type = c.effectiveType.toUpperCase();
+  }catch(e){}
+  const el = $("networkReal");
+  if(el){
+    el.textContent = type;
+    el.style.color = on ? "#5be58a" : "#ff4d5e";
+  }
+}
+window.addEventListener("online", () => { updateNetwork(); toast("✅ تم استعادة الاتصال"); });
+window.addEventListener("offline", () => { updateNetwork(); toast("⚠️ انقطع الاتصال"); });
+updateNetwork();
+
+/* ==========================================
+   حالة الاتصال
+   ========================================== */
+function updateServerStatus(){
+  const ok = livekitRoom && livekitRoom.state === "connected";
+  const el = $("serverReal");
+  if(el){
+    el.textContent = ok ? "متصل" : "غير متصل";
+    el.style.color = ok ? "#5be58a" : "#ff4d5e";
+  }
+}
+function showServerStatus(){
+  const ok = livekitRoom && livekitRoom.state === "connected";
+  toast(ok ? "🟢 متصل بالخادم" : "🔴 غير متصل");
+}
+
+/* ==========================================
+   تسجيل الجهاز
+   ========================================== */
+async function ensureDevice(){
+  try{
+    const r = await fetch(API + "/api/device", {
+      method: "POST",
+      headers: { "Content-Type":"application/json", "x-device-id": deviceId },
+      body: JSON.stringify({ deviceId })
+    });
+    const d = await r.json();
+    if(d.deviceId){
+      deviceId = d.deviceId;
+      localStorage.setItem("radioDeviceId", deviceId);
+    }
+  }catch(e){ console.error("device error", e); }
+}
+
+/* ==========================================
+   تحميل الغرف
+   ========================================== */
+async function loadRooms(){
+  try{
+    const r = await fetch(API + "/api/rooms?deviceId=" + encodeURIComponent(deviceId));
+    const d = await r.json();
+    roomsCache = d.rooms || [];
+    return roomsCache;
+  }catch(e){ return []; }
+}
+
+/* ==========================================
+   LiveKit — الاتصال
+   ========================================== */
+async function connectLiveKit(){
+  if(livekitRoom && livekitRoom.state === L.RoomState.Connected) return true;
+  try{
+    if(!deviceId) await ensureDevice();
+    const rooms = await loadRooms();
+    let room = rooms.find(r => r.id === activeRoomId && r.isMember)
+            || rooms.find(r => r.isMember);
+
+    if(!room){
+      toast("⚠️ لم تنضم لأي غرفة بعد");
+      openPanel("joinPanel");
+      return false;
+    }
+
+    activeRoomId = room.id;
+    localStorage.setItem("radioActiveRoomId", activeRoomId);
+
+    if($("roomNameReal")) $("roomNameReal").textContent = room.name || "الغرفة";
+    if($("membersCountReal")) $("membersCountReal").textContent = "(" + (room.memberCount || 0) + ")";
+
+    const res = await fetch(API + "/token?room=" + encodeURIComponent(activeRoomId), {
+      headers: { "x-device-id": deviceId }
+    });
+    const data = await res.json();
+    if(!res.ok || !data.token) throw new Error(data.error || "token error");
+
+    livekitRoom = new L.Room({ adaptiveStream:true, dynacast:true });
+
+    livekitRoom.on(L.RoomEvent.TrackSubscribed, track => {
+      if(track.kind === L.Track.Kind.Audio){
+        const a = track.attach();
+        a.autoplay = true;
+        a.setAttribute("playsinline", "");
+        document.body.appendChild(a);
+      }
+    });
+
+    livekitRoom.on(L.RoomEvent.DataReceived, (payload, participant) => {
+      try{
+        const d = JSON.parse(new TextDecoder().decode(payload));
+        if(d.senderDeviceId === deviceId) return;
+        if(d.type === "radio-chat"){
+          addMessage(d.text, false, d.name || "عضو");
+        } else if(d.type === "radio-voice"){
+          addVoiceMessage(d.audioData, d.duration, false, d.name || "عضو");
+        } else if(d.type === "radio-file"){
+          addFileMessage(d.text, d.fileType, d.fileData, false, d.name || "عضو");
+        }
+      }catch(e){}
+    });
+
+    livekitRoom.on(L.RoomEvent.Disconnected, () => {
+      updateServerStatus();
+      toast("🔴 انقطع الاتصال بالغرفة");
+    });
+
+    await livekitRoom.connect(data.url, data.token);
+    updateServerStatus();
+
+    /* تحميل معلوماتي والأعضاء */
+    await loadMyInfo();
+    await loadMembers();
+
+    /* تحديث دوري */
+    if(membersInterval) clearInterval(membersInterval);
+    membersInterval = setInterval(() => {
+      if(activeRoomId && livekitRoom && livekitRoom.state === "connected") {
+        loadMembers();
+      }
+    }, 20000);
+
+    toast("✅ تم الاتصال بغرفة: " + room.name);
+    return true;
+  }catch(e){
+    console.error(e);
+    updateServerStatus();
+    toast("⚠️ تعذر الاتصال: " + (e.message || ""));
+    return false;
+  }
+}
+
+/* ==========================================
+   تحميل معلوماتي الشخصية
+   ========================================== */
+async function loadMyInfo(){
+  if(!activeRoomId) return;
+  try{
+    const r = await fetch(
+      API + "/api/rooms/" + encodeURIComponent(activeRoomId) + "/my-code?deviceId=" + encodeURIComponent(deviceId),
+      { headers: { "x-device-id": deviceId } }
+    );
+    const d = await r.json();
+    if(!r.ok) throw new Error(d.error);
+
+    myRole = d.role;
+    myPersonalCode = d.personalCode;
+
+    const card = $("myCodeCard");
+    if(card){
+      if(d.isVisible && d.personalCode){
+        card.classList.add("show");
+        if($("myCodeValue")) $("myCodeValue").textContent = d.personalCode;
+        if($("myCodeRole")) $("myCodeRole").textContent =
+          d.role === "owner" ? "👑 مالك الغرفة" : "🛡️ مشرف";
+      } else {
+        card.classList.remove("show");
+      }
+    }
+  }catch(e){
+    console.error("loadMyInfo error", e);
+  }
+}
+
+/* ==========================================
+   فلتر الصوت اللاسلكي
+   ========================================== */
+function buildRadioFilter(ctx, preset){
+  const input  = ctx.createGain();
+  const output = ctx.createGain();
+  const bp     = ctx.createBiquadFilter();
+  bp.type = "bandpass";
+
+  const shaper = ctx.createWaveShaper();
+  const comp   = ctx.createDynamicsCompressor();
+  comp.threshold.value = -24;
+  comp.knee.value      = 12;
+  comp.ratio.value     = 8;
+  comp.attack.value    = 0.003;
+  comp.release.value   = 0.25;
+
+  const gain = ctx.createGain();
+
+  function makeCurve(amount){
+    const n = 1024;
+    const curve = new Float32Array(n);
+    for(let i=0; i<n; i++){
+      const x = (i*2)/n - 1;
+      curve[i] = Math.tanh(x * amount);
+    }
+    return curve;
+  }
+
+  switch(preset){
+    case "heavy":
+      bp.frequency.value = 1400; bp.Q.value = 3.5;
+      shaper.curve = makeCurve(3.5); gain.gain.value = 1.8; break;
+    case "sharp":
+      bp.frequency.value = 2200; bp.Q.value = 6;
+      shaper.curve = makeCurve(5); gain.gain.value = 1.6; break;
+    case "classic":
+      bp.frequency.value = 1100; bp.Q.value = 2.2;
+      shaper.curve = makeCurve(2); gain.gain.value = 1.3; break;
+    default:
+      bp.frequency.value = 1700; bp.Q.value = 4;
+      shaper.curve = makeCurve(2.8); gain.gain.value = 1.5;
+  }
+
+  input.connect(bp);
+  bp.connect(shaper);
+  shaper.connect(comp);
+  comp.connect(gain);
+  gain.connect(output);
+  return { input, output };
+}
+
+function cleanupFilter(){
+  try{ if(rawMicStream){ rawMicStream.getTracks().forEach(t => t.stop()); rawMicStream = null; } }catch(e){}
+  try{ if(filterChain?.input) filterChain.input.disconnect(); }catch(e){}
+  try{ if(filterChain?.output) filterChain.output.disconnect(); }catch(e){}
+  filterChain = null;
+  try{ if(mediaStreamDest) mediaStreamDest.disconnect(); }catch(e){}
+  mediaStreamDest = null;
+  try{ if(audioContext) audioContext.close(); }catch(e){}
+  audioContext = null;
+}
+
+/* ==========================================
+   PTT — اضغط للتحدث / أفلت للإيقاف
+   ========================================== */
+const pttBtn = $("pttHotspot");
+
+pttBtn.addEventListener("pointerdown", startTalking);
+pttBtn.addEventListener("pointerup", stopTalking);
+pttBtn.addEventListener("pointercancel", stopTalking);
+pttBtn.addEventListener("pointerleave", stopTalking);
+pttBtn.addEventListener("contextmenu", e => e.preventDefault());
+
+async function startTalking(e){
+  if(e) e.preventDefault();
+  if(isTalking) return;
+
+  const ok = await connectLiveKit();
+  if(!ok) return;
+
+  try{
+    rawMicStream = await navigator.mediaDevices.getUserMedia({
+      audio:{ echoCancellation:true, noiseSuppression:true, autoGainControl:true }
+    });
+
+    let streamToPublish = rawMicStream;
+
+    /* فلتر الصوت اللاسلكي */
+    if(radioOn){
+      try{
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const src = audioContext.createMediaStreamSource(rawMicStream);
+        filterChain = buildRadioFilter(audioContext, radioPreset);
+        src.connect(filterChain.input);
+        mediaStreamDest = audioContext.createMediaStreamDestination();
+        filterChain.output.connect(mediaStreamDest);
+        streamToPublish = mediaStreamDest.stream;
+      }catch(err){
+        console.error("filter error", err);
+        streamToPublish = rawMicStream;
+      }
+    }
+
+    const track = streamToPublish.getAudioTracks()[0];
+    if(!track) throw new Error("MIC_NOT_FOUND");
+
+    localAudioTrack = new L.LocalAudioTrack(track);
+    await localAudioTrack.enable();
+    await livekitRoom.localParticipant.publishTrack(localAudioTrack);
+
+    isTalking = true;
+    $("talkGlow")?.classList.add("active");
+    toast(radioOn ? "📻 تتحدث بصوت لاسلكي" : "🎙️ تتحدث الآن");
+  }catch(err){
+    console.error(err);
+    isTalking = false;
+    $("talkGlow")?.classList.remove("active");
+    if(localAudioTrack){ try{ localAudioTrack.stop(); }catch(e){} localAudioTrack = null; }
+    cleanupFilter();
+    toast("⚠️ تعذر الميكروفون");
+  }
+}
+
+async function stopTalking(e){
+  if(e) e.preventDefault();
+  if(!isTalking) return;
+  isTalking = false;
+  $("talkGlow")?.classList.remove("active");
+
+  try{
+    if(livekitRoom && localAudioTrack){
+      await livekitRoom.localParticipant.unpublishTrack(localAudioTrack);
+    }
+  }catch(e){}
+  try{ if(localAudioTrack) localAudioTrack.stop(); }catch(e){}
+  localAudioTrack = null;
+  cleanupFilter();
+}
+
+/* ==========================================
+   مفاتيح الصوت
+   ========================================== */
+function setVoiceMode(mode){
+  if(mode === "natural"){
+    naturalOn = true;
+    radioOn   = false;
+    toast("🎧 تم تفعيل الصوت الطبيعي");
+  } else {
+    radioOn   = true;
+    naturalOn = false;
+    openPanel("radioPresetsPanel");
+  }
+}
+
+function selectPreset(preset){
+  radioPreset = preset;
+  const names = { basic:"أساسي", heavy:"ثقيل", sharp:"حاد", classic:"كلاسيكي" };
+  toast("📻 نوع الصوت: " + (names[preset] || preset));
+  closePanel("radioPresetsPanel");
+}
+
+async function testVoicePreset(){
+  try{
+    const raw = await navigator.mediaDevices.getUserMedia({ audio:true });
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const src = ctx.createMediaStreamSource(raw);
+    const chain = buildRadioFilter(ctx, radioPreset);
+    src.connect(chain.input);
+    chain.output.connect(ctx.destination);
+    toast("🎙️ تحدث الآن لتجربة الصوت...");
+    setTimeout(() => {
+      try{ raw.getTracks().forEach(t => t.stop()); ctx.close(); }catch(e){}
+    }, 4000);
+  }catch(e){
+    toast("تعذر تجربة الصوت");
+  }
+}
+
+/* ==========================================
+   الموجات (50 موجة)
+   ========================================== */
+function changeWave(dir){
+  waveIndex = (waveIndex + dir + waves.length) % waves.length;
+  currentWave = waves[waveIndex];
+  if($("waveCodeReal")) $("waveCodeReal").textContent = currentWave.code;
+  if($("waveNumReal")) $("waveNumReal").textContent = "موجة " + (waveIndex + 1);
+  toast("📻 " + currentWave.code + " — " + currentWave.name);
+}
+
+function updateWaveUI(){
+  if($("waveCodeReal")) $("waveCodeReal").textContent = currentWave.code;
+  if($("waveNumReal")) $("waveNumReal").textContent = "موجة " + (waveIndex + 1);
+}
+  /* ==========================================
+   إظهار/إخفاء زر الإرسال
+   ========================================== */
+function onInputChange(){
+  const input = $("inputProxy");
+  const btn = $("sendBtn");
+  if(!input || !btn) return;
+  if(input.value.trim().length > 0) btn.classList.add("show");
+  else btn.classList.remove("show");
+}
+
+/* ==========================================
+   إرسال رسالة نصية
+   ========================================== */
+async function sendMessage(){
+  const input = $("inputProxy");
+  const text = input.value.trim();
+  if(!text) return;
+
+  const ok = await connectLiveKit();
+  if(!ok) return;
+
+  try{
+    const payload = new TextEncoder().encode(JSON.stringify({
+      type: "radio-chat",
+      text,
+      name: "أنت",
+      senderDeviceId: deviceId,
+      time: new Date().toLocaleTimeString("ar-SA", { hour:"2-digit", minute:"2-digit" })
+    }));
+    await livekitRoom.localParticipant.publishData(payload, { reliable:true });
+    addMessage(text, true, "أنت");
+    input.value = "";
+    onInputChange();
+  }catch(e){
+    toast("تعذر إرسال الرسالة");
+  }
+}
+
+/* ==========================================
+   عرض الرسائل
+   ========================================== */
+function addMessage(text, me, name){
+  const box = $("chatLayer");
+  if(!box) return;
+  box.classList.add("active");
+
+  const el = document.createElement("div");
+  el.className = "live-msg" + (me ? " me" : "");
+
+  let html = "";
+  if(name && !me) html += `<small>${escapeHtml(name)}</small>`;
+  html += escapeHtml(text);
+  html += `<small>${new Date().toLocaleTimeString("ar-SA",{hour:"2-digit",minute:"2-digit"})}</small>`;
+
+  el.innerHTML = html;
+  box.appendChild(el);
+  while(box.children.length > 50) box.removeChild(box.firstChild);
+  box.scrollTop = box.scrollHeight;
+}
+
+function addVoiceMessage(audioData, duration, me, name){
+  const box = $("chatLayer");
+  if(!box) return;
+  box.classList.add("active");
+
+  const el = document.createElement("div");
+  el.className = "live-msg" + (me ? " me" : "");
+  const id = "v_" + Math.random().toString(36).slice(2, 9);
+
+  el.innerHTML = `
+    <div class="voice-msg-player">
+      <button onclick="playVoice('${id}', this)">▶</button>
+      <span>${formatDuration(duration)}</span>
+    </div>
+    <audio id="${id}" src="${audioData}" preload="metadata"></audio>
+    <small>${(name||"")} • ${new Date().toLocaleTimeString("ar-SA",{hour:"2-digit",minute:"2-digit"})}</small>
+  `;
+  box.appendChild(el);
+  while(box.children.length > 50) box.removeChild(box.firstChild);
+  box.scrollTop = box.scrollHeight;
+}
+
+function addFileMessage(text, fileType, fileData, me, name){
+  const box = $("chatLayer");
+  if(!box) return;
+  box.classList.add("active");
+
+  const el = document.createElement("div");
+  el.className = "live-msg" + (me ? " me" : "");
+
+  let html = "";
+  if(name && !me) html += `<small>${escapeHtml(name)}</small>`;
+
+  if(fileType && fileType.startsWith("image/")){
+    html += `<img src="${fileData}" style="max-width:100%;border-radius:10px;display:block;margin-top:4px">`;
+  } else if(fileType && fileType.startsWith("video/")){
+    html += `<video src="${fileData}" controls style="max-width:100%;border-radius:10px;display:block;margin-top:4px"></video>`;
+  } else if(fileType && fileType.startsWith("audio/")){
+    html += `<audio src="${fileData}" controls style="max-width:100%;margin-top:4px"></audio>`;
+  } else {
+    html += `<a href="${fileData}" download="${escapeHtml(text)}" style="color:#7ac4ff;display:block;margin-top:4px">📎 ${escapeHtml(text)}</a>`;
+  }
+  html += `<small>${new Date().toLocaleTimeString("ar-SA",{hour:"2-digit",minute:"2-digit"})}</small>`;
+  el.innerHTML = html;
+  box.appendChild(el);
+  while(box.children.length > 50) box.removeChild(box.firstChild);
+  box.scrollTop = box.scrollHeight;
+}
+
+function playVoice(id, btn){
+  const audio = $(id);
+  if(!audio) return;
+  document.querySelectorAll("audio").forEach(a => {
+    if(a.id !== id && !a.paused) a.pause();
+  });
+  if(audio.paused){
+    audio.play();
+    btn.textContent = "⏸";
+    audio.onended = () => btn.textContent = "▶";
+  } else {
+    audio.pause();
+    btn.textContent = "▶";
+  }
+}
+
+/* ==========================================
+   قائمة الإرفاق 📎
+   ========================================== */
+function toggleAttachMenu(e){
+  if(e) e.stopPropagation();
+  $("attachMenu")?.classList.toggle("show");
+}
+
+document.addEventListener("click", e => {
+  const m = $("attachMenu");
+  if(!m || !m.classList.contains("show")) return;
+  const target = e.target;
+  if(m.contains(target)) return;
+  const attachBtn = document.querySelector('button[aria-label="الإرفاق"]');
+  if(attachBtn && attachBtn.contains(target)) return;
+  m.classList.remove("show");
+});
+
+function pickFile(type){
+  const input = $("fileInput");
+  if(!input) return;
+  input.accept = type || "*/*";
+  input.value = "";
+  input.click();
+  $("attachMenu")?.classList.remove("show");
+}
+
+$("fileInput").addEventListener("change", async e => {
+  const file = e.target.files[0];
+  if(!file) return;
+
+  if(file.size > 3 * 1024 * 1024){
+    toast("⚠️ حجم الملف كبير (الحد 3MB)");
+    e.target.value = "";
+    return;
+  }
+
+  const ok = await connectLiveKit();
+  if(!ok) { e.target.value = ""; return; }
+
+  try{
+    const reader = new FileReader();
+    reader.onload = async ev => {
+      try{
+        const fileData = ev.target.result;
+        const payload = new TextEncoder().encode(JSON.stringify({
+          type: "radio-file",
+          text: file.name,
+          fileType: file.type,
+          fileData,
+          senderDeviceId: deviceId,
+          name: "أنت"
+        }));
+        await livekitRoom.localParticipant.publishData(payload, { reliable:true });
+        addFileMessage(file.name, file.type, fileData, true, "أنت");
+        toast("✅ تم إرسال الملف");
+      }catch(err){
+        toast("تعذر إرسال الملف");
+      }
+    };
+    reader.readAsDataURL(file);
+  }catch(err){
+    toast("تعذر إرسال الملف");
+  }
+  e.target.value = "";
+});
+
+/* ==========================================
+   رسالة صوتية — زر المايك 📻
+   ========================================== */
+const micBtn = $("micHotspot");
+
+micBtn.addEventListener("pointerdown", startVoiceRecording);
+micBtn.addEventListener("pointerup", stopVoiceRecording);
+micBtn.addEventListener("pointercancel", stopVoiceRecording);
+micBtn.addEventListener("pointerleave", () => { if(isRecording) stopVoiceRecording(); });
+micBtn.addEventListener("contextmenu", e => e.preventDefault());
+
+async function startVoiceRecording(e){
+  if(e) e.preventDefault();
+  if(isRecording) return;
+
+  const ok = await connectLiveKit();
+  if(!ok) return;
+
+  try{
+    const stream = await navigator.mediaDevices.getUserMedia({ audio:true });
+    let mimeType = "audio/webm";
+    if(!MediaRecorder.isTypeSupported(mimeType)){
+      if(MediaRecorder.isTypeSupported("audio/mp4")) mimeType = "audio/mp4";
+      else mimeType = "";
+    }
+    mediaRecorder = mimeType
+      ? new MediaRecorder(stream, { mimeType })
+      : new MediaRecorder(stream);
+
+    recordedChunks = [];
+    mediaRecorder.ondataavailable = ev => {
+      if(ev.data && ev.data.size > 0) recordedChunks.push(ev.data);
+    };
+    mediaRecorder.onstop = async () => {
+      try{ stream.getTracks().forEach(t => t.stop()); }catch(e){}
+      clearInterval(recInterval);
+      $("recBar")?.classList.remove("show");
+
+      const dur = Math.round((Date.now() - recStart) / 1000);
+      if(dur < 1) return toast("⚠️ التسجيل قصير");
+      if(!recordedChunks.length) return toast("⚠️ لم يُسجَّل صوت");
+
+      const blob = new Blob(recordedChunks, { type: mediaRecorder.mimeType || "audio/webm" });
+      if(blob.size > 2 * 1024 * 1024) return toast("⚠️ التسجيل كبير");
+
+      const reader = new FileReader();
+      reader.onload = async ev => {
+        const audioData = ev.target.result;
+        try{
+          const payload = new TextEncoder().encode(JSON.stringify({
+            type: "radio-voice",
+            audioData,
+            duration: dur,
+            senderDeviceId: deviceId,
+            name: "أنت"
+          }));
+          await livekitRoom.localParticipant.publishData(payload, { reliable:true });
+          addVoiceMessage(audioData, dur, true, "أنت");
+          toast("✅ تم إرسال الصوت");
+        }catch(err){
+          toast("تعذر إرسال الصوت");
+        }
+      };
+      reader.readAsDataURL(blob);
+    };
+
+    isRecording = true;
+    recStart = Date.now();
+    $("recBar")?.classList.add("show");
+    if($("recTime")) $("recTime").textContent = "0:00";
+    recInterval = setInterval(() => {
+      const s = Math.round((Date.now() - recStart) / 1000);
+      if($("recTime")) $("recTime").textContent = formatDuration(s);
+    }, 500);
+
+    mediaRecorder.start();
+    toast("🎙️ جاري التسجيل...");
+  }catch(err){
+    console.error(err);
+    isRecording = false;
+    $("recBar")?.classList.remove("show");
+    toast("⚠️ تعذر التسجيل");
+  }
+}
+
+function stopVoiceRecording(e){
+  if(e) e.preventDefault();
+  if(!isRecording || !mediaRecorder) return;
+  isRecording = false;
+  try{ mediaRecorder.stop(); }catch(e){}
+}
+
+/* ==========================================
+   الأعضاء
+   ========================================== */
+async function loadMembers(){
+  if(!activeRoomId) return;
+  try{
+    const r = await fetch(
+      API + "/api/rooms/" + encodeURIComponent(activeRoomId) + "/members?deviceId=" + encodeURIComponent(deviceId),
+      { headers: { "x-device-id": deviceId } }
+    );
+    const d = await r.json();
+    if(!r.ok) throw new Error(d.error);
+
+    membersCache = d.members || [];
+    myRole = d.myRole || myRole;
+
+    const me = membersCache.find(m => m.deviceId === deviceId);
+    if(me){
+      myRole = me.role;
+      const canSee = me.role === "owner" || me.role === "admin";
+      const card = $("myCodeCard");
+      if(card){
+        if(canSee && me.personalCode){
+          card.classList.add("show");
+          if($("myCodeValue")) $("myCodeValue").textContent = me.personalCode;
+          if($("myCodeRole")) $("myCodeRole").textContent =
+            me.role === "owner" ? "👑 مالك الغرفة" : "🛡️ مشرف";
+          myPersonalCode = me.personalCode;
+        } else {
+          card.classList.remove("show");
+          myPersonalCode = null;
+        }
+      }
+    }
+
+    /* تحديث عدد الأعضاء */
+    const approved = membersCache.filter(m => m.status === "approved").length;
+    if($("membersCountReal")) $("membersCountReal").textContent = "(" + approved + ")";
+
+    renderMembersList();
+  }catch(e){
+    console.error("members error", e);
+  }
+}
+
+function renderMembersList(){
+  const c = $("membersContent");
+  if(!c) return;
+
+  if(!membersCache.length){
+    c.innerHTML = '<div class="empty-state">لا يوجد أعضاء</div>';
+    return;
+  }
+
+  const iAmOwner = myRole === "owner";
+  const iAmAdmin = myRole === "admin";
+
+  c.innerHTML = membersCache.map(m => {
+    const isOwner = m.role === "owner";
+    const isAdmin = m.role === "admin";
+    const isMe = m.deviceId === deviceId;
+
+    let badgeClass = "member";
+    let roleText = "عضو";
+    if(isOwner){ badgeClass = "owner"; roleText = "👑 مالك"; }
+    else if(isAdmin){ badgeClass = "admin"; roleText = "🛡️ مشرف"; }
+
+    let actionsHtml = "";
+    if(iAmOwner && !isOwner && !isMe){
+      if(isAdmin){
+        actionsHtml += `<button class="demote" onclick="demoteMember('${m.deviceId}')">سحب</button>`;
+      } else {
+        actionsHtml += `<button class="promote" onclick="promoteMember('${m.deviceId}')">ترقية</button>`;
+      }
+      actionsHtml += `<button class="remove" onclick="removeMember('${m.deviceId}')">حذف</button>`;
+    } else if(iAmAdmin && !isOwner && !isMe && m.invitedBy === deviceId){
+      actionsHtml += `<button class="remove" onclick="removeMember('${m.deviceId}')">حذف</button>`;
+    }
+
+    return `
+      <div class="member-row">
+        <div class="avatar">${isOwner ? "👑" : isAdmin ? "🛡️" : "👤"}</div>
+        <div class="info">
+          <div class="name">${escapeHtml(m.name)}${isMe ? ' <span style="font-size:9px;color:#8ab4dc">(أنت)</span>' : ''}</div>
+          <div class="role"><span class="role-badge ${badgeClass}">${roleText}</span></div>
+        </div>
+        <div class="actions">${actionsHtml}</div>
+      </div>
+    `;
+  }).join("");
+}
+
+/* ==========================================
+   ترقية / سحب إشراف
+   ========================================== */
+async function promoteMember(targetDeviceId){
+  if(!activeRoomId) return;
+  if(myRole !== "owner") return toast("⚠️ المالك فقط");
+  if(!confirm("هل تريد ترقية هذا العضو إلى مشرف؟")) return;
+
+  try{
+    const r = await fetch(
+      API + "/api/rooms/" + encodeURIComponent(activeRoomId) + "/promote",
+      {
+        method: "POST",
+        headers: { "Content-Type":"application/json", "x-device-id": deviceId },
+        body: JSON.stringify({ deviceId, targetDeviceId })
+      }
+    );
+    const d = await r.json();
+    if(!r.ok) throw new Error(d.error);
+    toast("🎉 تمت الترقية");
+    await loadMembers();
+  }catch(e){
+    toast("تعذر الترقية");
+  }
+}
+
+async function demoteMember(targetDeviceId){
+  if(!activeRoomId) return;
+  if(myRole !== "owner") return toast("⚠️ المالك فقط");
+  if(!confirm("هل تريد سحب الإشراف؟\n\n✅ الأعضاء الذين ضمّهم سيبقون")) return;
+
+  try{
+    const r = await fetch(
+      API + "/api/rooms/" + encodeURIComponent(activeRoomId) + "/demote",
+      {
+        method: "POST",
+        headers: { "Content-Type":"application/json", "x-device-id": deviceId },
+        body: JSON.stringify({ deviceId, targetDeviceId })
+      }
+    );
+    const d = await r.json();
+    if(!r.ok) throw new Error(d.error);
+    toast("تم سحب الإشراف");
+    await loadMembers();
+  }catch(e){
+    toast("تعذر سحب الإشراف");
+  }
+}
+
+async function removeMember(targetDeviceId){
+  if(!activeRoomId) return;
+  if(!confirm("حذف هذا العضو من الغرفة؟")) return;
+
+  try{
+    const r = await fetch(
+      API + "/api/rooms/" + encodeURIComponent(activeRoomId) + "/members/" + encodeURIComponent(targetDeviceId) + "?deviceId=" + encodeURIComponent(deviceId),
+      { method: "DELETE", headers: { "x-device-id": deviceId } }
+    );
+    const d = await r.json();
+    if(!r.ok) throw new Error(d.error);
+    toast("تم حذف العضو");
+    await loadMembers();
+  }catch(e){
+    toast("تعذر حذف العضو");
+  }
+}
+
+/* ==========================================
+   الرقم الشخصي — نسخ / مشاركة
+   ========================================== */
+function copyMyCode(){
+  if(!myPersonalCode) return toast("لا يوجد رقم");
+  navigator.clipboard.writeText(myPersonalCode).then(() => {
+    toast("📋 تم نسخ: " + myPersonalCode);
+  }).catch(() => {
+    toast("انسخه يدوياً: " + myPersonalCode);
+  });
+}
+
+function shareMyCode(){
+  if(!myPersonalCode) return toast("لا يوجد رقم");
+  const msg = "🔑 رقمي للانضمام لغرفة " + ($("roomNameReal")?.textContent || "") + ":\n" + myPersonalCode;
+  if(navigator.share){
+    navigator.share({ title: "رقم الانضمام", text: msg }).catch(() => {});
+  } else {
+    navigator.clipboard.writeText(msg).then(() => toast("📤 تم النسخ")).catch(() => {});
+  }
+}
+
+/* ==========================================
+   إنشاء غرفة
+   ========================================== */
+async function createRoom(){
+  const name = $("newRoomName")?.value.trim();
+  if(!name) return toast("اكتب اسم الغرفة");
+
+  try{
+    const r = await fetch(API + "/api/rooms", {
+      method: "POST",
+      headers: { "Content-Type":"application/json", "x-device-id": deviceId },
+      body: JSON.stringify({ deviceId, name })
+    });
+    const d = await r.json();
+    if(!r.ok) throw new Error(d.error);
+
+    toast("✅ تم إنشاء: " + name);
+    closePanel("createPanel");
+
+    activeRoomId = d.room.id;
+    localStorage.setItem("radioActiveRoomId", activeRoomId);
+    await connectLiveKit();
+  }catch(e){
+    toast("تعذر إنشاء الغرفة");
+  }
+}
+
+/* ==========================================
+   الانضمام لغرفة
+   ========================================== */
+async function submitJoin(){
+  const code = $("joinCode")?.value.trim().toUpperCase();
+  const name = $("joinName")?.value.trim();
+
+  if(!code || code.length !== 6) return toast("الرقم يجب أن يكون 6 خانات");
+  if(!name) return toast("اكتب اسمك");
+
+  try{
+    const r = await fetch(API + "/api/rooms/join-by-code", {
+      method: "POST",
+      headers: { "Content-Type":"application/json", "x-device-id": deviceId },
+      body: JSON.stringify({ deviceId, code, memberName: name })
+    });
+    const d = await r.json();
+    if(!r.ok) throw new Error(d.error);
+
+    toast("✅ " + (d.message || "تم الانضمام"));
+    closePanel("joinPanel");
+
+    activeRoomId = d.roomId;
+    localStorage.setItem("radioActiveRoomId", activeRoomId);
+    await connectLiveKit();
+  }catch(e){
+    if(e.message === "invalid_code") toast("⚠️ رقم غير صحيح");
+    else toast("تعذر الانضمام");
+  }
+}
+
+/* ==========================================
+   الخروج من الغرفة
+   ========================================== */
+async function leaveRoom(){
+  if(!confirm("هل تريد الخروج من الغرفة؟")) return;
+
+  try{ if(livekitRoom) await livekitRoom.disconnect(); }catch(e){}
+  livekitRoom = null;
+  activeRoomId = "";
+  localStorage.removeItem("radioActiveRoomId");
+  myRole = null;
+  myPersonalCode = null;
+
+  $("myCodeCard")?.classList.remove("show");
+  if($("roomNameReal")) $("roomNameReal").textContent = "لا توجد غرفة";
+  if($("membersCountReal")) $("membersCountReal").textContent = "(0)";
+  updateServerStatus();
+  closeAllPanels();
+  toast("🚪 تم الخروج");
+  }
+  /* ==========================================
+   النوافذ المنبثقة
+   ========================================== */
+function openPanel(id){
+  closeAllPanels();
+  $(id)?.classList.add("show");
+
+  if(id === "roomsPanel") renderRoomsList();
+  if(id === "membersPanel") loadMembers();
+  if(id === "settingsPanel") renderSettings();
+  if(id === "accountPanel") renderAccount();
+}
+
+function closePanel(id){
+  $(id)?.classList.remove("show");
+}
+
+function closeAllPanels(){
+  document.querySelectorAll(".modal").forEach(p => p.classList.remove("show"));
+}
+
+async function renderRoomsList(){
+  const c = $("roomsContent");
+  if(!c) return;
+  c.innerHTML = "جاري التحميل...";
+
+  const rooms = await loadRooms();
+  if(!rooms.length){
+    c.innerHTML = '<div class="empty-state">لا توجد غرف حالياً<br>أنشئ غرفة أو انضم برقم</div>';
+    return;
+  }
+
+  c.innerHTML = "";
+  rooms.forEach(r => {
+    const btn = document.createElement("button");
+    btn.className = "btn";
+    if(r.isOwner) btn.textContent = "👑 " + r.name;
+    else if(r.isAdmin) btn.textContent = "🛡️ " + r.name;
+    else if(r.isMember) btn.textContent = "✅ " + r.name;
+    else btn.textContent = r.name;
+
+    btn.onclick = async () => {
+      if(r.isMember){
+        activeRoomId = r.id;
+        localStorage.setItem("radioActiveRoomId", activeRoomId);
+        closeAllPanels();
+        await connectLiveKit();
+      } else {
+        toast("🔑 اطلب الرقم من المالك أو مشرف");
+      }
+    };
+    c.appendChild(btn);
+  });
+}
+
+function renderSettings(){
+  const c = $("settingsContent");
+  if(!c) return;
+  c.innerHTML = `
+    <div class="member-row">
+      <div class="avatar">🆔</div>
+      <div class="info">
+        <div class="name">معرّف الجهاز</div>
+        <div class="role" style="font-size:9px;word-break:break-all">${escapeHtml(deviceId || "--")}</div>
+      </div>
+    </div>
+    <div class="member-row">
+      <div class="avatar">📻</div>
+      <div class="info">
+        <div class="name">الغرفة النشطة</div>
+        <div class="role">${escapeHtml($("roomNameReal")?.textContent || "لا توجد")}</div>
+      </div>
+    </div>
+    <div class="member-row">
+      <div class="avatar">📡</div>
+      <div class="info">
+        <div class="name">حالة الاتصال</div>
+        <div class="role" style="color:${livekitRoom && livekitRoom.state === "connected" ? "#5be58a" : "#ff4d5e"}">
+          ${livekitRoom && livekitRoom.state === "connected" ? "متصل" : "غير متصل"}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderAccount(){
+  const c = $("accountContent");
+  if(!c) return;
+  c.innerHTML = `
+    <div class="member-row">
+      <div class="avatar">🆔</div>
+      <div class="info">
+        <div class="name">معرّف الجهاز</div>
+        <div class="role" style="font-size:9px;word-break:break-all">${escapeHtml(deviceId || "--")}</div>
+      </div>
+    </div>
+    <div class="member-row">
+      <div class="avatar">🔋</div>
+      <div class="info">
+        <div class="name">البطارية</div>
+        <div class="role">${$("batteryReal")?.textContent || "--"}</div>
+      </div>
+    </div>
+    <div class="member-row">
+      <div class="avatar">📶</div>
+      <div class="info">
+        <div class="name">الشبكة</div>
+        <div class="role">${$("networkReal")?.textContent || "--"}</div>
+      </div>
+    </div>
+    <div class="member-row">
+      <div class="avatar">🛡️</div>
+      <div class="info">
+        <div class="name">دورك في الغرفة</div>
+        <div class="role">
+          ${myRole === "owner" ? "👑 مالك" : myRole === "admin" ? "🛡️ مشرف" : myRole === "member" ? "👤 عضو" : "--"}
+        </div>
+      </div>
+    </div>
+    ${myPersonalCode ? `
+    <div class="member-row">
+      <div class="avatar">🔑</div>
+      <div class="info">
+        <div class="name">رقم التعريف الخاص بك</div>
+        <div class="role" style="font-family:monospace;font-size:15px;letter-spacing:2px;color:#49aaff">${myPersonalCode}</div>
+      </div>
+    </div>
+    ` : ""}
+  `;
+}
+
+/* ==========================================
+   التنقل السفلي
+   ========================================== */
+function switchNav(name){
+  if(name === "home"){
+    closeAllPanels();
+  } else if(name === "favorites"){
+    openPanel("roomsPanel");
+  } else if(name === "waves"){
+    openPanel("roomsPanel");
+  } else if(name === "account"){
+    openPanel("accountPanel");
+  }
+}
+
+/* ==========================================
+   حالة الجهاز
+   ========================================== */
+function showDeviceStatus(){
+  const bat = $("batteryReal")?.textContent || "--";
+  const net = $("networkReal")?.textContent || "--";
+  const srv = $("serverReal")?.textContent || "--";
+  toast("🔋 " + bat + " • 📶 " + net + " • 📡 " + srv);
+}
+
+/* ==========================================
+   اختبار الميكروفون
+   ========================================== */
+async function testMic(){
+  try{
+    const s = await navigator.mediaDevices.getUserMedia({ audio:true });
+    s.getTracks().forEach(t => t.stop());
+    toast("✅ الميكروفون يعمل");
+  }catch(e){
+    toast("⚠️ لم يتم السماح");
+  }
+}
+
+/* ==========================================
+   إغلاق احتياطي عند رفع الإصبع
+   ========================================== */
+window.addEventListener("pointerup", e => {
+  if(isTalking) stopTalking(e);
+  if(isRecording) stopVoiceRecording(e);
+});
+
+/* ==========================================
+   تحسين: إخفاء القائمة عند الضغط خارجها
+   ========================================== */
+document.addEventListener("click", e => {
+  const m = $("attachMenu");
+  if(!m || !m.classList.contains("show")) return;
+  if(m.contains(e.target)) return;
+  const attachBtn = document.querySelector('button[aria-label="الإرفاق"]');
+  if(attachBtn && (attachBtn === e.target || attachBtn.contains(e.target))) return;
+  m.classList.remove("show");
+});
+
+/* ==========================================
+   التشغيل
+   ========================================== */
+(async () => {
+  updateWaveUI();
+  await ensureDevice();
+  await connectLiveKit();
+  updateServerStatus();
+})();
+
+</script>
+</body>
+</html>
