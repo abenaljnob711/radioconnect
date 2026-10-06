@@ -973,8 +973,8 @@ body{display:flex;justify-content:center;align-items:center}
   .ptt-btn{width:76px;height:76px}
 }
 </style>
-</head>
-<body>
+  </head>
+  <body>
 <div class="app" id="app">
 
   <!-- ════════════ الهيدر ════════════ -->
@@ -1182,8 +1182,8 @@ body{display:flex;justify-content:center;align-items:center}
   <!-- ════════════ Toast ════════════ -->
   <div class="toast" id="toast"></div>
 
-</div>
-  <!-- ════════════ النافذة: الإعدادات ════════════ -->
+  </div>
+    <!-- ════════════ النافذة: الإعدادات ════════════ -->
   <div class="modal" id="settingsPanel">
     <div class="modal-box">
       <div class="modal-head">
@@ -1298,8 +1298,8 @@ body{display:flex;justify-content:center;align-items:center}
     </div>
   </div>
 
-</body>
-<script>
+  </body>
+  <script>
 "use strict";
 
 /* ═══════════════════════════════════════════════════
@@ -1801,7 +1801,7 @@ function updateWaveUI(){
   if($("waveCode")) $("waveCode").textContent = currentWave.code;
   if($("waveNum")) $("waveNum").textContent = "موجة " + (waveIndex + 1);
 }
-  /* ═══════════════════════════════════════════════════
+    /* ═══════════════════════════════════════════════════
    إظهار/إخفاء زر الإرسال
    ═══════════════════════════════════════════════════ */
 function onInputChange(){
@@ -2364,8 +2364,8 @@ async function leaveRoom(){
   updateServerStatus();
   closeAllPanels();
   toast("🚪 تم الخروج من الغرفة");
-  }
-  /* ═══════════════════════════════════════════════════
+    }
+    /* ═══════════════════════════════════════════════════
    النوافذ المنبثقة
    ═══════════════════════════════════════════════════ */
 function openPanel(id){
