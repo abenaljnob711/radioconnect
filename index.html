@@ -29,7 +29,7 @@ button{border:0;cursor:pointer;font-family:inherit}
 /* ============ قسم العمليات ============ */
 .ops-card{background:linear-gradient(135deg,#0a1f38,#041220);border:1px solid rgba(73,170,255,.2);border-radius:18px;padding:12px;margin-bottom:10px;box-shadow:0 8px 22px rgba(0,0,0,.35)}
 .ops-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:6px}
-.ops-left{display:flex;align-items:center;gap:5px}
+.ops-left{display:flex;align-items:center;gap:5px;cursor:pointer}
 .star{color:#f1c40f;font-size:16px}
 .ops-name{font-size:14px;font-weight:800}
 .ops-arrow{color:#6c88b0;font-size:11px}
@@ -211,7 +211,7 @@ button{border:0;cursor:pointer;font-family:inherit}
   <div class="ops-card">
     <div class="ops-top">
 
-      <div class="ops-left">
+      <div class="ops-left" onclick="openPanel('roomsPanel')">
         <span class="star">★</span>
         <span class="ops-name" id="opsRoomName">لا توجد غرفة</span>
         <span class="ops-arrow">▼</span>
@@ -304,7 +304,7 @@ button{border:0;cursor:pointer;font-family:inherit}
     <div class="chat-input">
 
       <button class="icon-btn" onclick="toggleAttachMenu(event)">📎</button>
-      <button class="icon-btn" id="micBtn" title="اضغط مطوّلاً للتسجيل">📻</button>
+      <button class="icon-btn" id="micBtn" title="اضغط مطوّلاً للتسجيل">🎙️</button>
 
       <input
         id="chatInput"
@@ -1183,7 +1183,7 @@ $("fileInput").addEventListener("change", async e => {
 });
 
 /* ==========================================
-   رسالة صوتية — زر المايك 📻
+   رسالة صوتية — زر المايك 🎙️
    ========================================== */
 const micBtn = $("micBtn");
 
@@ -1293,7 +1293,6 @@ async function loadMembers(){
     membersCache = d.members || [];
     myRole = d.myRole || myRole;
 
-    /* تحديث الرقم الشخصي إن تغير */
     const me = membersCache.find(m => m.deviceId === deviceId);
     if(me){
       myRole = me.role;
@@ -1314,8 +1313,6 @@ async function loadMembers(){
     }
 
     renderMembersList();
-
-    /* عدد الطلبات المعلقة (لو وجد) */
     updateRoomsBadge(0);
   }catch(e){
     console.error("members error", e);
@@ -1344,7 +1341,6 @@ function renderMembersList(){
     if(isOwner){ badgeClass = "owner"; roleText = "👑 مالك"; }
     else if(isAdmin){ badgeClass = "admin"; roleText = "🛡️ مشرف"; }
 
-    /* أزرار التحكم */
     let actionsHtml = "";
     if(iAmOwner && !isOwner && !isMe){
       if(isAdmin){
