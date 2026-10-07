@@ -2144,170 +2144,347 @@ async function initBattery(){
   try{
     if(!navigator.getBattery) return;
     const bat = await navigator.getBattery();
+
     const upd = () => {
       const level = Math.round(bat.level * 100);
       const el = $("batteryVal");
+
       if(el){
         el.textContent = level + "%" + (bat.charging ? " ⚡" : "");
-        el.style.color = level <= 15 ? "#ff4d5e" : level <= 30 ? "#ffc44d" : "#39d353";
+        el.style.color =
+          level <= 15
+          ? "#ff4d5e"
+          : level <= 30
+          ? "#ffc44d"
+          : "#39d353";
       }
     };
+
     upd();
+
     bat.addEventListener("levelchange", upd);
     bat.addEventListener("chargingchange", upd);
+
   }catch(e){}
 }
+
 initBattery();
 
 function updateNetwork(){
+
   const on = navigator.onLine;
   let type = on ? "4G" : "غير متصل";
+
   try{
-    const c = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-    if(c && c.effectiveType) type = c.effectiveType.toUpperCase();
+    const c =
+      navigator.connection ||
+      navigator.mozConnection ||
+      navigator.webkitConnection;
+
+    if(c && c.effectiveType)
+      type = c.effectiveType.toUpperCase();
+
   }catch(e){}
+
   const el = $("networkVal");
+
   if(el){
     el.textContent = type;
     el.style.color = on ? "#39d353" : "#ff4d5e";
   }
 }
-window.addEventListener("online", () => { updateNetwork(); toast("✅ تم استعادة الاتصال"); });
-window.addEventListener("offline", () => { updateNetwork(); toast("⚠️ انقطع الاتصال"); });
+
+window.addEventListener("online", () => {
+  updateNetwork();
+  toast("✅ تم استعادة الاتصال");
+});
+
+window.addEventListener("offline", () => {
+  updateNetwork();
+  toast("⚠️ انقطع الاتصال");
+});
+
 updateNetwork();
 
 function updateServerStatus(){
-  const ok = livekitRoom && livekitRoom.state === "connected";
+
+  const ok =
+    livekitRoom &&
+    livekitRoom.state === "connected";
+
   const dot = $("statusDot");
   const label = $("statusLabel");
   const srv = $("serverVal");
-  if(dot) dot.style.background = ok ? "#39d353" : "#ff4d5e";
+
+  if(dot)
+    dot.style.background =
+      ok ? "#39d353" : "#ff4d5e";
+
   if(label){
-    label.textContent = ok ? "متصل" : "غير متصل";
-    label.style.color = ok ? "#5be58a" : "#ff4d5e";
+    label.textContent =
+      ok ? "متصل" : "غير متصل";
+
+    label.style.color =
+      ok ? "#5be58a" : "#ff4d5e";
   }
+
   if(srv){
-    srv.textContent = ok ? "متصل" : "غير متصل";
-    srv.style.color = ok ? "#39d353" : "#ff4d5e";
+    srv.textContent =
+      ok ? "متصل" : "غير متصل";
+
+    srv.style.color =
+      ok ? "#39d353" : "#ff4d5e";
   }
 }
 
 async function ensureDevice(){
+
   try{
-    const r = await fetch(API + "/api/device", {
-      method: "POST",
-      headers: { "Content-Type":"application/json", "x-device-id": deviceId },
-      body: JSON.stringify({ deviceId })
-    });
+
+    const r =
+      await fetch(API + "/api/device", {
+        method:"POST",
+        headers:{
+          "Content-Type":"application/json",
+          "x-device-id":deviceId
+        },
+        body:JSON.stringify({deviceId})
+      });
+
     const d = await r.json();
+
     if(d.deviceId){
+
       deviceId = d.deviceId;
-      localStorage.setItem("radioDeviceId", deviceId);
+
+      localStorage.setItem(
+        "radioDeviceId",
+        deviceId
+      );
     }
+
   }catch(e){}
 }
 
 async function loadRooms(){
+
   try{
-    const r = await fetch(API + "/api/rooms?deviceId=" + encodeURIComponent(deviceId));
+
+    const r =
+      await fetch(
+        API + "/api/rooms?deviceId=" +
+        encodeURIComponent(deviceId)
+      );
+
     const d = await r.json();
+
     roomsCache = d.rooms || [];
+
     return roomsCache;
-  }catch(e){ return []; }
+
+  }catch(e){
+
+    return [];
+  }
 }
 
 async function connectLiveKit(){
-  if(livekitRoom && livekitRoom.state === L.RoomState.Connected) return true;
+
+  if(
+    livekitRoom &&
+    livekitRoom.state === L.RoomState.Connected
+  )
+    return true;
+
   try{
-    if(!deviceId) await ensureDevice();
+
+    if(!deviceId)
+      await ensureDevice();
+
     const rooms = await loadRooms();
-    let room = rooms.find(r => r.id === activeRoomId && r.isMember)
-            || rooms.find(r => r.isMember);
+
+    let room =
+      rooms.find(
+        r => r.id === activeRoomId && r.isMember
+      ) ||
+      rooms.find(r => r.isMember);
 
     if(!room){
+
       toast("⚠️ لم تنضم لأي غرفة بعد");
+
       openPanel("joinPanel");
+
       return false;
     }
 
     activeRoomId = room.id;
-    localStorage.setItem("radioActiveRoomId", activeRoomId);
 
-    if($("opsRoomName")) $("opsRoomName").textContent = room.name || "الغرفة";
+    localStorage.setItem(
+      "radioActiveRoomId",
+      activeRoomId
+    );
 
-    const res = await fetch(API + "/token?room=" + encodeURIComponent(activeRoomId), {
-      headers: { "x-device-id": deviceId }
-    });
-    const data = await res.json();
-    if(!res.ok || !data.token) throw new Error(data.error || "token error");
+    if($("opsRoomName"))
+      $("opsRoomName").textContent =
+        room.name || "الغرفة";
 
-    livekitRoom = new L.Room({ adaptiveStream:true, dynacast:true });
-
-    livekitRoom.on(L.RoomEvent.TrackSubscribed, track => {
-      if(track.kind === L.Track.Kind.Audio){
-        const a = track.attach();
-        a.autoplay = true;
-        a.setAttribute("playsinline", "");
-        document.body.appendChild(a);
-      }
-    });
-
-    livekitRoom.on(L.RoomEvent.DataReceived, (payload, participant) => {
-      try{
-        const d = JSON.parse(new TextDecoder().decode(payload));
-        if(d.senderDeviceId === deviceId) return;
-
-        if(d.type === "radio-chat"){
-          toast("رسالة من " + (d.name || "عضو"));
-        } else if(d.type === "radio-voice"){
-          toast("رسالة صوتية جديدة");
-        } else if(d.type === "radio-file"){
-          toast("ملف جديد");
+    const res =
+      await fetch(
+        API + "/token?room=" +
+        encodeURIComponent(activeRoomId),
+        {
+          headers:{
+            "x-device-id":deviceId
+          }
         }
-      }catch(e){}
-    });
+      );
 
-    livekitRoom.on(L.RoomEvent.Disconnected, () => {
-      updateServerStatus();
-      toast("🔴 انقطع الاتصال بالغرفة");
-    });
+    const data = await res.json();
 
-    await livekitRoom.connect(data.url, data.token);
+    if(!res.ok || !data.token)
+      throw new Error(
+        data.error || "token error"
+      );
+
+    livekitRoom =
+      new L.Room({
+        adaptiveStream:true,
+        dynacast:true
+      });
+
+    livekitRoom.on(
+      L.RoomEvent.TrackSubscribed,
+      track => {
+
+        if(track.kind === L.Track.Kind.Audio){
+
+          const a = track.attach();
+
+          a.autoplay = true;
+          a.setAttribute(
+            "playsinline",
+            ""
+          );
+
+          document.body.appendChild(a);
+        }
+      }
+    );
+
+    livekitRoom.on(
+      L.RoomEvent.DataReceived,
+      (payload, participant) => {
+
+        try{
+
+          const d =
+            JSON.parse(
+              new TextDecoder().decode(payload)
+            );
+
+          if(d.senderDeviceId === deviceId)
+            return;
+
+          if(d.type === "radio-chat"){
+
+            toast(
+              "رسالة من " +
+              (d.name || "عضو")
+            );
+
+          }else if(d.type === "radio-voice"){
+
+            toast("رسالة صوتية جديدة");
+
+          }else if(d.type === "radio-file"){
+
+            toast("ملف جديد");
+          }
+
+        }catch(e){}
+      }
+    );
+
+    livekitRoom.on(
+      L.RoomEvent.Disconnected,
+      () => {
+
+        updateServerStatus();
+
+        toast(
+          "🔴 انقطع الاتصال بالغرفة"
+        );
+      }
+    );
+
+    await livekitRoom.connect(
+      data.url,
+      data.token
+    );
+
     updateServerStatus();
 
     await loadMyInfo();
     await loadMembers();
 
-    if(membersInterval) clearInterval(membersInterval);
+    if(membersInterval)
+      clearInterval(membersInterval);
 
-    membersInterval = setInterval(() => {
-      if(activeRoomId && livekitRoom && livekitRoom.state === "connected") {
-        loadMembers();
-      }
-    }, 20000);
+    membersInterval =
+      setInterval(() => {
 
-    toast("✅ تم الاتصال بغرفة: " + room.name);
+        if(
+          activeRoomId &&
+          livekitRoom &&
+          livekitRoom.state === "connected"
+        ){
+          loadMembers();
+        }
+
+      },20000);
+
+    toast(
+      "✅ تم الاتصال بغرفة: " +
+      room.name
+    );
+
     return true;
 
   }catch(e){
+
     updateServerStatus();
+
     toast("⚠️ تعذر الاتصال");
+
     return false;
   }
 }
 
 async function loadMyInfo(){
-  if(!activeRoomId) return;
+
+  if(!activeRoomId)
+    return;
 
   try{
-    const r = await fetch(
-      API + "/api/rooms/" + encodeURIComponent(activeRoomId) +
-      "/my-code?deviceId=" + encodeURIComponent(deviceId),
-      { headers: { "x-device-id": deviceId } }
-    );
+
+    const r =
+      await fetch(
+        API + "/api/rooms/" +
+        encodeURIComponent(activeRoomId) +
+        "/my-code?deviceId=" +
+        encodeURIComponent(deviceId),
+        {
+          headers:{
+            "x-device-id":deviceId
+          }
+        }
+      );
 
     const d = await r.json();
-    if(!r.ok) throw new Error(d.error);
+
+    if(!r.ok)
+      throw new Error(d.error);
 
     myRole = d.role;
     myPersonalCode = d.personalCode;
@@ -2315,16 +2492,23 @@ async function loadMyInfo(){
     const card = $("myCodeCard");
 
     if(card){
+
       if(d.isVisible && d.personalCode){
+
         card.classList.add("show");
 
         if($("myCodeValue"))
-          $("myCodeValue").textContent = d.personalCode;
+          $("myCodeValue").textContent =
+            d.personalCode;
 
         if($("myCodeRole"))
           $("myCodeRole").textContent =
-            d.role === "owner" ? "👑 مالك الغرفة" : "🛡️ مشرف";
+            d.role === "owner"
+            ? "👑 مالك الغرفة"
+            : "🛡️ مشرف";
+
       }else{
+
         card.classList.remove("show");
       }
     }
@@ -2332,15 +2516,16 @@ async function loadMyInfo(){
   }catch(e){}
 }
 
-function buildRadioFilter(ctx, preset){
-  const input  = ctx.createGain();
+function buildRadioFilter(ctx,preset){
+
+  const input = ctx.createGain();
   const output = ctx.createGain();
-  const bp     = ctx.createBiquadFilter();
+  const bp = ctx.createBiquadFilter();
 
   bp.type = "bandpass";
 
   const shaper = ctx.createWaveShaper();
-  const comp   = ctx.createDynamicsCompressor();
+  const comp = ctx.createDynamicsCompressor();
 
   comp.threshold.value = -24;
   comp.knee.value = 12;
@@ -2351,12 +2536,16 @@ function buildRadioFilter(ctx, preset){
   const gain = ctx.createGain();
 
   function makeCurve(amount){
+
     const n = 1024;
     const curve = new Float32Array(n);
 
-    for(let i=0;i<n;i++){
-      const x = (i*2)/n - 1;
-      curve[i] = Math.tanh(x * amount);
+    for(let i = 0; i < n; i++){
+
+      const x = (i * 2) / n - 1;
+
+      curve[i] =
+        Math.tanh(x * amount);
     }
 
     return curve;
@@ -2365,27 +2554,34 @@ function buildRadioFilter(ctx, preset){
   switch(preset){
 
     case "heavy":
+
       bp.frequency.value = 1400;
       bp.Q.value = 3.5;
       shaper.curve = makeCurve(3.5);
       gain.gain.value = 1.8;
+
       break;
 
     case "sharp":
+
       bp.frequency.value = 2200;
       bp.Q.value = 6;
       shaper.curve = makeCurve(5);
       gain.gain.value = 1.6;
+
       break;
 
     case "classic":
+
       bp.frequency.value = 1100;
       bp.Q.value = 2.2;
       shaper.curve = makeCurve(2);
       gain.gain.value = 1.3;
+
       break;
 
     default:
+
       bp.frequency.value = 1700;
       bp.Q.value = 4;
       shaper.curve = makeCurve(2.8);
@@ -2398,35 +2594,57 @@ function buildRadioFilter(ctx, preset){
   comp.connect(gain);
   gain.connect(output);
 
-  return { input, output };
+  return {
+    input,
+    output
+  };
 }
 
 function cleanupFilter(){
+
   try{
+
     if(rawMicStream){
-      rawMicStream.getTracks().forEach(t => t.stop());
+
+      rawMicStream
+        .getTracks()
+        .forEach(t => t.stop());
+
       rawMicStream = null;
     }
+
   }catch(e){}
 
   try{
-    if(filterChain?.input) filterChain.input.disconnect();
+
+    if(filterChain?.input)
+      filterChain.input.disconnect();
+
   }catch(e){}
 
   try{
-    if(filterChain?.output) filterChain.output.disconnect();
+
+    if(filterChain?.output)
+      filterChain.output.disconnect();
+
   }catch(e){}
 
   filterChain = null;
 
   try{
-    if(mediaStreamDest) mediaStreamDest.disconnect();
+
+    if(mediaStreamDest)
+      mediaStreamDest.disconnect();
+
   }catch(e){}
 
   mediaStreamDest = null;
 
   try{
-    if(audioContext) audioContext.close();
+
+    if(audioContext)
+      audioContext.close();
+
   }catch(e){}
 
   audioContext = null;
@@ -2434,66 +2652,114 @@ function cleanupFilter(){
 
 const pttBtn = $("pttBtn");
 
-pttBtn.addEventListener("pointerdown", startTalking);
-pttBtn.addEventListener("pointerup", stopTalking);
-pttBtn.addEventListener("pointercancel", stopTalking);
-pttBtn.addEventListener("pointerleave", stopTalking);
-pttBtn.addEventListener("contextmenu", e => e.preventDefault());
+pttBtn.addEventListener(
+  "pointerdown",
+  startTalking
+);
+
+pttBtn.addEventListener(
+  "pointerup",
+  stopTalking
+);
+
+pttBtn.addEventListener(
+  "pointercancel",
+  stopTalking
+);
+
+pttBtn.addEventListener(
+  "pointerleave",
+  stopTalking
+);
+
+pttBtn.addEventListener(
+  "contextmenu",
+  e => e.preventDefault()
+);
 
 async function startTalking(e){
-  if(e) e.preventDefault();
-  if(isTalking) return;
+
+  if(e)
+    e.preventDefault();
+
+  if(isTalking)
+    return;
 
   const ok = await connectLiveKit();
-  if(!ok) return;
+
+  if(!ok)
+    return;
 
   try{
 
-    rawMicStream = await navigator.mediaDevices.getUserMedia({
-      audio:{
-        echoCancellation:true,
-        noiseSuppression:true,
-        autoGainControl:true
-      }
-    });
+    rawMicStream =
+      await navigator.mediaDevices.getUserMedia({
+        audio:{
+          echoCancellation:true,
+          noiseSuppression:true,
+          autoGainControl:true
+        }
+      });
 
-    let streamToPublish = rawMicStream;
+    let streamToPublish =
+      rawMicStream;
 
     if(radioOn){
+
       try{
+
         audioContext =
-          new (window.AudioContext || window.webkitAudioContext)();
+          new (
+            window.AudioContext ||
+            window.webkitAudioContext
+          )();
 
         const src =
-          audioContext.createMediaStreamSource(rawMicStream);
+          audioContext.createMediaStreamSource(
+            rawMicStream
+          );
 
         filterChain =
-          buildRadioFilter(audioContext, radioPreset);
+          buildRadioFilter(
+            audioContext,
+            radioPreset
+          );
 
-        src.connect(filterChain.input);
+        src.connect(
+          filterChain.input
+        );
 
         mediaStreamDest =
           audioContext.createMediaStreamDestination();
 
-        filterChain.output.connect(mediaStreamDest);
+        filterChain.output.connect(
+          mediaStreamDest
+        );
 
-        streamToPublish = mediaStreamDest.stream;
+        streamToPublish =
+          mediaStreamDest.stream;
 
       }catch(err){
-        streamToPublish = rawMicStream;
+
+        streamToPublish =
+          rawMicStream;
       }
     }
 
-    const track = streamToPublish.getAudioTracks()[0];
+    const track =
+      streamToPublish.getAudioTracks()[0];
 
     if(!track)
       throw new Error("MIC_NOT_FOUND");
 
-    localAudioTrack = new L.LocalAudioTrack(track);
+    localAudioTrack =
+      new L.LocalAudioTrack(track);
 
     await localAudioTrack.enable();
 
-    await livekitRoom.localParticipant.publishTrack(localAudioTrack);
+    await livekitRoom.localParticipant.publishTrack(
+      localAudioTrack
+    );
 
     isTalking = true;
 
@@ -2508,10 +2774,15 @@ async function startTalking(e){
   }catch(err){
 
     isTalking = false;
+
     pttBtn.classList.remove("talking");
 
     if(localAudioTrack){
-      try{localAudioTrack.stop()}catch(e){}
+
+      try{
+        localAudioTrack.stop();
+      }catch(e){}
+
       localAudioTrack = null;
     }
 
@@ -2523,23 +2794,32 @@ async function startTalking(e){
 
 async function stopTalking(e){
 
-  if(e) e.preventDefault();
+  if(e)
+    e.preventDefault();
 
-  if(!isTalking) return;
+  if(!isTalking)
+    return;
 
   isTalking = false;
 
   pttBtn.classList.remove("talking");
 
   try{
+
     if(livekitRoom && localAudioTrack){
-      await livekitRoom.localParticipant.unpublishTrack(localAudioTrack);
+
+      await livekitRoom.localParticipant.unpublishTrack(
+        localAudioTrack
+      );
     }
+
   }catch(e){}
 
   try{
+
     if(localAudioTrack)
       localAudioTrack.stop();
+
   }catch(e){}
 
   localAudioTrack = null;
@@ -2558,10 +2838,12 @@ function setVoiceMode(mode){
     $("voiceRadio")?.classList.remove("active");
 
     if($("naturalState"))
-      $("naturalState").textContent = "مفعل";
+      $("naturalState").textContent =
+        "مفعل";
 
     if($("radioState"))
-      $("radioState").textContent = "متوقف";
+      $("radioState").textContent =
+        "متوقف";
 
     toast("🎧 تم تفعيل الصوت الطبيعي");
 
@@ -2574,10 +2856,12 @@ function setVoiceMode(mode){
     $("voiceNatural")?.classList.remove("active");
 
     if($("naturalState"))
-      $("naturalState").textContent = "متوقف";
+      $("naturalState").textContent =
+        "متوقف";
 
     if($("radioState"))
-      $("radioState").textContent = "مفعل";
+      $("radioState").textContent =
+        "مفعل";
 
     openPanel("radioPresetsPanel");
   }
@@ -2594,7 +2878,10 @@ function selectPreset(preset){
     classic:"كلاسيكي"
   };
 
-  toast("📻 نوع الصوت: " + (names[preset] || preset));
+  toast(
+    "📻 نوع الصوت: " +
+    (names[preset] || preset)
+  );
 
   closePanel("radioPresetsPanel");
 }
@@ -2604,30 +2891,48 @@ async function testVoicePreset(){
   try{
 
     const raw =
-      await navigator.mediaDevices.getUserMedia({audio:true});
+      await navigator.mediaDevices.getUserMedia({
+        audio:true
+      });
 
     const ctx =
-      new (window.AudioContext || window.webkitAudioContext)();
+      new (
+        window.AudioContext ||
+        window.webkitAudioContext
+      )();
 
     const src =
       ctx.createMediaStreamSource(raw);
 
     const chain =
-      buildRadioFilter(ctx, radioPreset);
+      buildRadioFilter(
+        ctx,
+        radioPreset
+      );
 
     src.connect(chain.input);
     chain.output.connect(ctx.destination);
 
-    toast("🎙️ تحدث الآن لتجربة الصوت...");
+    toast(
+      "🎙️ تحدث الآن لتجربة الصوت..."
+    );
 
     setTimeout(() => {
+
       try{
-        raw.getTracks().forEach(t => t.stop());
+
+        raw
+          .getTracks()
+          .forEach(t => t.stop());
+
         ctx.close();
+
       }catch(e){}
+
     },4000);
 
   }catch(e){
+
     toast("تعذر تجربة الصوت");
   }
 }
@@ -2635,26 +2940,37 @@ async function testVoicePreset(){
 function changeWave(dir){
 
   waveIndex =
-    (waveIndex + dir + waves.length) % waves.length;
+    (waveIndex + dir + waves.length) %
+    waves.length;
 
-  currentWave = waves[waveIndex];
+  currentWave =
+    waves[waveIndex];
 
   if($("waveCode"))
-    $("waveCode").textContent = currentWave.code;
+    $("waveCode").textContent =
+      currentWave.code;
 
   if($("waveNum"))
-    $("waveNum").textContent = "موجة " + (waveIndex + 1);
+    $("waveNum").textContent =
+      "موجة " + (waveIndex + 1);
 
-  toast("📻 " + currentWave.code + " — " + currentWave.name);
+  toast(
+    "📻 " +
+    currentWave.code +
+    " — " +
+    currentWave.name
+  );
 }
 
 function updateWaveUI(){
 
   if($("waveCode"))
-    $("waveCode").textContent = currentWave.code;
+    $("waveCode").textContent =
+      currentWave.code;
 
   if($("waveNum"))
-    $("waveNum").textContent = "موجة " + (waveIndex + 1);
+    $("waveNum").textContent =
+      "موجة " + (waveIndex + 1);
 }
 
 function onInputChange(){
@@ -2662,7 +2978,8 @@ function onInputChange(){
   const input = $("chatInput");
   const btn = $("sendBtn");
 
-  if(!input || !btn) return;
+  if(!input || !btn)
+    return;
 
   if(input.value.trim().length > 0)
     btn.classList.add("show");
@@ -2675,11 +2992,14 @@ async function sendMessage(){
   const input = $("chatInput");
   const text = input.value.trim();
 
-  if(!text) return;
+  if(!text)
+    return;
 
-  const ok = await connectLiveKit();
+  const ok =
+    await connectLiveKit();
 
-  if(!ok) return;
+  if(!ok)
+    return;
 
   try{
 
@@ -2708,16 +3028,19 @@ async function sendMessage(){
     toast("✅ تم إرسال الرسالة");
 
     input.value = "";
+
     onInputChange();
 
   }catch(e){
+
     toast("تعذر إرسال الرسالة");
   }
 }
 
 function toggleAttachMenu(e){
 
-  if(e) e.stopPropagation();
+  if(e)
+    e.stopPropagation();
 
   $("attachMenu")?.classList.toggle("show");
 }
@@ -2737,87 +3060,122 @@ function pickFile(type){
 
   const input = $("fileInput");
 
-  if(!input) return;
+  if(!input)
+    return;
 
-  input.accept = type || "*/*";
+  input.accept =
+    type || "*/*";
+
   input.value = "";
+
   input.click();
 
   $("attachMenu")?.classList.remove("show");
 }
 
-$("fileInput").addEventListener("change", async e => {
+$("fileInput").addEventListener(
+  "change",
+  async e => {
 
-  const file = e.target.files[0];
+    const file =
+      e.target.files[0];
 
-  if(!file) return;
+    if(!file)
+      return;
 
-  if(file.size > 3 * 1024 * 1024){
-    toast("⚠️ حجم الملف كبير (الحد الأقصى 3MB)");
+    if(file.size > 3 * 1024 * 1024){
+
+      toast(
+        "⚠️ حجم الملف كبير (الحد الأقصى 3MB)"
+      );
+
+      e.target.value = "";
+
+      return;
+    }
+
+    const ok =
+      await connectLiveKit();
+
+    if(!ok){
+
+      e.target.value = "";
+
+      return;
+    }
+
+    try{
+
+      const reader =
+        new FileReader();
+
+      reader.onload =
+        async ev => {
+
+          try{
+
+            const fileData =
+              ev.target.result;
+
+            const payload =
+              new TextEncoder().encode(
+                JSON.stringify({
+                  type:"radio-file",
+                  text:file.name,
+                  fileType:file.type,
+                  fileData,
+                  senderDeviceId:deviceId,
+                  name:"أنت"
+                })
+              );
+
+            await livekitRoom.localParticipant.publishData(
+              payload,
+              {reliable:true}
+            );
+
+            toast("✅ تم إرسال الملف");
+
+          }catch(err){
+
+            toast("تعذر إرسال الملف");
+          }
+        };
+
+      reader.readAsDataURL(file);
+
+    }catch(err){
+
+      toast("تعذر إرسال الملف");
+    }
+
     e.target.value = "";
-    return;
   }
-
-  const ok = await connectLiveKit();
-
-  if(!ok){
-    e.target.value = "";
-    return;
-  }
-
-  try{
-
-    const reader = new FileReader();
-
-    reader.onload = async ev => {
-
-      try{
-
-        const fileData = ev.target.result;
-
-        const payload =
-          new TextEncoder().encode(
-            JSON.stringify({
-              type:"radio-file",
-              text:file.name,
-              fileType:file.type,
-              fileData,
-              senderDeviceId:deviceId,
-              name:"أنت"
-            })
-          );
-
-        await livekitRoom.localParticipant.publishData(
-          payload,
-          {reliable:true}
-        );
-
-        toast("✅ تم إرسال الملف");
-
-      }catch(err){
-        toast("تعذر إرسال الملف");
-      }
-    };
-
-    reader.readAsDataURL(file);
-
-  }catch(err){
-    toast("تعذر إرسال الملف");
-  }
-
-  e.target.value = "";
-});
+);
 
 const micBtn = $("micBtn");
 
-micBtn.addEventListener("pointerdown", startVoiceRecording);
-micBtn.addEventListener("pointerup", stopVoiceRecording);
-micBtn.addEventListener("pointercancel", stopVoiceRecording);
+micBtn.addEventListener(
+  "pointerdown",
+  startVoiceRecording
+);
+
+micBtn.addEventListener(
+  "pointerup",
+  stopVoiceRecording
+);
+
+micBtn.addEventListener(
+  "pointercancel",
+  stopVoiceRecording
+);
 
 micBtn.addEventListener(
   "pointerleave",
   () => {
-    if(isRecording) stopVoiceRecording();
+
+    if(isRecording)
+      stopVoiceRecording();
   }
 );
 
@@ -2828,13 +3186,17 @@ micBtn.addEventListener(
 
 async function startVoiceRecording(e){
 
-  if(e) e.preventDefault();
+  if(e)
+    e.preventDefault();
 
-  if(isRecording) return;
+  if(isRecording)
+    return;
 
-  const ok = await connectLiveKit();
+  const ok =
+    await connectLiveKit();
 
-  if(!ok) return;
+  if(!ok)
+    return;
 
   try{
 
@@ -2843,11 +3205,20 @@ async function startVoiceRecording(e){
         audio:true
       });
 
-    let mimeType = "audio/webm";
+    let mimeType =
+      "audio/webm";
 
-    if(!MediaRecorder.isTypeSupported(mimeType)){
+    if(
+      !MediaRecorder.isTypeSupported(
+        mimeType
+      )
+    ){
 
-      if(MediaRecorder.isTypeSupported("audio/mp4"))
+      if(
+        MediaRecorder.isTypeSupported(
+          "audio/mp4"
+        )
+      )
         mimeType = "audio/mp4";
       else
         mimeType = "";
@@ -2855,101 +3226,147 @@ async function startVoiceRecording(e){
 
     mediaRecorder =
       mimeType
-      ? new MediaRecorder(stream,{mimeType})
+      ? new MediaRecorder(
+          stream,
+          {mimeType}
+        )
       : new MediaRecorder(stream);
 
     recordedChunks = [];
 
     mediaRecorder.ondataavailable =
       ev => {
-        if(ev.data && ev.data.size > 0)
+
+        if(
+          ev.data &&
+          ev.data.size > 0
+        )
           recordedChunks.push(ev.data);
       };
 
-    mediaRecorder.onstop = async () => {
-
-      try{
-        stream.getTracks().forEach(t => t.stop());
-      }catch(e){}
-
-      clearInterval(recInterval);
-
-      $("recBar")?.classList.remove("show");
-      micBtn.classList.remove("rec");
-
-      const dur =
-        Math.round((Date.now() - recStart) / 1000);
-
-      if(dur < 1)
-        return toast("⚠️ التسجيل قصير جداً");
-
-      if(!recordedChunks.length)
-        return toast("⚠️ لم يتم تسجيل صوت");
-
-      const blob =
-        new Blob(
-          recordedChunks,
-          {
-            type:mediaRecorder.mimeType || "audio/webm"
-          }
-        );
-
-      if(blob.size > 2 * 1024 * 1024)
-        return toast("⚠️ التسجيل كبير جداً");
-
-      const reader = new FileReader();
-
-      reader.onload = async ev => {
-
-        const audioData = ev.target.result;
+    mediaRecorder.onstop =
+      async () => {
 
         try{
 
-          const payload =
-            new TextEncoder().encode(
-              JSON.stringify({
-                type:"radio-voice",
-                audioData,
-                duration:dur,
-                senderDeviceId:deviceId,
-                name:"أنت"
-              })
-            );
+          stream
+            .getTracks()
+            .forEach(t => t.stop());
 
-          await livekitRoom.localParticipant.publishData(
-            payload,
-            {reliable:true}
+        }catch(e){}
+
+        clearInterval(recInterval);
+
+        $("recBar")?.classList.remove(
+          "show"
+        );
+
+        micBtn.classList.remove("rec");
+
+        const dur =
+          Math.round(
+            (Date.now() - recStart) /
+            1000
           );
 
-          toast("✅ تم إرسال الرسالة الصوتية");
+        if(dur < 1)
+          return toast(
+            "⚠️ التسجيل قصير جداً"
+          );
 
-        }catch(err){
-          toast("تعذر إرسال الصوت");
-        }
+        if(!recordedChunks.length)
+          return toast(
+            "⚠️ لم يتم تسجيل صوت"
+          );
+
+        const blob =
+          new Blob(
+            recordedChunks,
+            {
+              type:
+                mediaRecorder.mimeType ||
+                "audio/webm"
+            }
+          );
+
+        if(
+          blob.size >
+          2 * 1024 * 1024
+        )
+          return toast(
+            "⚠️ التسجيل كبير جداً"
+          );
+
+        const reader =
+          new FileReader();
+
+        reader.onload =
+          async ev => {
+
+            const audioData =
+              ev.target.result;
+
+            try{
+
+              const payload =
+                new TextEncoder().encode(
+                  JSON.stringify({
+                    type:"radio-voice",
+                    audioData,
+                    duration:dur,
+                    senderDeviceId:deviceId,
+                    name:"أنت"
+                  })
+                );
+
+              await livekitRoom.localParticipant.publishData(
+                payload,
+                {reliable:true}
+              );
+
+              toast(
+                "✅ تم إرسال الرسالة الصوتية"
+              );
+
+            }catch(err){
+
+              toast(
+                "تعذر إرسال الصوت"
+              );
+            }
+          };
+
+        reader.readAsDataURL(blob);
       };
-
-      reader.readAsDataURL(blob);
-    };
 
     isRecording = true;
     recStart = Date.now();
 
     micBtn.classList.add("rec");
+
     $("recBar")?.classList.add("show");
 
     if($("recTime"))
-      $("recTime").textContent = "0:00";
+      $("recTime").textContent =
+        "0:00";
 
     recInterval =
-      setInterval(() => {
+      setInterval(
+        () => {
 
-        const s =
-          Math.round((Date.now() - recStart) / 1000);
+          const s =
+            Math.round(
+              (Date.now() - recStart) /
+              1000
+            );
 
-        if($("recTime"))
-          $("recTime").textContent = formatDuration(s);
+          if($("recTime"))
+            $("recTime").textContent =
+              formatDuration(s);
 
-      },500);
+        },
+        500
+      );
 
     mediaRecorder.start();
 
@@ -2960,7 +3377,10 @@ async function startVoiceRecording(e){
     isRecording = false;
 
     micBtn.classList.remove("rec");
-    $("recBar")?.classList.remove("show");
+
+    $("recBar")?.classList.remove(
+      "show"
+    );
 
     toast("⚠️ تعذر التسجيل");
   }
@@ -2968,7 +3388,8 @@ async function startVoiceRecording(e){
 
 function stopVoiceRecording(e){
 
-  if(e) e.preventDefault();
+  if(e)
+    e.preventDefault();
 
   if(!isRecording || !mediaRecorder)
     return;
@@ -2982,7 +3403,8 @@ function stopVoiceRecording(e){
 
 async function loadMembers(){
 
-  if(!activeRoomId) return;
+  if(!activeRoomId)
+    return;
 
   try{
 
@@ -3004,8 +3426,11 @@ async function loadMembers(){
     if(!r.ok)
       throw new Error(d.error);
 
-    membersCache = d.members || [];
-    myRole = d.myRole || myRole;
+    membersCache =
+      d.members || [];
+
+    myRole =
+      d.myRole || myRole;
 
     const me =
       membersCache.find(
@@ -3020,11 +3445,15 @@ async function loadMembers(){
         me.role === "owner" ||
         me.role === "admin";
 
-      const card = $("myCodeCard");
+      const card =
+        $("myCodeCard");
 
       if(card){
 
-        if(canSee && me.personalCode){
+        if(
+          canSee &&
+          me.personalCode
+        ){
 
           card.classList.add("show");
 
@@ -3038,17 +3467,20 @@ async function loadMembers(){
               ? "👑 مالك الغرفة"
               : "🛡️ مشرف";
 
-          myPersonalCode = me.personalCode;
+          myPersonalCode =
+            me.personalCode;
 
         }else{
 
           card.classList.remove("show");
+
           myPersonalCode = null;
         }
       }
     }
 
     renderMembersList();
+
     updateRoomsBadge(0);
 
   }catch(e){}
@@ -3056,9 +3488,11 @@ async function loadMembers(){
 
 function renderMembersList(){
 
-  const c = $("membersContent");
+  const c =
+    $("membersContent");
 
-  if(!c) return;
+  if(!c)
+    return;
 
   if(!membersCache.length){
 
@@ -3068,110 +3502,142 @@ function renderMembersList(){
     return;
   }
 
-  const iAmOwner = myRole === "owner";
-  const iAmAdmin = myRole === "admin";
+  const iAmOwner =
+    myRole === "owner";
+
+  const iAmAdmin =
+    myRole === "admin";
 
   c.innerHTML =
-    membersCache.map(m => {
+    membersCache
+      .map(m => {
 
-      const isOwner = m.role === "owner";
-      const isAdmin = m.role === "admin";
-      const isMe = m.deviceId === deviceId;
+        const isOwner =
+          m.role === "owner";
 
-      let badgeClass = "member";
-      let roleText = "عضو";
+        const isAdmin =
+          m.role === "admin";
 
-      if(isOwner){
-        badgeClass = "owner";
-        roleText = "👑 مالك";
-      }else if(isAdmin){
-        badgeClass = "admin";
-        roleText = "🛡️ مشرف";
-      }
+        const isMe =
+          m.deviceId === deviceId;
 
-      let actionsHtml = "";
+        let badgeClass =
+          "member";
 
-      if(iAmOwner && !isOwner && !isMe){
+        let roleText =
+          "عضو";
 
-        if(isAdmin){
+        if(isOwner){
+
+          badgeClass = "owner";
+          roleText = "👑 مالك";
+
+        }else if(isAdmin){
+
+          badgeClass = "admin";
+          roleText = "🛡️ مشرف";
+        }
+
+        let actionsHtml = "";
+
+        if(
+          iAmOwner &&
+          !isOwner &&
+          !isMe
+        ){
+
+          if(isAdmin){
+
+            actionsHtml +=
+              `<button class="demote"
+                onclick="demoteMember('${m.deviceId}')">
+                سحب إشراف
+              </button>`;
+
+          }else{
+
+            actionsHtml +=
+              `<button class="promote"
+                onclick="promoteMember('${m.deviceId}')">
+                ترقية
+              </button>`;
+          }
 
           actionsHtml +=
-            `<button class="demote"
-              onclick="demoteMember('${m.deviceId}')">
-              سحب إشراف
+            `<button class="remove"
+              onclick="removeMember('${m.deviceId}')">
+              حذف
             </button>`;
 
-        }else{
+        }else if(
+          iAmAdmin &&
+          !isOwner &&
+          !isMe &&
+          m.invitedBy === deviceId
+        ){
 
           actionsHtml +=
-            `<button class="promote"
-              onclick="promoteMember('${m.deviceId}')">
-              ترقية
+            `<button class="remove"
+              onclick="removeMember('${m.deviceId}')">
+              حذف
             </button>`;
         }
 
-        actionsHtml +=
-          `<button class="remove"
-            onclick="removeMember('${m.deviceId}')">
-            حذف
-          </button>`;
+        return `
+          <div class="member-row">
 
-      }else if(
-        iAmAdmin &&
-        !isOwner &&
-        !isMe &&
-        m.invitedBy === deviceId
-      ){
-
-        actionsHtml +=
-          `<button class="remove"
-            onclick="removeMember('${m.deviceId}')">
-            حذف
-          </button>`;
-      }
-
-      return `
-        <div class="member-row">
-
-          <div class="avatar">
-            ${isOwner ? "👑" : isAdmin ? "🛡️" : "👤"}
-          </div>
-
-          <div class="info">
-
-            <div class="name">
-              ${escapeHtml(m.name)}
-
+            <div class="avatar">
               ${
-                isMe
-                ? '<span style="font-size:9px;color:#8ab4dc">(أنت)</span>'
-                : ''
+                isOwner
+                ? "👑"
+                : isAdmin
+                ? "🛡️"
+                : "👤"
               }
             </div>
 
-            <div class="role">
-              <span class="role-badge ${badgeClass}">
-                ${roleText}
-              </span>
+            <div class="info">
+
+              <div class="name">
+
+                ${escapeHtml(m.name)}
+
+                ${
+                  isMe
+                  ? '<span style="font-size:9px;color:#8ab4dc">(أنت)</span>'
+                  : ''
+                }
+
+              </div>
+
+              <div class="role">
+
+                <span class="role-badge ${badgeClass}">
+                  ${roleText}
+                </span>
+
+              </div>
+
+            </div>
+
+            <div class="actions">
+              ${actionsHtml}
             </div>
 
           </div>
+        `;
 
-          <div class="actions">
-            ${actionsHtml}
-          </div>
-
-        </div>
-      `;
-
-    }).join("");
+      })
+      .join("");
 }
 
 function updateRoomsBadge(count){
 
-  const badge = $("roomsBadge");
+  const badge =
+    $("roomsBadge");
 
-  if(!badge) return;
+  if(!badge)
+    return;
 
   if(count > 0){
 
@@ -3186,12 +3652,19 @@ function updateRoomsBadge(count){
 
 async function promoteMember(targetDeviceId){
 
-  if(!activeRoomId) return;
+  if(!activeRoomId)
+    return;
 
   if(myRole !== "owner")
-    return toast("⚠️ المالك فقط يقدر يُرقّي");
+    return toast(
+      "⚠️ المالك فقط يقدر يُرقّي"
+    );
 
-  if(!confirm("هل تريد ترقية هذا العضو إلى مشرف؟"))
+  if(
+    !confirm(
+      "هل تريد ترقية هذا العضو إلى مشرف؟"
+    )
+  )
     return;
 
   try{
@@ -3214,26 +3687,33 @@ async function promoteMember(targetDeviceId){
         }
       );
 
-    const d = await r.json();
+    const d =
+      await r.json();
 
     if(!r.ok)
       throw new Error(d.error);
 
-    toast("🎉 تمت الترقية بنجاح");
+    toast(
+      "🎉 تمت الترقية بنجاح"
+    );
 
     await loadMembers();
 
   }catch(e){
+
     toast("تعذر الترقية");
   }
 }
 
 async function demoteMember(targetDeviceId){
 
-  if(!activeRoomId) return;
+  if(!activeRoomId)
+    return;
 
   if(myRole !== "owner")
-    return toast("⚠️ المالك فقط يقدر يسحب الإشراف");
+    return toast(
+      "⚠️ المالك فقط يقدر يسحب الإشراف"
+    );
 
   if(!confirm("هل تريد سحب الإشراف؟"))
     return;
@@ -3258,7 +3738,8 @@ async function demoteMember(targetDeviceId){
         }
       );
 
-    const d = await r.json();
+    const d =
+      await r.json();
 
     if(!r.ok)
       throw new Error(d.error);
@@ -3268,15 +3749,21 @@ async function demoteMember(targetDeviceId){
     await loadMembers();
 
   }catch(e){
+
     toast("تعذر سحب الإشراف");
   }
 }
 
 async function removeMember(targetDeviceId){
 
-  if(!activeRoomId) return;
+  if(!activeRoomId)
+    return;
 
-  if(!confirm("هل تريد حذف هذا العضو من الغرفة؟"))
+  if(
+    !confirm(
+      "هل تريد حذف هذا العضو من الغرفة؟"
+    )
+  )
     return;
 
   try{
@@ -3297,7 +3784,8 @@ async function removeMember(targetDeviceId){
         }
       );
 
-    const d = await r.json();
+    const d =
+      await r.json();
 
     if(!r.ok)
       throw new Error(d.error);
@@ -3307,6 +3795,7 @@ async function removeMember(targetDeviceId){
     await loadMembers();
 
   }catch(e){
+
     toast("تعذر حذف العضو");
   }
 }
@@ -3316,11 +3805,18 @@ function copyMyCode(){
   if(!myPersonalCode)
     return toast("لا يوجد رقم");
 
-  navigator.clipboard.writeText(myPersonalCode)
+  navigator.clipboard
+    .writeText(myPersonalCode)
     .then(() => {
-      toast("📋 تم نسخ الرقم: " + myPersonalCode);
+
+      toast(
+        "📋 تم نسخ الرقم: " +
+        myPersonalCode
+      );
+
     })
     .catch(() => {
+
       toast("تعذر النسخ");
     });
 }
@@ -3345,8 +3841,11 @@ function shareMyCode(){
 
   }else{
 
-    navigator.clipboard.writeText(msg)
-      .then(() => toast("📤 تم نسخ الرسالة"))
+    navigator.clipboard
+      .writeText(msg)
+      .then(() =>
+        toast("📤 تم نسخ الرسالة")
+      )
       .catch(() => {});
   }
 }
@@ -3357,33 +3856,43 @@ async function createRoom(){
     $("newRoomName")?.value.trim();
 
   if(!name)
-    return toast("اكتب اسم الغرفة");
+    return toast(
+      "اكتب اسم الغرفة"
+    );
 
   try{
 
     const r =
-      await fetch(API + "/api/rooms", {
-        method:"POST",
-        headers:{
-          "Content-Type":"application/json",
-          "x-device-id":deviceId
-        },
-        body:JSON.stringify({
-          deviceId,
-          name
-        })
-      });
+      await fetch(
+        API + "/api/rooms",
+        {
+          method:"POST",
+          headers:{
+            "Content-Type":"application/json",
+            "x-device-id":deviceId
+          },
+          body:JSON.stringify({
+            deviceId,
+            name
+          })
+        }
+      );
 
-    const d = await r.json();
+    const d =
+      await r.json();
 
     if(!r.ok)
       throw new Error(d.error);
 
-    toast("✅ تم إنشاء الغرفة: " + name);
+    toast(
+      "✅ تم إنشاء الغرفة: " +
+      name
+    );
 
     closePanel("createPanel");
 
-    activeRoomId = d.room.id;
+    activeRoomId =
+      d.room.id;
 
     localStorage.setItem(
       "radioActiveRoomId",
@@ -3393,6 +3902,7 @@ async function createRoom(){
     await connectLiveKit();
 
   }catch(e){
+
     toast("تعذر إنشاء الغرفة");
   }
 }
@@ -3400,13 +3910,20 @@ async function createRoom(){
 async function submitJoin(){
 
   const code =
-    $("joinCode")?.value.trim().toUpperCase();
+    $("joinCode")
+      ?.value
+      .trim()
+      .toUpperCase();
 
   const name =
-    $("joinName")?.value.trim();
+    $("joinName")
+      ?.value
+      .trim();
 
   if(!code || code.length !== 6)
-    return toast("رقم التعريف يجب أن يكون 6 خانات");
+    return toast(
+      "رقم التعريف يجب أن يكون 6 خانات"
+    );
 
   if(!name)
     return toast("اكتب اسمك");
@@ -3430,16 +3947,21 @@ async function submitJoin(){
         }
       );
 
-    const d = await r.json();
+    const d =
+      await r.json();
 
     if(!r.ok)
       throw new Error(d.error);
 
-    toast("✅ " + (d.message || "تم الانضمام"));
+    toast(
+      "✅ " +
+      (d.message || "تم الانضمام")
+    );
 
     closePanel("joinPanel");
 
-    activeRoomId = d.roomId;
+    activeRoomId =
+      d.roomId;
 
     localStorage.setItem(
       "radioActiveRoomId",
@@ -3451,7 +3973,9 @@ async function submitJoin(){
   }catch(e){
 
     if(e.message === "invalid_code")
-      toast("⚠️ رقم التعريف غير صحيح");
+      toast(
+        "⚠️ رقم التعريف غير صحيح"
+      );
     else
       toast("تعذر الانضمام");
   }
@@ -3459,27 +3983,38 @@ async function submitJoin(){
 
 async function leaveRoom(){
 
-  if(!confirm("هل تريد الخروج من الغرفة؟"))
+  if(
+    !confirm(
+      "هل تريد الخروج من الغرفة؟"
+    )
+  )
     return;
 
   try{
+
     if(livekitRoom)
       await livekitRoom.disconnect();
+
   }catch(e){}
 
   livekitRoom = null;
   activeRoomId = "";
 
-  localStorage.removeItem("radioActiveRoomId");
+  localStorage.removeItem(
+    "radioActiveRoomId"
+  );
 
   myRole = null;
   myPersonalCode = null;
 
   if($("myCodeCard"))
-    $("myCodeCard").classList.remove("show");
+    $("myCodeCard")
+      .classList
+      .remove("show");
 
   if($("opsRoomName"))
-    $("opsRoomName").textContent = "لا توجد غرفة";
+    $("opsRoomName").textContent =
+      "لا توجد غرفة";
 
   updateServerStatus();
 
@@ -3508,6 +4043,7 @@ function openPanel(id){
 }
 
 function closePanel(id){
+
   $(id)?.classList.remove("show");
 }
 
@@ -3515,18 +4051,24 @@ function closeAllPanels(){
 
   document
     .querySelectorAll(".modal")
-    .forEach(p => p.classList.remove("show"));
+    .forEach(
+      p => p.classList.remove("show")
+    );
 }
 
 async function renderRoomsList(){
 
-  const c = $("roomsContent");
+  const c =
+    $("roomsContent");
 
-  if(!c) return;
+  if(!c)
+    return;
 
-  c.innerHTML = "جاري التحميل...";
+  c.innerHTML =
+    "جاري التحميل...";
 
-  const rooms = await loadRooms();
+  const rooms =
+    await loadRooms();
 
   if(!rooms.length){
 
@@ -3546,36 +4088,41 @@ async function renderRoomsList(){
     btn.className = "btn";
 
     if(r.isOwner)
-      btn.textContent = "👑 " + r.name;
+      btn.textContent =
+        "👑 " + r.name;
     else if(r.isAdmin)
-      btn.textContent = "🛡️ " + r.name;
+      btn.textContent =
+        "🛡️ " + r.name;
     else if(r.isMember)
-      btn.textContent = "✅ " + r.name;
+      btn.textContent =
+        "✅ " + r.name;
     else
-      btn.textContent = r.name;
+      btn.textContent =
+        r.name;
 
-    btn.onclick = async () => {
+    btn.onclick =
+      async () => {
 
-      if(r.isMember){
+        if(r.isMember){
 
-        activeRoomId = r.id;
+          activeRoomId = r.id;
 
-        localStorage.setItem(
-          "radioActiveRoomId",
-          activeRoomId
-        );
+          localStorage.setItem(
+            "radioActiveRoomId",
+            activeRoomId
+          );
 
-        closeAllPanels();
+          closeAllPanels();
 
-        await connectLiveKit();
+          await connectLiveKit();
 
-      }else{
+        }else{
 
-        toast(
-          "🔑 اطلب رقم الانضمام من مالك أو مشرف الغرفة"
-        );
-      }
-    };
+          toast(
+            "🔑 اطلب رقم الانضمام من مالك أو مشرف الغرفة"
+          );
+        }
+      };
 
     c.appendChild(btn);
   });
@@ -3583,9 +4130,11 @@ async function renderRoomsList(){
 
 function renderSettings(){
 
-  const c = $("settingsContent");
+  const c =
+    $("settingsContent");
 
-  if(!c) return;
+  if(!c)
+    return;
 
   c.innerHTML = `
 
@@ -3621,7 +4170,10 @@ function renderSettings(){
         </div>
 
         <div class="role">
-          ${escapeHtml($("opsRoomName")?.textContent || "لا توجد")}
+          ${escapeHtml(
+            $("opsRoomName")?.textContent ||
+            "لا توجد"
+          )}
         </div>
 
       </div>
@@ -3658,9 +4210,11 @@ function renderSettings(){
 
 function renderAccount(){
 
-  const c = $("accountContent");
+  const c =
+    $("accountContent");
 
-  if(!c) return;
+  if(!c)
+    return;
 
   c.innerHTML = `
 
@@ -3782,25 +4336,33 @@ function switchNav(name){
 
   document
     .querySelectorAll(".nav-item")
-    .forEach(n => n.classList.remove("active"));
+    .forEach(
+      n => n.classList.remove("active")
+    );
 
   if(name === "home"){
 
     closeAllPanels();
 
-    $("navHome")?.classList.add("active");
+    $("navHome")
+      ?.classList
+      .add("active");
 
   }else if(name === "rooms"){
 
     openPanel("roomsPanel");
 
-    $("navRooms")?.classList.add("active");
+    $("navRooms")
+      ?.classList
+      .add("active");
 
   }else if(name === "account"){
 
     openPanel("accountPanel");
 
-    $("navAccount")?.classList.add("active");
+    $("navAccount")
+      ?.classList
+      .add("active");
   }
 }
 
@@ -3813,24 +4375,33 @@ async function testMic(){
         audio:true
       });
 
-    s.getTracks().forEach(t => t.stop());
+    s
+      .getTracks()
+      .forEach(t => t.stop());
 
-    toast("✅ الميكروفون يعمل بنجاح");
+    toast(
+      "✅ الميكروفون يعمل بنجاح"
+    );
 
   }catch(e){
 
-    toast("⚠️ لم يتم السماح بالميكروفون");
+    toast(
+      "⚠️ لم يتم السماح بالميكروفون"
+    );
   }
 }
 
-window.addEventListener("pointerup", e => {
+window.addEventListener(
+  "pointerup",
+  e => {
 
-  if(isTalking)
-    stopTalking(e);
+    if(isTalking)
+      stopTalking(e);
 
-  if(isRecording)
-    stopVoiceRecording(e);
-});
+    if(isRecording)
+      stopVoiceRecording(e);
+  }
+);
 
 (async () => {
 
