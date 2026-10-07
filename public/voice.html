@@ -1,1 +1,635 @@
 
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+
+<meta name="viewport"
+      content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+
+<title>Radio Connect - صوت مباشر</title>
+
+<style>
+*{
+  box-sizing:border-box;
+  -webkit-tap-highlight-color:transparent;
+}
+
+html,body{
+  margin:0;
+  width:100%;
+  height:100%;
+  background:#02050e;
+  color:#fff;
+  font-family:Arial,sans-serif;
+}
+
+body{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.app{
+  width:100%;
+  max-width:500px;
+  min-height:100%;
+  padding:25px 18px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+
+.logo{
+  font-size:25px;
+  font-weight:900;
+  margin-top:20px;
+}
+
+.status{
+  margin-top:10px;
+  color:#79e6a0;
+  font-size:14px;
+}
+
+.room{
+  margin-top:25px;
+  width:100%;
+  background:#091121;
+  border:1px solid #172743;
+  border-radius:18px;
+  padding:18px;
+  text-align:center;
+}
+
+.roomCode{
+  font-size:24px;
+  font-weight:900;
+  letter-spacing:4px;
+  color:#6eb7ff;
+  margin-top:8px;
+}
+
+.ptt{
+  width:220px;
+  height:220px;
+  border-radius:50%;
+  border:0;
+  margin-top:55px;
+
+  background:linear-gradient(145deg,#123a68,#07172c);
+
+  box-shadow:
+    0 0 0 10px rgba(54,143,255,.08),
+    0 0 45px rgba(40,130,255,.18);
+
+  color:#fff;
+  font-size:25px;
+  font-weight:900;
+
+  touch-action:none;
+  user-select:none;
+}
+
+.ptt:active,
+.ptt.talking{
+  background:linear-gradient(145deg,#a62020,#530c0c);
+
+  box-shadow:
+    0 0 0 10px rgba(255,70,70,.10),
+    0 0 55px rgba(255,50,50,.45);
+
+  transform:scale(.97);
+}
+
+.hint{
+  margin-top:25px;
+  color:#8896aa;
+  text-align:center;
+  line-height:1.8;
+}
+
+#error{
+  color:#ff7070;
+  margin-top:18px;
+  text-align:center;
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+  <div class="logo">
+    📻 Radio Connect
+  </div>
+
+  <div id="status" class="status">
+    جاري الاتصال...
+  </div>
+
+  <div class="room">
+    الغرفة
+    <div id="roomCode" class="roomCode">---</div>
+  </div>
+
+  <button
+    id="ptt"
+    class="ptt"
+    type="button">
+    اضغط للتحدث
+  </button>
+
+  <div class="hint">
+    اضغط باستمرار لإرسال صوتك<br>
+    ارفع إصبعك لإيقاف الإرسال
+  </div>
+
+  <div id="error"></div>
+
+</div>
+
+<script>
+
+const statusEl = document.getElementById("status");
+const roomCodeEl = document.getElementById("roomCode");
+const ptt = document.getElementById("ptt");
+const errorEl = document.getElementById("error");
+
+const params = new URLSearchParams(location.search);
+
+let roomId =
+  params.get("room") ||
+  params.get("r") ||
+  "";
+
+if (!roomId) {
+  roomId =
+    Math.random()
+      .toString(36)
+      .substring(2,8)
+      .toUpperCase();
+}
+
+roomId = roomId.toUpperCase();
+
+roomCodeEl.textContent = roomId;
+
+let ws = null;
+let peer = null;
+let localStream = null;
+let remoteAudio = null;
+let isTalking = false;
+let makingOffer = false;
+
+const rtcConfig = {
+  iceServers: [
+    {
+      urls: "stun:stun.l.google.com:19302"
+    },
+    {
+      urls: "stun:stun.cloudflare.com:3478"
+    }
+  ]
+};
+
+function setStatus(text, color) {
+  statusEl.textContent = text;
+  statusEl.style.color = color || "#79e6a0";
+}
+
+function showError(text) {
+  errorEl.textContent = text || "";
+}
+
+function send(data) {
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify(data));
+  }
+}
+
+function createPeer() {
+
+  if (peer) {
+    try {
+      peer.close();
+    } catch {}
+  }
+
+  peer = new RTCPeerConnection(rtcConfig);
+
+  peer.onicecandidate = (event) => {
+
+    if (event.candidate) {
+
+      send({
+        type: "ice",
+        candidate: event.candidate
+      });
+
+    }
+  };
+
+  peer.ontrack = (event) => {
+
+    if (!remoteAudio) {
+
+      remoteAudio = document.createElement("audio");
+
+      remoteAudio.autoplay = true;
+      remoteAudio.playsInline = true;
+
+      document.body.appendChild(remoteAudio);
+    }
+
+    remoteAudio.srcObject = event.streams[0];
+
+    remoteAudio.play().catch(() => {});
+  };
+
+  peer.onconnectionstatechange = () => {
+
+    const state = peer.connectionState;
+
+    if (state === "connected") {
+      setStatus("متصل بالطرف الآخر", "#79e6a0");
+    }
+
+    if (state === "connecting") {
+      setStatus("جاري الاتصال...", "#ffd166");
+    }
+
+    if (
+      state === "disconnected" ||
+      state === "failed"
+    ) {
+      setStatus("انقطع الاتصال", "#ff7070");
+    }
+  };
+
+  if (localStream) {
+
+    for (const track of localStream.getTracks()) {
+
+      peer.addTrack(track, localStream);
+    }
+  }
+}
+
+async function connect() {
+
+  const protocol =
+    location.protocol === "https:"
+      ? "wss:"
+      : "ws:";
+
+  ws = new WebSocket(
+    protocol +
+    "//" +
+    location.host
+  );
+
+  ws.onopen = () => {
+
+    setStatus("متصل بالخادم", "#79e6a0");
+
+    send({
+      type: "join",
+      room: roomId
+    });
+  };
+
+  ws.onmessage = async (event) => {
+
+    let msg;
+
+    try {
+      msg = JSON.parse(event.data);
+    } catch {
+      return;
+    }
+
+    if (msg.type === "joined") {
+
+      setStatus(
+        msg.peers > 1
+          ? "يوجد شخص في الغرفة"
+          : "بانتظار الطرف الآخر",
+        "#79e6a0"
+      );
+
+      createPeer();
+
+      return;
+    }
+
+    if (msg.type === "peer-joined") {
+
+      setStatus(
+        "تم دخول الطرف الآخر",
+        "#79e6a0"
+      );
+
+      await makeOffer();
+
+      return;
+    }
+
+    if (msg.type === "offer") {
+
+      createPeer();
+
+      await peer.setRemoteDescription(
+        new RTCSessionDescription(msg.offer)
+      );
+
+      const answer =
+        await peer.createAnswer();
+
+      await peer.setLocalDescription(answer);
+
+      send({
+        type: "answer",
+        answer: peer.localDescription
+      });
+
+      return;
+    }
+
+    if (msg.type === "answer") {
+
+      if (!peer) return;
+
+      await peer.setRemoteDescription(
+        new RTCSessionDescription(msg.answer)
+      );
+
+      return;
+    }
+
+    if (msg.type === "ice") {
+
+      if (!peer) return;
+
+      try {
+
+        await peer.addIceCandidate(
+          new RTCIceCandidate(msg.candidate)
+        );
+
+      } catch (e) {
+
+        console.warn(
+          "ICE error",
+          e
+        );
+      }
+
+      return;
+    }
+
+    if (msg.type === "peer-left") {
+
+      setStatus(
+        "الطرف الآخر خرج",
+        "#ff7070"
+      );
+
+      if (peer) {
+        peer.close();
+        peer = null;
+      }
+
+      return;
+    }
+
+    if (msg.type === "error") {
+
+      showError(msg.message);
+    }
+  };
+
+  ws.onerror = () => {
+
+    setStatus(
+      "تعذر الاتصال بالخادم",
+      "#ff7070"
+    );
+  };
+
+  ws.onclose = () => {
+
+    setStatus(
+      "انقطع اتصال الخادم",
+      "#ff7070"
+    );
+  };
+}
+
+async function makeOffer() {
+
+  if (!peer) {
+    createPeer();
+  }
+
+  if (makingOffer) return;
+
+  makingOffer = true;
+
+  try {
+
+    const offer =
+      await peer.createOffer();
+
+    await peer.setLocalDescription(offer);
+
+    send({
+      type: "offer",
+      offer: peer.localDescription
+    });
+
+  } catch (e) {
+
+    console.error(e);
+
+  } finally {
+
+    makingOffer = false;
+  }
+}
+
+async function startTalking(event) {
+
+  if (event) {
+    event.preventDefault();
+  }
+
+  if (isTalking) return;
+
+  isTalking = true;
+
+  ptt.classList.add("talking");
+
+  try {
+
+    if (!localStream) {
+
+      localStream =
+        await navigator.mediaDevices.getUserMedia({
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true,
+            channelCount: 1
+          },
+          video: false
+        });
+
+      if (!peer) {
+        createPeer();
+      }
+
+      for (
+        const track of
+        localStream.getTracks()
+      ) {
+
+        const sender =
+          peer.getSenders()
+            .find(
+              s =>
+                s.track &&
+                s.track.kind === "audio"
+            );
+
+        if (!sender) {
+
+          peer.addTrack(
+            track,
+            localStream
+          );
+
+        } else {
+
+          await sender.replaceTrack(
+            track
+          );
+        }
+
+      }
+
+      if (
+        peer.connectionState ===
+        "new"
+      ) {
+
+        await makeOffer();
+      }
+    }
+
+    for (
+      const track of
+      localStream.getAudioTracks()
+    ) {
+
+      track.enabled = true;
+    }
+
+    setStatus(
+      "🎙️ أنت تتحدث الآن",
+      "#ff6666"
+    );
+
+  } catch (error) {
+
+    console.error(error);
+
+    isTalking = false;
+
+    ptt.classList.remove("talking");
+
+    if (
+      error.name ===
+      "NotAllowedError"
+    ) {
+
+      showError(
+        "اسمح للتطبيق باستخدام الميكروفون"
+      );
+
+    } else {
+
+      showError(
+        "تعذر تشغيل الميكروفون"
+      );
+    }
+  }
+}
+
+function stopTalking(event) {
+
+  if (event) {
+    event.preventDefault();
+  }
+
+  if (!isTalking) return;
+
+  isTalking = false;
+
+  ptt.classList.remove("talking");
+
+  if (localStream) {
+
+    for (
+      const track of
+      localStream.getAudioTracks()
+    ) {
+
+      track.enabled = false;
+    }
+  }
+
+  setStatus(
+    "الميكروفون متوقف",
+    "#79e6a0"
+  );
+}
+
+ptt.addEventListener(
+  "pointerdown",
+  startTalking
+);
+
+ptt.addEventListener(
+  "pointerup",
+  stopTalking
+);
+
+ptt.addEventListener(
+  "pointercancel",
+  stopTalking
+);
+
+ptt.addEventListener(
+  "pointerleave",
+  stopTalking
+);
+
+document.addEventListener(
+  "visibilitychange",
+  () => {
+
+    if (document.hidden) {
+      stopTalking();
+    }
+
+  }
+);
+
+connect();
+
+</script>
+
+</body>
+</html>
