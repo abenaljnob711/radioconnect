@@ -6,200 +6,1105 @@
 <meta name="theme-color" content="#02050e">
 <title>Radio Connect - جهاز لاسلكي</title>
 <script src="https://unpkg.com/livekit-client@2.15.3/dist/livekit-client.umd.min.js"></script>
+
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0}
-html,body{min-height:100%;background:#02050e;color:#eaf4ff;font-family:Arial,"Noto Sans Arabic",sans-serif;direction:rtl}
-body{padding-bottom:75px}
+html,body{
+  min-height:100%;
+  background:#02050e;
+  color:#eaf4ff;
+  font-family:Arial,"Noto Sans Arabic",sans-serif;
+  direction:rtl
+}
+body{padding-bottom:72px}
 button,input{font:inherit}
 button{border:0;cursor:pointer;font-family:inherit}
-.app{max-width:520px;min-height:100vh;margin:auto;background:radial-gradient(circle at 50% 20%,rgba(10,50,90,.35),transparent 55%),linear-gradient(180deg,#03101d,#02050e);padding:8px 10px 10px;position:relative}
 
-/* ============ Header ============ */
-.topbar{display:flex;align-items:center;justify-content:space-between;padding:10px 4px 12px;gap:8px}
-.menu-btn{width:38px;height:38px;border-radius:11px;background:#0a1e35;color:#eaf4ff;font-size:18px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(73,170,255,.15)}
-.brand-wrap{flex:1;display:flex;align-items:center;gap:9px;justify-content:center}
-.brand-icon{font-size:26px;filter:drop-shadow(0 0 6px rgba(73,170,255,.6))}
-.brand{text-align:center}
-.brand strong{display:block;font-size:15px;font-weight:900;letter-spacing:.3px}
-.brand span{font-size:10px;color:#7f95ad}
-.status-pill{display:flex;align-items:center;gap:5px;background:#061a2e;padding:6px 10px;border-radius:16px;border:1px solid rgba(73,170,255,.2);font-size:10px}
-.status-pill .dot{width:7px;height:7px;border-radius:50%;background:#39d353;box-shadow:0 0 8px #39d353}
-.status-pill .lbl{color:#5be58a;font-weight:700}
+.app{
+  max-width:520px;
+  min-height:100vh;
+  margin:auto;
+  background:
+    radial-gradient(circle at 50% 18%,rgba(17,76,130,.32),transparent 42%),
+    linear-gradient(180deg,#06182b 0%,#03101e 42%,#020914 100%);
+  position:relative;
+  overflow:hidden;
+}
 
-/* ============ قسم العمليات ============ */
-.ops-card{background:linear-gradient(135deg,#0a1f38,#041220);border:1px solid rgba(73,170,255,.2);border-radius:18px;padding:12px;margin-bottom:10px;box-shadow:0 8px 22px rgba(0,0,0,.35)}
-.ops-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:6px}
-.ops-left{display:flex;align-items:center;gap:5px;cursor:pointer}
-.star{color:#f1c40f;font-size:16px}
-.ops-name{font-size:14px;font-weight:800}
-.ops-arrow{color:#6c88b0;font-size:11px}
+/* =========================
+   الشريط العلوي
+========================= */
+.topbar{
+  display:none;
+}
 
-.wave-center{flex:1;text-align:center}
-.wave-label-top{font-size:9px;color:#6d8cad}
-.wave-code-big{font-size:26px;font-weight:900;letter-spacing:2px;color:#fff;font-family:monospace;text-shadow:0 0 15px rgba(73,170,255,.7)}
-.wave-num-big{font-size:11px;color:#8ab4dc;margin-top:2px}
+/* =========================
+   بطاقة العمليات الرئيسية
+========================= */
+.ops-card{
+  margin:8px 5px 7px;
+  height:171px;
+  padding:10px 8px;
+  border-radius:17px;
+  background:
+    linear-gradient(135deg,rgba(11,34,60,.96),rgba(3,16,30,.98));
+  border:1px solid rgba(84,166,235,.42);
+  box-shadow:
+    inset 0 0 18px rgba(45,123,190,.08),
+    0 7px 22px rgba(0,0,0,.42);
+  position:relative;
+}
 
-.wave-arrows{display:flex;align-items:center;gap:4px}
-.arrow-btn{width:30px;height:30px;border-radius:50%;background:radial-gradient(circle,#0f4a7a,#0a2b47);color:#fff;font-size:14px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(73,170,255,.4);box-shadow:0 0 12px rgba(73,170,255,.3)}
-.arrow-btn:active{transform:scale(.92)}
+.ops-top{
+  height:100%;
+  display:grid;
+  grid-template-columns:1.08fr 1.25fr 1.12fr;
+  align-items:center;
+  gap:4px;
+}
 
-/* ============ بطاقة الرقم الشخصي ============ */
-.my-code-card{display:none;margin-bottom:10px;background:linear-gradient(135deg,#0d2f4a,#051728);border:1px solid rgba(73,170,255,.35);border-radius:16px;padding:12px;text-align:center;position:relative;overflow:hidden}
+.ops-left{
+  height:151px;
+  border-radius:13px;
+  border:1px solid rgba(73,170,255,.34);
+  background:linear-gradient(135deg,#09233e,#06172b);
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  justify-content:flex-start;
+  padding:15px 13px;
+  cursor:pointer;
+  position:relative;
+  overflow:hidden;
+}
+
+.ops-left:after{
+  content:"";
+  position:absolute;
+  inset:auto -20px -35px auto;
+  width:90px;
+  height:90px;
+  background:radial-gradient(circle,rgba(35,130,220,.17),transparent 68%);
+}
+
+.star{
+  color:#ffc94d;
+  font-size:25px;
+  line-height:1;
+  margin-bottom:7px;
+}
+
+.ops-name{
+  color:#fff;
+  font-size:19px;
+  font-weight:900;
+  line-height:1.25;
+  white-space:nowrap;
+}
+
+.ops-arrow{
+  color:#8eb5d8;
+  font-size:18px;
+  margin-top:8px;
+}
+
+.wave-center{
+  height:151px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  position:relative;
+}
+
+.wave-label-top{
+  display:none;
+}
+
+.wave-code-big{
+  font-size:31px;
+  font-weight:900;
+  letter-spacing:2px;
+  color:#fff;
+  font-family:monospace;
+  text-shadow:0 0 15px rgba(73,170,255,.55);
+}
+
+.wave-num-big{
+  font-size:18px;
+  color:#fff;
+  font-weight:800;
+  margin-top:2px;
+}
+
+.wave-arrows{
+  position:absolute;
+  left:0;
+  right:0;
+  top:50%;
+  transform:translateY(-50%);
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  pointer-events:none;
+}
+
+.arrow-btn{
+  width:55px;
+  height:55px;
+  border-radius:50%;
+  background:
+    radial-gradient(circle at 35% 30%,#65d7ff,#2188c9 48%,#0b4775 100%);
+  color:#fff;
+  font-size:39px;
+  line-height:1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border:3px solid rgba(123,215,255,.65);
+  box-shadow:
+    0 0 12px rgba(49,177,255,.75),
+    inset 0 0 12px rgba(255,255,255,.22);
+  pointer-events:auto;
+}
+
+.arrow-btn:active{transform:scale(.91)}
+
+/* بطاقة الحالة العلوية اليمنى */
+.status-row{
+  position:absolute;
+  top:18px;
+  left:calc(50% + 132px);
+  width:175px;
+  height:151px;
+  margin:0;
+  padding:10px 4px;
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:0;
+  background:linear-gradient(135deg,#09233e,#06172a);
+  border:1px solid rgba(73,170,255,.38);
+  border-radius:13px;
+  z-index:3;
+}
+
+.status-box{
+  text-align:center;
+  padding:18px 2px 5px;
+  border-left:1px solid rgba(110,171,215,.22);
+}
+
+.status-box:last-child{border-left:0}
+
+.status-box .icon{
+  display:block;
+  font-size:23px;
+  margin-bottom:7px;
+}
+
+.status-box .val{
+  display:block;
+  color:#fff;
+  font-size:13px;
+  font-weight:900;
+}
+
+.status-box .lbl{
+  display:block;
+  color:#a7bdd2;
+  font-size:10px;
+  margin-top:6px;
+}
+
+.status-box.ok .val{color:#fff}
+
+/* =========================
+   الرقم الشخصي
+========================= */
+.my-code-card{
+  display:none;
+  margin:7px 5px;
+  background:linear-gradient(135deg,#0d2f4a,#051728);
+  border:1px solid rgba(73,170,255,.35);
+  border-radius:16px;
+  padding:12px;
+  text-align:center;
+  position:relative;
+  overflow:hidden
+}
+
 .my-code-card.show{display:block}
-.my-code-card::before{content:"";position:absolute;top:-50%;right:-50%;width:200%;height:200%;background:radial-gradient(circle,rgba(73,170,255,.15),transparent 60%);animation:rotate 20s linear infinite;pointer-events:none}
-@keyframes rotate{from{transform:rotate(0)}to{transform:rotate(360deg)}}
-.my-code-card .code-label{font-size:10px;color:#8ab4dc;position:relative;z-index:1;margin-bottom:6px}
-.my-code-card .code-value{font-size:30px;font-weight:900;letter-spacing:6px;color:#fff;font-family:monospace;text-shadow:0 0 20px rgba(73,170,255,.9);position:relative;z-index:1;margin:6px 0}
-.my-code-card .code-role{font-size:10px;color:#5be58a;position:relative;z-index:1;margin-top:4px}
-.my-code-card .code-actions{display:flex;gap:6px;margin-top:10px;position:relative;z-index:1}
-.my-code-card .code-btn{flex:1;padding:8px;border-radius:10px;background:#146aa0;color:#fff;font-size:11px;font-weight:700;transition:.15s}
-.my-code-card .code-btn:active{transform:scale(.97);background:#0e5378}
 
-/* ============ حالة الجهاز ============ */
-.status-row{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;background:#04101e;border:1px solid rgba(73,170,255,.15);border-radius:14px;padding:8px;margin-bottom:10px}
-.status-box{text-align:center;padding:4px 2px}
-.status-box .icon{font-size:15px;display:block;margin-bottom:3px}
-.status-box .val{font-size:12px;font-weight:800;color:#fff;display:block}
-.status-box .lbl{font-size:9px;color:#6d8cad;display:block;margin-top:2px}
-.status-box.ok .val{color:#39d353}
+.my-code-card::before{
+  content:"";
+  position:absolute;
+  top:-50%;
+  right:-50%;
+  width:200%;
+  height:200%;
+  background:radial-gradient(circle,rgba(73,170,255,.15),transparent 60%);
+  animation:rotate 20s linear infinite;
+  pointer-events:none
+}
 
-/* ============ الصوت + PTT ============ */
-.voice-ptt{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;margin-bottom:10px}
-.voice-box{background:linear-gradient(135deg,#0a1f38,#041220);border:1px solid rgba(73,170,255,.2);border-radius:16px;padding:10px 6px;text-align:center;transition:.25s;cursor:pointer}
-.voice-box.active{border-color:rgba(73,170,255,.55);background:linear-gradient(135deg,#0d2942,#061a2e);box-shadow:0 0 15px rgba(73,170,255,.25)}
-.voice-box .vt-ico{font-size:20px;display:block;margin-bottom:3px}
-.voice-box .vt-name{font-size:11px;font-weight:800;color:#eaf4ff}
-.voice-box .vt-state{font-size:9px;margin-top:3px;color:#5b7394}
-.voice-box.active .vt-state{color:#39d353}
+@keyframes rotate{
+  from{transform:rotate(0)}
+  to{transform:rotate(360deg)}
+}
 
-.ptt-wrap{position:relative;display:flex;justify-content:center;align-items:center}
-.ptt-ring{position:absolute;width:120px;height:120px;border-radius:50%;background:radial-gradient(circle,rgba(231,76,60,.35),transparent 65%);animation:pttPulse 2s infinite;pointer-events:none}
-@keyframes pttPulse{0%,100%{transform:scale(1);opacity:.6}50%{transform:scale(1.15);opacity:.9}}
-.ptt-btn{width:100px;height:100px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#1d6194,#0b314f 60%,#061c2e);border:4px solid #174b73;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 0 0 6px rgba(13,44,71,.4),0 6px 20px rgba(0,0,0,.6);user-select:none;touch-action:none;transition:.12s;position:relative;z-index:2}
-.ptt-btn.talking{background:radial-gradient(circle at 40% 35%,#e74c3c,#8e2a1f 60%,#521812);border-color:#e74c3c;box-shadow:0 0 0 8px rgba(231,76,60,.3),0 0 30px rgba(231,76,60,.7);transform:scale(.95)}
-.ptt-btn .ico{font-size:22px}
-.ptt-btn .txt{display:none} /* تم إزالة الخط الأصفر التعليمي تماماً */
+.my-code-card .code-label{
+  font-size:10px;
+  color:#8ab4dc;
+  position:relative;
+  z-index:1;
+  margin-bottom:6px
+}
 
-/* ============ خانة الإدخال السفلية (نظيفة وخالية من الرسائل) ============ */
-.chat-input{display:flex;align-items:center;gap:4px;padding:7px;background:rgba(2,8,16,.85);border-top:1px solid rgba(255,255,255,.06);position:relative}
-.icon-btn{width:36px;height:36px;border-radius:50%;background:#0a1f38;color:#cce5ff;font-size:16px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(73,170,255,.18);flex-shrink:0;transition:.15s}
-.icon-btn.rec{background:#e74c3c;color:#fff;animation:recPulse .9s infinite}
-@keyframes recPulse{0%,100%{box-shadow:0 0 0 0 rgba(231,76,60,.6)}50%{box-shadow:0 0 0 10px rgba(231,76,60,0)}}
-.chat-input input{flex:1;height:36px;background:#020a14;border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:0 12px;color:#fff;font-size:12px;outline:none;min-width:0}
-.chat-input input::placeholder{color:#63798d}
-.chat-input input:focus{border-color:rgba(73,170,255,.5)}
-.send-btn{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#168cff,#0055d4);color:#fff;font-size:14px;display:none;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 0 12px rgba(22,140,255,.5);border:0}
+.my-code-card .code-value{
+  font-size:30px;
+  font-weight:900;
+  letter-spacing:6px;
+  color:#fff;
+  font-family:monospace;
+  text-shadow:0 0 20px rgba(73,170,255,.9);
+  position:relative;
+  z-index:1;
+  margin:6px 0
+}
+
+.my-code-card .code-role{
+  font-size:10px;
+  color:#5be58a;
+  position:relative;
+  z-index:1;
+  margin-top:4px
+}
+
+.my-code-card .code-actions{
+  display:flex;
+  gap:6px;
+  margin-top:10px;
+  position:relative;
+  z-index:1
+}
+
+.my-code-card .code-btn{
+  flex:1;
+  padding:8px;
+  border-radius:10px;
+  background:#146aa0;
+  color:#fff;
+  font-size:11px;
+  font-weight:700
+}
+
+/* =========================
+   الصوت + زر اللاسلكي
+========================= */
+.voice-ptt{
+  height:260px;
+  margin:0 5px 7px;
+  display:grid;
+  grid-template-columns:1fr 142px 1fr;
+  align-items:center;
+  gap:5px;
+  border-radius:17px;
+  background:
+    linear-gradient(180deg,rgba(7,28,49,.96),rgba(3,17,31,.98));
+  border:1px solid rgba(73,170,255,.28);
+  box-shadow:
+    inset 0 0 30px rgba(37,112,175,.07),
+    0 7px 22px rgba(0,0,0,.42);
+  position:relative;
+}
+
+.voice-box{
+  height:139px;
+  border-radius:16px;
+  background:
+    linear-gradient(135deg,#12477a,#0a2d50);
+  border:1px solid rgba(73,170,255,.42);
+  padding:10px 8px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  transition:.2s;
+  cursor:pointer;
+  position:relative;
+}
+
+.voice-box.active{
+  background:linear-gradient(135deg,#135a8e,#0b3155);
+  border-color:#36b9ff;
+  box-shadow:0 0 18px rgba(39,174,255,.28);
+}
+
+.voice-box .vt-ico{
+  display:none;
+}
+
+.voice-box .vt-name{
+  color:#fff;
+  font-size:18px;
+  font-weight:900;
+  white-space:nowrap;
+}
+
+.voice-box .vt-state{
+  color:#d0e3f5;
+  font-size:11px;
+  margin-top:7px;
+}
+
+.voice-box.active .vt-state{color:#fff}
+
+.voice-box:before{
+  content:"‹";
+  position:absolute;
+  right:10px;
+  top:50%;
+  transform:translateY(-50%);
+  color:#37b9ff;
+  font-size:40px;
+  font-weight:300;
+}
+
+.voice-box:last-child:before{
+  content:"›";
+  right:auto;
+  left:10px;
+}
+
+.ptt-wrap{
+  position:relative;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:235px;
+}
+
+.ptt-ring{
+  position:absolute;
+  width:174px;
+  height:174px;
+  border-radius:50%;
+  background:
+    radial-gradient(circle,
+      rgba(255,35,40,.48) 0%,
+      rgba(235,34,40,.25) 42%,
+      rgba(220,35,42,.10) 59%,
+      transparent 70%);
+  border:7px solid rgba(255,40,45,.35);
+  box-shadow:
+    0 0 0 9px rgba(255,35,40,.13),
+    0 0 35px rgba(255,30,35,.45);
+  animation:pttPulse 2s infinite;
+  pointer-events:none;
+}
+
+@keyframes pttPulse{
+  0%,100%{transform:scale(1);opacity:.72}
+  50%{transform:scale(1.06);opacity:1}
+}
+
+.ptt-btn{
+  width:142px;
+  height:142px;
+  border-radius:50%;
+  background:
+    radial-gradient(circle at 50% 30%,#777 0%,#272727 30%,#111 63%,#080808 100%);
+  border:7px solid #d6252c;
+  color:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow:
+    0 0 0 5px rgba(255,42,48,.25),
+    0 0 30px rgba(255,25,30,.58),
+    inset 0 0 20px rgba(255,255,255,.08);
+  user-select:none;
+  touch-action:none;
+  transition:.12s;
+  position:relative;
+  z-index:2;
+}
+
+.ptt-btn:after{
+  content:"";
+  position:absolute;
+  inset:16px;
+  border-radius:50%;
+  border:2px solid rgba(255,255,255,.11);
+}
+
+.ptt-btn.talking{
+  background:
+    radial-gradient(circle at 45% 28%,#ff7770,#e3282d 42%,#861317 72%,#3c0709 100%);
+  border-color:#ff4a4f;
+  box-shadow:
+    0 0 0 8px rgba(255,45,50,.28),
+    0 0 45px rgba(255,35,40,.9);
+  transform:scale(.95);
+}
+
+.ptt-btn .ico{
+  font-size:50px;
+  filter:drop-shadow(0 2px 5px rgba(0,0,0,.65));
+}
+
+.ptt-btn .txt{display:none}
+
+/* =========================
+   منطقة المحادثة
+========================= */
+.chat-area{
+  height:calc(100vh - 520px);
+  min-height:250px;
+  margin:0 5px;
+  border-radius:16px 16px 0 0;
+  border:1px solid rgba(73,170,255,.15);
+  background:
+    radial-gradient(circle at 50% 15%,rgba(24,78,125,.08),transparent 50%),
+    rgba(2,10,19,.45);
+}
+
+/* =========================
+   خانة الإدخال
+========================= */
+.chat-input{
+  position:fixed;
+  bottom:66px;
+  left:50%;
+  transform:translateX(-50%);
+  width:min(520px,100%);
+  min-height:64px;
+  display:flex;
+  align-items:center;
+  gap:7px;
+  padding:9px 10px;
+  background:rgba(4,18,33,.97);
+  border-top:1px solid rgba(73,170,255,.22);
+  z-index:35;
+  backdrop-filter:blur(15px);
+}
+
+.icon-btn{
+  width:45px;
+  height:45px;
+  border-radius:50%;
+  background:#0b3760;
+  color:#e5f4ff;
+  font-size:22px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border:1px solid rgba(73,170,255,.3);
+  flex-shrink:0;
+  transition:.15s;
+}
+
+.icon-btn:active{transform:scale(.9)}
+
+.icon-btn.rec{
+  background:#e74c3c;
+  color:#fff;
+  animation:recPulse .9s infinite
+}
+
+@keyframes recPulse{
+  0%,100%{box-shadow:0 0 0 0 rgba(231,76,60,.6)}
+  50%{box-shadow:0 0 0 10px rgba(231,76,60,0)}
+}
+
+.chat-input input{
+  flex:1;
+  height:47px;
+  background:#60728a;
+  border:1px solid rgba(190,215,238,.35);
+  border-radius:25px;
+  padding:0 17px;
+  color:#fff;
+  font-size:15px;
+  outline:none;
+  min-width:0;
+  box-shadow:inset 0 2px 8px rgba(0,0,0,.2);
+}
+
+.chat-input input::placeholder{
+  color:#eef5fc;
+  opacity:.9
+}
+
+.chat-input input:focus{
+  border-color:#46baff
+}
+
+.send-btn{
+  width:45px;
+  height:45px;
+  border-radius:50%;
+  background:linear-gradient(135deg,#20b9ed,#0879c5);
+  color:#fff;
+  font-size:20px;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  flex-shrink:0;
+  box-shadow:0 0 14px rgba(22,140,255,.45);
+}
+
 .send-btn.show{display:flex}
 
-/* ============ التنقل السفلي ============ */
-.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(520px,100%);height:66px;background:rgba(2,8,16,.97);border-top:1px solid rgba(73,170,255,.15);display:grid;grid-template-columns:repeat(4,1fr);z-index:40;backdrop-filter:blur(15px)}
-.nav-item{background:transparent;color:#5b7394;font-size:9px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding-top:4px;position:relative}
-.nav-item .ico{font-size:19px}
-.nav-item.active{color:#49aaff}
-.nav-item.active .ico{filter:drop-shadow(0 0 6px rgba(73,170,255,.8))}
-.nav-badge{position:absolute;top:6px;right:calc(50% - 20px);background:#e74c3c;color:#fff;font-size:9px;font-weight:900;min-width:17px;height:17px;border-radius:9px;display:none;align-items:center;justify-content:center;padding:0 4px;box-shadow:0 0 10px rgba(231,76,60,.6)}
+/* =========================
+   قائمة المرفقات
+========================= */
+.attach-menu{
+  position:fixed;
+  bottom:133px;
+  left:50%;
+  transform:translateX(-50%);
+  width:min(330px,calc(100% - 30px));
+  background:#071d32;
+  border:1px solid rgba(73,170,255,.35);
+  border-radius:17px;
+  padding:8px;
+  display:none;
+  grid-template-columns:1fr 1fr;
+  gap:6px;
+  z-index:70;
+  box-shadow:0 12px 35px rgba(0,0,0,.65);
+}
+
+.attach-menu.show{display:grid}
+
+.attach-item{
+  background:#0c3152;
+  color:#fff;
+  padding:12px 7px;
+  border-radius:11px;
+  font-size:11px;
+}
+
+.attach-item:active{transform:scale(.97)}
+
+.attach-item .ico{
+  display:block;
+  font-size:20px;
+  margin-bottom:4px
+}
+
+/* =========================
+   التنقل السفلي
+========================= */
+.bottom-nav{
+  position:fixed;
+  bottom:0;
+  left:50%;
+  transform:translateX(-50%);
+  width:min(520px,100%);
+  height:68px;
+  background:rgba(2,11,22,.98);
+  border-top:1px solid rgba(73,170,255,.22);
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  z-index:40;
+  backdrop-filter:blur(15px);
+}
+
+.nav-item{
+  background:transparent;
+  color:#b4c3d3;
+  font-size:11px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:3px;
+  padding-top:4px;
+  position:relative;
+}
+
+.nav-item .ico{
+  font-size:25px;
+  line-height:1
+}
+
+.nav-item.active{
+  color:#31b8ff
+}
+
+.nav-item.active .ico{
+  filter:drop-shadow(0 0 7px rgba(73,170,255,.9))
+}
+
+.nav-item.active:after{
+  content:"";
+  position:absolute;
+  bottom:0;
+  width:70px;
+  height:3px;
+  border-radius:3px 3px 0 0;
+  background:#25b8ff;
+  box-shadow:0 0 10px #25b8ff
+}
+
+.nav-badge{
+  position:absolute;
+  top:5px;
+  right:calc(50% - 20px);
+  background:#e74c3c;
+  color:#fff;
+  font-size:9px;
+  font-weight:900;
+  min-width:17px;
+  height:17px;
+  border-radius:9px;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:0 4px
+}
+
 .nav-badge.show{display:flex}
 
-/* ============ النوافذ ============ */
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:80;display:none;align-items:flex-end;justify-content:center;backdrop-filter:blur(5px)}
+/* =========================
+   النوافذ
+========================= */
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.78);
+  z-index:80;
+  display:none;
+  align-items:flex-end;
+  justify-content:center;
+  backdrop-filter:blur(5px)
+}
+
 .modal.show{display:flex}
-.modal-box{width:min(520px,100%);max-height:85vh;overflow-y:auto;background:#071a2d;border-radius:20px 20px 0 0;padding:16px;border:1px solid rgba(73,170,255,.2)}
-.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
-.modal-head h3{font-size:15px;color:#fff}
-.modal-head .close{width:32px;height:32px;border-radius:9px;background:#0a1f38;color:#fff;font-size:18px}
-.modal-content{color:#eaf4ff;font-size:12px;line-height:1.7}
+
+.modal-box{
+  width:min(520px,100%);
+  max-height:85vh;
+  overflow-y:auto;
+  background:#071a2d;
+  border-radius:20px 20px 0 0;
+  padding:16px;
+  border:1px solid rgba(73,170,255,.2)
+}
+
+.modal-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:12px
+}
+
+.modal-head h3{
+  font-size:15px;
+  color:#fff
+}
+
+.modal-head .close{
+  width:32px;
+  height:32px;
+  border-radius:9px;
+  background:#0a1f38;
+  color:#fff;
+  font-size:18px
+}
+
+.modal-content{
+  color:#eaf4ff;
+  font-size:12px;
+  line-height:1.7
+}
 
 .field{margin-bottom:10px}
-.field label{display:block;font-size:11px;color:#8ab4dc;margin-bottom:5px}
-.field input{width:100%;height:44px;background:#020a14;border:1px solid rgba(255,255,255,.08);border-radius:11px;padding:0 12px;color:#fff;font-size:14px;outline:none;letter-spacing:1px;text-align:center}
-.field input:focus{border-color:rgba(73,170,255,.6)}
-.field input::placeholder{color:#5b7394;letter-spacing:0}
 
-.btn{width:100%;padding:12px;border-radius:12px;background:linear-gradient(135deg,#168cff,#0055d4);color:#fff;font-weight:800;font-size:13px;margin-top:6px;box-shadow:0 8px 20px rgba(22,140,255,.3)}
+.field label{
+  display:block;
+  font-size:11px;
+  color:#8ab4dc;
+  margin-bottom:5px
+}
+
+.field input{
+  width:100%;
+  height:44px;
+  background:#020a14;
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:11px;
+  padding:0 12px;
+  color:#fff;
+  font-size:14px;
+  outline:none;
+  letter-spacing:1px;
+  text-align:center
+}
+
+.field input:focus{
+  border-color:rgba(73,170,255,.6)
+}
+
+.field input::placeholder{
+  color:#5b7394;
+  letter-spacing:0
+}
+
+.btn{
+  width:100%;
+  padding:12px;
+  border-radius:12px;
+  background:linear-gradient(135deg,#168cff,#0055d4);
+  color:#fff;
+  font-weight:800;
+  font-size:13px;
+  margin-top:6px;
+  box-shadow:0 8px 20px rgba(22,140,255,.3)
+}
+
 .btn:active{transform:scale(.98)}
-.btn.success{background:linear-gradient(135deg,#1a9a52,#0d7033)}
-.btn.danger{background:linear-gradient(135deg,#c92a3d,#8e1a29)}
-.btn.ghost{background:#0a1f38;border:1px solid rgba(73,170,255,.25);color:#eaf4ff}
-.btn.small{padding:8px 12px;font-size:11px;width:auto;display:inline-block;margin:3px}
 
-.member-row{display:flex;align-items:center;gap:8px;padding:10px;background:#04101e;border-radius:11px;margin-bottom:6px;font-size:11px}
-.member-row .avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#0f4a7a,#0a2b47);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
-.member-row .info{flex:1;min-width:0}
-.member-row .name{font-weight:700;font-size:12px;color:#fff;display:flex;align-items:center;gap:5px}
-.member-row .role{font-size:9px;color:#8ab4dc;margin-top:2px}
-.member-row .actions{display:flex;gap:4px;flex-shrink:0}
-.member-row .actions button{padding:6px 9px;border-radius:8px;font-size:10px;font-weight:700;background:#146aa0;color:#fff}
+.btn.success{
+  background:linear-gradient(135deg,#1a9a52,#0d7033)
+}
+
+.btn.danger{
+  background:linear-gradient(135deg,#c92a3d,#8e1a29)
+}
+
+.btn.ghost{
+  background:#0a1f38;
+  border:1px solid rgba(73,170,255,.25);
+  color:#eaf4ff
+}
+
+.btn.small{
+  padding:8px 12px;
+  font-size:11px;
+  width:auto;
+  display:inline-block;
+  margin:3px
+}
+
+.member-row{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:10px;
+  background:#04101e;
+  border-radius:11px;
+  margin-bottom:6px;
+  font-size:11px
+}
+
+.member-row .avatar{
+  width:34px;
+  height:34px;
+  border-radius:50%;
+  background:linear-gradient(135deg,#0f4a7a,#0a2b47);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:15px;
+  flex-shrink:0
+}
+
+.member-row .info{
+  flex:1;
+  min-width:0
+}
+
+.member-row .name{
+  font-weight:700;
+  font-size:12px;
+  color:#fff;
+  display:flex;
+  align-items:center;
+  gap:5px
+}
+
+.member-row .role{
+  font-size:9px;
+  color:#8ab4dc;
+  margin-top:2px
+}
+
+.member-row .actions{
+  display:flex;
+  gap:4px;
+  flex-shrink:0
+}
+
+.member-row .actions button{
+  padding:6px 9px;
+  border-radius:8px;
+  font-size:10px;
+  font-weight:700;
+  background:#146aa0;
+  color:#fff
+}
+
 .member-row .actions .demote{background:#7a4a1a}
 .member-row .actions .remove{background:#8e2028}
 .member-row .actions .promote{background:#1a7a42}
 
-.role-badge{display:inline-block;padding:2px 7px;border-radius:9px;font-size:9px;font-weight:700}
-.role-badge.owner{background:rgba(241,196,15,.2);color:#f1c40f}
-.role-badge.admin{background:rgba(73,170,255,.25);color:#49aaff}
-.role-badge.member{background:rgba(139,157,180,.2);color:#8b9db4}
+.role-badge{
+  display:inline-block;
+  padding:2px 7px;
+  border-radius:9px;
+  font-size:9px;
+  font-weight:700
+}
 
-.rec-bar{position:fixed;bottom:76px;left:50%;transform:translateX(-50%);background:rgba(231,76,60,.95);color:#fff;padding:10px 18px;border-radius:20px;font-size:12px;font-weight:700;display:none;align-items:center;gap:9px;z-index:95;box-shadow:0 8px 25px rgba(231,76,60,.5)}
+.role-badge.owner{
+  background:rgba(241,196,15,.2);
+  color:#f1c40f
+}
+
+.role-badge.admin{
+  background:rgba(73,170,255,.25);
+  color:#49aaff
+}
+
+.role-badge.member{
+  background:rgba(139,157,180,.2);
+  color:#8b9db4
+}
+
+.rec-bar{
+  position:fixed;
+  bottom:76px;
+  left:50%;
+  transform:translateX(-50%);
+  background:rgba(231,76,60,.95);
+  color:#fff;
+  padding:10px 18px;
+  border-radius:20px;
+  font-size:12px;
+  font-weight:700;
+  display:none;
+  align-items:center;
+  gap:9px;
+  z-index:95;
+  box-shadow:0 8px 25px rgba(231,76,60,.5)
+}
+
 .rec-bar.show{display:flex}
-.rec-dot{width:9px;height:9px;background:#fff;border-radius:50%;animation:recPulse .8s infinite}
 
-.toast{position:fixed;left:50%;bottom:76px;transform:translateX(-50%) translateY(15px);padding:9px 16px;background:#0a1e36;color:#fff;border:1px solid rgba(73,170,255,.35);border-radius:20px;font-size:11px;z-index:100;opacity:0;transition:.25s;pointer-events:none;max-width:90%;text-align:center;box-shadow:0 8px 25px rgba(0,0,0,.6)}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.rec-dot{
+  width:9px;
+  height:9px;
+  background:#fff;
+  border-radius:50%;
+  animation:recPulse .8s infinite
+}
+
+.toast{
+  position:fixed;
+  left:50%;
+  bottom:140px;
+  transform:translateX(-50%) translateY(15px);
+  padding:9px 16px;
+  background:#0a1e36;
+  color:#fff;
+  border:1px solid rgba(73,170,255,.35);
+  border-radius:20px;
+  font-size:11px;
+  z-index:100;
+  opacity:0;
+  transition:.25s;
+  pointer-events:none;
+  max-width:90%;
+  text-align:center;
+  box-shadow:0 8px 25px rgba(0,0,0,.6)
+}
+
+.toast.show{
+  opacity:1;
+  transform:translateX(-50%) translateY(0)
+}
 
 .hidden{display:none!important}
-.empty-state{padding:20px;text-align:center;color:#61788e;font-size:11px;line-height:1.7}
 
-@media(max-width:380px){
-  .ptt-btn{width:90px;height:90px}
-  .ptt-btn .ico{font-size:20px}
-  .wave-code-big{font-size:22px}
-  .my-code-card .code-value{font-size:26px;letter-spacing:4px}
+.empty-state{
+  padding:20px;
+  text-align:center;
+  color:#61788e;
+  font-size:11px;
+  line-height:1.7
+}
+
+@media(max-width:520px){
+  .status-row{
+    left:auto;
+    right:5px;
+    width:178px;
+  }
+
+  .ops-card{
+    margin-right:5px;
+    padding-right:188px;
+  }
+
+  .ops-top{
+    display:block;
+    position:relative;
+  }
+
+  .ops-left{
+    width:150px;
+    height:151px;
+  }
+
+  .wave-center{
+    position:absolute;
+    right:153px;
+    left:5px;
+    top:0;
+    height:151px;
+  }
+
+  .wave-arrows{
+    right:0;
+    left:0;
+  }
+
+  .arrow-btn{
+    width:46px;
+    height:46px;
+    font-size:32px;
+  }
+
+  .voice-ptt{
+    grid-template-columns:1fr 128px 1fr;
+  }
+
+  .ptt-btn{
+    width:126px;
+    height:126px;
+  }
+
+  .ptt-ring{
+    width:155px;
+    height:155px;
+  }
+
+  .voice-box .vt-name{
+    font-size:15px;
+  }
+}
+
+@media(max-width:390px){
+  .ops-card{
+    padding-right:155px;
+  }
+
+  .status-row{
+    width:150px;
+  }
+
+  .ops-left{
+    width:130px;
+  }
+
+  .wave-center{
+    right:132px;
+  }
+
+  .wave-code-big{
+    font-size:24px;
+  }
+
+  .wave-num-big{
+    font-size:15px;
+  }
+
+  .arrow-btn{
+    width:40px;
+    height:40px;
+    font-size:28px;
+  }
+
+  .voice-ptt{
+    grid-template-columns:1fr 108px 1fr;
+    gap:2px;
+  }
+
+  .ptt-btn{
+    width:108px;
+    height:108px;
+  }
+
+  .ptt-ring{
+    width:137px;
+    height:137px;
+  }
+
+  .ptt-btn .ico{
+    font-size:42px;
+  }
+
+  .voice-box .vt-name{
+    font-size:12px;
+  }
 }
 </style>
 </head>
+
 <body>
 <div class="app" id="app">
 
-  <!-- ============ Header ============ -->
-  <header class="topbar">
-    <button class="menu-btn" onclick="openPanel('settingsPanel')">☰</button>
-    <div class="brand-wrap">
-      <span class="brand-icon">📡</span>
-      <div class="brand">
-        <strong>Radio Connect</strong>
-        <span>جهاز لاسلكي</span>
-      </div>
-    </div>
-    <div class="status-pill">
-      <span class="dot" id="statusDot"></span>
-      <span class="lbl" id="statusLabel">غير متصل</span>
-    </div>
-  </header>
-
-  <!-- ============ قسم العمليات ============ -->
+  <!-- العمليات + الموجة + الحالة -->
   <div class="ops-card">
     <div class="ops-top">
 
       <div class="ops-left" onclick="openPanel('roomsPanel')">
         <span class="star">★</span>
         <span class="ops-name" id="opsRoomName">لا توجد غرفة</span>
-        <span class="ops-arrow">▼</span>
+        <span class="ops-arrow">⌄</span>
       </div>
 
       <div class="wave-center">
         <div class="wave-label-top">الموجة الحالية</div>
         <div class="wave-code-big" id="waveCode">------</div>
         <div class="wave-num-big" id="waveNum">موجة 1</div>
-      </div>
 
-      <div class="wave-arrows">
-        <button class="arrow-btn" onclick="changeWave(-1)">‹</button>
-        <button class="arrow-btn" onclick="changeWave(1)">›</button>
+        <div class="wave-arrows">
+          <button class="arrow-btn" onclick="changeWave(-1)">‹</button>
+          <button class="arrow-btn" onclick="changeWave(1)">›</button>
+        </div>
       </div>
 
     </div>
   </div>
 
-  <!-- ============ بطاقة الرقم الشخصي ============ -->
+  <!-- حالة الجهاز -->
+  <div class="status-row">
+    <div class="status-box ok">
+      <span class="icon">🔋</span>
+      <span class="val" id="batteryVal">--%</span>
+      <span class="lbl">البطارية</span>
+    </div>
+
+    <div class="status-box ok">
+      <span class="icon">▮▮▮</span>
+      <span class="val" id="networkVal">--</span>
+      <span class="lbl">الشبكة</span>
+    </div>
+
+    <div class="status-box ok">
+      <span class="icon">☁</span>
+      <span class="val" id="serverVal">--</span>
+      <span class="lbl">بالخادم</span>
+    </div>
+  </div>
+
+  <!-- الرقم الشخصي -->
   <div class="my-code-card" id="myCodeCard">
     <div class="code-label">🆔 رقم التعريف الخاص بك</div>
     <div class="code-value" id="myCodeValue">------</div>
@@ -210,26 +1115,7 @@ button{border:0;cursor:pointer;font-family:inherit}
     </div>
   </div>
 
-  <!-- ============ حالة الجهاز ============ -->
-  <div class="status-row">
-    <div class="status-box ok">
-      <span class="icon">🔋</span>
-      <span class="val" id="batteryVal">--%</span>
-      <span class="lbl">البطارية</span>
-    </div>
-    <div class="status-box ok">
-      <span class="icon">📶</span>
-      <span class="val" id="networkVal">--</span>
-      <span class="lbl">الشبكة</span>
-    </div>
-    <div class="status-box ok">
-      <span class="icon">📡</span>
-      <span class="val" id="serverVal">--</span>
-      <span class="lbl">بالخادم</span>
-    </div>
-  </div>
-
-  <!-- ============ الصوت + PTT ============ -->
+  <!-- الصوت + PTT -->
   <div class="voice-ptt">
 
     <div class="voice-box active" id="voiceNatural" onclick="setVoiceMode('natural')">
@@ -240,6 +1126,7 @@ button{border:0;cursor:pointer;font-family:inherit}
 
     <div class="ptt-wrap">
       <div class="ptt-ring"></div>
+
       <button class="ptt-btn" id="pttBtn">
         <span class="ico">🎙️</span>
         <span class="txt"></span>
@@ -254,10 +1141,16 @@ button{border:0;cursor:pointer;font-family:inherit}
 
   </div>
 
-  <!-- ============ خانة الإدخال السفلية (خالية من الحوار والرسائل القديمة) ============ -->
-  <div class="chat-input" style="border-radius: 14px; margin-top: 15px;">
+  <!-- مساحة المحادثة -->
+  <div class="chat-area"></div>
+
+  <!-- إدخال المحادثة -->
+  <div class="chat-input">
     <button class="icon-btn" onclick="toggleAttachMenu(event)">📎</button>
-    <button class="icon-btn" id="micBtn" title="اضغط مطوّلاً للتسجيل">🎙️</button>
+
+    <button class="icon-btn" id="micBtn" title="اضغط مطوّلاً للتسجيل">
+      🎙️
+    </button>
 
     <input
       id="chatInput"
@@ -270,50 +1163,68 @@ button{border:0;cursor:pointer;font-family:inherit}
     <button class="send-btn" id="sendBtn" onclick="sendMessage()">➤</button>
   </div>
 
-  <!-- ============ قائمة الإرفاق ============ -->
+  <!-- قائمة المرفقات -->
   <div class="attach-menu" id="attachMenu">
+
     <button class="attach-item" onclick="pickFile('image/*')">
-      <span class="ico">🖼️</span> إرسال صورة
+      <span class="ico">🖼️</span>
+      إرسال صورة
     </button>
+
     <button class="attach-item" onclick="pickFile('video/*')">
-      <span class="ico">🎥</span> إرسال فيديو
+      <span class="ico">🎥</span>
+      إرسال فيديو
     </button>
+
     <button class="attach-item" onclick="openPanel('contactsPanel')">
-      <span class="ico">👥</span> جهات الاتصال
+      <span class="ico">👥</span>
+      جهات الاتصال
     </button>
+
     <button class="attach-item" onclick="pickFile('.pdf,.doc,.docx,.xls,.xlsx,.txt')">
-      <span class="ico">📄</span> إرسال مستند
+      <span class="ico">📄</span>
+      إرسال مستند
     </button>
+
     <button class="attach-item" onclick="pickFile('audio/*')">
-      <span class="ico">🎵</span> إرسال صوت
+      <span class="ico">🎵</span>
+      إرسال صوت
     </button>
+
     <button class="attach-item" onclick="openPanel('membersPanel')">
-      <span class="ico">👤</span> أعضاء الغرفة
+      <span class="ico">👤</span>
+      أعضاء الغرفة
     </button>
+
   </div>
 
-  <!-- ============ التنقل السفلي ============ -->
+  <!-- التنقل السفلي -->
   <nav class="bottom-nav">
+
     <button class="nav-item active" id="navHome" onclick="switchNav('home')">
       <span class="ico">⌂</span>
       <span>الرئيسية</span>
     </button>
+
     <button class="nav-item" id="navRooms" onclick="switchNav('rooms')">
-      <span class="ico">◉</span>
-      <span>الغرف</span>
+      <span class="ico">☆</span>
+      <span>المفضلة</span>
       <span class="nav-badge" id="roomsBadge">0</span>
     </button>
+
     <button class="nav-item" id="navJoin" onclick="openPanel('joinPanel')">
-      <span class="ico">🔑</span>
-      <span>انضمام</span>
+      <span class="ico">▮◖▮</span>
+      <span>الموجات</span>
     </button>
+
     <button class="nav-item" id="navAccount" onclick="switchNav('account')">
       <span class="ico">♙</span>
       <span>حسابي</span>
     </button>
+
   </nav>
 
-  <!-- ============ النوافذ المنبثقة ============ -->
+  <!-- النوافذ المنبثقة -->
 
   <div class="modal" id="settingsPanel">
     <div class="modal-box">
@@ -346,10 +1257,12 @@ button{border:0;cursor:pointer;font-family:inherit}
         <h3>➕ إنشاء غرفة جديدة</h3>
         <button class="close" onclick="closePanel('createPanel')">×</button>
       </div>
+
       <div class="field">
         <label>اسم الغرفة</label>
         <input id="newRoomName" placeholder="مثال: غرفة العمليات" maxlength="40">
       </div>
+
       <button class="btn success" onclick="createRoom()">✅ إنشاء</button>
     </div>
   </div>
@@ -360,14 +1273,17 @@ button{border:0;cursor:pointer;font-family:inherit}
         <h3>🔑 الانضمام لغرفة</h3>
         <button class="close" onclick="closePanel('joinPanel')">×</button>
       </div>
+
       <div class="field">
         <label>رقم التعريف</label>
         <input id="joinCode" placeholder="مثال: 7F3A2B" maxlength="6" style="text-transform:uppercase">
       </div>
+
       <div class="field">
         <label>اسمك</label>
         <input id="joinName" placeholder="اكتب اسمك" maxlength="40">
       </div>
+
       <button class="btn success" onclick="submitJoin()">✅ انضمام</button>
     </div>
   </div>
@@ -410,6 +1326,7 @@ button{border:0;cursor:pointer;font-family:inherit}
         <h3>📻 اختر نوع الصوت اللاسلكي</h3>
         <button class="close" onclick="closePanel('radioPresetsPanel')">×</button>
       </div>
+
       <div class="modal-content">
         <button class="btn ghost" onclick="selectPreset('basic')">📻 أساسي</button>
         <button class="btn ghost" onclick="selectPreset('heavy')">🎚️ ثقيل</button>
@@ -430,6 +1347,7 @@ button{border:0;cursor:pointer;font-family:inherit}
   <div class="toast" id="toast"></div>
 
 </div>
+
 <script>
 "use strict";
 
@@ -664,7 +1582,7 @@ async function loadMyInfo(){
       if(d.isVisible && d.personalCode){
         card.classList.add("show");
         if($("myCodeValue")) $("myCodeValue").textContent = d.personalCode;
-        if($("myCodeRole")) $("myCodeRole").textContent = 
+        if($("myCodeRole")) $("myCodeRole").textContent =
           d.role === "owner" ? "👑 مالك الغرفة" : "🛡️ مشرف";
       } else {
         card.classList.remove("show");
