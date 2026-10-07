@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -7,7 +6,11 @@
 <meta name="viewport"
       content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 
+<meta name="theme-color" content="#02050e">
+
 <title>Radio Connect - صوت مباشر</title>
+
+<script src="https://unpkg.com/livekit-client@2.15.3/dist/livekit-client.umd.min.js"></script>
 
 <style>
 *{
@@ -50,6 +53,7 @@ body{
   margin-top:10px;
   color:#79e6a0;
   font-size:14px;
+  text-align:center;
 }
 
 .room{
@@ -89,6 +93,7 @@ body{
 
   touch-action:none;
   user-select:none;
+  -webkit-user-select:none;
 }
 
 .ptt:active,
@@ -102,6 +107,10 @@ body{
   transform:scale(.97);
 }
 
+.ptt:disabled{
+  opacity:.45;
+}
+
 .hint{
   margin-top:25px;
   color:#8896aa;
@@ -113,6 +122,15 @@ body{
   color:#ff7070;
   margin-top:18px;
   text-align:center;
+  min-height:22px;
+}
+
+.remote{
+  position:fixed;
+  width:1px;
+  height:1px;
+  opacity:0;
+  pointer-events:none;
 }
 </style>
 </head>
@@ -126,7 +144,7 @@ body{
   </div>
 
   <div id="status" class="status">
-    جاري الاتصال...
+    جاري الاتصال بالخدمة الصوتية...
   </div>
 
   <div class="room">
@@ -137,7 +155,8 @@ body{
   <button
     id="ptt"
     class="ptt"
-    type="button">
+    type="button"
+    disabled>
     اضغط للتحدث
   </button>
 
@@ -150,21 +169,79 @@ body{
 
 </div>
 
+<div id="remoteAudioContainer" class="remote"></div>
+
 <script>
 
-const statusEl = document.getElementById("status");
-const roomCodeEl = document.getElementById("roomCode");
-const ptt = document.getElementById("ptt");
-const errorEl = document.getElementById("error");
+/* =========================================================
+   RADIO CONNECT
+   LIVEKIT PTT VOICE
+   ========================================================= */
 
-const params = new URLSearchParams(location.search);
+const statusEl =
+  document.getElementById("status");
+
+const roomCodeEl =
+  document.getElementById("roomCode");
+
+const ptt =
+  document.getElementById("ptt");
+
+const errorEl =
+  document.getElementById("error");
+
+const remoteAudioContainer =
+  document.getElementById("remoteAudioContainer");
+
+
+/* =========================================================
+   التحقق من LiveKit
+   ========================================================= */
+
+if (
+  typeof LivekitClient === "undefined"
+) {
+
+  setStatus(
+    "تعذر تحميل خدمة الصوت",
+    "#ff7070"
+  );
+
+  showError(
+    "LiveKit لم يتم تحميله"
+  );
+
+  throw new Error(
+    "LivekitClient is not available"
+  );
+}
+
+
+const {
+  Room,
+  RoomEvent,
+  Track,
+  createLocalAudioTrack
+} = LivekitClient;
+
+
+/* =========================================================
+   الغرفة
+   ========================================================= */
+
+const params =
+  new URLSearchParams(
+    window.location.search
+  );
 
 let roomId =
   params.get("room") ||
   params.get("r") ||
   "";
 
+
 if (!roomId) {
+
   roomId =
     Math.random()
       .toString(36)
@@ -172,462 +249,754 @@ if (!roomId) {
       .toUpperCase();
 }
 
-roomId = roomId.toUpperCase();
+roomId =
+  roomId
+    .trim()
+    .toUpperCase();
 
-roomCodeEl.textContent = roomId;
 
-let ws = null;
-let peer = null;
-let localStream = null;
-let remoteAudio = null;
+roomCodeEl.textContent =
+  roomId;
+
+
+/* =========================================================
+   المتغيرات
+   ========================================================= */
+
+let liveRoom = null;
+
+let localAudioTrack = null;
+
+let audioPublished = false;
+
 let isTalking = false;
-let makingOffer = false;
 
-const rtcConfig = {
-  iceServers: [
-    {
-      urls: "stun:stun.l.google.com:19302"
-    },
-    {
-      urls: "stun:stun.cloudflare.com:3478"
-    }
-  ]
-};
+let connecting = false;
 
-function setStatus(text, color) {
-  statusEl.textContent = text;
-  statusEl.style.color = color || "#79e6a0";
-}
 
-function showError(text) {
-  errorEl.textContent = text || "";
-}
+/* =========================================================
+   Device ID
+   ========================================================= */
 
-function send(data) {
-  if (ws && ws.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify(data));
-  }
-}
-
-function createPeer() {
-
-  if (peer) {
-    try {
-      peer.close();
-    } catch {}
-  }
-
-  peer = new RTCPeerConnection(rtcConfig);
-
-  peer.onicecandidate = (event) => {
-
-    if (event.candidate) {
-
-      send({
-        type: "ice",
-        candidate: event.candidate
-      });
-
-    }
-  };
-
-  peer.ontrack = (event) => {
-
-    if (!remoteAudio) {
-
-      remoteAudio = document.createElement("audio");
-
-      remoteAudio.autoplay = true;
-      remoteAudio.playsInline = true;
-
-      document.body.appendChild(remoteAudio);
-    }
-
-    remoteAudio.srcObject = event.streams[0];
-
-    remoteAudio.play().catch(() => {});
-  };
-
-  peer.onconnectionstatechange = () => {
-
-    const state = peer.connectionState;
-
-    if (state === "connected") {
-      setStatus("متصل بالطرف الآخر", "#79e6a0");
-    }
-
-    if (state === "connecting") {
-      setStatus("جاري الاتصال...", "#ffd166");
-    }
-
-    if (
-      state === "disconnected" ||
-      state === "failed"
-    ) {
-      setStatus("انقطع الاتصال", "#ff7070");
-    }
-  };
-
-  if (localStream) {
-
-    for (const track of localStream.getTracks()) {
-
-      peer.addTrack(track, localStream);
-    }
-  }
-}
-
-async function connect() {
-
-  const protocol =
-    location.protocol === "https:"
-      ? "wss:"
-      : "ws:";
-
-  ws = new WebSocket(
-    protocol +
-    "//" +
-    location.host
+let deviceId =
+  localStorage.getItem(
+    "radio_connect_device_id"
   );
 
-  ws.onopen = () => {
 
-    setStatus("متصل بالخادم", "#79e6a0");
+if (!deviceId) {
 
-    send({
-      type: "join",
-      room: roomId
-    });
-  };
+  deviceId =
+    "DEV-" +
+    crypto.randomUUID();
 
-  ws.onmessage = async (event) => {
-
-    let msg;
-
-    try {
-      msg = JSON.parse(event.data);
-    } catch {
-      return;
-    }
-
-    if (msg.type === "joined") {
-
-      setStatus(
-        msg.peers > 1
-          ? "يوجد شخص في الغرفة"
-          : "بانتظار الطرف الآخر",
-        "#79e6a0"
-      );
-
-      createPeer();
-
-      return;
-    }
-
-    if (msg.type === "peer-joined") {
-
-      setStatus(
-        "تم دخول الطرف الآخر",
-        "#79e6a0"
-      );
-
-      await makeOffer();
-
-      return;
-    }
-
-    if (msg.type === "offer") {
-
-      createPeer();
-
-      await peer.setRemoteDescription(
-        new RTCSessionDescription(msg.offer)
-      );
-
-      const answer =
-        await peer.createAnswer();
-
-      await peer.setLocalDescription(answer);
-
-      send({
-        type: "answer",
-        answer: peer.localDescription
-      });
-
-      return;
-    }
-
-    if (msg.type === "answer") {
-
-      if (!peer) return;
-
-      await peer.setRemoteDescription(
-        new RTCSessionDescription(msg.answer)
-      );
-
-      return;
-    }
-
-    if (msg.type === "ice") {
-
-      if (!peer) return;
-
-      try {
-
-        await peer.addIceCandidate(
-          new RTCIceCandidate(msg.candidate)
-        );
-
-      } catch (e) {
-
-        console.warn(
-          "ICE error",
-          e
-        );
-      }
-
-      return;
-    }
-
-    if (msg.type === "peer-left") {
-
-      setStatus(
-        "الطرف الآخر خرج",
-        "#ff7070"
-      );
-
-      if (peer) {
-        peer.close();
-        peer = null;
-      }
-
-      return;
-    }
-
-    if (msg.type === "error") {
-
-      showError(msg.message);
-    }
-  };
-
-  ws.onerror = () => {
-
-    setStatus(
-      "تعذر الاتصال بالخادم",
-      "#ff7070"
-    );
-  };
-
-  ws.onclose = () => {
-
-    setStatus(
-      "انقطع اتصال الخادم",
-      "#ff7070"
-    );
-  };
+  localStorage.setItem(
+    "radio_connect_device_id",
+    deviceId
+  );
 }
 
-async function makeOffer() {
 
-  if (!peer) {
-    createPeer();
+/* =========================================================
+   الحالة
+   ========================================================= */
+
+function setStatus(
+  text,
+  color = "#79e6a0"
+) {
+
+  statusEl.textContent =
+    text;
+
+  statusEl.style.color =
+    color;
+}
+
+
+function showError(
+  text
+) {
+
+  errorEl.textContent =
+    text || "";
+}
+
+
+/* =========================================================
+   الحصول على Token
+   ========================================================= */
+
+async function getToken() {
+
+  const response =
+    await fetch(
+      "/token?room=" +
+      encodeURIComponent(roomId),
+      {
+        method:"GET",
+        headers:{
+          "x-device-id":
+            deviceId
+        },
+        cache:"no-store"
+      }
+    );
+
+
+  if (!response.ok) {
+
+    let message =
+      "تعذر الحصول على رمز الاتصال";
+
+    try {
+
+      const data =
+        await response.json();
+
+      if (data.error) {
+        message =
+          data.error;
+      }
+
+    } catch {}
+
+    throw new Error(
+      message
+    );
   }
 
-  if (makingOffer) return;
 
-  makingOffer = true;
+  const data =
+    await response.json();
+
+
+  if (
+    !data.token ||
+    !data.url
+  ) {
+
+    throw new Error(
+      "بيانات LiveKit غير مكتملة"
+    );
+  }
+
+
+  return data;
+}
+
+
+/* =========================================================
+   اتصال LiveKit
+   ========================================================= */
+
+async function connectLiveKit() {
+
+  if (connecting) {
+    return;
+  }
+
+  if (
+    liveRoom &&
+    liveRoom.state === "connected"
+  ) {
+    return;
+  }
+
+
+  connecting = true;
 
   try {
 
-    const offer =
-      await peer.createOffer();
+    setStatus(
+      "جاري الاتصال بالصوت...",
+      "#ffd166"
+    );
 
-    await peer.setLocalDescription(offer);
 
-    send({
-      type: "offer",
-      offer: peer.localDescription
-    });
+    const data =
+      await getToken();
 
-  } catch (e) {
 
-    console.error(e);
+    liveRoom =
+      new Room({
+        adaptiveStream:true,
+        dynacast:true
+      });
+
+
+    /* -----------------------------------------
+       دخول شخص جديد
+    ----------------------------------------- */
+
+    liveRoom.on(
+      RoomEvent.ParticipantConnected,
+      participant => {
+
+        setStatus(
+          "تم الاتصال بالطرف الآخر",
+          "#79e6a0"
+        );
+
+        showError("");
+      }
+    );
+
+
+    /* -----------------------------------------
+       خروج شخص
+    ----------------------------------------- */
+
+    liveRoom.on(
+      RoomEvent.ParticipantDisconnected,
+      participant => {
+
+        setStatus(
+          "الطرف الآخر خرج من الغرفة",
+          "#ffd166"
+        );
+      }
+    );
+
+
+    /* -----------------------------------------
+       اتصال الغرفة
+    ----------------------------------------- */
+
+    liveRoom.on(
+      RoomEvent.Connected,
+      () => {
+
+        setStatus(
+          "متصل بالغرفة الصوتية",
+          "#79e6a0"
+        );
+
+        ptt.disabled =
+          false;
+
+        showError("");
+      }
+    );
+
+
+    /* -----------------------------------------
+       انقطاع الاتصال
+    ----------------------------------------- */
+
+    liveRoom.on(
+      RoomEvent.Disconnected,
+      reason => {
+
+        ptt.disabled =
+          true;
+
+        setStatus(
+          "انقطع الاتصال الصوتي",
+          "#ff7070"
+        );
+      }
+    );
+
+
+    /* -----------------------------------------
+       استقبال صوت الطرف الآخر
+    ----------------------------------------- */
+
+    liveRoom.on(
+      RoomEvent.TrackSubscribed,
+      (
+        track,
+        publication,
+        participant
+      ) => {
+
+        if (
+          track.kind ===
+          Track.Kind.Audio
+        ) {
+
+          const element =
+            track.attach();
+
+          element.autoplay =
+            true;
+
+          element.playsInline =
+            true;
+
+          remoteAudioContainer
+            .appendChild(
+              element
+            );
+
+          element.play()
+            .catch(() => {});
+
+          setStatus(
+            "متصل بالطرف الآخر",
+            "#79e6a0"
+          );
+        }
+      }
+    );
+
+
+    /* -----------------------------------------
+       إزالة الصوت
+    ----------------------------------------- */
+
+    liveRoom.on(
+      RoomEvent.TrackUnsubscribed,
+      (
+        track
+      ) => {
+
+        try {
+
+          track.detach()
+            .forEach(
+              element => {
+                element.remove();
+              }
+            );
+
+        } catch {}
+      }
+    );
+
+
+    /* -----------------------------------------
+       دخول LiveKit
+    ----------------------------------------- */
+
+    await liveRoom.connect(
+      data.url,
+      data.token
+    );
+
+
+    setStatus(
+      "بانتظار الطرف الآخر...",
+      "#79e6a0"
+    );
+
+    ptt.disabled =
+      false;
+
+
+  } catch (error) {
+
+    console.error(
+      "LiveKit connection error:",
+      error
+    );
+
+
+    ptt.disabled =
+      true;
+
+
+    setStatus(
+      "تعذر الاتصال الصوتي",
+      "#ff7070"
+    );
+
+
+    showError(
+      error.message ||
+      "تعذر الاتصال بخدمة الصوت"
+    );
+
+
+    liveRoom =
+      null;
+
 
   } finally {
 
-    makingOffer = false;
+    connecting =
+      false;
   }
 }
 
-async function startTalking(event) {
+
+/* =========================================================
+   إنشاء الميكروفون
+   ========================================================= */
+
+async function createMicrophone() {
+
+  if (
+    !liveRoom ||
+    liveRoom.state !==
+      "connected"
+  ) {
+
+    await connectLiveKit();
+  }
+
+
+  if (!liveRoom) {
+
+    throw new Error(
+      "الاتصال الصوتي غير جاهز"
+    );
+  }
+
+
+  /* -----------------------------------------
+     إذا كان الميكروفون موجودًا
+  ----------------------------------------- */
+
+  if (localAudioTrack) {
+
+    return localAudioTrack;
+  }
+
+
+  /* -----------------------------------------
+     طلب إذن الميكروفون
+  ----------------------------------------- */
+
+  localAudioTrack =
+    await createLocalAudioTrack({
+
+      echoCancellation:true,
+
+      noiseSuppression:true,
+
+      autoGainControl:true,
+
+      channelCount:1
+
+    });
+
+
+  /* -----------------------------------------
+     نشر الميكروفون في الغرفة
+  ----------------------------------------- */
+
+  await liveRoom
+    .localParticipant
+    .publishTrack(
+      localAudioTrack,
+      {
+        name:"radio-microphone"
+      }
+    );
+
+
+  audioPublished =
+    true;
+
+
+  /* -----------------------------------------
+     يبدأ مكتوم
+  ----------------------------------------- */
+
+  await localAudioTrack.mute();
+
+
+  return localAudioTrack;
+}
+
+
+/* =========================================================
+   بدء التحدث
+   ========================================================= */
+
+async function startTalking(
+  event
+) {
 
   if (event) {
     event.preventDefault();
   }
 
-  if (isTalking) return;
 
-  isTalking = true;
+  if (isTalking) {
+    return;
+  }
 
-  ptt.classList.add("talking");
+
+  isTalking =
+    true;
+
+
+  ptt.classList.add(
+    "talking"
+  );
+
+
+  ptt.textContent =
+    "🎙️ تحدث الآن";
+
+
+  showError("");
+
 
   try {
 
-    if (!localStream) {
+    /* -----------------------------------------
+       الاتصال بالغرفة
+    ----------------------------------------- */
 
-      localStream =
-        await navigator.mediaDevices.getUserMedia({
-          audio: {
-            echoCancellation: true,
-            noiseSuppression: true,
-            autoGainControl: true,
-            channelCount: 1
-          },
-          video: false
-        });
-
-      if (!peer) {
-        createPeer();
-      }
-
-      for (
-        const track of
-        localStream.getTracks()
-      ) {
-
-        const sender =
-          peer.getSenders()
-            .find(
-              s =>
-                s.track &&
-                s.track.kind === "audio"
-            );
-
-        if (!sender) {
-
-          peer.addTrack(
-            track,
-            localStream
-          );
-
-        } else {
-
-          await sender.replaceTrack(
-            track
-          );
-        }
-
-      }
-
-      if (
-        peer.connectionState ===
-        "new"
-      ) {
-
-        await makeOffer();
-      }
-    }
-
-    for (
-      const track of
-      localStream.getAudioTracks()
+    if (
+      !liveRoom ||
+      liveRoom.state !==
+        "connected"
     ) {
 
-      track.enabled = true;
+      await connectLiveKit();
     }
+
+
+    /* -----------------------------------------
+       إنشاء الميكروفون
+    ----------------------------------------- */
+
+    const microphone =
+      await createMicrophone();
+
+
+    /* -----------------------------------------
+       فتح الميكروفون
+    ----------------------------------------- */
+
+    await microphone.unmute();
+
 
     setStatus(
       "🎙️ أنت تتحدث الآن",
       "#ff6666"
     );
 
+
   } catch (error) {
 
-    console.error(error);
+    console.error(
+      "Microphone error:",
+      error
+    );
 
-    isTalking = false;
 
-    ptt.classList.remove("talking");
+    isTalking =
+      false;
+
+
+    ptt.classList.remove(
+      "talking"
+    );
+
+
+    ptt.textContent =
+      "اضغط للتحدث";
+
+
+    let message =
+      "تعذر تشغيل الميكروفون";
+
 
     if (
       error.name ===
       "NotAllowedError"
     ) {
 
-      showError(
-        "اسمح للتطبيق باستخدام الميكروفون"
-      );
+      message =
+        "تم رفض إذن الميكروفون. اسمح للمتصفح باستخدام الميكروفون ثم حاول مرة أخرى.";
 
-    } else {
+    } else if (
+      error.name ===
+      "NotFoundError"
+    ) {
 
-      showError(
-        "تعذر تشغيل الميكروفون"
-      );
+      message =
+        "لم يتم العثور على ميكروفون في الجهاز.";
+
+    } else if (
+      error.name ===
+      "NotReadableError"
+    ) {
+
+      message =
+        "الميكروفون مستخدم من تطبيق آخر.";
+
+    } else if (
+      error.message
+    ) {
+
+      message =
+        error.message;
     }
+
+
+    showError(
+      message
+    );
+
+
+    setStatus(
+      "الميكروفون متوقف",
+      "#ff7070"
+    );
   }
 }
 
-function stopTalking(event) {
+
+/* =========================================================
+   إيقاف التحدث
+   ========================================================= */
+
+async function stopTalking(
+  event
+) {
 
   if (event) {
     event.preventDefault();
   }
 
-  if (!isTalking) return;
 
-  isTalking = false;
-
-  ptt.classList.remove("talking");
-
-  if (localStream) {
-
-    for (
-      const track of
-      localStream.getAudioTracks()
-    ) {
-
-      track.enabled = false;
-    }
+  if (!isTalking) {
+    return;
   }
 
-  setStatus(
-    "الميكروفون متوقف",
-    "#79e6a0"
+
+  isTalking =
+    false;
+
+
+  ptt.classList.remove(
+    "talking"
   );
+
+
+  ptt.textContent =
+    "اضغط للتحدث";
+
+
+  try {
+
+    if (localAudioTrack) {
+
+      await localAudioTrack
+        .mute();
+    }
+
+  } catch (error) {
+
+    console.warn(
+      "Mute error:",
+      error
+    );
+  }
+
+
+  if (
+    liveRoom &&
+    liveRoom.state ===
+      "connected"
+  ) {
+
+    setStatus(
+      "الميكروفون متوقف",
+      "#79e6a0"
+    );
+  }
 }
+
+
+/* =========================================================
+   أزرار PTT
+   ========================================================= */
 
 ptt.addEventListener(
   "pointerdown",
   startTalking
 );
 
+
 ptt.addEventListener(
   "pointerup",
   stopTalking
 );
+
 
 ptt.addEventListener(
   "pointercancel",
   stopTalking
 );
 
+
 ptt.addEventListener(
   "pointerleave",
   stopTalking
 );
 
+
+/* =========================================================
+   منع سحب الصفحة أثناء الضغط
+   ========================================================= */
+
+ptt.addEventListener(
+  "contextmenu",
+  event => {
+    event.preventDefault();
+  }
+);
+
+
+/* =========================================================
+   إذا خرج التطبيق من الشاشة
+   أوقف الميكروفون
+   ========================================================= */
+
 document.addEventListener(
   "visibilitychange",
   () => {
 
-    if (document.hidden) {
+    if (
+      document.hidden &&
+      isTalking
+    ) {
+
       stopTalking();
     }
 
   }
 );
 
-connect();
+
+/* =========================================================
+   تنظيف عند إغلاق الصفحة
+   ========================================================= */
+
+window.addEventListener(
+  "beforeunload",
+  () => {
+
+    try {
+
+      if (localAudioTrack) {
+
+        localAudioTrack.stop();
+      }
+
+      if (liveRoom) {
+
+        liveRoom.disconnect();
+      }
+
+    } catch {}
+  }
+);
+
+
+/* =========================================================
+   بدء الاتصال
+   ========================================================= */
+
+connectLiveKit();
 
 </script>
 
