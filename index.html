@@ -2153,20 +2153,36 @@ async function checkSystemMessages(){
 
   await loadRooms();
 
-  /* إذا كانت هناك غرفة محفوظة، حاول الاتصال */
+  /* ✅ إذا كانت هناك غرفة محفوظة، اتصل تلقائياً */
   if(activeRoomId && activeRoomId !== ""){
     try{
       const room = roomsCache.find(r => r.id === activeRoomId);
-      if(room && (room.isMember || room.isOwner)){
+      if(room){
         if($("opsRoomName")) $("opsRoomName").textContent = room.name;
         if($("opsRoomNum")) $("opsRoomNum").textContent = "رقم الغرفة: " + (room.roomNumber || "?");
-        await connectLiveKit();
-        await loadMyInfo();
+
+        /* ⚡ حاول الاتصال 3 مرات */
+        let connected = false;
+        for(let i = 0; i < 3 && !connected; i++){
+          connected = await connectLiveKit();
+          if(!connected){
+            await new Promise(r => setTimeout(r, 2000));
+          }
+        }
+
+        if(connected){
+          await loadMyInfo();
+          toast("✅ تم استعادة الاتصال بالغرفة");
+        } else {
+          console.log("فشل الاتصال التلقائي");
+        }
       } else {
         activeRoomId = "";
         localStorage.removeItem("radioActiveRoomId");
       }
-    }catch(e){}
+    }catch(e){
+      console.error("Auto-connect failed:", e);
+    }
   }
 
   setInterval(checkSystemMessages, 5000);
