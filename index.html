@@ -2153,7 +2153,7 @@ async function checkSystemMessages(){
 
   await loadRooms();
 
-  /* ✅ إذا كانت هناك غرفة محفوظة، اتصل تلقائياً */
+  /* ✅ إذا كانت هناك غرفة محفوظة، حاول الاتصال 3 مرات */
   if(activeRoomId && activeRoomId !== ""){
     try{
       const room = roomsCache.find(r => r.id === activeRoomId);
@@ -2161,9 +2161,9 @@ async function checkSystemMessages(){
         if($("opsRoomName")) $("opsRoomName").textContent = room.name;
         if($("opsRoomNum")) $("opsRoomNum").textContent = "رقم الغرفة: " + (room.roomNumber || "?");
 
-        /* ⚡ حاول الاتصال 3 مرات */
         let connected = false;
         for(let i = 0; i < 3 && !connected; i++){
+          console.log("محاولة الاتصال رقم " + (i + 1));
           connected = await connectLiveKit();
           if(!connected){
             await new Promise(r => setTimeout(r, 2000));
@@ -2174,7 +2174,7 @@ async function checkSystemMessages(){
           await loadMyInfo();
           toast("✅ تم استعادة الاتصال بالغرفة");
         } else {
-          console.log("فشل الاتصال التلقائي");
+          toast("⚠️ تعذر استعادة الاتصال، حاول يدوياً");
         }
       } else {
         activeRoomId = "";
