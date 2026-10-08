@@ -1524,22 +1524,51 @@ async function stopTalking(event){
 
 /* ============ وضع الصوت ============ */
 function setVoiceMode(mode){
+  /* ✅ إذا كان المايك شغالاً ← أوقفه أولاً */
+  const wasTalking = isTalking;
+
   if(mode === "natural"){
+    /* ✅ تبديل إلى الوضع الطبيعي */
+    if(naturalOn && !radioOn){
+      /* بالفعل في الوضع الصحيح */
+      return;
+    }
+
     naturalOn = true;
     radioOn = false;
+
+    /* ✅ تنظيف أي فلتر لاسلكي */
+    cleanupFilter();
+
+    /* تحديث الواجهة */
     $("voiceNatural")?.classList.add("active");
     $("voiceRadio")?.classList.remove("active");
     if($("naturalState")) $("naturalState").textContent = "مفعل";
     if($("radioState")) $("radioState").textContent = "متوقف";
+
     toast("🎧 تم تفعيل الصوت الطبيعي");
   }
+
   if(mode === "radio"){
+    /* ✅ تبديل إلى الوضع اللاسلكي */
+    if(radioOn && !naturalOn){
+      /* بالفعل في الوضع الصحيح */
+      return;
+    }
+
     naturalOn = false;
     radioOn = true;
+
+    /* ✅ تنظيف أي فلتر قديم */
+    cleanupFilter();
+
+    /* تحديث الواجهة */
     $("voiceNatural")?.classList.remove("active");
     $("voiceRadio")?.classList.add("active");
     if($("naturalState")) $("naturalState").textContent = "متوقف";
     if($("radioState")) $("radioState").textContent = "مفعل";
+
+    toast("📻 تم تفعيل الصوت اللاسلكي");
     openPanel("radioPresetsPanel");
   }
 }
