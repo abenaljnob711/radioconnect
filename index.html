@@ -1,11 +1,3 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<meta name="theme-color" content="#02050e">
-<title>Radio Connect - جهاز لاسلكي</title>
-<script src="https://cdn.jsdelivr.net/npm/livekit-client@2.15.3/dist/livekit-client.umd.min.js"></script>
 <style>
 *{
   box-sizing:border-box;
@@ -83,20 +75,9 @@ button{border:0;cursor:pointer;font-family:inherit}
 }
 .ops-top{
   min-height:67px;display:grid;
-  grid-template-columns:1fr 1.15fr 1fr;
+  grid-template-columns:42px 1fr 42px;
   align-items:center;gap:5px
 }
-.ops-left{
-  min-width:0;display:flex;align-items:center;gap:5px;cursor:pointer
-}
-.star{color:#f5bd35;font-size:17px;filter:drop-shadow(0 0 5px rgba(245,189,53,.3))}
-.ops-info{min-width:0;display:flex;flex-direction:column;gap:2px}
-.ops-name{
-  font-size:12px;font-weight:900;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#eaf4ff
-}
-.ops-room-num{font-size:8px;color:#6f9bc0;font-weight:700}
-.ops-arrow{color:#698198;font-size:9px}
 .wave-center{text-align:center}
 .wave-label-top{font-size:8px;color:#637c94;margin-bottom:2px}
 .wave-code-big{
@@ -106,9 +87,9 @@ button{border:0;cursor:pointer;font-family:inherit}
 }
 .wave-name-display{font-size:10px;color:#8ab4dc;margin-top:2px;font-weight:700}
 .wave-num-big{font-size:8px;color:#6f9bc0;margin-top:2px}
-.wave-arrows{display:flex;justify-content:flex-end;align-items:center;gap:4px}
+.wave-arrows{display:flex;justify-content:center;align-items:center;gap:4px}
 .arrow-btn{
-  width:30px;height:30px;border-radius:50%;background:#0c2942;color:#fff;font-size:16px;
+  width:36px;height:36px;border-radius:50%;background:#0c2942;color:#fff;font-size:18px;
   display:flex;align-items:center;justify-content:center;
   border:1px solid rgba(58,157,230,.32);box-shadow:0 4px 12px rgba(0,0,0,.35)
 }
@@ -127,6 +108,24 @@ button{border:0;cursor:pointer;font-family:inherit}
   color:#fff;font-family:monospace;margin:4px 0
 }
 .my-code-card .code-role{font-size:9px;color:#55dc82}
+.code-room-info{
+  margin:6px 0;
+  padding:6px;
+  border-top:1px solid rgba(94,176,255,.15);
+  border-bottom:1px solid rgba(94,176,255,.15)
+}
+.code-room-name{
+  font-size:14px;
+  font-weight:900;
+  color:#fff;
+  margin-bottom:2px;
+  letter-spacing:.3px
+}
+.code-room-num{
+  font-size:9px;
+  color:#5eb0ff;
+  font-weight:700
+}
 .my-code-card .code-actions{display:flex;gap:6px;margin-top:7px}
 .my-code-card .code-btn{
   flex:1;padding:7px;border-radius:10px;
@@ -437,7 +436,6 @@ button{border:0;cursor:pointer;font-family:inherit}
   .wave-code-big{font-size:20px;letter-spacing:2px}
 }
 </style>
-</head>
 <body>
 
 <div class="app" id="app">
@@ -458,16 +456,11 @@ button{border:0;cursor:pointer;font-family:inherit}
   </div>
 </header>
 
-<!-- ========== بطاقة الموجة والغرفة ========== -->
+<!-- ========== بطاقة الموجة (مع أزرار التنقل على الجانبين) ========== -->
 <div class="ops-card">
   <div class="ops-top">
-    <div class="ops-left" onclick="openPanel('roomsPanel')">
-      <span class="star">★</span>
-      <div class="ops-info">
-        <div class="ops-name" id="opsRoomName">لا توجد غرفة</div>
-        <div class="ops-room-num" id="opsRoomNum"></div>
-      </div>
-      <span class="ops-arrow">▼</span>
+    <div class="wave-arrows">
+      <button class="arrow-btn" onclick="changeWave(-1)">‹</button>
     </div>
     <div class="wave-center">
       <div class="wave-label-top">الموجة الحالية</div>
@@ -476,17 +469,20 @@ button{border:0;cursor:pointer;font-family:inherit}
       <div class="wave-num-big" id="waveNum">1</div>
     </div>
     <div class="wave-arrows">
-      <button class="arrow-btn" onclick="changeWave(-1)">‹</button>
       <button class="arrow-btn" onclick="changeWave(1)">›</button>
     </div>
   </div>
 </div>
 
-<!-- ========== بطاقة رقم التعريف ========== -->
-<div class="my-code-card" id="myCodeCard">
+<!-- ========== بطاقة رقم التعريف (مع اسم الغرفة) ========== -->
+<div class="my-code-card show" id="myCodeCard">
   <div class="code-label">🆔 رقم التعريف الشخصي</div>
   <div class="code-value" id="myCodeValue">------</div>
-  <div class="code-role" id="myCodeRole">مشرف</div>
+  <div class="code-role" id="myCodeRole">مالك الغرفة</div>
+  <div class="code-room-info">
+    <div class="code-room-name" id="codeRoomName">لا توجد غرفة</div>
+    <div class="code-room-num" id="codeRoomNum">رقم الغرفة: -</div>
+  </div>
   <div class="code-actions">
     <button class="code-btn" onclick="copyMyCode()">📋 نسخ</button>
     <button class="code-btn" onclick="shareMyCode()">📤 مشاركة</button>
@@ -803,9 +799,6 @@ let recStart = 0;
 let recInterval = null;
 let isRecording = false;
 
-let waveChannelMembers = [];
-let pendingJoinRequests = [];
-
 const $ = id => document.getElementById(id);
 
 /* ============ Toast ============ */
@@ -1085,6 +1078,13 @@ async function loadMyInfo(){
         myPersonalCode = null;
         $("myCodeCard")?.classList.remove("show");
       }
+    }
+
+    /* ✅ تحديث اسم الغرفة ورقمها في بطاقة رقم التعريف */
+    const room = roomsCache.find(r => r.id === activeRoomId);
+    if(room){
+      if($("codeRoomName")) $("codeRoomName").textContent = room.name || "لا توجد غرفة";
+      if($("codeRoomNum")) $("codeRoomNum").textContent = "رقم الغرفة: " + (room.roomNumber || "-");
     }
   }catch(e){ console.error(e); }
 }
@@ -1841,8 +1841,10 @@ async function createRoom(){
     activeRoomId = data.room.id;
     localStorage.setItem("radioActiveRoomId", activeRoomId);
 
-    if($("opsRoomName")) $("opsRoomName").textContent = data.room.name;
-    if($("opsRoomNum")) $("opsRoomNum").textContent = "رقم الغرفة: " + data.room.roomNumber;
+    /* ✅ تحديث بطاقة رقم التعريف */
+    if($("codeRoomName")) $("codeRoomName").textContent = data.room.name || "لا توجد غرفة";
+    if($("codeRoomNum")) $("codeRoomNum").textContent = "رقم الغرفة: " + (data.room.roomNumber || "-");
+    $("myCodeCard")?.classList.add("show");
 
     closeAllPanels();
     await loadRooms();
@@ -1876,8 +1878,9 @@ async function submitJoin(){
     activeRoomId = data.room.id;
     localStorage.setItem("radioActiveRoomId", activeRoomId);
 
-    if($("opsRoomName")) $("opsRoomName").textContent = data.room.name;
-    if($("opsRoomNum")) $("opsRoomNum").textContent = "رقم الغرفة: " + data.room.roomNumber;
+    if($("codeRoomName")) $("codeRoomName").textContent = data.room.name || "لا توجد غرفة";
+    if($("codeRoomNum")) $("codeRoomNum").textContent = "رقم الغرفة: " + (data.room.roomNumber || "-");
+    $("myCodeCard")?.classList.add("show");
 
     closeAllPanels();
     await loadRooms();
@@ -1906,8 +1909,8 @@ async function leaveRoom(){
   localStorage.removeItem("radioActiveRoomId");
   localStorage.removeItem("radioActiveRoomData");
 
-  if($("opsRoomName")) $("opsRoomName").textContent = "لا توجد غرفة";
-  if($("opsRoomNum")) $("opsRoomNum").textContent = "";
+  if($("codeRoomName")) $("codeRoomName").textContent = "لا توجد غرفة";
+  if($("codeRoomNum")) $("codeRoomNum").textContent = "رقم الغرفة: -";
   $("myCodeCard")?.classList.remove("show");
 
   closeAllPanels();
@@ -1972,8 +1975,10 @@ async function selectRoom(roomId){
 
   const room = roomsCache.find(r => r.id === roomId);
   if(room){
-    if($("opsRoomName")) $("opsRoomName").textContent = room.name;
-    if($("opsRoomNum")) $("opsRoomNum").textContent = "رقم الغرفة: " + (room.roomNumber || "?");
+    /* ✅ تحديث بطاقة رقم التعريف */
+    if($("codeRoomName")) $("codeRoomName").textContent = room.name || "لا توجد غرفة";
+    if($("codeRoomNum")) $("codeRoomNum").textContent = "رقم الغرفة: " + (room.roomNumber || "-");
+    $("myCodeCard")?.classList.add("show");
   }
 
   closeAllPanels();
@@ -2154,8 +2159,10 @@ async function checkSystemMessages(){
     try{
       const room = roomsCache.find(r => r.id === activeRoomId);
       if(room){
-        if($("opsRoomName")) $("opsRoomName").textContent = room.name;
-        if($("opsRoomNum")) $("opsRoomNum").textContent = "رقم الغرفة: " + (room.roomNumber || "?");
+        /* ✅ تحديث بطاقة رقم التعريف */
+        if($("codeRoomName")) $("codeRoomName").textContent = room.name || "لا توجد غرفة";
+        if($("codeRoomNum")) $("codeRoomNum").textContent = "رقم الغرفة: " + (room.roomNumber || "-");
+        $("myCodeCard")?.classList.add("show");
 
         let connected = false;
         for(let i = 0; i < 3 && !connected; i++){
