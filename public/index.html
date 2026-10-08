@@ -1282,38 +1282,92 @@ function cleanupFilter(){
 const pttBtn = $("pttBtn");
 const pttRing = $("pttRing");
 
+let activePointerId = null;
+
 if(pttBtn){
-  pttBtn.addEventListener("touchstart", (e) => {
+  /* ✅ بدء التحدث */
+  pttBtn.addEventListener("pointerdown", (e) => {
     e.preventDefault();
-    startTalking(e);
-  }, { passive: false });
-
-  pttBtn.addEventListener("touchend", (e) => {
-    e.preventDefault();
-    stopTalking(e);
-  }, { passive: false });
-
-  pttBtn.addEventListener("touchcancel", (e) => {
-    e.preventDefault();
-    stopTalking(e);
-  }, { passive: false });
-
-  pttBtn.addEventListener("mousedown", (e) => {
-    e.preventDefault();
+    e.stopPropagation();
+    
+    /* منع النقرات المزدوجة */
+    if(activePointerId !== null) return;
+    
+    activePointerId = e.pointerId;
+    
+    /* تثبيت المؤشر على الزر */
+    try{
+      pttBtn.setPointerCapture(e.pointerId);
+    }catch(x){}
+    
     startTalking(e);
   });
 
-  pttBtn.addEventListener("mouseup", (e) => {
+  /* ✅ إيقاف التحدث */
+  pttBtn.addEventListener("pointerup", (e) => {
     e.preventDefault();
+    e.stopPropagation();
+    
+    if(activePointerId === null) return;
+    if(e.pointerId !== activePointerId) return;
+    
+    activePointerId = null;
     stopTalking(e);
   });
 
-  pttBtn.addEventListener("mouseleave", (e) => {
-    if(isTalking) stopTalking(e);
+  /* ✅ إلغاء (إذا خرج الإصبع) */
+  pttBtn.addEventListener("pointercancel", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if(activePointerId === null) return;
+    if(e.pointerId !== activePointerId) return;
+    
+    activePointerId = null;
+    stopTalking(e);
   });
 
+  /* ✅ إيقاف عند خروج الإصبع من الزر */
+  pttBtn.addEventListener("pointerleave", (e) => {
+    if(activePointerId === null) return;
+    if(e.pointerId !== activePointerId) return;
+    
+    /* إذا رُفع الإصبع، أنهِ التحدث */
+    if(e.buttons === 0){
+      activePointerId = null;
+      stopTalking(e);
+    }
+  });
+
+  /* منع القائمة المنبثقة */
   pttBtn.addEventListener("contextmenu", e => e.preventDefault());
+
+  /* منع السحب */
+  pttBtn.addEventListener("dragstart", e => e.preventDefault());
 }
+
+/* ✅ احتياطي: إيقاف عند رفع الإصبع في أي مكان */
+window.addEventListener("pointerup", (e) => {
+  if(activePointerId !== null && e.pointerId === activePointerId){
+    activePointerId = null;
+    if(isTalking) stopTalking(e);
+  }
+});
+
+/* ✅ احتياطي: إيقاف عند رفع الإصبع على الموبايل */
+window.addEventListener("touchend", (e) => {
+  if(isTalking && activePointerId === null){
+    /* لا نوقف هنا — نترك pointerup يعمل */
+  }
+});
+
+window.addEventListener("blur", () => {
+  /* إيقاف عند فقدان التركيز */
+  if(isTalking){
+    activePointerId = null;
+    stopTalking();
+  }
+});
 
 /* ============ 🆕 بدء/إيقاف التحدث (مع دعم الموجة + اختبار محلي) ============ */
 async function startTalking(event){
