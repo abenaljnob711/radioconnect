@@ -1320,7 +1320,7 @@ function cleanupFilter(){
   filterChain = null;
   mediaStreamDest = null;
 }
-  /* ============ زر PTT — ربط الأحداث (محسّن) ============ */
+/* ============ زر PTT — ربط الأحداث (محسّن) ============ */
 const pttBtn = $("pttBtn");
 const pttRing = $("pttRing");
 let activePointerId = null;
@@ -1744,8 +1744,8 @@ async function rejectJoin(targetDeviceId){
   }catch(e){
     toast("⚠️ تعذر الرفض");
   }
-  }
-  /* ============ المحادثة ============ */
+}
+/* ============ المحادثة ============ */
 function onInputChange(){
   const input = $("chatInput");
   const send = $("sendBtn");
