@@ -42,10 +42,6 @@ button{
     radial-gradient(circle at 50% 30%,rgba(35,70,110,.20),transparent 42%),
     linear-gradient(180deg,#07111d 0%,#02050a 55%,#010308 100%)
 }
-
-/* =====================================================
-   HEADER
-===================================================== */
 .topbar{
   height:52px;
   display:grid;
@@ -115,10 +111,6 @@ button{
   color:#59dc83;
   font-weight:800
 }
-
-/* =====================================================
-   OPERATIONS / WAVE
-===================================================== */
 .ops-card{
   position:relative;
   background:
@@ -207,10 +199,6 @@ button{
 .arrow-btn:active{
   transform:scale(.9)
 }
-
-/* =====================================================
-   MY CODE
-===================================================== */
 .my-code-card{
   display:none;
   margin-bottom:9px;
@@ -253,10 +241,6 @@ button{
   font-size:10px;
   font-weight:800
 }
-
-/* =====================================================
-   DEVICE STATUS — COMPACT
-===================================================== */
 .status-row{
   display:grid;
   grid-template-columns:repeat(3,1fr);
@@ -297,10 +281,6 @@ button{
 .status-box.ok .val{
   color:#42d879
 }
-
-/* =====================================================
-   PTT AREA
-===================================================== */
 .voice-ptt{
   position:relative;
   display:grid;
@@ -433,10 +413,6 @@ button{
 .ptt-btn .txt{
   display:none
 }
-
-/* =====================================================
-   CHAT — LARGE MAIN PANEL
-===================================================== */
 .chat-section{
   height:285px;
   display:flex;
@@ -484,10 +460,6 @@ button{
   color:#536a80;
   font-size:10px
 }
-
-/* =====================================================
-   CHAT COMPOSER
-===================================================== */
 .chat-input{
   min-height:57px;
   display:flex;
@@ -563,10 +535,6 @@ button{
 .send-btn.show{
   display:flex
 }
-
-/* =====================================================
-   ATTACHMENT MENU
-===================================================== */
 .attach-menu{
   position:absolute;
   bottom:72px;
@@ -599,10 +567,6 @@ button{
 .attach-item:active{
   background:#0d304b
 }
-
-/* =====================================================
-   BOTTOM NAV
-===================================================== */
 .bottom-nav{
   position:fixed;
   bottom:0;
@@ -658,10 +622,6 @@ button{
 .nav-badge.show{
   display:flex
 }
-
-/* =====================================================
-   MODALS
-===================================================== */
 .modal{
   position:fixed;
   inset:0;
@@ -811,10 +771,6 @@ button{
   background:rgba(139,157,180,.2);
   color:#8b9db4
 }
-
-/* =====================================================
-   RECORD BAR / TOAST
-===================================================== */
 .rec-bar{
   position:fixed;
   bottom:82px;
@@ -875,10 +831,6 @@ button{
 .hidden{
   display:none!important
 }
-
-/* =====================================================
-   SMALL SCREENS
-===================================================== */
 @media(max-width:380px){
   .topbar{
     grid-template-columns:40px 1fr 76px
@@ -1112,13 +1064,6 @@ button{
       <h3>👥 أعضاء الغرفة</h3>
       <button class="close" onclick="closePanel('membersPanel')">×</button>
     </div>
-    <div class="modal-content" id="membersContent">جاري الت
-<div class="modal" id="membersPanel">
-  <div class="modal-box">
-    <div class="modal-head">
-      <h3>👥 أعضاء الغرفة</h3>
-      <button class="close" onclick="closePanel('membersPanel')">×</button>
-    </div>
     <div class="modal-content" id="membersContent">جاري التحميل...</div>
   </div>
 </div>
@@ -1152,18 +1097,10 @@ button{
       <button class="close" onclick="closePanel('radioPresetsPanel')">×</button>
     </div>
     <div class="modal-content">
-      <button class="btn ghost" onclick="selectPreset('basic')">
-        📻 صوت لاسلكي أساسي
-      </button>
-      <button class="btn ghost" onclick="selectPreset('strong')">
-        📡 صوت لاسلكي قوي
-      </button>
-      <button class="btn ghost" onclick="selectPreset('old')">
-        📻 صوت جهاز قديم
-      </button>
-      <button class="btn success" onclick="testVoicePreset()">
-        🔊 اختبار الصوت
-      </button>
+      <button class="btn ghost" onclick="selectPreset('basic')">📻 صوت لاسلكي أساسي</button>
+      <button class="btn ghost" onclick="selectPreset('strong')">📡 صوت لاسلكي قوي</button>
+      <button class="btn ghost" onclick="selectPreset('old')">📻 صوت جهاز قديم</button>
+      <button class="btn success" onclick="testVoicePreset()">🔊 اختبار الصوت</button>
     </div>
   </div>
 </div>
@@ -1174,15 +1111,11 @@ button{
   <span id="recTime">00:00</span>
 </div>
 
-<input
-  type="file"
-  id="fileInput"
-  hidden
-  multiple
->
+<input type="file" id="fileInput" hidden multiple>
 
 <div class="toast" id="toast"></div>
 
+</div>
 <script>
 "use strict";
 
@@ -1190,27 +1123,19 @@ const API = location.origin;
 const L = window.LivekitClient;
 
 const waves = [];
-
 for(let i = 0; i < 50; i++){
   const code = Math.floor(Math.random() * 0xFFFFFF)
     .toString(16)
     .toUpperCase()
     .padStart(6,"0");
-
-  waves.push({
-    code,
-    name:"موجة " + (i + 1)
-  });
+  waves.push({ code, name:"موجة " + (i + 1) });
 }
 
 let waveIndex = 0;
 let currentWave = waves[0];
 
-let deviceId =
-  localStorage.getItem("radioDeviceId") || "";
-
-let activeRoomId =
-  localStorage.getItem("radioActiveRoomId") || "";
+let deviceId = localStorage.getItem("radioDeviceId") || "";
+let activeRoomId = localStorage.getItem("radioActiveRoomId") || "";
 
 let livekitRoom = null;
 let localAudioTrack = null;
@@ -1243,12 +1168,9 @@ const $ = id => document.getElementById(id);
 function toast(message){
   const el = $("toast");
   if(!el) return;
-
   el.textContent = message;
   el.classList.add("show");
-
   clearTimeout(el._timer);
-
   el._timer = setTimeout(() => {
     el.classList.remove("show");
   },2500);
@@ -1257,11 +1179,8 @@ function toast(message){
 function escapeHtml(value){
   return String(value ?? "")
     .replace(/[&<>"']/g,m => ({
-      "&":"&amp;",
-      "<":"&lt;",
-      ">":"&gt;",
-      '"':"&quot;",
-      "'":"&#039;"
+      "&":"&amp;","<":"&lt;",">":"&gt;",
+      '"':"&quot;","'":"&#039;"
     }[m]));
 }
 
@@ -1269,28 +1188,20 @@ function formatDuration(seconds){
   const s = Math.max(0,Math.floor(seconds));
   const m = Math.floor(s / 60);
   const r = s % 60;
-
-  return String(m).padStart(2,"0") +
-    ":" +
-    String(r).padStart(2,"0");
+  return String(m).padStart(2,"0") + ":" + String(r).padStart(2,"0");
 }
 
 async function initBattery(){
   try{
     if(!navigator.getBattery) return;
-
     const battery = await navigator.getBattery();
-
     const update = () => {
       const value = Math.round(battery.level * 100);
-
       if($("batteryVal")){
         $("batteryVal").textContent = value + "%";
       }
     };
-
     update();
-
     battery.addEventListener("levelchange",update);
   }catch(e){}
 }
@@ -1298,24 +1209,15 @@ async function initBattery(){
 function updateNetwork(){
   const el = $("networkVal");
   if(!el) return;
-
   const connection =
     navigator.connection ||
     navigator.mozConnection ||
     navigator.webkitConnection;
-
   if(connection){
-    const type =
-      connection.effectiveType ||
-      connection.type ||
-      "--";
-
-    el.textContent =
-      String(type)
-        .replace("4g","4G")
-        .replace("3g","3G")
-        .replace("2g","2G")
-        .replace("slow-2g","2G");
+    const type = connection.effectiveType || connection.type || "--";
+    el.textContent = String(type)
+      .replace("4g","4G").replace("3g","3G")
+      .replace("2g","2G").replace("slow-2g","2G");
   }else{
     el.textContent = navigator.onLine ? "متصل" : "غير متصل";
   }
@@ -1325,11 +1227,13 @@ function updateServerStatus(){
   const value = $("serverVal");
   const dot = $("statusDot");
   const label = $("statusLabel");
+  
+  const isConnected =
+    livekitRoom && livekitRoom.state === "connected";
 
-  if(navigator.onLine){
+  if(isConnected){
     if(value) value.textContent = "متصل";
     if(label) label.textContent = "متصل";
-
     if(dot){
       dot.style.background = "#39d353";
       dot.style.boxShadow = "0 0 9px #39d353";
@@ -1337,7 +1241,6 @@ function updateServerStatus(){
   }else{
     if(value) value.textContent = "غير متصل";
     if(label) label.textContent = "غير متصل";
-
     if(dot){
       dot.style.background = "#e53935";
       dot.style.boxShadow = "0 0 9px #e53935";
@@ -1347,42 +1250,19 @@ function updateServerStatus(){
 
 async function ensureDevice(){
   if(deviceId) return deviceId;
-
-  deviceId =
-    "DEV-" +
-    Math.random()
-      .toString(36)
-      .slice(2,14)
-      .toUpperCase();
-
-  localStorage.setItem(
-    "radioDeviceId",
-    deviceId
-  );
-
+  deviceId = "DEV-" + Math.random().toString(36).slice(2,14).toUpperCase();
+  localStorage.setItem("radioDeviceId", deviceId);
   return deviceId;
 }
 
 async function loadRooms(){
   try{
-    const response = await fetch(
-      API + "/api/rooms",
-      {
-        headers:{
-          "x-device-id":deviceId
-        }
-      }
-    );
-
+    const response = await fetch(API + "/api/rooms", {
+      headers:{ "x-device-id":deviceId }
+    });
     if(!response.ok) return;
-
     const data = await response.json();
-
-    roomsCache =
-      Array.isArray(data.rooms)
-        ? data.rooms
-        : [];
-
+    roomsCache = Array.isArray(data.rooms) ? data.rooms : [];
     renderRoomsList();
     updateRoomsBadge();
   }catch(e){
@@ -1390,148 +1270,134 @@ async function loadRooms(){
     renderRoomsList();
   }
 }
-
-async function connectLiveKit(){
+  async function connectLiveKit(){
   try{
     if(!L){
       toast("تعذر تحميل الاتصال الصوتي");
-      return;
+      return false;
+    }
+
+    if(!activeRoomId || activeRoomId === ""){
+      return false;
+    }
+
+    if(livekitRoom && livekitRoom.state === "connected"){
+      return true;
     }
 
     const response = await fetch(
-      API +
-      "/token?room=" +
-      encodeURIComponent(activeRoomId || "default"),
+      API + "/token?room=" + encodeURIComponent(activeRoomId),
       {
-        headers:{
-          "x-device-id":deviceId
-        }
+        headers:{ "x-device-id":deviceId }
       }
     );
 
-    if(!response.ok){
-      throw new Error("token");
-    }
+    if(!response.ok) throw new Error("token");
 
     const data = await response.json();
+    if(!data.token || !data.url) throw new Error("token-data");
 
-    if(!data.token || !data.url){
-      throw new Error("token-data");
-    }
+    livekitRoom = new L.Room({
+      adaptiveStream:true,
+      dynacast:true
+    });
 
-    livekitRoom =
-      new L.Room({
-        adaptiveStream:true,
-        dynacast:true
-      });
+    livekitRoom.on(L.RoomEvent.TrackSubscribed, (track) => {
+      try{
+        const element = track.attach();
+        element.autoplay = true;
+        element.playsInline = true;
+        document.body.appendChild(element);
+      }catch(e){}
+    });
 
-    livekitRoom.on(
-      L.RoomEvent.TrackSubscribed,
-      (track) => {
-        try{
-          const element =
-            track.attach();
+    livekitRoom.on(L.RoomEvent.DataReceived, (payload) => {
+      try{
+        const text = new TextDecoder().decode(payload);
+        const data = JSON.parse(text);
 
-          element.autoplay = true;
-          element.playsInline = true;
+        if(data.type === "radio-chat"){
+          const empty = $("chatMessages")?.querySelector(".chat-empty");
+          if(empty) empty.remove();
 
-          document.body.appendChild(element);
-        }catch(e){}
-      }
-    );
+          const bubble = document.createElement("div");
+          bubble.style.cssText =
+            "background:#10243a;border-radius:13px;padding:8px 10px;" +
+            "margin-bottom:6px;font-size:11px;color:#eaf4ff;";
+          bubble.innerHTML =
+            '<div style="font-weight:800;color:#5eb0ff">' +
+            escapeHtml(data.name || "عضو") +
+            '</div>' +
+            '<div>' + escapeHtml(data.text || "") + '</div>' +
+            '<div style="font-size:8px;color:#7290a8;margin-top:3px">' +
+            escapeHtml(data.time || "") + '</div>';
 
-    livekitRoom.on(
-      L.RoomEvent.DataReceived,
-      (payload,participant) => {
-        try{
-          const text =
-            new TextDecoder().decode(payload);
+          $("chatMessages")?.appendChild(bubble);
+          const cm = $("chatMessages");
+          if(cm) cm.scrollTop = cm.scrollHeight;
+        }
 
-          const data =
-            JSON.parse(text);
+        if(data.type === "radio-voice"){
+          toast("🎙️ رسالة صوتية من " + (data.name || "عضو"));
+        }
 
-          if(data.type === "radio-chat"){
-            toast(
-              "رسالة من " +
-              (data.name || "عضو")
-            );
-          }
+        if(data.type === "radio-file"){
+          toast("📎 ملف من " + (data.name || "عضو"));
+        }
+      }catch(e){ console.error("Data received error:", e); }
+    });
 
-          if(data.type === "radio-file"){
-            toast(
-              "تم استلام ملف من " +
-              (data.name || "عضو")
-            );
-          }
+    livekitRoom.on(L.RoomEvent.Disconnected, () => {
+      updateServerStatus();
+      toast("🔴 انقطع الاتصال");
+    });
 
-          if(data.type === "radio-voice"){
-            toast(
-              "تم استلام تسجيل صوتي"
-            );
-          }
-        }catch(e){}
-      }
-    );
+    await livekitRoom.connect(data.url, data.token);
 
-    livekitRoom.on(
-      L.RoomEvent.Disconnected,
-      () => {
-        updateServerStatus();
-      }
-    );
+    updateServerStatus();
+    toast("✅ تم الاتصال بالغرفة");
 
-    await livekitRoom.connect(
-      data.url,
-      data.token
-    );
-
-    toast("تم الاتصال الصوتي");
+    return true;
 
   }catch(e){
     console.error(e);
+    livekitRoom = null;
+    updateServerStatus();
+    return false;
   }
 }
 
 async function loadMyInfo(){
   try{
+    if(!activeRoomId) return;
+
     const response = await fetch(
-      API +
-      "/api/device/" +
-      encodeURIComponent(deviceId),
+      API + "/api/rooms/" +
+      encodeURIComponent(activeRoomId) +
+      "/members",
       {
-        headers:{
-          "x-device-id":deviceId
-        }
+        headers:{ "x-device-id":deviceId }
       }
     );
 
     if(!response.ok) return;
 
     const data = await response.json();
+    membersCache = Array.isArray(data.members) ? data.members : [];
 
-    myRole = data.role || null;
-    myPersonalCode =
-      data.code ||
-      data.personalCode ||
-      null;
+    const me = membersCache.find(m => m.deviceId === deviceId);
+    if(me){
+      myRole = me.role || null;
+      myPersonalCode = me.personalCode || null;
 
-    if(
-      myPersonalCode &&
-      (myRole === "owner" ||
-       myRole === "admin")
-    ){
-      $("myCodeCard")?.classList.add("show");
-
-      if($("myCodeValue")){
-        $("myCodeValue").textContent =
-          myPersonalCode;
-      }
-
-      if($("myCodeRole")){
-        $("myCodeRole").textContent =
-          myRole === "owner"
-            ? "مالك الغرفة"
-            : "مشرف";
+      if(myPersonalCode &&
+         (myRole === "owner" || myRole === "admin")){
+        $("myCodeCard")?.classList.add("show");
+        if($("myCodeValue")) $("myCodeValue").textContent = myPersonalCode;
+        if($("myCodeRole")){
+          $("myCodeRole").textContent =
+            myRole === "owner" ? "مالك الغرفة" : "مشرف";
+        }
       }
     }
   }catch(e){}
@@ -1539,56 +1405,36 @@ async function loadMyInfo(){
 
 function buildRadioFilter(source){
   if(!audioContext){
-    audioContext =
-      new (window.AudioContext ||
-           window.webkitAudioContext)();
+    audioContext = new (window.AudioContext ||
+                        window.webkitAudioContext)();
   }
 
   if(audioContext.state === "suspended"){
     audioContext.resume().catch(()=>{});
   }
 
-  const input =
-    audioContext.createMediaStreamSource(
-      source
-    );
+  const input = audioContext.createMediaStreamSource(source);
 
-  const high =
-    audioContext.createBiquadFilter();
-
+  const high = audioContext.createBiquadFilter();
   high.type = "highpass";
   high.frequency.value = 320;
 
-  const low =
-    audioContext.createBiquadFilter();
-
+  const low = audioContext.createBiquadFilter();
   low.type = "lowpass";
   low.frequency.value = 2800;
 
-  const compressor =
-    audioContext.createDynamicsCompressor();
-
+  const compressor = audioContext.createDynamicsCompressor();
   compressor.threshold.value = -24;
   compressor.knee.value = 10;
   compressor.ratio.value = 6;
   compressor.attack.value = 0.003;
   compressor.release.value = 0.12;
 
-  mediaStreamDest =
-    audioContext.createMediaStreamDestination();
+  mediaStreamDest = audioContext.createMediaStreamDestination();
 
-  input
-    .connect(high)
-    .connect(low)
-    .connect(compressor)
-    .connect(mediaStreamDest);
+  input.connect(high).connect(low).connect(compressor).connect(mediaStreamDest);
 
-  filterChain = {
-    input,
-    high,
-    low,
-    compressor
-  };
+  filterChain = { input, high, low, compressor };
 
   return mediaStreamDest.stream;
 }
@@ -1602,127 +1448,109 @@ function cleanupFilter(){
       filterChain.compressor.disconnect();
     }
   }catch(e){}
-
   filterChain = null;
   mediaStreamDest = null;
 }
 
+/* ============ ربط أحداث زر PTT ============ */
 const pttBtn = $("pttBtn");
 
-pttBtn.addEventListener(
-  "pointerdown",
-  startTalking
-);
+if(pttBtn){
+  pttBtn.addEventListener("touchstart", (e) => {
+    e.preventDefault();
+    startTalking(e);
+  }, { passive: false });
 
-pttBtn.addEventListener(
-  "pointerup",
-  stopTalking
-);
+  pttBtn.addEventListener("touchend", (e) => {
+    e.preventDefault();
+    stopTalking(e);
+  }, { passive: false });
 
-pttBtn.addEventListener(
-  "pointercancel",
-  stopTalking
-);
+  pttBtn.addEventListener("touchcancel", (e) => {
+    e.preventDefault();
+    stopTalking(e);
+  }, { passive: false });
 
-pttBtn.addEventListener(
-  "pointerleave",
-  stopTalking
-);
+  pttBtn.addEventListener("mousedown", (e) => {
+    e.preventDefault();
+    startTalking(e);
+  });
 
-pttBtn.addEventListener(
-  "contextmenu",
-  e => e.preventDefault()
-);
+  pttBtn.addEventListener("mouseup", (e) => {
+    e.preventDefault();
+    stopTalking(e);
+  });
 
-async function startTalking(event){
-  if(event){
-    event.preventDefault();
+  pttBtn.addEventListener("mouseleave", (e) => {
+    if(isTalking) stopTalking(e);
+  });
+
+  pttBtn.addEventListener("contextmenu", e => e.preventDefault());
   }
-
+  async function startTalking(event){
+  if(event) event.preventDefault();
   if(isTalking) return;
 
+  if(!activeRoomId || activeRoomId === ""){
+    toast("⚠️ أنشئ غرفة أو انضم إلى غرفة أولاً");
+    return;
+  }
+
   try{
-    if(!livekitRoom){
-      await connectLiveKit();
+    if(!livekitRoom || livekitRoom.state !== "connected"){
+      toast("🎙️ جاري الاتصال بالغرفة...");
+      const ok = await connectLiveKit();
+      if(!ok){
+        toast("⚠️ تعذر الاتصال بالغرفة");
+        return;
+      }
     }
 
-    rawMicStream =
-      await navigator.mediaDevices.getUserMedia({
-        audio:{
-          echoCancellation:true,
-          noiseSuppression:true,
-          autoGainControl:true
-        }
-      });
+    rawMicStream = await navigator.mediaDevices.getUserMedia({
+      audio:{
+        echoCancellation:true,
+        noiseSuppression:true,
+        autoGainControl:true
+      }
+    });
 
-    let stream =
-      rawMicStream;
+    let stream = rawMicStream;
+    if(radioOn) stream = buildRadioFilter(rawMicStream);
 
-    if(radioOn){
-      stream =
-        buildRadioFilter(
-          rawMicStream
-        );
-    }
+    localAudioTrack = await L.LocalAudioTrack.createTrack(
+      stream.getAudioTracks()[0]
+    );
 
-    localAudioTrack =
-      await L.LocalAudioTrack.createTrack(
-        stream.getAudioTracks()[0]
-      );
-
-    await livekitRoom.localParticipant
-      .publishTrack(
-        localAudioTrack
-      );
-
+    await livekitRoom.localParticipant.publishTrack(localAudioTrack);
     localAudioTrack.enable();
 
     isTalking = true;
-
     pttBtn.classList.add("talking");
-
-    toast("تم الضغط على الميكروفون");
+    toast("🎙️ تتحدث الآن");
 
   }catch(error){
     console.error(error);
-
     isTalking = false;
-
     pttBtn.classList.remove("talking");
-
-    toast(
-      "تعذر تشغيل الميكروفون"
-    );
+    toast("⚠️ تعذر تشغيل الميكروفون");
   }
 }
 
 async function stopTalking(event){
-  if(event){
-    event.preventDefault();
-  }
-
+  if(event) event.preventDefault();
   if(!isTalking) return;
 
   try{
     if(localAudioTrack && livekitRoom){
-      await livekitRoom.localParticipant
-        .unpublishTrack(
-          localAudioTrack
-        );
+      await livekitRoom.localParticipant.unpublishTrack(localAudioTrack);
     }
   }catch(e){}
 
-  try{
-    if(localAudioTrack){
-      localAudioTrack.stop();
-    }
-  }catch(e){}
+  try{ if(localAudioTrack) localAudioTrack.stop(); }catch(e){}
 
   try{
     if(rawMicStream){
-      rawMicStream
-        .getTracks()
-        .forEach(track => track.stop());
+      rawMicStream.getTracks().forEach(track => track.stop());
     }
   }catch(e){}
 
@@ -1739,116 +1567,63 @@ function setVoiceMode(mode){
   if(mode === "natural"){
     naturalOn = true;
     radioOn = false;
-
-    $("voiceNatural")
-      ?.classList.add("active");
-
-    $("voiceRadio")
-      ?.classList.remove("active");
-
-    $("naturalState").textContent =
-      "مفعل";
-
-    $("radioState").textContent =
-      "متوقف";
+    $("voiceNatural")?.classList.add("active");
+    $("voiceRadio")?.classList.remove("active");
+    if($("naturalState")) $("naturalState").textContent = "مفعل";
+    if($("radioState")) $("radioState").textContent = "متوقف";
+    toast("🎧 تم تفعيل الصوت الطبيعي");
   }
 
   if(mode === "radio"){
     naturalOn = false;
     radioOn = true;
-
-    $("voiceNatural")
-      ?.classList.remove("active");
-
-    $("voiceRadio")
-      ?.classList.add("active");
-
-    $("naturalState").textContent =
-      "متوقف";
-
-    $("radioState").textContent =
-      "مفعل";
-
-    openPanel(
-      "radioPresetsPanel"
-    );
+    $("voiceNatural")?.classList.remove("active");
+    $("voiceRadio")?.classList.add("active");
+    if($("naturalState")) $("naturalState").textContent = "متوقف";
+    if($("radioState")) $("radioState").textContent = "مفعل";
+    openPanel("radioPresetsPanel");
   }
 }
 
 function selectPreset(preset){
   radioPreset = preset;
-
-  closePanel(
-    "radioPresetsPanel"
-  );
-
-  toast(
-    "تم اختيار إعداد الصوت اللاسلكي"
-  );
+  closePanel("radioPresetsPanel");
+  toast("📻 تم اختيار إعداد الصوت");
 }
 
 function testVoicePreset(){
-  toast("اختبار الصوت اللاسلكي");
+  toast("🔊 اختبار الصوت اللاسلكي");
 }
 
 function changeWave(direction){
   waveIndex += direction;
-
-  if(waveIndex < 0){
-    waveIndex = waves.length - 1;
-  }
-
-  if(waveIndex >= waves.length){
-    waveIndex = 0;
-  }
-
-  currentWave =
-    waves[waveIndex];
-
+  if(waveIndex < 0) waveIndex = waves.length - 1;
+  if(waveIndex >= waves.length) waveIndex = 0;
+  currentWave = waves[waveIndex];
   updateWaveUI();
 }
 
 function updateWaveUI(){
-  if($("waveCode")){
-    $("waveCode").textContent =
-      currentWave.code;
-  }
-
-  if($("waveNum")){
-    $("waveNum").textContent =
-      currentWave.name;
-  }
+  if($("waveCode")) $("waveCode").textContent = currentWave.code;
+  if($("waveNum")) $("waveNum").textContent = currentWave.name;
 }
 
 function onInputChange(){
-  const input =
-    $("chatInput");
-
-  const send =
-    $("sendBtn");
-
+  const input = $("chatInput");
+  const send = $("sendBtn");
   if(!input || !send) return;
-
-  if(input.value.trim()){
-    send.classList.add("show");
-  }else{
-    send.classList.remove("show");
-  }
+  if(input.value.trim()) send.classList.add("show");
+  else send.classList.remove("show");
 }
 
 async function sendMessage(){
-  const input =
-    $("chatInput");
-
+  const input = $("chatInput");
   if(!input) return;
-
-  const text =
-    input.value.trim();
-
+  const text = input.value.trim();
   if(!text) return;
 
-  if(!livekitRoom){
-    toast("تعذر الاتصال بالمحادثة");
+  if(!livekitRoom || livekitRoom.state !== "connected"){
+    toast("⚠️ أنشئ غرفة أو انضم إليها أولاً");
     return;
   }
 
@@ -1858,304 +1633,168 @@ async function sendMessage(){
       text,
       name:"أنت",
       senderDeviceId:deviceId,
-      time:new Date()
-        .toLocaleTimeString(
-          "ar-SA",
-          {
-            hour:"2-digit",
-            minute:"2-digit"
-          }
-        )
+      time:new Date().toLocaleTimeString("ar-SA",{
+        hour:"2-digit", minute:"2-digit"
+      })
     };
 
-    const data =
-      new TextEncoder().encode(
-        JSON.stringify(message)
-      );
+    const data = new TextEncoder().encode(JSON.stringify(message));
+    await livekitRoom.localParticipant.publishData(data, { reliable:true });
 
-    await livekitRoom.localParticipant
-      .publishData(
-        data,
-        {
-          reliable:true
-        }
-      );
+    const empty = $("chatMessages")?.querySelector(".chat-empty");
+    if(empty) empty.remove();
 
-    const empty =
-      $("chatMessages")
-        ?.querySelector(".chat-empty");
-
-    if(empty){
-      empty.remove();
-    }
-
-    const bubble =
-      document.createElement("div");
-
+    const bubble = document.createElement("div");
     bubble.style.cssText =
-      "background:#0d304b;" +
-      "border-radius:13px;" +
-      "padding:8px 10px;" +
-      "margin-bottom:6px;" +
-      "font-size:11px;";
+      "background:#0d304b;border-radius:13px;padding:8px 10px;" +
+      "margin-bottom:6px;font-size:11px;";
 
     bubble.innerHTML =
-      "<div style=\"font-weight:800\">" +
-      escapeHtml(text) +
-      "</div>" +
-      "<div style=\"font-size:8px;" +
-      "color:#7290a8;" +
-      "margin-top:3px\">" +
-      escapeHtml(message.time) +
-      "</div>";
+      "<div style=\"font-weight:800\">" + escapeHtml(text) + "</div>" +
+      "<div style=\"font-size:8px;color:#7290a8;margin-top:3px\">" +
+      escapeHtml(message.time) + "</div>";
 
-    $("chatMessages")
-      ?.appendChild(bubble);
-
+    $("chatMessages")?.appendChild(bubble);
     input.value = "";
     onInputChange();
 
   }catch(e){
-    toast("تعذر إرسال الرسالة");
+    toast("⚠️ تعذر إرسال الرسالة");
   }
 }
 
 function toggleAttachMenu(event){
-  if(event){
-    event.stopPropagation();
-  }
-
-  $("attachMenu")
-    ?.classList.toggle("show");
+  if(event) event.stopPropagation();
+  $("attachMenu")?.classList.toggle("show");
 }
 
-document.addEventListener(
-  "click",
-  event => {
-    const menu =
-      $("attachMenu");
-
-    if(
-      menu &&
-      !menu.contains(event.target)
-    ){
-      menu.classList.remove("show");
-    }
+document.addEventListener("click", event => {
+  const menu = $("attachMenu");
+  if(menu && !menu.contains(event.target)){
+    menu.classList.remove("show");
   }
-);
+});
 
 function pickFile(accept){
-  const input =
-    $("fileInput");
-
+  const input = $("fileInput");
   if(!input) return;
-
   input.accept = accept;
   input.value = "";
-
   input.click();
 }
+  $("fileInput")?.addEventListener("change", async event => {
+  const files = Array.from(event.target.files || []);
+  if(!files.length) return;
 
-$("fileInput").addEventListener(
-  "change",
-  async event => {
-
-    const files =
-      Array.from(
-        event.target.files || []
-      );
-
-    if(!files.length) return;
-
-    for(const file of files){
-      if(file.size > 3 * 1024 * 1024){
-        toast(
-          "حجم الملف يجب ألا يتجاوز 3MB"
-        );
-        continue;
-      }
-
-      try{
-        const reader =
-          new FileReader();
-
-        reader.onload = async () => {
-
-          if(!livekitRoom){
-            toast(
-              "تعذر الاتصال بالمحادثة"
-            );
-            return;
-          }
-
-          const message = {
-            type:"radio-file",
-            name:"أنت",
-            fileName:file.name,
-            fileType:file.type,
-            data:reader.result
-          };
-
-          const encoded =
-            new TextEncoder().encode(
-              JSON.stringify(message)
-            );
-
-          await livekitRoom.localParticipant
-            .publishData(
-              encoded,
-              {
-                reliable:true
-              }
-            );
-
-          toast(
-            "تم إرسال " +
-            file.name
-          );
-        };
-
-        reader.readAsDataURL(file);
-
-      }catch(e){
-        toast("تعذر إرسال الملف");
-      }
+  for(const file of files){
+    if(file.size > 3 * 1024 * 1024){
+      toast("⚠️ حجم الملف يجب ألا يتجاوز 3MB");
+      continue;
     }
 
-    $("attachMenu")
-      ?.classList.remove("show");
+    if(!livekitRoom || livekitRoom.state !== "connected"){
+      toast("⚠️ أنشئ غرفة أو انضم إليها أولاً");
+      return;
+    }
+
+    try{
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const message = {
+          type:"radio-file",
+          name:"أنت",
+          fileName:file.name,
+          fileType:file.type,
+          data:reader.result
+        };
+        const encoded = new TextEncoder().encode(JSON.stringify(message));
+        await livekitRoom.localParticipant.publishData(encoded, { reliable:true });
+        toast("✅ تم إرسال " + file.name);
+      };
+      reader.readAsDataURL(file);
+    }catch(e){
+      toast("⚠️ تعذر إرسال الملف");
+    }
   }
-);
+  $("attachMenu")?.classList.remove("show");
+});
 
 async function startVoiceRecording(){
   if(isRecording) return;
 
+  if(!activeRoomId || activeRoomId === ""){
+    toast("⚠️ أنشئ غرفة أو انضم إليها أولاً");
+    return;
+  }
+
   try{
-    const stream =
-      await navigator.mediaDevices
-        .getUserMedia({
-          audio:true
-        });
-
-    mediaRecorder =
-      new MediaRecorder(stream);
-
+    const stream = await navigator.mediaDevices.getUserMedia({ audio:true });
+    mediaRecorder = new MediaRecorder(stream);
     recordedChunks = [];
     isRecording = true;
     recStart = Date.now();
 
-    $("recBar")
-      ?.classList.add("show");
+    $("recBar")?.classList.add("show");
 
-    recInterval =
-      setInterval(() => {
-        if($("recTime")){
-          $("recTime").textContent =
-            formatDuration(
-              (Date.now() - recStart) / 1000
-            );
-        }
-      },1000);
+    recInterval = setInterval(() => {
+      if($("recTime")){
+        $("recTime").textContent = formatDuration((Date.now() - recStart) / 1000);
+      }
+    },1000);
 
-    mediaRecorder.ondataavailable =
-      event => {
-        if(event.data.size){
-          recordedChunks.push(
-            event.data
-          );
-        }
-      };
+    mediaRecorder.ondataavailable = event => {
+      if(event.data.size) recordedChunks.push(event.data);
+    };
 
-    mediaRecorder.onstop =
-      async () => {
+    mediaRecorder.onstop = async () => {
+      clearInterval(recInterval);
+      $("recBar")?.classList.remove("show");
 
-        clearInterval(recInterval);
+      const blob = new Blob(recordedChunks, {
+        type: mediaRecorder.mimeType || "audio/webm"
+      });
 
-        $("recBar")
-          ?.classList.remove("show");
+      stream.getTracks().forEach(track => track.stop());
 
-        const blob =
-          new Blob(
-            recordedChunks,
-            {
-              type:
-                mediaRecorder.mimeType ||
-                "audio/webm"
-            }
-          );
+      if(blob.size > 2 * 1024 * 1024){
+        toast("⚠️ التسجيل أكبر من 2MB");
+        return;
+      }
 
-        stream
-          .getTracks()
-          .forEach(track => track.stop());
+      if(!livekitRoom || livekitRoom.state !== "connected"){
+        toast("⚠️ أنشئ غرفة أو انضم إليها أولاً");
+        return;
+      }
 
-        if(blob.size > 2 * 1024 * 1024){
-          toast(
-            "التسجيل أكبر من 2MB"
-          );
-          return;
-        }
-
-        const reader =
-          new FileReader();
-
-        reader.onload = async () => {
-
-          if(!livekitRoom){
-            toast(
-              "تعذر الاتصال بالمحادثة"
-            );
-            return;
-          }
-
-          const message = {
-            type:"radio-voice",
-            name:"أنت",
-            data:reader.result
-          };
-
-          const encoded =
-            new TextEncoder().encode(
-              JSON.stringify(message)
-            );
-
-          try{
-            await livekitRoom
-              .localParticipant
-              .publishData(
-                encoded,
-                {
-                  reliable:true
-                }
-              );
-
-            toast(
-              "تم إرسال التسجيل الصوتي"
-            );
-          }catch(e){
-            toast(
-              "تعذر إرسال التسجيل"
-            );
-          }
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const message = {
+          type:"radio-voice",
+          name:"أنت",
+          data:reader.result
         };
-
-        reader.readAsDataURL(blob);
+        const encoded = new TextEncoder().encode(JSON.stringify(message));
+        try{
+          await livekitRoom.localParticipant.publishData(encoded, { reliable:true });
+          toast("✅ تم إرسال التسجيل الصوتي");
+        }catch(e){
+          toast("⚠️ تعذر إرسال التسجيل");
+        }
       };
+      reader.readAsDataURL(blob);
+    };
 
     mediaRecorder.start();
 
   }catch(e){
-    toast(
-      "تعذر تشغيل تسجيل الصوت"
-    );
+    toast("⚠️ تعذر تشغيل تسجيل الصوت");
+    isRecording = false;
   }
 }
 
 function stopVoiceRecording(){
-  if(
-    mediaRecorder &&
-    isRecording
-  ){
-    mediaRecorder.stop();
+  if(mediaRecorder && isRecording){
+    try{ mediaRecorder.stop(); }catch(e){}
     isRecording = false;
   }
 }
@@ -2164,117 +1803,61 @@ async function loadMembers(){
   if(!activeRoomId) return;
 
   try{
-    const response =
-      await fetch(
-        API +
-        "/api/rooms/" +
-        encodeURIComponent(activeRoomId) +
-        "/members",
-        {
-          headers:{
-            "x-device-id":deviceId
-          }
-        }
-      );
+    const response = await fetch(
+      API + "/api/rooms/" + encodeURIComponent(activeRoomId) + "/members",
+      { headers:{ "x-device-id":deviceId } }
+    );
 
     if(!response.ok) return;
 
-    const data =
-      await response.json();
-
-    membersCache =
-      Array.isArray(data.members)
-        ? data.members
-        : [];
-
+    const data = await response.json();
+    membersCache = Array.isArray(data.members) ? data.members : [];
     renderMembersList();
   }catch(e){}
 }
 
 function renderMembersList(){
-  const container =
-    $("membersContent");
-
+  const container = $("membersContent");
   if(!container) return;
 
   if(!membersCache.length){
-    container.innerHTML =
-      '<div class="empty-state">' +
-      'لا يوجد أعضاء حالياً' +
-      '</div>';
+    container.innerHTML = '<div class="empty-state">لا يوجد أعضاء حالياً</div>';
     return;
   }
 
-  container.innerHTML =
-    membersCache.map(member => {
-
-      const role =
-        member.role || "member";
-
-      const roleText =
-        role === "owner"
-          ? "المالك"
-          : role === "admin"
-            ? "مشرف"
-            : "عضو";
-
-      return `
-        <div class="member-row">
-          <div class="avatar">👤</div>
-          <div class="info">
-            <div class="name">
-              ${escapeHtml(
-                member.name ||
-                "عضو"
-              )}
-            </div>
-            <div class="role">
-              <span class="role-badge ${role}">
-                ${roleText}
-              </span>
-            </div>
+  container.innerHTML = membersCache.map(member => {
+    const role = member.role || "member";
+    const roleText = role === "owner" ? "المالك" : role === "admin" ? "مشرف" : "عضو";
+    return `
+      <div class="member-row">
+        <div class="avatar">👤</div>
+        <div class="info">
+          <div class="name">${escapeHtml(member.name || "عضو")}</div>
+          <div class="role">
+            <span class="role-badge ${role}">${roleText}</span>
           </div>
         </div>
-      `;
-    }).join("");
+      </div>
+    `;
+  }).join("");
 }
 
 function updateRoomsBadge(){
-  const badge =
-    $("roomsBadge");
-
+  const badge = $("roomsBadge");
   if(!badge) return;
-
-  const count =
-    roomsCache.length;
-
+  const count = roomsCache.length;
   badge.textContent = count;
-
-  if(count > 0){
-    badge.classList.add("show");
-  }else{
-    badge.classList.remove("show");
-  }
+  if(count > 0) badge.classList.add("show");
+  else badge.classList.remove("show");
 }
 
 async function promoteMember(memberId){
   try{
     await fetch(
-      API +
-      "/api/rooms/" +
-      encodeURIComponent(activeRoomId) +
-      "/members/" +
-      encodeURIComponent(memberId) +
-      "/promote",
-      {
-        method:"POST",
-        headers:{
-          "Content-Type":"application/json",
-          "x-device-id":deviceId
-        }
-      }
+      API + "/api/rooms/" + encodeURIComponent(activeRoomId) +
+      "/members/" + encodeURIComponent(memberId) + "/promote",
+      { method:"POST", headers:{ "x-device-id":deviceId } }
     );
-
     await loadMembers();
   }catch(e){}
 }
@@ -2282,21 +1865,10 @@ async function promoteMember(memberId){
 async function demoteMember(memberId){
   try{
     await fetch(
-      API +
-      "/api/rooms/" +
-      encodeURIComponent(activeRoomId) +
-      "/members/" +
-      encodeURIComponent(memberId) +
-      "/demote",
-      {
-        method:"POST",
-        headers:{
-          "Content-Type":"application/json",
-          "x-device-id":deviceId
-        }
-      }
+      API + "/api/rooms/" + encodeURIComponent(activeRoomId) +
+      "/members/" + encodeURIComponent(memberId) + "/demote",
+      { method:"POST", headers:{ "x-device-id":deviceId } }
     );
-
     await loadMembers();
   }catch(e){}
 }
@@ -2304,197 +1876,123 @@ async function demoteMember(memberId){
 async function removeMember(memberId){
   try{
     await fetch(
-      API +
-      "/api/rooms/" +
-      encodeURIComponent(activeRoomId) +
-      "/members/" +
-      encodeURIComponent(memberId),
-      {
-        method:"DELETE",
-        headers:{
-          "x-device-id":deviceId
-        }
-      }
+      API + "/api/rooms/" + encodeURIComponent(activeRoomId) +
+      "/members/" + encodeURIComponent(memberId),
+      { method:"DELETE", headers:{ "x-device-id":deviceId } }
     );
-
     await loadMembers();
   }catch(e){}
 }
 
 async function copyMyCode(){
   if(!myPersonalCode) return;
-
   try{
-    await navigator.clipboard.writeText(
-      myPersonalCode
-    );
-
-    toast("تم نسخ الرقم");
+    await navigator.clipboard.writeText(myPersonalCode);
+    toast("✅ تم نسخ الرقم");
   }catch(e){
-    toast("تعذر النسخ");
+    toast("⚠️ تعذر النسخ");
   }
 }
 
 async function shareMyCode(){
   if(!myPersonalCode) return;
-
-  const text =
-    "رقم التعريف الخاص بي: " +
-    myPersonalCode;
-
+  const text = "رقم التعريف الخاص بي: " + myPersonalCode;
   try{
     if(navigator.share){
-      await navigator.share({
-        text
-      });
+      await navigator.share({ text });
     }else{
       await navigator.clipboard.writeText(text);
-      toast("تم نسخ الرقم للمشاركة");
+      toast("✅ تم نسخ الرقم للمشاركة");
     }
   }catch(e){}
 }
 
 async function createRoom(){
-  const input =
-    $("newRoomName");
-
-  const name =
-    input?.value.trim();
+  const input = $("newRoomName");
+  const name = input?.value.trim();
 
   if(!name){
-    toast("اكتب اسم الغرفة");
+    toast("⚠️ اكتب اسم الغرفة");
     return;
   }
 
   try{
-    const response =
-      await fetch(
-        API + "/api/rooms",
-        {
-          method:"POST",
-          headers:{
-            "Content-Type":
-              "application/json",
-            "x-device-id":
-              deviceId
-          },
-          body:JSON.stringify({
-            name
-          })
-        }
-      );
+    const response = await fetch(API + "/api/rooms", {
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json",
+        "x-device-id":deviceId
+      },
+      body:JSON.stringify({ name })
+    });
 
-    const data =
-      await response.json();
+    const data = await response.json();
 
     if(!response.ok){
-      throw new Error(
-        data.error ||
-        "تعذر إنشاء الغرفة"
-      );
+      throw new Error(data.error || "تعذر إنشاء الغرفة");
     }
 
     if(data.room){
-      activeRoomId =
-        data.room.id ||
-        data.room.roomId ||
-        "";
-
-      localStorage.setItem(
-        "radioActiveRoomId",
-        activeRoomId
-      );
+      activeRoomId = data.room.id || data.room.roomId || "";
+      localStorage.setItem("radioActiveRoomId", activeRoomId);
     }
 
-    toast("تم إنشاء الغرفة");
-
     closeAllPanels();
+
+    if($("opsRoomName")){
+      $("opsRoomName").textContent = data.room?.name || name;
+    }
 
     await loadRooms();
     await loadMyInfo();
 
-    if($("opsRoomName")){
-      $("opsRoomName").textContent =
-        data.room?.name ||
-        name;
-    }
+    /* ✅ الاتصال التلقائي بالغرفة الجديدة */
+    await connectLiveKit();
+    await loadMyInfo();
+
+    toast("✅ تم إنشاء الغرفة والاتصال");
 
   }catch(e){
-    toast(
-      e.message ||
-      "تعذر إنشاء الغرفة"
-    );
+    toast("⚠️ " + (e.message || "تعذر إنشاء الغرفة"));
   }
 }
 
 async function submitJoin(){
-  const code =
-    $("joinCode")?.value
-      .trim()
-      .toUpperCase();
-
-  const name =
-    $("joinName")?.value
-      .trim();
+  const code = $("joinCode")?.value.trim().toUpperCase();
+  const name = $("joinName")?.value.trim();
 
   if(!code || code.length !== 6){
-    toast(
-      "أدخل رقم التعريف المكون من 6 خانات"
-    );
+    toast("⚠️ أدخل رقم التعريف المكون من 6 خانات");
     return;
   }
 
   if(!name){
-    toast("اكتب اسمك");
+    toast("⚠️ اكتب اسمك");
     return;
   }
 
   try{
-    const response =
-      await fetch(
-        API + "/api/rooms/join",
-        {
-          method:"POST",
-          headers:{
-            "Content-Type":
-              "application/json",
-            "x-device-id":
-              deviceId
-          },
-          body:JSON.stringify({
-            code,
-            name
-          })
-        }
-      );
+    const response = await fetch(API + "/api/rooms/join", {
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json",
+        "x-device-id":deviceId
+      },
+      body:JSON.stringify({ code, name })
+    });
 
-    const data =
-      await response.json();
+    const data = await response.json();
 
     if(!response.ok){
-      throw new Error(
-        data.error ||
-        "تعذر الانضمام"
-      );
+      throw new Error(data.error || "تعذر الانضمام");
     }
 
-    const room =
-      data.room || data;
-
-    activeRoomId =
-      room.id ||
-      room.roomId ||
-      "";
-
-    localStorage.setItem(
-      "radioActiveRoomId",
-      activeRoomId
-    );
+    const room = data.room || data;
+    activeRoomId = room.id || room.roomId || "";
+    localStorage.setItem("radioActiveRoomId", activeRoomId);
 
     if($("opsRoomName")){
-      $("opsRoomName").textContent =
-        room.name ||
-        "الغرفة";
+      $("opsRoomName").textContent = room.name || "الغرفة";
     }
 
     closeAllPanels();
@@ -2502,13 +2000,14 @@ async function submitJoin(){
     await loadRooms();
     await loadMyInfo();
 
-    toast("تم الانضمام للغرفة");
+    /* ✅ الاتصال التلقائي بعد الانضمام */
+    await connectLiveKit();
+    await loadMyInfo();
+
+    toast("✅ تم الانضمام والاتصال");
 
   }catch(e){
-    toast(
-      e.message ||
-      "تعذر الانضمام للغرفة"
-    );
+    toast("⚠️ " + (e.message || "تعذر الانضمام للغرفة"));
   }
 }
 
@@ -2521,49 +2020,28 @@ async function leaveRoom(){
   }catch(e){}
 
   activeRoomId = "";
-
-  localStorage.removeItem(
-    "radioActiveRoomId"
-  );
+  localStorage.removeItem("radioActiveRoomId");
 
   if($("opsRoomName")){
-    $("opsRoomName").textContent =
-      "لا توجد غرفة";
+    $("opsRoomName").textContent = "لا توجد غرفة";
   }
 
   closeAllPanels();
-
-  toast("تم الخروج من الغرفة");
+  updateServerStatus();
+  toast("🚪 تم الخروج من الغرفة");
 }
 
 function openPanel(id){
   closeAllPanels();
-
   const panel = $(id);
-
   if(!panel) return;
-
   panel.classList.add("show");
 
-  if(id === "roomsPanel"){
-    loadRooms();
-  }
-
-  if(id === "membersPanel"){
-    loadMembers();
-  }
-
-  if(id === "accountPanel"){
-    renderAccount();
-  }
-
-  if(id === "settingsPanel"){
-    renderSettings();
-  }
-
-  if(id === "contactsPanel"){
-    renderContacts();
-  }
+  if(id === "roomsPanel") loadRooms();
+  if(id === "membersPanel") loadMembers();
+  if(id === "accountPanel") renderAccount();
+  if(id === "settingsPanel") renderSettings();
+  if(id === "contactsPanel") renderContacts();
 }
 
 function closePanel(id){
@@ -2571,291 +2049,175 @@ function closePanel(id){
 }
 
 function closeAllPanels(){
-  document
-    .querySelectorAll(".modal")
-    .forEach(panel =>
-      panel.classList.remove("show")
-    );
+  document.querySelectorAll(".modal").forEach(panel => {
+    panel.classList.remove("show");
+  });
 }
 
 function renderRoomsList(){
-  const content =
-    $("roomsContent");
-
+  const content = $("roomsContent");
   if(!content) return;
 
   if(!roomsCache.length){
-    content.innerHTML =
-      '<div class="empty-state">' +
-      'لا توجد غرف حالياً' +
-      '</div>';
+    content.innerHTML = '<div class="empty-state">لا توجد غرف حالياً</div>';
     return;
   }
 
-  content.innerHTML =
-    roomsCache.map(room => {
-
-      const id =
-        room.id ||
-        room.roomId ||
-        "";
-
-      return `
-        <div class="member-row"
-             onclick="selectRoom('${escapeHtml(id)}')">
-          <div class="avatar">📻</div>
-          <div class="info">
-            <div class="name">
-              ${escapeHtml(
-                room.name ||
-                "غرفة"
-              )}
-            </div>
-            <div class="role">
-              ${escapeHtml(
-                room.code ||
-                room.inviteCode ||
-                ""
-              )}
-            </div>
-          </div>
+  content.innerHTML = roomsCache.map(room => {
+    const id = room.id || room.roomId || "";
+    return `
+      <div class="member-row" onclick="selectRoom('${escapeHtml(id)}')">
+        <div class="avatar">📻</div>
+        <div class="info">
+          <div class="name">${escapeHtml(room.name || "غرفة")}</div>
+          <div class="role">${escapeHtml(room.code || room.inviteCode || "")}</div>
         </div>
-      `;
-    }).join("");
+      </div>
+    `;
+  }).join("");
 }
 
 function selectRoom(roomId){
   activeRoomId = roomId;
+  localStorage.setItem("radioActiveRoomId", roomId);
 
-  localStorage.setItem(
-    "radioActiveRoomId",
-    roomId
-  );
-
-  const room =
-    roomsCache.find(
-      item =>
-        (item.id || item.roomId) === roomId
-    );
-
+  const room = roomsCache.find(item => (item.id || item.roomId) === roomId);
   if(room && $("opsRoomName")){
-    $("opsRoomName").textContent =
-      room.name ||
-      "الغرفة";
+    $("opsRoomName").textContent = room.name || "الغرفة";
   }
 
   closeAllPanels();
-
-  toast("تم اختيار الغرفة");
+  toast("✅ تم اختيار الغرفة");
 }
 
 function renderSettings(){
-  const content =
-    $("settingsContent");
-
+  const content = $("settingsContent");
   if(!content) return;
 
   content.innerHTML = `
     <div class="member-row">
       <div class="avatar">📡</div>
       <div class="info">
-        <div class="name">
-          Radio Connect
-        </div>
-        <div class="role">
-          جهاز لاسلكي
-        </div>
+        <div class="name">Radio Connect</div>
+        <div class="role">جهاز لاسلكي</div>
       </div>
     </div>
-
     <div class="member-row">
       <div class="avatar">🎙️</div>
       <div class="info">
-        <div class="name">
-          الميكروفون
-        </div>
-        <div class="role">
-          ${naturalOn
-            ? "الصوت الطبيعي مفعل"
-            : "الصوت اللاسلكي مفعل"}
-        </div>
+        <div class="name">الميكروفون</div>
+        <div class="role">${naturalOn ? "الصوت الطبيعي مفعل" : "الصوت اللاسلكي مفعل"}</div>
       </div>
     </div>
   `;
 }
 
 function renderAccount(){
-  const content =
-    $("accountContent");
-
+  const content = $("accountContent");
   if(!content) return;
 
   content.innerHTML = `
     <div class="member-row">
       <div class="avatar">♙</div>
       <div class="info">
-        <div class="name">
-          حسابي
-        </div>
-        <div class="role">
-          ${myRole || "عضو"}
-        </div>
+        <div class="name">حسابي</div>
+        <div class="role">${myRole || "عضو"}</div>
       </div>
     </div>
-
     <div class="member-row">
       <div class="avatar">🆔</div>
       <div class="info">
-        <div class="name">
-          رقم الجهاز
-        </div>
-        <div class="role">
-          ${escapeHtml(deviceId)}
-        </div>
+        <div class="name">رقم الجهاز</div>
+        <div class="role">${escapeHtml(deviceId)}</div>
       </div>
     </div>
   `;
 }
 
 function renderContacts(){
-  const content =
-    $("contactsContent");
-
+  const content = $("contactsContent");
   if(!content) return;
-
-  content.innerHTML =
-    '<div class="empty-state">' +
-    'لا توجد جهات اتصال حالياً' +
-    '</div>';
+  content.innerHTML = '<div class="empty-state">لا توجد جهات اتصال حالياً</div>';
 }
 
 function switchNav(section){
-  document
-    .querySelectorAll(".nav-item")
-    .forEach(item =>
-      item.classList.remove("active")
-    );
+  document.querySelectorAll(".nav-item").forEach(item => {
+    item.classList.remove("active");
+  });
 
   if(section === "home"){
-    $("navHome")
-      ?.classList.add("active");
+    $("navHome")?.classList.add("active");
     closeAllPanels();
   }
-
   if(section === "rooms"){
-    $("navRooms")
-      ?.classList.add("active");
+    $("navRooms")?.classList.add("active");
     openPanel("roomsPanel");
   }
-
   if(section === "account"){
-    $("navAccount")
-      ?.classList.add("active");
+    $("navAccount")?.classList.add("active");
     openPanel("accountPanel");
   }
 }
 
 async function testMic(){
   try{
-    const stream =
-      await navigator.mediaDevices
-        .getUserMedia({
-          audio:{
-            echoCancellation:true,
-            noiseSuppression:true,
-            autoGainControl:true
-          }
-        });
-
-    stream
-      .getTracks()
-      .forEach(track => track.stop());
-
-    toast(
-      "الميكروفون يعمل بشكل صحيح"
-    );
+    const stream = await navigator.mediaDevices.getUserMedia({
+      audio:{ echoCancellation:true, noiseSuppression:true, autoGainControl:true }
+    });
+    stream.getTracks().forEach(track => track.stop());
+    toast("✅ الميكروفون يعمل بشكل صحيح");
   }catch(e){
-    toast(
-      "تعذر الوصول إلى الميكروفون"
-    );
+    toast("⚠️ تعذر الوصول إلى الميكروفون");
   }
 }
 
-$("micBtn")?.addEventListener(
-  "pointerdown",
-  async event => {
-    event.preventDefault();
+/* أزرار الميكروفون الصوتي */
+$("micBtn")?.addEventListener("pointerdown", async event => {
+  event.preventDefault();
+  $("micBtn")?.classList.add("rec");
+  await startVoiceRecording();
+});
 
-    $("micBtn")
-      ?.classList.add("rec");
+$("micBtn")?.addEventListener("pointerup", event => {
+  event.preventDefault();
+  $("micBtn")?.classList.remove("rec");
+  stopVoiceRecording();
+});
 
-    await startVoiceRecording();
-  }
-);
+$("micBtn")?.addEventListener("pointercancel", () => {
+  $("micBtn")?.classList.remove("rec");
+  stopVoiceRecording();
+});
 
-$("micBtn")?.addEventListener(
-  "pointerup",
-  event => {
-    event.preventDefault();
+window.addEventListener("pointerup", () => {
+  if(isTalking) stopTalking();
+  if(isRecording) stopVoiceRecording();
+});
 
-    $("micBtn")
-      ?.classList.remove("rec");
+window.addEventListener("online", () => {
+  updateNetwork();
+  updateServerStatus();
+});
 
-    stopVoiceRecording();
-  }
-);
+window.addEventListener("offline", () => {
+  updateNetwork();
+  updateServerStatus();
+});
 
-$("micBtn")?.addEventListener(
-  "pointercancel",
-  () => {
-    $("micBtn")
-      ?.classList.remove("rec");
-
-    stopVoiceRecording();
-  }
-);
-
-window.addEventListener(
-  "pointerup",
-  () => {
-    if(isTalking){
-      stopTalking();
-    }
-
-    if(isRecording){
-      stopVoiceRecording();
-    }
-  }
-);
-
-window.addEventListener(
-  "online",
-  updateServerStatus
-);
-
-window.addEventListener(
-  "offline",
-  updateServerStatus
-);
-
+/* ============ بدء التطبيق ============ */
 (async () => {
   updateWaveUI();
-
   await ensureDevice();
-
   await initBattery();
-
   updateNetwork();
-
   await loadRooms();
 
-  await connectLiveKit();
+  /* ✅ لا اتصال تلقائي عند فتح التطبيق */
 
   await loadMyInfo();
-
   updateServerStatus();
 })();
 </script>
 
 </body>
-  </html>
+</html>
