@@ -46,10 +46,7 @@ button{border:0;cursor:pointer;font-family:inherit}
     radial-gradient(circle at 50% 30%,rgba(35,70,110,.20),transparent 42%),
     linear-gradient(180deg,#07111d 0%,#02050a 55%,#010308 100%)
 }
-.app::-webkit-scrollbar{
-  width:0;
-  display:none
-}
+.app::-webkit-scrollbar{width:0;display:none}
 
 /* ============ HEADER ============ */
 .topbar{
@@ -132,23 +129,15 @@ button{border:0;cursor:pointer;font-family:inherit}
 }
 .my-code-card .code-role{font-size:9px;color:#55dc82}
 .code-room-info{
-  margin:6px 0;
-  padding:6px;
+  margin:6px 0;padding:6px;
   border-top:1px solid rgba(94,176,255,.15);
   border-bottom:1px solid rgba(94,176,255,.15)
 }
 .code-room-name{
-  font-size:14px;
-  font-weight:900;
-  color:#fff;
-  margin-bottom:2px;
-  letter-spacing:.3px
+  font-size:14px;font-weight:900;color:#fff;
+  margin-bottom:2px;letter-spacing:.3px
 }
-.code-room-num{
-  font-size:9px;
-  color:#5eb0ff;
-  font-weight:700
-}
+.code-room-num{font-size:9px;color:#5eb0ff;font-weight:700}
 .my-code-card .code-actions{display:flex;gap:6px;margin-top:7px}
 .my-code-card .code-btn{
   flex:1;padding:7px;border-radius:10px;
@@ -447,7 +436,6 @@ button{border:0;cursor:pointer;font-family:inherit}
 .empty-state{padding:25px 15px;text-align:center;color:#60788e;font-size:11px;line-height:1.7}
 .hidden{display:none!important}
 
-/* ============ SMALL ============ */
 @media(max-width:380px){
   .topbar{grid-template-columns:40px 1fr 84px}
   .voice-ptt{grid-template-columns:1fr 108px 1fr;min-height:130px}
@@ -480,7 +468,7 @@ button{border:0;cursor:pointer;font-family:inherit}
   </div>
 </header>
 
-<!-- ========== بطاقة الموجة ========== -->
+<!-- ========== بطاقة الموجة (أزرار على الجانبين) ========== -->
 <div class="ops-card">
   <div class="ops-top">
     <div class="wave-arrows">
@@ -498,7 +486,7 @@ button{border:0;cursor:pointer;font-family:inherit}
   </div>
 </div>
 
-<!-- ========== بطاقة رقم التعريف ========== -->
+<!-- ========== بطاقة رقم التعريف (مع اسم الغرفة) ========== -->
 <div class="my-code-card show" id="myCodeCard">
   <div class="code-label">🆔 رقم التعريف الشخصي</div>
   <div class="code-value" id="myCodeValue">------</div>
@@ -695,7 +683,6 @@ button{border:0;cursor:pointer;font-family:inherit}
   </div>
 </div>
 
-<!-- 🆕 نافذة طلب الانضمام -->
 <div class="modal" id="joinRequestPanel">
   <div class="modal-box">
     <div class="modal-head">
@@ -765,8 +752,8 @@ button{border:0;cursor:pointer;font-family:inherit}
 
 <div class="toast" id="toast"></div>
 
-      </div>
-      <script>
+</div>
+<script>
 "use strict";
 
 const API = location.origin;
@@ -803,10 +790,8 @@ let livekitRoom = null;
 let localAudioTrack = null;
 let isTalking = false;
 
-/* 🆕 متغيرات قناة الموجة */
 let waveRoom = null;
 let waveLocalAudioTrack = null;
-let isWaveTalking = false;
 
 let naturalOn = true;
 let radioOn = false;
@@ -829,10 +814,49 @@ let recStart = 0;
 let recInterval = null;
 let isRecording = false;
 
-/* 🆕 حالة اختبار المايك المحلي */
 let isLocalTesting = false;
 
 const $ = id => document.getElementById(id);
+
+/* ============ 🆕 بييب جهاز اللاسلكي ============ */
+function playDeviceBeep(frequency = 1200, duration = 0.15){
+  try{
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    if(audioCtx.state === "suspended"){
+      audioCtx.resume();
+    }
+
+    const oscillator = audioCtx.createOscillator();
+    const gainNode = audioCtx.createGain();
+
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(frequency, audioCtx.currentTime);
+
+    gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(
+      0.001,
+      audioCtx.currentTime + duration
+    );
+
+    oscillator.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+
+    oscillator.start();
+    oscillator.stop(audioCtx.currentTime + duration);
+
+    setTimeout(() => {
+      try{ audioCtx.close(); }catch(e){}
+    }, (duration + 0.1) * 1000);
+
+  }catch(e){
+    console.error("Beep error:", e);
+  }
+}
+
+function playStopBeep(){
+  playDeviceBeep(800, 0.15);
+}
 
 /* ============ Toast ============ */
 function toast(message){
@@ -976,14 +1000,12 @@ async function ensureDevice(){
     if(data.waveFingerprint){
       waveFingerprint = data.waveFingerprint;
       localStorage.setItem("radioWaveFingerprint", waveFingerprint);
-
-      /* 🆕 إنشاء قناة الموجة تلقائياً */
       await createWaveChannel();
     }
   }catch(e){ console.error(e); }
 }
 
-/* ============ 🆕 إنشاء قناة الموجة ============ */
+/* ============ إنشاء قناة الموجة ============ */
 async function createWaveChannel(){
   if(!waveFingerprint) return;
   try{
@@ -1045,46 +1067,35 @@ async function connectLiveKit(){
       dynacast:true
     });
 
-    livekitRoom.on(L.RoomEvent.TrackSubscribed, (track) => {
     livekitRoom.on(L.RoomEvent.TrackSubscribed, async (track) => {
-  try{
-    if(track.kind === L.Track.Kind.Audio){
-      const element = track.attach();
-      element.autoplay = true;
-      element.playsInline = true;
-      element.style.display = "none";
-      document.body.appendChild(element);
-
-      /* ✅ توجيه الصوت إلى السماعة الخارجية */
       try{
-        const devices = await navigator.mediaDevices.enumerateDevices();
-        const speakers = devices.filter(d => d.kind === "audiooutput");
+        if(track.kind === L.Track.Kind.Audio){
+          const element = track.attach();
+          element.autoplay = true;
+          element.playsInline = true;
+          element.style.display = "none";
+          document.body.appendChild(element);
 
-        /* البحث عن سماعة خارجية (Speaker) */
-        const externalSpeaker = speakers.find(d => 
-          d.label.toLowerCase().includes("speaker") ||
-          d.label.toLowerCase().includes("loud") ||
-          d.label.toLowerCase().includes("خارجي")
-        );
+          /* ✅ توجيه الصوت للسماعة الخارجية */
+          try{
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            const speakers = devices.filter(d => d.kind === "audiooutput");
 
-        if(externalSpeaker && element.setSinkId){
-          await element.setSinkId(externalSpeaker.deviceId);
-          console.log("✅ الصوت على السماعة الخارجية:", externalSpeaker.label);
-        } else if(speakers.length > 0 && element.setSinkId){
-          /* إذا لم نجد سماعة خارجية محددة، اختر الأخير (عادةً Speaker) */
-          const lastSpeaker = speakers[speakers.length - 1];
-          await element.setSinkId(lastSpeaker.deviceId);
-          console.log("✅ الصوت على:", lastSpeaker.label);
+            const externalSpeaker = speakers.find(d => 
+              d.label.toLowerCase().includes("speaker") ||
+              d.label.toLowerCase().includes("loud")
+            );
+
+            if(externalSpeaker && element.setSinkId){
+              await element.setSinkId(externalSpeaker.deviceId);
+              console.log("✅ الصوت على السماعة الخارجية");
+            } else if(speakers.length > 0 && element.setSinkId){
+              await element.setSinkId(speakers[speakers.length - 1].deviceId);
+            }
+          }catch(err){}
         }
-      }catch(err){
-        console.log("SinkId غير مدعوم:", err);
-      }
-
-      /* ✅ محاولة زيادة مستوى الصوت */
-      element.volume = 1.0;
-    }
-  }catch(e){ console.error(e); }
-});
+      }catch(e){ console.error(e); }
+    });
 
     livekitRoom.on(L.RoomEvent.DataReceived, (payload) => {
       try{
@@ -1131,7 +1142,7 @@ async function connectLiveKit(){
   }
 }
 
-/* ============ 🆕 الاتصال بقناة الموجة ============ */
+/* ============ الاتصال بقناة الموجة ============ */
 async function connectWaveChannel(){
   try{
     if(!L) return false;
@@ -1157,7 +1168,7 @@ async function connectWaveChannel(){
       dynacast:true
     });
 
-    waveRoom.on(L.RoomEvent.TrackSubscribed, (track) => {
+    waveRoom.on(L.RoomEvent.TrackSubscribed, async (track) => {
       try{
         if(track.kind === L.Track.Kind.Audio){
           const element = track.attach();
@@ -1165,6 +1176,15 @@ async function connectWaveChannel(){
           element.playsInline = true;
           element.style.display = "none";
           document.body.appendChild(element);
+
+          try{
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            const speakers = devices.filter(d => d.kind === "audiooutput");
+
+            if(speakers.length > 0 && element.setSinkId){
+              await element.setSinkId(speakers[speakers.length - 1].deviceId);
+            }
+          }catch(err){}
         }
       }catch(e){ console.error(e); }
     });
@@ -1224,7 +1244,6 @@ async function loadMyInfo(){
       }
     }
 
-    /* ✅ تحديث اسم الغرفة ورقمها */
     const room = roomsCache.find(r => r.id === activeRoomId);
     if(room){
       if($("codeRoomName")) $("codeRoomName").textContent = room.name || "لا توجد غرفة";
@@ -1233,7 +1252,7 @@ async function loadMyInfo(){
   }catch(e){ console.error(e); }
 }
 
-/* ============ فلتر الصوت اللاسلكي ============ */
+/* ============ فلتر الصوت اللاسلكي (محسّن) ============ */
 function buildRadioFilter(source){
   if(!audioContext){
     audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -1244,24 +1263,20 @@ function buildRadioFilter(source){
 
   const input = audioContext.createMediaStreamSource(source);
 
-  /* High-pass: قطع الترددات المنخفضة */
   const high = audioContext.createBiquadFilter();
   high.type = "highpass";
   high.frequency.value = 320;
 
-  /* Low-pass: قطع الترددات العالية */
   const low = audioContext.createBiquadFilter();
   low.type = "lowpass";
   low.frequency.value = 2800;
 
-  /* Peak: تعزيز الترددات الوسطى (صوت لاسلكي) */
   const peak = audioContext.createBiquadFilter();
   peak.type = "peaking";
   peak.frequency.value = 1700;
   peak.Q.value = 3;
   peak.gain.value = 6;
 
-  /* Compressor: ضغط الصوت */
   const compressor = audioContext.createDynamicsCompressor();
   compressor.threshold.value = -24;
   compressor.knee.value = 10;
@@ -1269,7 +1284,6 @@ function buildRadioFilter(source){
   compressor.attack.value = 0.003;
   compressor.release.value = 0.12;
 
-  /* WaveShaper: تشويه بسيط */
   const shaper = audioContext.createWaveShaper();
   const n = 1024;
   const curve = new Float32Array(n);
@@ -1306,76 +1320,55 @@ function cleanupFilter(){
   filterChain = null;
   mediaStreamDest = null;
 }
-
-/* ============ زر PTT ============ */
+  /* ============ زر PTT — ربط الأحداث (محسّن) ============ */
 const pttBtn = $("pttBtn");
 const pttRing = $("pttRing");
-
 let activePointerId = null;
 
 if(pttBtn){
-  /* ✅ بدء التحدث */
+  /* بدء التحدث */
   pttBtn.addEventListener("pointerdown", (e) => {
     e.preventDefault();
     e.stopPropagation();
-    
-    /* منع النقرات المزدوجة */
     if(activePointerId !== null) return;
-    
     activePointerId = e.pointerId;
-    
-    /* تثبيت المؤشر على الزر */
-    try{
-      pttBtn.setPointerCapture(e.pointerId);
-    }catch(x){}
-    
+
+    try{ pttBtn.setPointerCapture(e.pointerId); }catch(x){}
+
     startTalking(e);
   });
 
-  /* ✅ إيقاف التحدث */
+  /* إيقاف التحدث عند رفع الإصبع */
   pttBtn.addEventListener("pointerup", (e) => {
     e.preventDefault();
     e.stopPropagation();
-    
-    if(activePointerId === null) return;
-    if(e.pointerId !== activePointerId) return;
-    
+    if(activePointerId !== e.pointerId) return;
     activePointerId = null;
     stopTalking(e);
   });
 
-  /* ✅ إلغاء (إذا خرج الإصبع) */
+  /* إلغاء */
   pttBtn.addEventListener("pointercancel", (e) => {
     e.preventDefault();
     e.stopPropagation();
-    
-    if(activePointerId === null) return;
-    if(e.pointerId !== activePointerId) return;
-    
+    if(activePointerId !== e.pointerId) return;
     activePointerId = null;
     stopTalking(e);
   });
 
-  /* ✅ إيقاف عند خروج الإصبع من الزر */
+  /* إيقاف عند خروج الإصبع */
   pttBtn.addEventListener("pointerleave", (e) => {
-    if(activePointerId === null) return;
-    if(e.pointerId !== activePointerId) return;
-    
-    /* إذا رُفع الإصبع، أنهِ التحدث */
+    if(activePointerId !== e.pointerId) return;
     if(e.buttons === 0){
       activePointerId = null;
       stopTalking(e);
     }
   });
 
-  /* منع القائمة المنبثقة */
   pttBtn.addEventListener("contextmenu", e => e.preventDefault());
-
-  /* منع السحب */
-  pttBtn.addEventListener("dragstart", e => e.preventDefault());
 }
 
-/* ✅ احتياطي: إيقاف عند رفع الإصبع في أي مكان */
+/* احتياطي: إيقاف عند رفع الإصبع في أي مكان */
 window.addEventListener("pointerup", (e) => {
   if(activePointerId !== null && e.pointerId === activePointerId){
     activePointerId = null;
@@ -1383,22 +1376,15 @@ window.addEventListener("pointerup", (e) => {
   }
 });
 
-/* ✅ احتياطي: إيقاف عند رفع الإصبع على الموبايل */
-window.addEventListener("touchend", (e) => {
-  if(isTalking && activePointerId === null){
-    /* لا نوقف هنا — نترك pointerup يعمل */
-  }
-});
-
+/* إيقاف عند فقدان التركيز */
 window.addEventListener("blur", () => {
-  /* إيقاف عند فقدان التركيز */
   if(isTalking){
     activePointerId = null;
     stopTalking();
   }
 });
 
-/* ============ 🆕 بدء/إيقاف التحدث (مع دعم الموجة + اختبار محلي) ============ */
+/* ============ بدء/إيقاف التحدث ============ */
 async function startTalking(event){
   if(event) event.preventDefault();
   if(isTalking) return;
@@ -1409,8 +1395,15 @@ async function startTalking(event){
   $("waveVisualLeft")?.classList.add("active");
   $("waveVisualRight")?.classList.add("active");
 
+  /* 🆕 بييب بدء الإرسال */
+  if(radioOn){
+    playDeviceBeep(1400, 0.12);
+  } else {
+    playDeviceBeep(900, 0.10);
+  }
+
   try{
-    /* الحالة 1: في غرفة ← اتصل بالغرفة */
+    /* الحالة 1: في غرفة */
     if(activeRoomId && activeRoomId !== ""){
       if(!livekitRoom || livekitRoom.state !== "connected"){
         toast("🎙️ جاري الاتصال بالغرفة...");
@@ -1444,7 +1437,7 @@ async function startTalking(event){
       return;
     }
 
-    /* الحالة 2: لست في غرفة ← جرب قناة الموجة */
+    /* الحالة 2: قناة الموجة */
     if(waveFingerprint && waveFingerprint !== ""){
       const waveConnected = await connectWaveChannel();
 
@@ -1481,7 +1474,6 @@ async function startTalking(event){
       }
     });
 
-    /* تشغيل محلي (يسمع نفسه فقط) */
     const audioEl = new Audio();
     audioEl.srcObject = rawMicStream;
     audioEl.muted = false;
@@ -1501,6 +1493,9 @@ async function startTalking(event){
 
 async function stopTalking(event){
   if(event) event.preventDefault();
+
+  /* 🆕 بييب الإيقاف */
+  playStopBeep();
 
   /* إيقاف اختبار محلي */
   if(isLocalTesting && window.__localTestAudio){
@@ -1551,52 +1546,37 @@ async function stopTalking(event){
   $("waveVisualRight")?.classList.remove("active");
 }
 
-/* ============ وضع الصوت ============ */
+/* ============ وضع الصوت (بدون تداخل) ============ */
 function setVoiceMode(mode){
-  /* ✅ إذا كان المايك شغالاً ← أوقفه أولاً */
-  const wasTalking = isTalking;
+  /* لا تفعل شيئاً إذا كان نفس الوضع */
+  if(mode === "natural" && naturalOn && !radioOn) return;
+  if(mode === "radio" && radioOn && !naturalOn) return;
+
+  /* إيقاف أي جلسة تحدث حالية */
+  if(isTalking){
+    stopTalking();
+  }
+
+  /* تنظيف أي فلتر متبقٍ */
+  cleanupFilter();
 
   if(mode === "natural"){
-    /* ✅ تبديل إلى الوضع الطبيعي */
-    if(naturalOn && !radioOn){
-      /* بالفعل في الوضع الصحيح */
-      return;
-    }
-
     naturalOn = true;
     radioOn = false;
-
-    /* ✅ تنظيف أي فلتر لاسلكي */
-    cleanupFilter();
-
-    /* تحديث الواجهة */
     $("voiceNatural")?.classList.add("active");
     $("voiceRadio")?.classList.remove("active");
     if($("naturalState")) $("naturalState").textContent = "مفعل";
     if($("radioState")) $("radioState").textContent = "متوقف";
-
     toast("🎧 تم تفعيل الصوت الطبيعي");
   }
 
   if(mode === "radio"){
-    /* ✅ تبديل إلى الوضع اللاسلكي */
-    if(radioOn && !naturalOn){
-      /* بالفعل في الوضع الصحيح */
-      return;
-    }
-
     naturalOn = false;
     radioOn = true;
-
-    /* ✅ تنظيف أي فلتر قديم */
-    cleanupFilter();
-
-    /* تحديث الواجهة */
     $("voiceNatural")?.classList.remove("active");
     $("voiceRadio")?.classList.add("active");
     if($("naturalState")) $("naturalState").textContent = "متوقف";
     if($("radioState")) $("radioState").textContent = "مفعل";
-
     toast("📻 تم تفعيل الصوت اللاسلكي");
     openPanel("radioPresetsPanel");
   }
@@ -1629,7 +1609,7 @@ function updateWaveUI(){
   if($("waveNum")) $("waveNum").textContent = currentWave.number;
 }
 
-/* ============ 🆕 عرض قناتي اللاسلكية ============ */
+/* ============ عرض قناتي اللاسلكية ============ */
 function openWaveChannel(){
   closeAllPanels();
   const content = $("settingsContent");
@@ -1643,7 +1623,7 @@ function openWaveChannel(){
         <div class="role" style="font-family:monospace;color:#5eb0ff;font-size:18px;letter-spacing:3px">${escapeHtml(waveFingerprint || "---")}</div>
       </div>
     </div>
-    <div class="notice" style="margin-top:12px;padding:12px;background:#0a1828;border-radius:12px;font-size:11px;color:#9ab0c6;line-height:1.8">
+    <div style="margin-top:12px;padding:12px;background:#0a1828;border-radius:12px;font-size:11px;color:#9ab0c6;line-height:1.8">
       📌 شارك هذا الرقم مع من تريد التحدث معهم.<br>
       سيتمكنون من البحث عنه ثم إرسال طلب انضمام.<br>
       عند الموافقة ستتحدثون معاً عبر الموجة.
@@ -1677,7 +1657,7 @@ async function shareWaveCode(){
   }catch(e){}
 }
 
-/* ============ 🆕 فحص طلبات الانضمام ============ */
+/* ============ فحص طلبات الانضمام ============ */
 let lastPendingIds = [];
 
 async function checkWaveRequests(){
@@ -1693,7 +1673,6 @@ async function checkWaveRequests(){
     const data = await response.json();
     const pending = data.pendingRequests || [];
 
-    /* إذا كانت هناك طلبات جديدة */
     const newRequests = pending.filter(p => !lastPendingIds.includes(p.deviceId));
 
     if(newRequests.length > 0){
@@ -1765,8 +1744,8 @@ async function rejectJoin(targetDeviceId){
   }catch(e){
     toast("⚠️ تعذر الرفض");
   }
-}
-        /* ============ المحادثة ============ */
+  }
+  /* ============ المحادثة ============ */
 function onInputChange(){
   const input = $("chatInput");
   const send = $("sendBtn");
@@ -2277,7 +2256,6 @@ async function searchUser(){
   }
 }
 
-/* 🆕 إرسال طلب انضمام لقناة موجة */
 async function sendJoinRequest(fingerprint){
   if(!fingerprint) return;
 
@@ -2636,7 +2614,6 @@ async function checkSystemMessages(){
 
   await loadRooms();
 
-  /* ✅ إذا كانت هناك غرفة محفوظة */
   if(activeRoomId && activeRoomId !== ""){
     try{
       const room = roomsCache.find(r => r.id === activeRoomId);
@@ -2666,7 +2643,6 @@ async function checkSystemMessages(){
     }
   }
 
-  /* ✅ فحص دوري للطلبات + رسائل النظام */
   setInterval(checkWaveRequests, 3000);
   setInterval(checkSystemMessages, 5000);
   updateServerStatus();
