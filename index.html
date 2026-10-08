@@ -515,7 +515,6 @@ button{border:0;cursor:pointer;font-family:inherit}
 <!-- ========== منطقة PTT ========== -->
 <div class="voice-ptt">
 
-  <!-- زر الصوت الطبيعي -->
   <div class="voice-box active" id="voiceNatural" onclick="setVoiceMode('natural')">
     <span class="vt-ico">🔊</span>
     <span class="vt-name">الصوت الطبيعي</span>
@@ -525,7 +524,6 @@ button{border:0;cursor:pointer;font-family:inherit}
     </div>
   </div>
 
-  <!-- زر PTT -->
   <div class="ptt-wrap">
     <div class="ptt-ring" id="pttRing"></div>
     <button class="ptt-btn" id="pttBtn">
@@ -534,7 +532,6 @@ button{border:0;cursor:pointer;font-family:inherit}
     </button>
   </div>
 
-  <!-- زر الصوت اللاسلكي -->
   <div class="voice-box" id="voiceRadio" onclick="setVoiceMode('radio')">
     <span class="vt-ico">📻</span>
     <span class="vt-name">الصوت اللاسلكي</span>
@@ -854,7 +851,7 @@ async function initBattery(){
   }catch(e){}
 }
 
-/* ============ الشبكة الذكية (WiFi vs Cellular) ============ */
+/* ============ الشبكة الذكية ============ */
 function updateNetwork(){
   const el = $("networkVal");
   const iconEl = $("networkIcon");
@@ -870,7 +867,7 @@ function updateNetwork(){
 
   let type = "--";
   let strength = "good";
-  let icon = "📶"; /* افتراضي: WiFi */
+  let icon = "📶";
 
   if(!navigator.onLine){
     type = "غير متصل";
@@ -1091,7 +1088,8 @@ async function loadMyInfo(){
     }
   }catch(e){ console.error(e); }
 }
-  /* ============ فلتر الصوت اللاسلكي ============ */
+
+/* ============ فلتر الصوت اللاسلكي ============ */
 function buildRadioFilter(source){
   if(!audioContext){
     audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -1136,7 +1134,7 @@ function cleanupFilter(){
   mediaStreamDest = null;
 }
 
-/* ============ زر PTT — ربط الأحداث ============ */
+/* ============ زر PTT ============ */
 const pttBtn = $("pttBtn");
 const pttRing = $("pttRing");
 
@@ -1312,8 +1310,7 @@ function updateWaveUI(){
   if($("waveNameDisplay")) $("waveNameDisplay").textContent = currentWave.name;
   if($("waveNum")) $("waveNum").textContent = currentWave.number;
 }
-
-/* ============ المحادثة ============ */
+  /* ============ المحادثة ============ */
 function onInputChange(){
   const input = $("chatInput");
   const send = $("sendBtn");
@@ -2153,7 +2150,6 @@ async function checkSystemMessages(){
 
   await loadRooms();
 
-  /* ✅ إذا كانت هناك غرفة محفوظة، حاول الاتصال 3 مرات */
   if(activeRoomId && activeRoomId !== ""){
     try{
       const room = roomsCache.find(r => r.id === activeRoomId);
