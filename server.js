@@ -1,7 +1,7 @@
 "use strict";
 
 /* ==========================================
-   Radio Connect Server - v1.0
+   Radio Connect Server - v1.1
    Node.js + Express + LiveKit
    ========================================== */
 
@@ -749,13 +749,14 @@ app.get("/api/search-user", (req, res) => {
       }
     }
 
-    if (!targetRoom) return res.status(404).json({ error: "user_not_in_room" });
+    const hasWaveChannel = !!db.waveChannels[fingerprint];
 
     res.json({
       found: true,
       deviceId: targetDeviceId,
       waveFingerprint: fingerprint,
-      room: targetRoom
+      room: targetRoom,
+      hasWaveChannel: hasWaveChannel
     });
   } catch (e) {
     res.status(500).json({ error: "server_error" });
@@ -811,6 +812,63 @@ app.get("/token", async (req, res) => {
 });
 
 /* ==========================================
+   🆕 GET /wave-token
+   توكن قناة الموجة (للنداء المباشر)
+   ========================================== */
+app.get("/wave-token", async (req, res) => {
+  try {
+    const deviceId = getDeviceIdFromReq(req);
+    const waveCode = (req.query.wave || "").toUpperCase();
+
+    if (!deviceId) return res.status(401).json({ error: "device_required" });
+    if (!waveCode) return res.status(400).json({ error: "wave_required" });
+    if (!LIVEKIT_API_KEY || !LIVEKIT_API_SECRET) {
+      return res.status(500).json({ error: "livekit_not_configured" });
+    }
+
+    /* اسم قناة LiveKit الداخلي */
+    const channelName = "wave-" + waveCode;
+
+    /* التحقق: هل المستخدم صاحب البصمة أم عضو مقبول؟ */
+    const channel = db.waveChannels[waveCode];
+    if (channel) {
+      const isOwner = channel.owner === deviceId;
+      const member = channel.members.find(m => m.deviceId === deviceId);
+      const isApproved = member && member.status === "approved";
+
+      if (!isOwner && !isApproved) {
+        return res.status(403).json({ error: "not_a_member" });
+      }
+    }
+
+    const at = new AccessToken(LIVEKIT_API_KEY, LIVEKIT_API_SECRET, {
+      identity: deviceId,
+      ttl: "3h",
+      name: deviceId.substring(0, 12)
+    });
+
+    at.addGrant({
+      roomJoin: true,
+      room: channelName,
+      canPublish: true,
+      canSubscribe: true,
+      canPublishData: true
+    });
+
+    const token = await at.toJwt();
+
+    res.json({
+      token,
+      url: LIVEKIT_URL || "wss://radioconnect-8uyh53qc.livekit.cloud",
+      channel: channelName
+    });
+  } catch (e) {
+    console.error("wave-token:", e);
+    res.status(500).json({ error: "wave_token_failed" });
+  }
+});
+
+/* ==========================================
    404 fallback
    ========================================== */
 app.get("*", (req, res) => {
@@ -823,7 +881,7 @@ app.get("*", (req, res) => {
 app.listen(PORT, () => {
   console.log("");
   console.log("========================================");
-  console.log("📡  Radio Connect Server");
+  console.log("📡  Radio Connect Server v1.1");
   console.log("========================================");
   console.log("✅  المنفذ: " + PORT);
   console.log("🔑  LiveKit: " + (LIVEKIT_API_KEY ? "مفعّل ✅" : "غير مُعدّ ❌"));
