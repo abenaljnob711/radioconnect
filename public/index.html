@@ -1046,16 +1046,45 @@ async function connectLiveKit(){
     });
 
     livekitRoom.on(L.RoomEvent.TrackSubscribed, (track) => {
+    livekitRoom.on(L.RoomEvent.TrackSubscribed, async (track) => {
+  try{
+    if(track.kind === L.Track.Kind.Audio){
+      const element = track.attach();
+      element.autoplay = true;
+      element.playsInline = true;
+      element.style.display = "none";
+      document.body.appendChild(element);
+
+      /* ✅ توجيه الصوت إلى السماعة الخارجية */
       try{
-        if(track.kind === L.Track.Kind.Audio){
-          const element = track.attach();
-          element.autoplay = true;
-          element.playsInline = true;
-          element.style.display = "none";
-          document.body.appendChild(element);
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const speakers = devices.filter(d => d.kind === "audiooutput");
+
+        /* البحث عن سماعة خارجية (Speaker) */
+        const externalSpeaker = speakers.find(d => 
+          d.label.toLowerCase().includes("speaker") ||
+          d.label.toLowerCase().includes("loud") ||
+          d.label.toLowerCase().includes("خارجي")
+        );
+
+        if(externalSpeaker && element.setSinkId){
+          await element.setSinkId(externalSpeaker.deviceId);
+          console.log("✅ الصوت على السماعة الخارجية:", externalSpeaker.label);
+        } else if(speakers.length > 0 && element.setSinkId){
+          /* إذا لم نجد سماعة خارجية محددة، اختر الأخير (عادةً Speaker) */
+          const lastSpeaker = speakers[speakers.length - 1];
+          await element.setSinkId(lastSpeaker.deviceId);
+          console.log("✅ الصوت على:", lastSpeaker.label);
         }
-      }catch(e){ console.error(e); }
-    });
+      }catch(err){
+        console.log("SinkId غير مدعوم:", err);
+      }
+
+      /* ✅ محاولة زيادة مستوى الصوت */
+      element.volume = 1.0;
+    }
+  }catch(e){ console.error(e); }
+});
 
     livekitRoom.on(L.RoomEvent.DataReceived, (payload) => {
       try{
