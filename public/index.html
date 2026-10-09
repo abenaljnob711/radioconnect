@@ -46,6 +46,7 @@ button{border:0;cursor:pointer;font-family:inherit}
 .code-btn{flex:1;padding:4px;border-radius:6px;background:#0d5d91;color:#fff;font-size:8px;font-weight:800}
 
 .voice-ptt-clean{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;padding:10px 0}
+.voice-ptt-clean.disabled{display:none !important}
 .ptt-wrap{position:relative;width:120px;height:120px;display:flex;justify-content:center;align-items:center}
 .ptt-ring{position:absolute;width:120px;height:120px;border-radius:50%;background:radial-gradient(circle,rgba(255,53,47,.30) 0%,rgba(255,53,47,.08) 43%,transparent 68%);animation:pttPulse 2s infinite;pointer-events:none}
 .ptt-ring.talking{background:radial-gradient(circle,rgba(63,169,255,.40) 0%,rgba(63,169,255,.15) 43%,transparent 68%);animation:pttPulseFast 1s infinite}
@@ -80,6 +81,7 @@ button{border:0;cursor:pointer;font-family:inherit}
 .msg-bubble .time{font-size:7px;color:#7290a8;margin-top:2px;display:block}
 
 .chat-input{min-height:48px;display:flex;align-items:center;gap:4px;padding:6px;background:#040b12;border-top:1px solid rgba(255,255,255,.07);flex-shrink:0}
+.chat-input.disabled-chat{opacity:.4;pointer-events:none}
 .icon-btn{width:32px;height:32px;min-width:32px;border-radius:50%;background:#0b1d2d;color:#c9e4fa;font-size:14px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.07);flex-shrink:0}
 .icon-btn.rec{background:#e52e32;color:#fff;animation:recPulse .9s infinite}
 @keyframes recPulse{0%,100%{box-shadow:0 0 0 0 rgba(231,76,60,.5)}50%{box-shadow:0 0 0 7px rgba(231,76,60,0)}}
@@ -205,7 +207,7 @@ button{border:0;cursor:pointer;font-family:inherit}
     <div class="chat-empty">لا توجد رسائل في الغرفة حالياً</div>
   </div>
 
-  <div class="chat-input" id="chatInputRow">
+  <div class="chat-input disabled-chat" id="chatInputRow">
     <button class="icon-btn" id="micBtn" title="التسجيل الصوتي">🎙️</button>
     <input id="chatInput" placeholder="اكتب رسالة..." autocomplete="off"
       onkeydown="if(event.key==='Enter'){event.preventDefault();sendMessage()}"
@@ -347,7 +349,6 @@ let currentWave = waves[0];
 let deviceId = localStorage.getItem("radioDeviceId") || "";
 let waveFingerprint = localStorage.getItem("radioWaveFingerprint") || "";
 let activeRoomId = localStorage.getItem("radioActiveRoomId") || "";
-let activeRoomData = JSON.parse(localStorage.getItem("radioActiveRoomData") || "null");
 let commMode = localStorage.getItem("radioCommMode") || "wave";
 
 let livekitRoom = null;
@@ -406,35 +407,52 @@ function formatDuration(seconds){
   return String(Math.floor(s/60)).padStart(2,"0") + ":" + String(s%60).padStart(2,"0");
 }
 
-function updateActiveRoomUI(){
-  if(activeRoomData){
-    if($("codeRoomName")) $("codeRoomName").textContent = activeRoomData.name || "غرفة نشطة";
-    if($("codeRoomNum")) $("codeRoomNum").textContent = "رقم الغرفة: " + (activeRoomData.roomNumber || activeRoomData.id || "-");
-    if($("myCodeValue")) $("myCodeValue").textContent = activeRoomData.roomCode || activeRoomData.code || "------";
-    if($("activeChatTitle")) $("activeChatTitle").textContent = "💬 محادثة: " + (activeRoomData.name || "");
-  } else {
-    if($("codeRoomName")) $("codeRoomName").textContent = "لا توجد غرفة حالياً";
-    if($("codeRoomNum")) $("codeRoomNum").textContent = "رقم الغرفة: -";
-    if($("myCodeValue")) $("myCodeValue").textContent = "------";
-  }
+function updateServerStatus(){
+  const value = $("serverVal") || $("statusLabel");
+  if(!value) return;
+  const isConnected = livekitRoom && livekitRoom.state === "connected";
+  value.textContent = isConnected ? "متصل" : (activeRoomId ? "متصل" : "متصل");
 }
 
-function setCommMode(mode){
+async function loadMyInfo(){
+  try{
+    const res = await fetch(API + "/api/device", {
+      method:"POST",
+      headers:{ "Content-Type":"application/json", "x-device-id":deviceId },
+      body:JSON.stringify({ deviceId })
+    });
+    const data = await res.json();
+    if(data.waveFingerprint){
+      waveFingerprint = data.waveFingerprint;
+      if($("myCodeValue")) $("myCodeValue").textContent = waveFingerprint;
+    }
+  }catch(e){}
+}
+
+async function setCommMode(mode){
+  if(mode === commMode && ((mode === "wave" && waveRoom) || (mode === "room" && livekitRoom))) return;
+  if(isTalking) stopTalking();
+
+  if(mode === "room"){
+    if(waveRoom){ try{ await waveRoom.disconnect(); }catch(e){} waveRoom = null; }
+    $("waveViewSection")?.classList.add("disabled");
+    $("roomChatSection")?.style.setProperty("display", "flex", "important");
+    $("chatInputRow")?.classList.remove("disabled-chat");
+    toast("🏠 وضع الغرفة (مفعل للمراسلة)");
+  } else {
+    if(livekitRoom){ try{ await livekitRoom.disconnect(); }catch(e){} livekitRoom = null; }
+    $("waveViewSection")?.classList.remove("disabled");
+    $("roomChatSection")?.style.setProperty("display", "none", "important");
+    $("chatInputRow")?.classList.add("disabled-chat");
+    toast("📻 وضع الموجة (مفعل للحديث المباشر)");
+  }
+
   commMode = mode;
   localStorage.setItem("radioCommMode", mode);
   document.querySelectorAll(".mode-btn").forEach(btn => btn.classList.remove("active"));
-  
-  if(mode === "wave"){
-    $("modeWave")?.classList.add("active");
-    $("waveViewSection")?.style.setProperty("display", "flex", "important");
-    $("roomChatSection")?.style.setProperty("display", "none", "important");
-    toast("📻 وضع الموجة (الحديث المباشر)");
-  } else {
-    $("modeRoom")?.classList.add("active");
-    $("waveViewSection")?.style.setProperty("display", "none", "important");
-    $("roomChatSection")?.style.setProperty("display", "flex", "important");
-    toast("🏠 وضع الغرفة (المراسلة)");
-  }
+  if(mode === "wave") $("modeWave")?.classList.add("active");
+  if(mode === "room") $("modeRoom")?.classList.add("active");
+  updateServerStatus();
 }
 
 async function loadRooms(){
@@ -450,37 +468,80 @@ async function loadRooms(){
 
 async function connectLiveKit(){
   try{
-    if(!L || !activeRoomId) return false;
-    if(livekitRoom && livekitRoom.state === "connected") return true;
+    if(!L){
+      console.error("LiveKit library not loaded");
+      return false;
+    }
+    if(!activeRoomId || activeRoomId === ""){
+      console.error("No active room");
+      return false;
+    }
+    if(livekitRoom && livekitRoom.state === "connected"){
+      return true;
+    }
 
-    const response = await fetch(API + "/token?room=" + encodeURIComponent(activeRoomId), {
-      headers:{ "x-device-id":deviceId }
-    });
-    if(!response.ok) return false;
+    const response = await fetch(
+      API + "/token?room=" + encodeURIComponent(activeRoomId),
+      { headers:{ "x-device-id":deviceId } }
+    );
+
+    if(!response.ok){
+      const err = await response.json().catch(()=>({}));
+      console.error("Token error:", err);
+      return false;
+    }
+
     const data = await response.json();
+    if(!data.token || !data.url){
+      console.error("Invalid token data");
+      return false;
+    }
 
-    livekitRoom = new L.Room();
+    livekitRoom = new L.Room({
+      adaptiveStream: true,
+      dynacast: true
+    });
+
+    /* استقبال الصوت */
+    livekitRoom.on(L.RoomEvent.TrackSubscribed, (track) => {
+      try{
+        if(track.kind === L.Track.Kind.Audio){
+          const element = track.attach();
+          element.autoplay = true;
+          element.playsInline = true;
+          element.style.display = "none";
+          document.body.appendChild(element);
+        }
+      }catch(e){}
+    });
+
+    /* استقبال البيانات */
     livekitRoom.on(L.RoomEvent.DataReceived, (payload) => {
       try{
         const text = new TextDecoder().decode(payload);
         const data = JSON.parse(text);
         if(data.senderDeviceId === deviceId) return;
-        if(data.type === "radio-chat") appendChatBubble(data.text, data.name, false, data.time);
-        if(data.type === "radio-voice") appendAudioBubble(data.data, data.name, false);
+        if(data.type === "radio-chat"){
+          appendChatBubble(data.text, data.name, false, data.time);
+        }
+        if(data.type === "radio-voice"){
+          appendAudioBubble(data.data, data.name, false);
+        }
       }catch(e){}
     });
 
-    livekitRoom.on(L.RoomEvent.TrackSubscribed, (track, publication, participant) => {
-      if(track.kind === "audio"){
-        const audioElement = track.attach();
-        document.body.appendChild(audioElement);
-      }
+    livekitRoom.on(L.RoomEvent.Disconnected, () => {
+      updateServerStatus();
     });
 
     await livekitRoom.connect(data.url, data.token);
+    updateServerStatus();
     return true;
+
   }catch(e){
+    console.error("LiveKit connect error:", e);
     livekitRoom = null;
+    updateServerStatus();
     return false;
   }
 }
@@ -497,7 +558,7 @@ async function connectWaveChannel(){
     const data = await response.json();
 
     waveRoom = new L.Room();
-    waveRoom.on(L.RoomEvent.TrackSubscribed, (track, publication, participant) => {
+    waveRoom.on(L.RoomEvent.TrackSubscribed, (track) => {
       if(track.kind === "audio"){
         const audioElement = track.attach();
         document.body.appendChild(audioElement);
@@ -640,6 +701,7 @@ async function sendMessage(){
   if(!input) return;
   const text = input.value.trim();
   if(!text) return;
+  if(commMode === "wave"){ toast("⚠️ التراسل متاح في وضع الغرفة"); return; }
 
   if(!activeRoomId){
     toast("⚠️ أنشئ غرفة أو انضم إلى غرفة أولاً");
@@ -648,7 +710,11 @@ async function sendMessage(){
   }
 
   if(!livekitRoom || livekitRoom.state !== "connected"){
-    await connectLiveKit();
+    const connected = await connectLiveKit();
+    if(!connected){
+      toast("⚠️ انضم إلى غرفة أولاً لإرسال الرسائل");
+      return;
+    }
   }
 
   try{
@@ -780,30 +846,35 @@ function renderRoomsList(){
       <div class="avatar">📻</div>
       <div class="info">
         <div class="name">${escapeHtml(room.name)}</div>
-        <div class="role">رقم الغرفة: ${room.roomNumber || room.id || "?"}</div>
+        <div class="role">رقم الغرفة: ${room.roomNumber || "?"}</div>
       </div>
       <div class="actions">
-        <button class="btn" style="padding:4px 8px;margin:0;font-size:8px;" onclick="selectRoomId('${escapeHtml(room.id)}')">دخول</button>
+        <button class="btn" style="padding:4px 8px;margin:0;font-size:8px;" onclick="selectRoom('${escapeHtml(room.id)}')">دخول</button>
       </div>
     </div>
   `).join("");
 }
 
-async function selectRoomId(roomId){
+async function selectRoom(roomId){
+  activeRoomId = roomId;
+  localStorage.setItem("radioActiveRoomId", roomId);
+
   const room = roomsCache.find(r => r.id === roomId);
-  if(!room){
-    toast("⚠️ الغرفة غير موجودة");
-    return;
+  if(room){
+    if($("codeRoomName")) $("codeRoomName").textContent = room.name || "لا توجد غرفة";
+    if($("codeRoomNum")) $("codeRoomNum").textContent = "رقم الغرفة: " + (room.roomNumber || "-");
   }
-  activeRoomId = room.id;
-  activeRoomData = room;
-  localStorage.setItem("radioActiveRoomId", activeRoomId);
-  localStorage.setItem("radioActiveRoomData", JSON.stringify(activeRoomData));
+
   closePanel("roomsPanel");
-  updateActiveRoomUI();
-  await connectLiveKit();
-  setCommMode("room");
-  toast("✅ تم الدخول للغرفة بنجاح: " + room.name);
+  await setCommMode("room");
+
+  const connected = await connectLiveKit();
+  if(connected){
+    await loadMyInfo();
+    toast("✅ تم الاتصال بالغرفة");
+  } else {
+    toast("⚠️ تعذر الاتصال بالغرفة");
+  }
 }
 
 function updateRoomsBadge(){
@@ -833,14 +904,20 @@ async function createRoom(){
     const data = await res.json();
     if(!res.ok) throw new Error(data.error);
     activeRoomId = data.room.id;
-    activeRoomData = data.room;
     localStorage.setItem("radioActiveRoomId", activeRoomId);
-    localStorage.setItem("radioActiveRoomData", JSON.stringify(activeRoomData));
+
+    if($("codeRoomName")) $("codeRoomName").textContent = data.room.name || name;
+    if($("codeRoomNum")) $("codeRoomNum").textContent = "رقم الغرفة: " + (data.room.roomNumber || "-");
+
     closePanel("createPanel");
-    updateActiveRoomUI();
-    await connectLiveKit();
-    setCommMode("room");
-    toast("✅ تم إنشاء الغرفة والدخول إليها");
+    await setCommMode("room");
+    const connected = await connectLiveKit();
+    if(connected){
+      await loadMyInfo();
+      toast("✅ تم إنشاء الغرفة والدخول إليها");
+    } else {
+      toast("⚠️ تم الإنشاء ولكن تعذر الاتصال بالخادم");
+    }
   }catch(e){ toast("⚠️ تعذر الإنشاء"); }
 }
 
@@ -861,10 +938,12 @@ async function testMic(){
     });
     const data = await res.json();
     if(data.deviceId) deviceId = data.deviceId;
-    if(data.waveFingerprint) waveFingerprint = data.waveFingerprint;
+    if(data.waveFingerprint){
+      waveFingerprint = data.waveFingerprint;
+      if($("myCodeValue")) $("myCodeValue").textContent = waveFingerprint;
+    }
   }catch(e){}
 
-  updateActiveRoomUI();
   setCommMode(commMode);
   await loadRooms();
   if(activeRoomId && commMode === "room") await connectLiveKit();
