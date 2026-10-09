@@ -59,35 +59,30 @@ button{border:0;cursor:pointer;font-family:inherit}
 .status-box .val{font-size:9px;font-weight:900;color:#fff;display:block}
 .status-box .lbl{font-size:6px;color:#627990;display:block}
 .status-box.ok .val{color:#42d879}
-.voice-ptt{position:relative;display:grid;grid-template-columns:1fr 105px 1fr;align-items:center;gap:4px;min-height:120px;margin:2px 0 6px}
-.voice-box{min-height:60px;border-radius:13px;padding:6px 3px;background:#071521;border:1px solid rgba(255,255,255,.06);text-align:center;transition:.2s;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center}
-.voice-box.active{background:#0b2234;border-color:rgba(48,158,235,.48);box-shadow:0 0 14px rgba(31,143,218,.13)}
-.voice-box .vt-ico{font-size:18px;display:block;margin-bottom:2px}
-.voice-box .vt-name{font-size:9px;font-weight:900;color:#eaf4ff}
-.voice-box .vt-state{font-size:7px;margin-top:2px;color:#536b81}
-.voice-box.active .vt-state{color:#48db7e}
-.wave-visualizer{display:flex;align-items:center;justify-content:center;gap:2px;height:16px;margin-top:2px}
-.wave-visualizer i{display:block;width:2px;height:3px;background:#3fa9ff;border-radius:1px}
-.wave-visualizer.active i{background:#5eb0ff;animation:waveBar .6s infinite ease-in-out}
-.wave-visualizer.active i:nth-child(1){animation-delay:0s}
-.wave-visualizer.active i:nth-child(2){animation-delay:.1s}
-.wave-visualizer.active i:nth-child(3){animation-delay:.2s}
-.wave-visualizer.active i:nth-child(4){animation-delay:.3s}
-.wave-visualizer.active i:nth-child(5){animation-delay:.4s}
-@keyframes waveBar{0%,100%{height:3px}50%{height:13px}}
-.ptt-wrap{position:relative;width:105px;height:105px;display:flex;justify-content:center;align-items:center}
-.ptt-ring{position:absolute;width:105px;height:105px;border-radius:50%;background:radial-gradient(circle,rgba(255,53,47,.30) 0%,rgba(255,53,47,.08) 43%,transparent 68%);animation:pttPulse 2s infinite;pointer-events:none;transition:.3s}
+.voice-ptt-clean{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:140px;margin:6px 0}
+.ptt-wrap{position:relative;width:115px;height:115px;display:flex;justify-content:center;align-items:center}
+.ptt-ring{position:absolute;width:115px;height:115px;border-radius:50%;background:radial-gradient(circle,rgba(255,53,47,.30) 0%,rgba(255,53,47,.08) 43%,transparent 68%);animation:pttPulse 2s infinite;pointer-events:none;transition:.3s}
 .ptt-ring.talking{background:radial-gradient(circle,rgba(63,169,255,.40) 0%,rgba(63,169,255,.15) 43%,transparent 68%);animation:pttPulseFast 1s infinite}
 @keyframes pttPulse{0%,100%{transform:scale(.95);opacity:.45}50%{transform:scale(1.08);opacity:.9}}
 @keyframes pttPulseFast{0%,100%{transform:scale(1);opacity:.7}50%{transform:scale(1.12);opacity:1}}
-.ptt-btn{width:90px;height:90px;border-radius:50%;background:radial-gradient(circle at 38% 28%,#ff5b50 0%,#ef3930 28%,#c6201d 62%,#721311 100%);border:4px solid #ed3932;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 0 0 5px rgba(231,76,60,.12),0 6px 20px rgba(0,0,0,.7);user-select:none;touch-action:none;position:relative;z-index:2}
+.ptt-btn{width:96px;height:96px;border-radius:50%;background:radial-gradient(circle at 38% 28%,#ff5b50 0%,#ef3930 28%,#c6201d 62%,#721311 100%);border:4px solid #ed3932;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 0 0 5px rgba(231,76,60,.12),0 6px 20px rgba(0,0,0,.7);user-select:none;touch-action:none;position:relative;z-index:2}
 .ptt-btn.talking{background:radial-gradient(circle at 38% 28%,#5eb0ff 0%,#2f8fdd 32%,#0f5fa0 65%,#082a52 100%);border-color:#3fa9ff;box-shadow:0 0 0 8px rgba(63,169,255,.22),0 0 28px rgba(63,169,255,.8);transform:scale(.94)}
-.ptt-btn .ico{font-size:26px}
+.ptt-btn .ico{font-size:28px}
+.ptt-hint{font-size:9px;color:#7895af;margin-top:8px;font-weight:700}
+.wave-visualizer-clean{display:flex;align-items:center;justify-content:center;gap:3px;height:20px;margin-top:6px}
+.wave-visualizer-clean i{display:block;width:3px;height:4px;background:#3fa9ff;border-radius:1px}
+.wave-visualizer-clean.active i{background:#5eb0ff;animation:waveBar .6s infinite ease-in-out}
+.wave-visualizer-clean.active i:nth-child(1){animation-delay:0s}
+.wave-visualizer-clean.active i:nth-child(2){animation-delay:.1s}
+.wave-visualizer-clean.active i:nth-child(3){animation-delay:.2s}
+.wave-visualizer-clean.active i:nth-child(4){animation-delay:.3s}
+.wave-visualizer-clean.active i:nth-child(5){animation-delay:.4s}
+@keyframes waveBar{0%,100%{height:4px}50%{height:16px}}
+
 .chat-section{flex:1;min-height:160px;display:flex;flex-direction:column;background:linear-gradient(180deg,#071725,#030a11);border:1px solid rgba(255,255,255,.065);border-radius:15px;overflow:hidden;margin-top:2px;margin-bottom:6px}
 .chat-head{height:34px;min-height:34px;display:flex;align-items:center;justify-content:space-between;padding:0 10px;background:#081a29;border-bottom:1px solid rgba(255,255,255,.06)}
 .chat-title{font-size:10px;font-weight:900}
 .chat-state{font-size:7px;color:#46d879}
-.chat-state.typing{color:#ffc44d;font-style:italic}
 .chat-messages{flex:1;min-height:0;padding:8px;overflow-y:auto}
 .chat-empty{height:100%;display:flex;align-items:center;justify-content:center;color:#536a80;font-size:9px}
 .msg-bubble{margin-bottom:6px;max-width:85%;word-wrap:break-word}
@@ -98,8 +93,6 @@ button{border:0;cursor:pointer;font-family:inherit}
 .msg-bubble.other .text{background:#10243a;color:#eaf4ff}
 .msg-bubble.mine .text{background:#0d5d91;color:#fff}
 .msg-bubble .time{font-size:7px;color:#7290a8;margin-top:2px;display:block;padding:0 3px}
-.msg-bubble.system{max-width:100%;text-align:center;margin:4px auto}
-.msg-bubble.system .text{background:transparent;color:#8ab4dc;font-size:8px;padding:3px;font-style:italic}
 .chat-input{min-height:46px;display:flex;align-items:center;gap:4px;padding:6px;background:#040b12;border-top:1px solid rgba(255,255,255,.07);position:relative;z-index:10;flex-shrink:0}
 .icon-btn{width:32px;height:32px;min-width:32px;border-radius:50%;background:#0b1d2d;color:#c9e4fa;font-size:14px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.07);flex-shrink:0}
 .icon-btn.rec{background:#e52e32;color:#fff;animation:recPulse .9s infinite}
@@ -112,11 +105,9 @@ button{border:0;cursor:pointer;font-family:inherit}
 .emoji-picker{position:absolute;bottom:52px;left:6px;width:250px;max-height:180px;overflow-y:auto;background:#081b2b;border:1px solid rgba(65,158,225,.28);border-radius:12px;padding:6px;display:none;z-index:65;grid-template-columns:repeat(7,1fr);gap:3px}
 .emoji-picker.show{display:grid}
 .emoji-picker button{width:100%;aspect-ratio:1;border-radius:6px;background:transparent;color:#fff;font-size:16px;display:flex;align-items:center;justify-content:center}
-.emoji-picker button:active{background:#0d304b}
 .attach-menu{position:absolute;bottom:52px;right:6px;width:180px;background:#081b2b;border:1px solid rgba(65,158,225,.28);border-radius:12px;padding:5px;display:none;z-index:60}
 .attach-menu.show{display:block}
 .attach-item{width:100%;min-height:34px;padding:6px 8px;border-radius:8px;background:transparent;color:#eaf4ff;text-align:right;font-size:10px;display:flex;align-items:center;gap:7px}
-.attach-item:active{background:#0d304b}
 .bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(520px,100%);height:60px;background:rgba(3,9,15,.98);border-top:1px solid rgba(255,255,255,.07);display:grid;grid-template-columns:repeat(4,1fr);z-index:40;backdrop-filter:blur(12px)}
 .nav-item{position:relative;background:transparent;color:#52687c;font-size:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px}
 .nav-item .ico{font-size:18px;line-height:18px}
@@ -144,11 +135,6 @@ button{border:0;cursor:pointer;font-family:inherit}
 .member-row .role{font-size:8px;color:#82a0b9;margin-top:1px}
 .member-row .actions{display:flex;gap:3px}
 .member-row .mini-btn{padding:4px 6px;border-radius:6px;background:#0d5d91;color:#fff;font-size:8px;font-weight:700}
-.member-row .mini-btn.danger{background:#8b1928}
-.role-badge{display:inline-block;padding:1px 5px;border-radius:7px;font-size:8px;font-weight:700}
-.role-badge.owner{background:rgba(241,196,15,.2);color:#f1c40f}
-.role-badge.admin{background:rgba(73,170,255,.25);color:#49aaff}
-.role-badge.member{background:rgba(139,157,180,.2);color:#8b9db4}
 .rec-bar{position:fixed;bottom:70px;left:50%;transform:translateX(-50%);background:rgba(224,42,47,.97);color:#fff;padding:8px 14px;border-radius:18px;font-size:10px;font-weight:800;display:none;align-items:center;gap:7px;z-index:95}
 .rec-bar.show{display:flex}
 .rec-dot{width:7px;height:7px;background:#fff;border-radius:50%;animation:recPulse .8s infinite}
@@ -197,7 +183,7 @@ button{border:0;cursor:pointer;font-family:inherit}
 
 <div class="mode-switch">
   <button class="mode-btn active" id="modeWave" onclick="setCommMode('wave')">
-    <span class="m-ico">📻</span> <span>الموجة (الحديث)</span>
+    <span class="m-ico">📻</span> <span>الموجة (الحديث المباشر)</span>
   </button>
   <button class="mode-btn" id="modeRoom" onclick="setCommMode('room')">
     <span class="m-ico">🏠</span> <span>الغرفة (المراسلة)</span>
@@ -236,31 +222,18 @@ button{border:0;cursor:pointer;font-family:inherit}
   </div>
 </div>
 
-<div class="voice-ptt">
-  <div class="voice-box active" id="voiceNatural" onclick="setVoiceMode('natural')">
-    <span class="vt-ico">🔊</span>
-    <span class="vt-name">الصوت الطبيعي</span>
-    <span class="vt-state" id="naturalState">مفعل</span>
-    <div class="wave-visualizer" id="waveVisualLeft">
-      <i></i><i></i><i></i><i></i><i></i>
-    </div>
-  </div>
-
+<!-- تم إزالة مربعات الصوت القديمة واستبدالها بنظام PTT احترافي ونظيف -->
+<div class="voice-ptt-clean">
   <div class="ptt-wrap">
     <div class="ptt-ring" id="pttRing"></div>
     <button class="ptt-btn" id="pttBtn">
       <span class="ico">🎙️</span>
     </button>
   </div>
-
-  <div class="voice-box" id="voiceRadio" onclick="setVoiceMode('radio')">
-    <span class="vt-ico">📻</span>
-    <span class="vt-name">الصوت اللاسلكي</span>
-    <span class="vt-state" id="radioState">متوقف</span>
-    <div class="wave-visualizer" id="waveVisualRight">
-      <i></i><i></i><i></i><i></i><i></i>
-    </div>
+  <div class="wave-visualizer-clean" id="waveVisual">
+    <i></i><i></i><i></i><i></i><i></i>
   </div>
+  <div class="ptt-hint" id="pttHint">اضغط مطولاً للحديث عبر الموجة</div>
 </div>
 
 <div class="chat-section">
@@ -276,7 +249,7 @@ button{border:0;cursor:pointer;font-family:inherit}
   <div class="chat-input" id="chatInputRow">
     <button class="icon-btn" onclick="toggleEmojiPicker(event)" title="الوجوه">😊</button>
     <button class="icon-btn" onclick="toggleAttachMenu(event)" title="مرفقات">📎</button>
-    <button class="icon-btn" id="micBtn" title="التسجيل">🎙️</button>
+    <button class="icon-btn" id="micBtn" title="التسجيل الصوتي الطبيعي">🎙️</button>
 
     <input id="chatInput" placeholder="اكتب رسالة..." autocomplete="off"
       onkeydown="if(event.key==='Enter'){event.preventDefault();sendMessage()}"
@@ -391,18 +364,6 @@ button{border:0;cursor:pointer;font-family:inherit}
   </div>
 </div>
 
-<div class="modal" id="joinRequestPanel">
-  <div class="modal-box">
-    <div class="modal-head">
-      <h3>🔔 طلب انضمام جديد</h3>
-      <button class="close" onclick="closePanel('joinRequestPanel')">×</button>
-    </div>
-    <div class="modal-content" id="joinRequestContent">
-      <div class="empty-state">لا توجد طلبات</div>
-    </div>
-  </div>
-</div>
-
 <div class="modal" id="membersPanel">
   <div class="modal-box">
     <div class="modal-head">
@@ -435,24 +396,9 @@ button{border:0;cursor:pointer;font-family:inherit}
   </div>
 </div>
 
-<div class="modal" id="radioPresetsPanel">
-  <div class="modal-box">
-    <div class="modal-head">
-      <h3>📻 إعدادات الصوت اللاسلكي</h3>
-      <button class="close" onclick="closePanel('radioPresetsPanel')">×</button>
-    </div>
-    <div class="modal-content">
-      <button class="btn ghost" onclick="selectPreset('basic')">📻 صوت لاسلكي أساسي</button>
-      <button class="btn ghost" onclick="selectPreset('strong')">📡 صوت لاسلكي قوي</button>
-      <button class="btn ghost" onclick="selectPreset('old')">📻 صوت جهاز قديم</button>
-      <button class="btn success" onclick="testVoicePreset()">🔊 اختبار الصوت</button>
-    </div>
-  </div>
-</div>
-
 <div class="rec-bar" id="recBar">
   <span class="rec-dot"></span>
-  <span>جاري التسجيل</span>
+  <span>جاري التسجيل الطبيعي</span>
   <span id="recTime">00:00</span>
 </div>
 
@@ -487,36 +433,41 @@ let livekitRoom = null;
 let waveRoom = null;
 let isTalking = false;
 let waveLocalAudioTrack = null;
-let naturalOn = true;
-let radioOn = false;
 let roomsCache = [];
-let membersCache = [];
-let myRole = null;
-let myPersonalCode = null;
 let rawMicStream = null;
 let localTestAudio = null;
 
+let audioCtx = null;
+let mediaRecorder = null;
+let recordedChunks = [];
+let recStart = 0;
+let recInterval = null;
+let isRecording = false;
+
 const $ = id => document.getElementById(id);
 
-function playDeviceBeep(freq = 1200, dur = 0.12){
+/* مؤثرات صوتية احترافية لللاسلكي (Walkie-Talkie Beeps) */
+function playRadioBeep(freq = 1800, dur = 0.08){
   try{
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    if(ctx.state === "suspended") ctx.resume();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
+    if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if(audioCtx.state === "suspended") audioCtx.resume();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
     osc.type = 'sine';
-    osc.frequency.setValueAtTime(freq, ctx.currentTime);
-    gain.gain.setValueAtTime(0.12, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+    gain.gain.setValueAtTime(0.18, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
     osc.connect(gain);
-    gain.connect(ctx.destination);
+    gain.connect(audioCtx.destination);
     osc.start();
-    osc.stop(ctx.currentTime + dur);
-    setTimeout(() => { try{ ctx.close(); }catch(e){} }, (dur + 0.1)*1000);
+    osc.stop(audioCtx.currentTime + dur);
   }catch(e){}
 }
-function playStartBeep(){ playDeviceBeep(1400, 0.1); }
-function playStopBeep(){ playDeviceBeep(800, 0.12); }
+function playStartBeep(){ playRadioBeep(1900, 0.07); }
+function playStopBeep(){ 
+  playRadioBeep(1400, 0.05);
+  setTimeout(() => playRadioBeep(900, 0.08), 60);
+}
 
 function toast(message){
   const el = $("toast");
@@ -531,6 +482,11 @@ function escapeHtml(value){
   return String(value ?? "").replace(/[&<>"']/g,m => ({
     "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
   }[m]));
+}
+
+function formatDuration(seconds){
+  const s = Math.max(0, Math.floor(seconds));
+  return String(Math.floor(s/60)).padStart(2,"0") + ":" + String(s%60).padStart(2,"0");
 }
 
 async function initBattery(){
@@ -585,7 +541,7 @@ async function setCommMode(mode){
   document.querySelectorAll(".mode-btn").forEach(btn => btn.classList.remove("active"));
   if(mode === "wave") $("modeWave")?.classList.add("active");
   if(mode === "room") $("modeRoom")?.classList.add("active");
-  toast(mode === "wave" ? "📻 وضع الموجة (جاهز للحديث)" : "📻 وضع الغرفة (جاهز للمراسلة)");
+  toast(mode === "wave" ? "📻 وضع الموجة (الحديث المباشر)" : "🏠 وضع الغرفة (المراسلة)");
 }
 
 async function loadRooms(){
@@ -617,6 +573,7 @@ async function connectLiveKit(){
         const data = JSON.parse(text);
         if(data.senderDeviceId === deviceId) return;
         if(data.type === "radio-chat") appendChatBubble(data.text, data.name, false, data.time);
+        if(data.type === "radio-voice") appendChatBubble("🎙️ رسالة صوتية طبيعية", data.name, false, null);
       }catch(e){}
     });
 
@@ -660,10 +617,10 @@ if(pttBtn){
     isTalking = true;
     pttBtn.classList.add("talking");
     pttRing.classList.add("talking");
-    $("waveVisualLeft")?.classList.add("active");
-    $("waveVisualRight")?.classList.add("active");
+    $("waveVisual")?.classList.add("active");
+    if($("pttHint")) $("pttHinttextContent") = "جاري الإرسال عبر الموجة...";
 
-    if(radioOn) playStartBeep();
+    playStartBeep();
 
     try{
       await connectWaveChannel();
@@ -674,13 +631,12 @@ if(pttBtn){
         await waveRoom.localParticipant.publishTrack(waveLocalAudioTrack);
         waveLocalAudioTrack.enable();
       } else {
-        // تشغيل اختبار محلي لسماع الصوت إذا لم تكن الموجة متصلة بشخص آخر حالياً
         localTestAudio = new Audio();
         localTestAudio.srcObject = rawMicStream;
-        localTestAudio.volume = naturalOn ? 1.0 : 0.5;
+        localTestAudio.volume = 1.0;
         localTestAudio.play().catch(()=>{});
       }
-      toast("🎙️ جاري الإرسال عبر الموجة " + currentWave.code);
+      toast("📻 تتحدث الآن عبر الموجة " + currentWave.code);
     }catch(err){
       toast("⚠️ تعذر تشغيل الميكروفون");
       stopTalking();
@@ -698,7 +654,7 @@ if(pttBtn){
 }
 
 function stopTalking(){
-  if(radioOn) playStopBeep();
+  if(isTalking) playStopBeep();
   if(localTestAudio){
     try{ localTestAudio.pause(); localTestAudio.srcObject = null; }catch(e){}
     localTestAudio = null;
@@ -714,18 +670,8 @@ function stopTalking(){
   isTalking = false;
   pttBtn?.classList.remove("talking");
   pttRing?.classList.remove("talking");
-  $("waveVisualLeft")?.classList.remove("active");
-  $("waveVisualRight")?.classList.remove("active");
-}
-
-function setVoiceMode(mode){
-  naturalOn = (mode === "natural");
-  radioOn = (mode === "radio");
-  $("voiceNatural")?.classList.toggle("active", naturalOn);
-  $("voiceRadio")?.classList.toggle("active", radioOn);
-  if($("naturalState")) $("naturalState").textContent = naturalOn ? "مفعل" : "متوقف";
-  if($("radioState")) $("radioState").textContent = radioOn ? "مفعل" : "متوقف";
-  toast(naturalOn ? "🎧 الصوت الطبيعي مفعل" : "📻 الصوت اللاسلكي مفعل");
+  $("waveVisual")?.classList.remove("active");
+  if($("pttHint")) $("pttHint").textContent = "اضغط مطولاً للحديث عبر الموجة";
 }
 
 function changeWave(direction){
@@ -790,6 +736,87 @@ async function sendMessage(){
     toast("⚠️ تعذر إرسال الرسالة");
   }
 }
+
+async function startVoiceRecording(){
+  if(isRecording) return;
+  if(!activeRoomId){
+    toast("⚠️ أنشئ غرفة أولاً للتسجيل الصوتي");
+    openPanel("roomsPanel");
+    return;
+  }
+  if(!livekitRoom || livekitRoom.state !== "connected"){
+    await connectLiveKit();
+  }
+
+  try{
+    const stream = await navigator.mediaDevices.getUserMedia({ audio:true });
+    mediaRecorder = new MediaRecorder(stream);
+    recordedChunks = [];
+    isRecording = true;
+    recStart = Date.now();
+    $("recBar")?.classList.add("show");
+
+    recInterval = setInterval(() => {
+      if($("recTime")) $("recTime").textContent = formatDuration((Date.now() - recStart) / 1000);
+    }, 1000);
+
+    mediaRecorder.ondataavailable = event => {
+      if(event.data.size) recordedChunks.push(event.data);
+    };
+
+    mediaRecorder.onstop = async () => {
+      clearInterval(recInterval);
+      $("recBar")?.classList.remove("show");
+
+      const blob = new Blob(recordedChunks, { type: mediaRecorder.mimeType || "audio/webm" });
+      stream.getTracks().forEach(track => track.stop());
+
+      if(blob.size > 3 * 1024 * 1024){
+        toast("⚠️ حجم التسجيل كبير جداً");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const message = { type:"radio-voice", name:"أنت", data:reader.result };
+        const encoded = new TextEncoder().encode(JSON.stringify(message));
+        try{
+          if(livekitRoom && livekitRoom.state === "connected"){
+            await livekitRoom.localParticipant.publishData(encoded, { reliable:true });
+          }
+          appendChatBubble("🎙️ رسالة صوتية طبيعية", "أنت", true, null);
+        }catch(e){
+          toast("⚠️ تعذر إرسال الصوت الطبيعي");
+        }
+      };
+      reader.readAsDataURL(blob);
+    };
+
+    mediaRecorder.start();
+  }catch(e){
+    isRecording = false;
+    toast("⚠️ تعذر الوصول للمايكروفون للتسجيل");
+  }
+}
+
+function stopVoiceRecording(){
+  if(mediaRecorder && isRecording){
+    try{ mediaRecorder.stop(); }catch(e){}
+    isRecording = false;
+  }
+}
+
+$("micBtn")?.addEventListener("pointerdown", async event => {
+  event.preventDefault();
+  $("micBtn")?.classList.add("rec");
+  await startVoiceRecording();
+});
+
+$("micBtn")?.addEventListener("pointerup", event => {
+  event.preventDefault();
+  $("micBtn")?.classList.remove("rec");
+  stopVoiceRecording();
+});
 
 function openPanel(id){
   document.querySelectorAll(".modal").forEach(m => m.classList.remove("show"));
