@@ -8,5 +8,12 @@
   "short_name": "Radio Connect",
   "start_url": "/",
   "theme_color": "#ffffff",
-  "description": "Radio connect app"
+  "description": "Radio connect app",
+  "icons": [
+    {
+      "src": "./icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
 }
