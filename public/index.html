@@ -23,8 +23,8 @@ button{border:0;cursor:pointer;font-family:inherit}
 .brand strong{display:block;font-size:13px;font-weight:900}
 .brand span{display:block;font-size:7px;color:#647c94;margin-top:1px}
 .status-pill{height:28px;min-width:80px;display:flex;align-items:center;justify-content:center;gap:4px;background:#071522;border:1px solid rgba(255,255,255,.07);border-radius:14px;font-size:8px;padding:0 6px}
-.status-pill .dot{width:6px;height:6px;border-radius:50%;background:#39d353;box-shadow:0 0 7px #39d353;transition:.3s}
-.status-pill .lbl{color:#59dc83;font-weight:800;transition:.3s}
+.status-pill .dot{width:6px;height:6px;border-radius:50%;background:#39d353;box-shadow:0 0 7px #39d353}
+.status-pill .lbl{color:#59dc83;font-weight:800}
 .status-pill.weak .dot{background:#ffc44d}
 .status-pill.weak .lbl{color:#ffc44d}
 .status-pill.bad .dot{background:#ff4d5e}
@@ -66,7 +66,6 @@ button{border:0;cursor:pointer;font-family:inherit}
 .voice-box .vt-name{font-size:9px;font-weight:900;color:#eaf4ff}
 .voice-box .vt-state{font-size:7px;margin-top:2px;color:#536b81}
 .voice-box.active .vt-state{color:#48db7e}
-.voice-ptt.disabled{opacity:.4;filter:grayscale(1);pointer-events:none}
 .wave-visualizer{display:flex;align-items:center;justify-content:center;gap:2px;height:16px;margin-top:2px}
 .wave-visualizer i{display:block;width:2px;height:3px;background:#3fa9ff;border-radius:1px}
 .wave-visualizer.active i{background:#5eb0ff;animation:waveBar .6s infinite ease-in-out}
@@ -102,7 +101,6 @@ button{border:0;cursor:pointer;font-family:inherit}
 .msg-bubble.system{max-width:100%;text-align:center;margin:4px auto}
 .msg-bubble.system .text{background:transparent;color:#8ab4dc;font-size:8px;padding:3px;font-style:italic}
 .chat-input{min-height:46px;display:flex;align-items:center;gap:4px;padding:6px;background:#040b12;border-top:1px solid rgba(255,255,255,.07);position:relative;z-index:10;flex-shrink:0}
-.chat-input.disabled-chat{opacity:.4;pointer-events:none}
 .icon-btn{width:32px;height:32px;min-width:32px;border-radius:50%;background:#0b1d2d;color:#c9e4fa;font-size:14px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.07);flex-shrink:0}
 .icon-btn.rec{background:#e52e32;color:#fff;animation:recPulse .9s infinite}
 @keyframes recPulse{0%,100%{box-shadow:0 0 0 0 rgba(231,76,60,.5)}50%{box-shadow:0 0 0 7px rgba(231,76,60,0)}}
@@ -125,9 +123,9 @@ button{border:0;cursor:pointer;font-family:inherit}
 .nav-item.active{color:#3fa9ff}
 .nav-badge{position:absolute;top:5px;right:calc(50% - 18px);background:#ed3940;color:#fff;font-size:7px;font-weight:900;min-width:14px;height:14px;border-radius:7px;display:none;align-items:center;justify-content:center}
 .nav-badge.show{display:flex}
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:80;display:none;align-items:flex-end;justify-content:center;backdrop-filter:blur(5px)}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:900;display:none;align-items:flex-end;justify-content:center;backdrop-filter:blur(5px)}
 .modal.show{display:flex}
-.modal-box{width:min(520px,100%);max-height:82vh;overflow-y:auto;background:#071827;border-radius:18px 18px 0 0;padding:14px;border:1px solid rgba(70,157,218,.2)}
+.modal-box{width:min(520px,100%);max-height:82vh;overflow-y:auto;background:#071827;border-radius:18px 18px 0 0;padding:14px;border:1px solid rgba(70,157,218,.2);z-index:901}
 .modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
 .modal-head h3{font-size:13px;color:#fff}
 .modal-head .close{width:28px;height:28px;border-radius:8px;background:#0b2134;color:#fff;font-size:16px}
@@ -154,7 +152,7 @@ button{border:0;cursor:pointer;font-family:inherit}
 .rec-bar{position:fixed;bottom:70px;left:50%;transform:translateX(-50%);background:rgba(224,42,47,.97);color:#fff;padding:8px 14px;border-radius:18px;font-size:10px;font-weight:800;display:none;align-items:center;gap:7px;z-index:95}
 .rec-bar.show{display:flex}
 .rec-dot{width:7px;height:7px;background:#fff;border-radius:50%;animation:recPulse .8s infinite}
-.toast{position:fixed;left:50%;bottom:70px;transform:translateX(-50%) translateY(12px);padding:8px 14px;background:#0b2033;color:#fff;border:1px solid rgba(55,157,228,.32);border-radius:18px;font-size:10px;z-index:100;opacity:0;transition:.25s;pointer-events:none;max-width:90%;text-align:center}
+.toast{position:fixed;left:50%;bottom:70px;transform:translateX(-50%) translateY(12px);padding:8px 14px;background:#0b2033;color:#fff;border:1px solid rgba(55,157,228,.32);border-radius:18px;font-size:10px;z-index:1000;opacity:0;transition:.25s;pointer-events:none;max-width:90%;text-align:center}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .empty-state{padding:18px 10px;text-align:center;color:#60788e;font-size:10px;line-height:1.5}
 </style>
@@ -174,7 +172,7 @@ button{border:0;cursor:pointer;font-family:inherit}
   </div>
   <div class="status-pill" id="statusPill">
     <span class="dot" id="statusDot"></span>
-    <span class="lbl" id="statusLabel">غير متصل</span>
+    <span class="lbl" id="statusLabel">متصل</span>
   </div>
 </header>
 
@@ -199,10 +197,10 @@ button{border:0;cursor:pointer;font-family:inherit}
 
 <div class="mode-switch">
   <button class="mode-btn active" id="modeWave" onclick="setCommMode('wave')">
-    <span class="m-ico">📻</span> <span>الموجة</span>
+    <span class="m-ico">📻</span> <span>الموجة (الحديث)</span>
   </button>
   <button class="mode-btn" id="modeRoom" onclick="setCommMode('room')">
-    <span class="m-ico">🏠</span> <span>الغرفة</span>
+    <span class="m-ico">🏠</span> <span>الغرفة (المراسلة)</span>
   </button>
 </div>
 
@@ -233,7 +231,7 @@ button{border:0;cursor:pointer;font-family:inherit}
   </div>
   <div class="status-box ok">
     <span class="icon">📡</span>
-    <span class="val" id="serverVal">--</span>
+    <span class="val" id="serverVal">متصل</span>
     <span class="lbl">بالخادم</span>
   </div>
 </div>
@@ -275,7 +273,7 @@ button{border:0;cursor:pointer;font-family:inherit}
     <div class="chat-empty">لا توجد رسائل حالياً</div>
   </div>
 
-  <div class="chat-input disabled-chat" id="chatInputRow">
+  <div class="chat-input" id="chatInputRow">
     <button class="icon-btn" onclick="toggleEmojiPicker(event)" title="الوجوه">😊</button>
     <button class="icon-btn" onclick="toggleAttachMenu(event)" title="مرفقات">📎</button>
     <button class="icon-btn" id="micBtn" title="التسجيل">🎙️</button>
@@ -338,7 +336,7 @@ button{border:0;cursor:pointer;font-family:inherit}
 <div class="modal" id="roomsPanel">
   <div class="modal-box">
     <div class="modal-head">
-      <h3>📻 الغرف</h3>
+      <h3>📻 الغرف المتاحة</h3>
       <button class="close" onclick="closePanel('roomsPanel')">×</button>
     </div>
     <div class="modal-content" id="roomsContent">جاري التحميل...</div>
@@ -356,7 +354,7 @@ button{border:0;cursor:pointer;font-family:inherit}
       <label>اسم الغرفة</label>
       <input id="newRoomName" placeholder="مثال: غرفة العمليات" maxlength="40">
     </div>
-    <button class="btn success" onclick="createRoom()">✅ إنشاء</button>
+    <button class="btn success" onclick="createRoom()">✅ إنشاء ودخول</button>
   </div>
 </div>
 
@@ -496,13 +494,29 @@ let membersCache = [];
 let myRole = null;
 let myPersonalCode = null;
 let rawMicStream = null;
-let mediaRecorder = null;
-let recordedChunks = [];
-let recStart = 0;
-let recInterval = null;
-let isRecording = false;
+let localTestAudio = null;
 
 const $ = id => document.getElementById(id);
+
+function playDeviceBeep(freq = 1200, dur = 0.12){
+  try{
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    if(ctx.state === "suspended") ctx.resume();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(freq, ctx.currentTime);
+    gain.gain.setValueAtTime(0.12, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + dur);
+    setTimeout(() => { try{ ctx.close(); }catch(e){} }, (dur + 0.1)*1000);
+  }catch(e){}
+}
+function playStartBeep(){ playDeviceBeep(1400, 0.1); }
+function playStopBeep(){ playDeviceBeep(800, 0.12); }
 
 function toast(message){
   const el = $("toast");
@@ -517,11 +531,6 @@ function escapeHtml(value){
   return String(value ?? "").replace(/[&<>"']/g,m => ({
     "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
   }[m]));
-}
-
-function formatDuration(seconds){
-  const s = Math.max(0, Math.floor(seconds));
-  return String(Math.floor(s/60)).padStart(2,"0") + ":" + String(s%60).padStart(2,"0");
 }
 
 async function initBattery(){
@@ -542,9 +551,7 @@ function updateNetwork(){
 function updateServerStatus(){
   const value = $("serverVal");
   if(!value) return;
-  const isConnected = (commMode === "room" && livekitRoom && livekitRoom.state === "connected") ||
-                      (commMode === "wave" && waveRoom && waveRoom.state === "connected") ||
-                      navigator.onLine;
+  const isConnected = navigator.onLine;
   value.textContent = isConnected ? "متصل" : "غير متصل";
   value.style.color = isConnected ? "#39d353" : "#ff4d5e";
 }
@@ -573,24 +580,12 @@ async function setCommMode(mode){
   if(mode === commMode) return;
   if(isTalking) stopTalking();
 
-  if(mode === "room"){
-    if(waveRoom){ try{ await waveRoom.disconnect(); }catch(e){} waveRoom = null; }
-    document.querySelector(".voice-ptt")?.classList.add("disabled");
-    document.getElementById("chatInputRow")?.classList.remove("disabled-chat");
-    toast("🏠 وضع الغرفة (مفعل للمراسلة)");
-  } else {
-    if(livekitRoom){ try{ await livekitRoom.disconnect(); }catch(e){} livekitRoom = null; }
-    document.querySelector(".voice-ptt")?.classList.remove("disabled");
-    document.getElementById("chatInputRow")?.classList.add("disabled-chat");
-    toast("📻 وضع الموجة (مفعل للحديث المباشر)");
-  }
-
   commMode = mode;
   localStorage.setItem("radioCommMode", mode);
   document.querySelectorAll(".mode-btn").forEach(btn => btn.classList.remove("active"));
   if(mode === "wave") $("modeWave")?.classList.add("active");
   if(mode === "room") $("modeRoom")?.classList.add("active");
-  updateServerStatus();
+  toast(mode === "wave" ? "📻 وضع الموجة (جاهز للحديث)" : "📻 وضع الغرفة (جاهز للمراسلة)");
 }
 
 async function loadRooms(){
@@ -648,11 +643,9 @@ async function connectWaveChannel(){
 
     waveRoom = new L.Room();
     await waveRoom.connect(data.url, data.token);
-    updateServerStatus();
     return true;
   }catch(e){
     waveRoom = null;
-    updateServerStatus();
     return false;
   }
 }
@@ -663,7 +656,6 @@ const pttRing = $("pttRing");
 if(pttBtn){
   pttBtn.addEventListener("pointerdown", async (e) => {
     e.preventDefault();
-    if(commMode === "room"){ toast("⚠️ المايك مفعل في وضع الموجة فقط"); return; }
     if(isTalking) return;
     isTalking = true;
     pttBtn.classList.add("talking");
@@ -671,12 +663,26 @@ if(pttBtn){
     $("waveVisualLeft")?.classList.add("active");
     $("waveVisualRight")?.classList.add("active");
 
+    if(radioOn) playStartBeep();
+
     try{
       await connectWaveChannel();
-      rawMicStream = await navigator.mediaDevices.getUserMedia({ audio:true });
-      toast("📻 تتحدث عبر الموجة " + currentWave.code);
+      rawMicStream = await navigator.mediaDevices.getUserMedia({ audio:{ echoCancellation:true, noiseSuppression:true } });
+      
+      if(waveRoom && waveRoom.state === "connected"){
+        waveLocalAudioTrack = await L.LocalAudioTrack.createTrack(rawMicStream.getAudioTracks()[0]);
+        await waveRoom.localParticipant.publishTrack(waveLocalAudioTrack);
+        waveLocalAudioTrack.enable();
+      } else {
+        // تشغيل اختبار محلي لسماع الصوت إذا لم تكن الموجة متصلة بشخص آخر حالياً
+        localTestAudio = new Audio();
+        localTestAudio.srcObject = rawMicStream;
+        localTestAudio.volume = naturalOn ? 1.0 : 0.5;
+        localTestAudio.play().catch(()=>{});
+      }
+      toast("🎙️ جاري الإرسال عبر الموجة " + currentWave.code);
     }catch(err){
-      toast("⚠️ خطأ في الميكروفون");
+      toast("⚠️ تعذر تشغيل الميكروفون");
       stopTalking();
     }
   });
@@ -685,9 +691,22 @@ if(pttBtn){
     e.preventDefault();
     stopTalking();
   });
+  pttBtn.addEventListener("pointercancel", (e) => {
+    e.preventDefault();
+    stopTalking();
+  });
 }
 
 function stopTalking(){
+  if(radioOn) playStopBeep();
+  if(localTestAudio){
+    try{ localTestAudio.pause(); localTestAudio.srcObject = null; }catch(e){}
+    localTestAudio = null;
+  }
+  if(waveLocalAudioTrack && waveRoom){
+    try{ waveRoom.localParticipant.unpublishTrack(waveLocalAudioTrack); waveLocalAudioTrack.stop(); }catch(e){}
+    waveLocalAudioTrack = null;
+  }
   if(rawMicStream){
     rawMicStream.getTracks().forEach(t => t.stop());
     rawMicStream = null;
@@ -706,7 +725,7 @@ function setVoiceMode(mode){
   $("voiceRadio")?.classList.toggle("active", radioOn);
   if($("naturalState")) $("naturalState").textContent = naturalOn ? "مفعل" : "متوقف";
   if($("radioState")) $("radioState").textContent = radioOn ? "مفعل" : "متوقف";
-  toast(naturalOn ? "🎧 الصوت الطبيعي" : "📻 الصوت اللاسلكي");
+  toast(naturalOn ? "🎧 الصوت الطبيعي مفعل" : "📻 الصوت اللاسلكي مفعل");
 }
 
 function changeWave(direction){
@@ -747,20 +766,23 @@ async function sendMessage(){
   if(!input) return;
   const text = input.value.trim();
   if(!text) return;
-  if(commMode === "wave"){ toast("⚠️ التراسل متاح في وضع الغرفة"); return; }
+
+  if(!activeRoomId){
+    toast("⚠️ أنشئ غرفة أو انضم إلى غرفة أولاً");
+    openPanel("roomsPanel");
+    return;
+  }
 
   if(!livekitRoom || livekitRoom.state !== "connected"){
-    const connected = await connectLiveKit();
-    if(!connected){
-      toast("⚠️ انضم إلى غرفة أولاً لإرسال الرسائل");
-      return;
-    }
+    await connectLiveKit();
   }
 
   try{
     const message = { type:"radio-chat", text, name:"أنت", senderDeviceId:deviceId, time:new Date().toLocaleTimeString("ar-SA",{ hour:"2-digit", minute:"2-digit" }) };
     const data = new TextEncoder().encode(JSON.stringify(message));
-    await livekitRoom.localParticipant.publishData(data, { reliable:true });
+    if(livekitRoom && livekitRoom.state === "connected"){
+      await livekitRoom.localParticipant.publishData(data, { reliable:true });
+    }
     appendChatBubble(text, "أنت", true, message.time);
     input.value = "";
     onInputChange();
@@ -781,7 +803,7 @@ function renderRoomsList(){
   const content = $("roomsContent");
   if(!content) return;
   if(!roomsCache.length){
-    content.innerHTML = '<div class="empty-state">لا توجد غرف متاحة</div>';
+    content.innerHTML = '<div class="empty-state">لا توجد غرف متاحة<br>أنشئ غرفة جديدة أدناه</div>';
     return;
   }
   content.innerHTML = roomsCache.map(room => `
@@ -789,7 +811,7 @@ function renderRoomsList(){
       <div class="avatar">📻</div>
       <div class="info">
         <div class="name">${escapeHtml(room.name)}</div>
-        <div class="role">رقم ${room.roomNumber || "?"}</div>
+        <div class="role">رقم الغرفة: ${room.roomNumber || "?"}</div>
       </div>
       <div class="actions">
         <button class="mini-btn" onclick="selectRoom('${escapeHtml(room.id)}')">دخول</button>
@@ -802,9 +824,8 @@ async function selectRoom(roomId){
   activeRoomId = roomId;
   localStorage.setItem("radioActiveRoomId", roomId);
   closePanel("roomsPanel");
-  await setCommMode("room");
   await connectLiveKit();
-  toast("✅ تم الاتصال بالغرفة");
+  toast("✅ تم الدخول للغرفة بنجاح");
 }
 
 function updateRoomsBadge(){
@@ -836,10 +857,17 @@ async function createRoom(){
     activeRoomId = data.room.id;
     localStorage.setItem("radioActiveRoomId", activeRoomId);
     closePanel("createPanel");
-    await setCommMode("room");
     await connectLiveKit();
-    toast("✅ تم إنشاء الغرفة بنجاح");
+    toast("✅ تم إنشاء الغرفة والدخول إليها");
   }catch(e){ toast("⚠️ تعذر الإنشاء"); }
+}
+
+async function testMic(){
+  try{
+    const stream = await navigator.mediaDevices.getUserMedia({ audio:true });
+    stream.getTracks().forEach(t => t.stop());
+    toast("✅ الميكروفون يعمل بكفاءة");
+  }catch(e){ toast("⚠️ تعذر الوصول للمايكروفون"); }
 }
 
 (async () => {
@@ -847,20 +875,8 @@ async function createRoom(){
   await initBattery();
   updateNetwork();
   updateServerStatus();
-
-  if(commMode === "room"){
-    $("modeRoom")?.classList.add("active");
-    $("modeWave")?.classList.remove("active");
-    document.querySelector(".voice-ptt")?.classList.add("disabled");
-    document.getElementById("chatInputRow")?.classList.remove("disabled-chat");
-    if(activeRoomId) await connectLiveKit();
-  } else {
-    $("modeWave")?.classList.add("active");
-    $("modeRoom")?.classList.remove("active");
-    document.querySelector(".voice-ptt")?.classList.remove("disabled");
-    document.getElementById("chatInputRow")?.classList.add("disabled-chat");
-  }
   await loadRooms();
+  if(activeRoomId) await connectLiveKit();
 })();
 </script>
 
