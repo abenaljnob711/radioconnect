@@ -13,7 +13,7 @@ body{height:100vh;overflow:hidden;position:fixed;width:100%}
 button,input{font:inherit}
 button{border:0;cursor:pointer;font-family:inherit}
 .app{max-width:520px;height:100vh;margin:auto;padding:6px 8px 0;display:flex;flex-direction:column;overflow:hidden;background:radial-gradient(circle at 50% 30%,rgba(35,70,110,.20),transparent 42%),linear-gradient(180deg,#07111d 0%,#02050a 55%,#010308 100%)}
-.app-scroll{flex:1;display:flex;flex-direction:column;overflow:hidden;padding-bottom:65px}
+.app-scroll{flex:1;display:flex;flex-direction:column;overflow:hidden;padding-bottom:60px}
 .topbar{height:42px;display:grid;grid-template-columns:38px 1fr 86px;align-items:center;gap:5px;padding:2px 0 4px;flex-shrink:0}
 .menu-btn{width:34px;height:34px;border-radius:10px;background:#0b1725;color:#dcecff;font-size:16px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.08)}
 .brand-wrap{display:flex;align-items:center;justify-content:center;gap:5px}
@@ -64,11 +64,11 @@ button{border:0;cursor:pointer;font-family:inherit}
 .wave-visualizer-clean.active i:nth-child(5){animation-delay:.4s}
 @keyframes waveBar{0%,100%{height:4px}50%{height:14px}}
 
-.chat-section{flex:1;display:flex;flex-direction:column;background:linear-gradient(180deg,#071725,#030a11);border:1px solid rgba(255,255,255,.065);border-radius:14px;overflow:hidden;margin-top:2px}
+.chat-section{flex:1;display:flex;flex-direction:column;background:linear-gradient(180deg,#071725,#030a11);border:1px solid rgba(255,255,255,.065);border-radius:14px;overflow:hidden;margin-top:2px;min-height:0}
 .chat-head{height:32px;min-height:32px;display:flex;align-items:center;justify-content:space-between;padding:0 8px;background:#081a29;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0}
 .chat-title{font-size:9px;font-weight:900}
 .chat-state{font-size:7px;color:#46d879}
-.chat-messages{flex:1;padding:8px;overflow-y:auto}
+.chat-messages{flex:1;min-height:0;padding:8px;overflow-y:auto}
 .chat-empty{height:100%;display:flex;align-items:center;justify-content:center;color:#536a80;font-size:9px}
 .msg-bubble{margin-bottom:6px;max-width:85%;word-wrap:break-word}
 .msg-bubble.mine{align-self:flex-start;margin-right:auto}
@@ -77,8 +77,12 @@ button{border:0;cursor:pointer;font-family:inherit}
 .msg-bubble .text{background:#0d304b;border-radius:10px;padding:5px 8px;font-size:10px;line-height:1.4}
 .msg-bubble.mine .text{background:#0d5d91;color:#fff}
 .msg-bubble .time{font-size:7px;color:#7290a8;margin-top:2px;display:block}
-.chat-input{min-height:44px;display:flex;align-items:center;gap:4px;padding:6px;background:#040b12;border-top:1px solid rgba(255,255,255,.07);flex-shrink:0}
-.chat-input input{flex:1;height:32px;background:#07131e;border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:0 10px;color:#fff;font-size:11px;outline:none}
+
+.chat-input{min-height:48px;display:flex;align-items:center;gap:4px;padding:6px;background:#040b12;border-top:1px solid rgba(255,255,255,.07);flex-shrink:0}
+.icon-btn{width:32px;height:32px;min-width:32px;border-radius:50%;background:#0b1d2d;color:#c9e4fa;font-size:14px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.07);flex-shrink:0}
+.icon-btn.rec{background:#e52e32;color:#fff;animation:recPulse .9s infinite}
+@keyframes recPulse{0%,100%{box-shadow:0 0 0 0 rgba(231,76,60,.5)}50%{box-shadow:0 0 0 7px rgba(231,76,60,0)}}
+.chat-input input{flex:1;height:32px;background:#07131e;border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:0 10px;color:#fff;font-size:11px;outline:none;min-width:0}
 .send-btn{width:32px;height:32px;border-radius:50%;background:linear-gradient(145deg,#1594ff,#0757d8);color:#fff;font-size:11px;display:none;align-items:center;justify-content:center;flex-shrink:0}
 .send-btn.show{display:flex}
 
@@ -108,6 +112,9 @@ button{border:0;cursor:pointer;font-family:inherit}
 .member-row .info{flex:1;min-width:0}
 .member-row .name{font-weight:700;font-size:10px;color:#fff}
 .member-row .role{font-size:7px;color:#82a0b9}
+.rec-bar{position:fixed;bottom:65px;left:50%;transform:translateX(-50%);background:rgba(224,42,47,.97);color:#fff;padding:6px 12px;border-radius:16px;font-size:9px;font-weight:800;display:none;align-items:center;gap:6px;z-index:95}
+.rec-bar.show{display:flex}
+.rec-dot{width:6px;height:6px;background:#fff;border-radius:50%;animation:recPulse .8s infinite}
 .toast{position:fixed;left:50%;bottom:65px;transform:translateX(-50%) translateY(10px);padding:6px 12px;background:#0b2033;color:#fff;border:1px solid rgba(55,157,228,.32);border-radius:14px;font-size:9px;z-index:1000;opacity:0;transition:.25s;pointer-events:none;max-width:90%;text-align:center}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .empty-state{padding:14px 8px;text-align:center;color:#60788e;font-size:9px}
@@ -171,7 +178,7 @@ button{border:0;cursor:pointer;font-family:inherit}
   </div>
 </div>
 
-<!-- واجهة الموجة (الحديث المباشر) -->
+<!-- وضع الموجة (الحديث المباشر) -->
 <div class="voice-ptt-clean" id="waveViewSection">
   <div class="ptt-wrap">
     <div class="ptt-ring" id="pttRing"></div>
@@ -182,10 +189,10 @@ button{border:0;cursor:pointer;font-family:inherit}
   <div class="wave-visualizer-clean" id="waveVisual">
     <i></i><i></i><i></i><i></i><i></i>
   </div>
-  <div class="ptt-hint" id="pttHint">اضغط مطولاً للحديث عبر الموجة (صوت طبيعي)</div>
+  <div class="ptt-hint" id="pttHint">اضغط مطولاً للحديث عبر الموجة</div>
 </div>
 
-<!-- واجهة الغرفة (مساحة المراسلة الكاملة والمتناسقة) -->
+<!-- وضع الغرفة (المراسلة المتناسقة بملء الشاشة المتبقية) -->
 <div class="chat-section" id="roomChatSection" style="display:none;">
   <div class="chat-head">
     <span class="chat-title">💬 محادثة الغرفة</span>
@@ -197,6 +204,7 @@ button{border:0;cursor:pointer;font-family:inherit}
   </div>
 
   <div class="chat-input" id="chatInputRow">
+    <button class="icon-btn" id="micBtn" title="التسجيل الصوتي">🎙️</button>
     <input id="chatInput" placeholder="اكتب رسالة..." autocomplete="off"
       onkeydown="if(event.key==='Enter'){event.preventDefault();sendMessage()}"
       oninput="onInputChange()">
@@ -307,6 +315,12 @@ button{border:0;cursor:pointer;font-family:inherit}
   </div>
 </div>
 
+<div class="rec-bar" id="recBar">
+  <span class="rec-dot"></span>
+  <span>جاري تسجيل المقطع الصوتي</span>
+  <span id="recTime">00:00</span>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -339,12 +353,16 @@ let isTalking = false;
 let waveLocalAudioTrack = null;
 let roomsCache = [];
 let rawMicStream = null;
-let localTestAudio = null;
 let audioCtx = null;
+
+let mediaRecorder = null;
+let recordedChunks = [];
+let recStart = 0;
+let recInterval = null;
+let isRecording = false;
 
 const $ = id => document.getElementById(id);
 
-/* نغمة البيب الطبيعية لللاسلكي */
 function playRadioBeep(freq = 1400, dur = 0.08){
   try{
     if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -377,6 +395,11 @@ function escapeHtml(value){
   return String(value ?? "").replace(/[&<>"']/g,m => ({
     "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
   }[m]));
+}
+
+function formatDuration(seconds){
+  const s = Math.max(0, Math.floor(seconds));
+  return String(Math.floor(s/60)).padStart(2,"0") + ":" + String(s%60).padStart(2,"0");
 }
 
 function setCommMode(mode){
@@ -426,7 +449,16 @@ async function connectLiveKit(){
         const data = JSON.parse(text);
         if(data.senderDeviceId === deviceId) return;
         if(data.type === "radio-chat") appendChatBubble(data.text, data.name, false, data.time);
+        if(data.type === "radio-voice") appendAudioBubble(data.data, data.name, false);
       }catch(e){}
+    });
+
+    // استقبال الصوت المباشر من الأعضاء الآخرين في الغرفة
+    livekitRoom.on(L.RoomEvent.TrackSubscribed, (track, publication, participant) => {
+      if(track.kind === "audio"){
+        const audioElement = track.attach();
+        document.body.appendChild(audioElement);
+      }
     });
 
     await livekitRoom.connect(data.url, data.token);
@@ -449,6 +481,15 @@ async function connectWaveChannel(){
     const data = await response.json();
 
     waveRoom = new L.Room();
+    
+    // استقبال الصوت المباشر للطرف الآخر فقط دون سماع صوت نفسك
+    waveRoom.on(L.RoomEvent.TrackSubscribed, (track, publication, participant) => {
+      if(track.kind === "audio"){
+        const audioElement = track.attach();
+        document.body.appendChild(audioElement);
+      }
+    });
+
     await waveRoom.connect(data.url, data.token);
     return true;
   }catch(e){
@@ -468,19 +509,14 @@ if(pttBtn){
     pttBtn.classList.add("talking");
     pttRing.classList.add("talking");
     $("waveVisual")?.classList.add("active");
-    if($("pttHint")) $("pttHint").textContent = "جاري الإرسال (صوت طبيعي)...";
+    if($("pttHint")) $("pttHint").textContent = "جاري إرسال نداءك عبر الموجة...";
 
     playStartBeep();
 
     try{
       rawMicStream = await navigator.mediaDevices.getUserMedia({ audio:{ echoCancellation:true, noiseSuppression:true } });
       
-      // سماع الصوت الطبيعي فوراً دون تضخيم لاسلكي مزعج
-      localTestAudio = new Audio();
-      localTestAudio.srcObject = rawMicStream;
-      localTestAudio.volume = 1.0;
-      localTestAudio.play().catch(()=>{});
-
+      // لا يتم تشغيل صوت محلي لنفسك (لا تسمع نفسك)، الطرف الآخر فقط يسمعك تماماً مثل اتصال الجوال
       connectWaveChannel().then(() => {
         if(waveRoom && waveRoom.state === "connected" && rawMicStream){
           L.LocalAudioTrack.createTrack(rawMicStream.getAudioTracks()[0]).then(track => {
@@ -490,7 +526,7 @@ if(pttBtn){
           });
         }
       });
-      toast("🎙️ تتحدث الآن بصوت طبيعي عبر الموجة " + currentWave.code);
+      toast("🎙️ تتحدث الآن عبر الموجة " + currentWave.code);
     }catch(err){
       toast("⚠️ تعذر تشغيل الميكروفون");
       stopTalking();
@@ -511,10 +547,6 @@ if(pttBtn){
 
 function stopTalking(){
   if(isTalking) playStopBeep();
-  if(localTestAudio){
-    try{ localTestAudio.pause(); localTestAudio.srcObject = null; }catch(e){}
-    localTestAudio = null;
-  }
   if(waveLocalAudioTrack && waveRoom){
     try{ waveRoom.localParticipant.unpublishTrack(waveLocalAudioTrack); waveLocalAudioTrack.stop(); }catch(e){}
     waveLocalAudioTrack = null;
@@ -527,7 +559,7 @@ function stopTalking(){
   pttBtn?.classList.remove("talking");
   pttRing?.classList.remove("talking");
   $("waveVisual")?.classList.remove("active");
-  if($("pttHint")) $("pttHint").textContent = "اضغط مطولاً للحديث عبر الموجة (صوت طبيعي)";
+  if($("pttHint")) $("pttHint").textContent = "اضغط مطولاً للحديث عبر الموجة";
 }
 
 function changeWave(direction){
@@ -556,6 +588,23 @@ function appendChatBubble(text, senderName, isMine, time){
 
   bubble.innerHTML = (!isMine && senderName ? '<span class="sender">' + escapeHtml(senderName) + '</span>' : '') +
     '<div class="text">' + escapeHtml(text) + '</div>' +
+    '<span class="time">' + escapeHtml(timeStr) + '</span>';
+
+  container.appendChild(bubble);
+  container.scrollTop = container.scrollHeight;
+}
+
+function appendAudioBubble(audioData, senderName, isMine){
+  const container = $("chatMessages");
+  if(!container) return;
+  container.querySelector(".chat-empty")?.remove();
+
+  const bubble = document.createElement("div");
+  bubble.className = "msg-bubble " + (isMine ? "mine" : "other");
+  
+  const timeStr = new Date().toLocaleTimeString("ar-SA",{ hour:"2-digit", minute:"2-digit" });
+  bubble.innerHTML = (!isMine && senderName ? '<span class="sender">' + escapeHtml(senderName) + '</span>' : '') +
+    '<div class="text"><audio controls src="' + audioData + '" style="height:30px;width:100%"></audio></div>' +
     '<span class="time">' + escapeHtml(timeStr) + '</span>';
 
   container.appendChild(bubble);
@@ -591,6 +640,102 @@ async function sendMessage(){
     toast("⚠️ تعذر إرسال الرسالة");
   }
 }
+
+/* التسجيل الصوتي الكامل في الغرفة */
+async function startVoiceRecording(){
+  if(isRecording) return;
+  if(!activeRoomId){
+    toast("⚠️ أنشئ غرفة أو انضم لغرفة أولاً");
+    openPanel("roomsPanel");
+    return;
+  }
+  if(!livekitRoom || livekitRoom.state !== "connected"){
+    await connectLiveKit();
+  }
+
+  try{
+    const stream = await navigator.mediaDevices.getUserMedia({ audio:true });
+    mediaRecorder = new MediaRecorder(stream);
+    recordedChunks = [];
+    isRecording = true;
+    recStart = Date.now();
+    $("recBar")?.classList.add("show");
+
+    recInterval = setInterval(() => {
+      if($("recTime")) $("recTime").textContent = formatDuration((Date.now() - recStart) / 1000);
+    }, 1000);
+
+    mediaRecorder.ondataavailable = event => {
+      if(event.data.size) recordedChunks.push(event.data);
+    };
+
+    mediaRecorder.onstop = async () => {
+      clearInterval(recInterval);
+      $("recBar")?.classList.remove("show");
+
+      const blob = new Blob(recordedChunks, { type: mediaRecorder.mimeType || "audio/webm" });
+      stream.getTracks().forEach(track => track.stop());
+
+      if(blob.size > 5 * 1024 * 1024){
+        toast("⚠️ حجم التسجيل كبير جداً");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const base64Audio = reader.result;
+        const message = { type:"radio-voice", name:"أنت", data:base64Audio };
+        const encoded = new TextEncoder().encode(JSON.stringify(message));
+        try{
+          if(livekitRoom && livekitRoom.state === "connected"){
+            await livekitRoom.localParticipant.publishData(encoded, { reliable:true });
+          }
+          appendAudioBubble(base64Audio, "أنت", true);
+          toast("✅ تم إرسال المقطع الصوتي");
+        }catch(e){
+          toast("⚠️ تعذر إرسال المقطع الصوتي");
+        }
+      };
+      reader.readAsDataURL(blob);
+    };
+
+    mediaRecorder.start();
+  }catch(e){
+    isRecording = false;
+    toast("⚠️ تعذر الوصول للميكروفون");
+  }
+}
+
+function stopVoiceRecording(){
+  if(mediaRecorder && isRecording){
+    try{ mediaRecorder.stop(); }catch(e){}
+    isRecording = false;
+  }
+}
+
+$("micBtn")?.addEventListener("pointerdown", async e => {
+  e.preventDefault();
+  $("micBtn")?.classList.add("rec");
+  await startVoiceRecording();
+});
+
+$("micBtn")?.addEventListener("pointerup", e => {
+  e.preventDefault();
+  $("micBtn")?.classList.remove("rec");
+  stopVoiceRecording();
+});
+
+$("micBtn")?.addEventListener("touchstart", async e => {
+  e.preventDefault();
+  $("micBtn")?.classList.add("rec");
+  await startVoiceRecording();
+}, { passive:false });
+
+$("micBtn")?.addEventListener("touchend", e => {
+  e.preventDefault();
+  $("micBtn")?.classList.remove("rec");
+  stopVoiceRecording();
+}, { passive:false });
 
 function openPanel(id){
   document.querySelectorAll(".modal").forEach(m => m.classList.remove("show"));
