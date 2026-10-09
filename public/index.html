@@ -47,8 +47,7 @@ button{border:0;cursor:pointer;font-family:inherit}
     linear-gradient(180deg,#07111d 0%,#02050a 55%,#010308 100%)
 }
 .app::-webkit-scrollbar{width:0;display:none}
-</style>
-</head>
+
 /* ============ HEADER ============ */
 .topbar{
   height:52px;
@@ -350,7 +349,8 @@ button{border:0;cursor:pointer;font-family:inherit}
   position:relative;z-index:11
 }
 .send-btn.show{display:flex}
-  /* ============ EMOJI PICKER ============ */
+
+/* ============ EMOJI PICKER ============ */
 .emoji-picker{
   position:absolute;bottom:60px;left:8px;
   width:290px;max-height:220px;overflow-y:auto;
@@ -504,7 +504,7 @@ button{border:0;cursor:pointer;font-family:inherit}
 }
 </style>
 </head>
-  <body>
+<body>
 
 <div class="app" id="app">
 
@@ -652,8 +652,9 @@ button{border:0;cursor:pointer;font-family:inherit}
     </div>
   </div>
 
-    </div>
-    <!-- ========== شريط التنقل السفلي ========== -->
+</div>
+
+<!-- ========== شريط التنقل السفلي ========== -->
 <nav class="bottom-nav">
   <button class="nav-item active" id="navHome" onclick="switchNav('home')">
     <span class="ico">⌂</span><span>الرئيسية</span>
@@ -815,8 +816,9 @@ button{border:0;cursor:pointer;font-family:inherit}
 
 <div class="toast" id="toast"></div>
 
-  </div>
-  <script>
+</div>
+
+<script>
 "use strict";
 
 const API = location.origin;
@@ -1097,21 +1099,17 @@ async function createWaveChannel(){
 async function setCommMode(mode){
   if(mode === commMode) return;
 
-  /* إيقاف أي جلسة تحدث */
   if(isTalking){
     await stopTalking();
   }
 
-  /* إيقاف الوضع القديم */
   if(mode === "room"){
-    /* قطع الموجة */
     if(waveRoom){
       try{ await waveRoom.disconnect(); }catch(e){}
       waveRoom = null;
     }
     toast("🏠 تم التبديل إلى وضع الغرفة");
   } else {
-    /* قطع الغرفة */
     if(livekitRoom){
       try{ await livekitRoom.disconnect(); }catch(e){}
       livekitRoom = null;
@@ -1122,14 +1120,14 @@ async function setCommMode(mode){
   commMode = mode;
   localStorage.setItem("radioCommMode", mode);
 
-  /* تحديث الأزرار */
   document.querySelectorAll(".mode-btn").forEach(btn => btn.classList.remove("active"));
   if(mode === "wave") $("modeWave")?.classList.add("active");
   if(mode === "room") $("modeRoom")?.classList.add("active");
 
   updateServerStatus();
 }
-    /* ============ جلب الغرف ============ */
+
+/* ============ جلب الغرف ============ */
 async function loadRooms(){
   try{
     const response = await fetch(API + "/api/rooms", {
@@ -1176,7 +1174,6 @@ async function connectLiveKit(){
           element.style.display = "none";
           document.body.appendChild(element);
 
-          /* توجيه الصوت للسماعة الخارجية */
           try{
             const devices = await navigator.mediaDevices.enumerateDevices();
             const speakers = devices.filter(d => d.kind === "audiooutput");
@@ -1446,13 +1443,11 @@ async function startTalking(event){
   $("waveVisualLeft")?.classList.add("active");
   $("waveVisualRight")?.classList.add("active");
 
-  /* 🆕 بييب عند البدء (وضع اللاسلكي فقط) */
   if(radioOn){
     playStartBeep();
   }
 
   try{
-    /* وضع الغرفة */
     if(commMode === "room" && activeRoomId){
       if(!livekitRoom || livekitRoom.state !== "connected"){
         toast("🎙️ جاري الاتصال بالغرفة...");
@@ -1478,7 +1473,6 @@ async function startTalking(event){
       return;
     }
 
-    /* وضع الموجة */
     if(commMode === "wave" && waveFingerprint){
       const waveConnected = await connectWaveChannel();
       if(waveConnected && waveRoom && waveRoom.state === "connected"){
@@ -1497,7 +1491,6 @@ async function startTalking(event){
       }
     }
 
-    /* اختبار محلي */
     rawMicStream = await navigator.mediaDevices.getUserMedia({
       audio:{ echoCancellation:true, noiseSuppression:true, autoGainControl:true }
     });
@@ -1520,12 +1513,10 @@ async function startTalking(event){
 async function stopTalking(event){
   if(event) event.preventDefault();
 
-  /* 🆕 بييب عند الإيقاف (وضع اللاسلكي فقط) */
   if(radioOn){
     playStopBeep();
   }
 
-  /* إيقاف اختبار محلي */
   if(isLocalTesting && window.__localTestAudio){
     try{
       window.__localTestAudio.pause();
@@ -1539,14 +1530,12 @@ async function stopTalking(event){
     }
   }
 
-  /* إيقاف الغرفة */
   if(localAudioTrack && livekitRoom){
     try{ await livekitRoom.localParticipant.unpublishTrack(localAudioTrack); }catch(e){}
     try{ localAudioTrack.stop(); }catch(e){}
     localAudioTrack = null;
   }
 
-  /* إيقاف الموجة */
   if(waveLocalAudioTrack && waveRoom){
     try{ await waveRoom.localParticipant.unpublishTrack(waveLocalAudioTrack); }catch(e){}
     try{ waveLocalAudioTrack.stop(); }catch(e){}
@@ -1567,7 +1556,7 @@ async function stopTalking(event){
   $("waveVisualRight")?.classList.remove("active");
 }
 
-/* ============ وضع الصوت (بدون تداخل) ============ */
+/* ============ وضع الصوت ============ */
 function setVoiceMode(mode){
   if(mode === "natural" && naturalOn && !radioOn) return;
   if(mode === "radio" && radioOn && !naturalOn) return;
@@ -1624,8 +1613,9 @@ function updateWaveUI(){
   if($("waveCode")) $("waveCode").textContent = currentWave.code;
   if($("waveNameDisplay")) $("waveNameDisplay").textContent = currentWave.name;
   if($("waveNum")) $("waveNum").textContent = currentWave.number;
-    }
-    /* ============ عرض قناتي اللاسلكية ============ */
+}
+
+/* ============ عرض قناتي اللاسلكية ============ */
 function openWaveChannel(){
   closeAllPanels();
   const content = $("settingsContent");
@@ -2485,7 +2475,6 @@ async function testMic(){
   await initBattery();
   updateNetwork();
 
-  /* تفعيل زر الوضع */
   if(commMode === "room"){
     $("modeRoom")?.classList.add("active");
     $("modeWave")?.classList.remove("active");
@@ -2513,7 +2502,6 @@ async function testMic(){
         if($("codeRoomNum")) $("codeRoomNum").textContent = "رقم الغرفة: " + (room.roomNumber || "-");
         $("myCodeCard")?.classList.add("show");
 
-        /* اتصال تلقائي حسب الوضع المحفوظ */
         if(commMode === "room"){
           await connectLiveKit();
           await loadMyInfo();
