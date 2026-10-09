@@ -12,150 +12,151 @@ html,body{height:100%;overflow:hidden;background:#01040a;color:#fff;font-family:
 body{height:100vh;overflow:hidden;position:fixed;width:100%}
 button,input{font:inherit}
 button{border:0;cursor:pointer;font-family:inherit}
-.app{max-width:520px;height:100vh;margin:auto;padding:8px 10px 0;display:flex;flex-direction:column;overflow:hidden;background:radial-gradient(circle at 50% 30%,rgba(35,70,110,.20),transparent 42%),linear-gradient(180deg,#07111d 0%,#02050a 55%,#010308 100%)}
-.app-scroll{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:none;-ms-overflow-style:none;padding-bottom:80px}
+.app{max-width:520px;height:100vh;margin:auto;padding:6px 8px 0;display:flex;flex-direction:column;overflow:hidden;background:radial-gradient(circle at 50% 30%,rgba(35,70,110,.20),transparent 42%),linear-gradient(180deg,#07111d 0%,#02050a 55%,#010308 100%)}
+.app-scroll{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:none;-ms-overflow-style:none;padding-bottom:75px}
 .app-scroll::-webkit-scrollbar{width:0;display:none}
-.topbar{height:52px;display:grid;grid-template-columns:42px 1fr 92px;align-items:center;gap:7px;padding:2px 0 7px;flex-shrink:0}
-.menu-btn{width:40px;height:40px;border-radius:13px;background:#0b1725;color:#dcecff;font-size:20px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.08)}
-.brand-wrap{display:flex;align-items:center;justify-content:center;gap:7px}
-.brand-icon{font-size:22px;filter:drop-shadow(0 0 8px rgba(45,153,255,.65))}
+.topbar{height:46px;display:grid;grid-template-columns:38px 1fr 86px;align-items:center;gap:5px;padding:2px 0 5px;flex-shrink:0}
+.menu-btn{width:36px;height:36px;border-radius:11px;background:#0b1725;color:#dcecff;font-size:18px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.08)}
+.brand-wrap{display:flex;align-items:center;justify-content:center;gap:5px}
+.brand-icon{font-size:18px}
 .brand{text-align:center}
-.brand strong{display:block;font-size:14px;font-weight:900}
-.brand span{display:block;font-size:8px;color:#647c94;margin-top:2px}
-.status-pill{height:32px;min-width:88px;display:flex;align-items:center;justify-content:center;gap:5px;background:#071522;border:1px solid rgba(255,255,255,.07);border-radius:18px;font-size:9px;padding:0 8px}
-.status-pill .dot{width:7px;height:7px;border-radius:50%;background:#39d353;box-shadow:0 0 9px #39d353;transition:.3s}
+.brand strong{display:block;font-size:13px;font-weight:900}
+.brand span{display:block;font-size:7px;color:#647c94;margin-top:1px}
+.status-pill{height:28px;min-width:80px;display:flex;align-items:center;justify-content:center;gap:4px;background:#071522;border:1px solid rgba(255,255,255,.07);border-radius:14px;font-size:8px;padding:0 6px}
+.status-pill .dot{width:6px;height:6px;border-radius:50%;background:#39d353;box-shadow:0 0 7px #39d353;transition:.3s}
 .status-pill .lbl{color:#59dc83;font-weight:800;transition:.3s}
 .status-pill.weak .dot{background:#ffc44d}
 .status-pill.weak .lbl{color:#ffc44d}
 .status-pill.bad .dot{background:#ff4d5e}
 .status-pill.bad .lbl{color:#ff4d5e}
-.ops-card{position:relative;background:linear-gradient(145deg,#0b1c2d,#06101a);border:1px solid rgba(255,255,255,.07);border-radius:20px;padding:11px;margin-bottom:9px}
-.ops-top{min-height:67px;display:grid;grid-template-columns:42px 1fr 42px;align-items:center;gap:5px}
+.ops-card{position:relative;background:linear-gradient(145deg,#0b1c2d,#06101a);border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:8px;margin-bottom:6px}
+.ops-top{min-height:55px;display:grid;grid-template-columns:36px 1fr 36px;align-items:center;gap:4px}
 .wave-center{text-align:center}
-.wave-label-top{font-size:8px;color:#637c94;margin-bottom:2px}
-.wave-code-big{font-size:24px;line-height:26px;font-weight:900;letter-spacing:3px;color:#fff;font-family:monospace;text-shadow:0 0 10px rgba(54,159,255,.55)}
-.wave-name-display{font-size:10px;color:#8ab4dc;margin-top:2px;font-weight:700}
-.wave-num-big{font-size:8px;color:#6f9bc0;margin-top:2px}
+.wave-label-top{font-size:7px;color:#637c94;margin-bottom:1px}
+.wave-code-big{font-size:20px;line-height:22px;font-weight:900;letter-spacing:2px;color:#fff;font-family:monospace;text-shadow:0 0 8px rgba(54,159,255,.5)}
+.wave-name-display{font-size:9px;color:#8ab4dc;margin-top:1px;font-weight:700}
+.wave-num-big{font-size:7px;color:#6f9bc0;margin-top:1px}
 .wave-arrows{display:flex;justify-content:center;align-items:center}
-.arrow-btn{width:36px;height:36px;border-radius:50%;background:#0c2942;color:#fff;font-size:18px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(58,157,230,.32)}
+.arrow-btn{width:32px;height:32px;border-radius:50%;background:#0c2942;color:#fff;font-size:16px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(58,157,230,.32)}
 .arrow-btn:active{transform:scale(.9)}
-.mode-switch{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:9px}
-.mode-btn{padding:10px 8px;border-radius:14px;background:#071521;border:1px solid rgba(255,255,255,.06);color:#8ab4dc;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:6px;transition:.2s}
-.mode-btn.active{background:linear-gradient(145deg,#0b3a5e,#08253d);border-color:rgba(58,157,230,.5);color:#fff;box-shadow:0 0 15px rgba(58,157,230,.2)}
-.mode-btn .m-ico{font-size:16px}
-.my-code-card{display:none;margin-bottom:9px;background:#081c2c;border:1px solid rgba(49,153,230,.3);border-radius:17px;padding:10px;text-align:center}
+.mode-switch{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:6px}
+.mode-btn{padding:8px;border-radius:11px;background:#071521;border:1px solid rgba(255,255,255,.06);color:#8ab4dc;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:5px;transition:.2s}
+.mode-btn.active{background:linear-gradient(145deg,#0b3a5e,#08253d);border-color:rgba(58,157,230,.5);color:#fff;box-shadow:0 0 12px rgba(58,157,230,.2)}
+.mode-btn .m-ico{font-size:14px}
+.my-code-card{display:none;margin-bottom:6px;background:#081c2c;border:1px solid rgba(49,153,230,.3);border-radius:14px;padding:8px;text-align:center}
 .my-code-card.show{display:block}
-.my-code-card .code-label{font-size:9px;color:#7895af}
-.my-code-card .code-value{font-size:24px;font-weight:900;letter-spacing:4px;color:#fff;font-family:monospace;margin:4px 0}
-.my-code-card .code-role{font-size:9px;color:#55dc82}
-.code-room-info{margin:6px 0;padding:6px;border-top:1px solid rgba(94,176,255,.15);border-bottom:1px solid rgba(94,176,255,.15)}
-.code-room-name{font-size:14px;font-weight:900;color:#fff;margin-bottom:2px}
-.code-room-num{font-size:9px;color:#5eb0ff;font-weight:700}
-.my-code-card .code-actions{display:flex;gap:6px;margin-top:7px}
-.my-code-card .code-btn{flex:1;padding:7px;border-radius:10px;background:#0d5d91;color:#fff;font-size:10px;font-weight:800}
-.status-row{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px}
-.status-box{min-height:52px;display:grid;grid-template-columns:24px 1fr;grid-template-rows:1fr 1fr;align-items:center;text-align:right;padding:7px 8px;background:#071521;border:1px solid rgba(255,255,255,.055);border-radius:13px}
-.status-box .icon{grid-row:1 / span 2;font-size:16px;text-align:center}
-.status-box .val{font-size:10px;font-weight:900;color:#fff;display:block}
-.status-box .lbl{font-size:7px;color:#627990;display:block}
+.my-code-card .code-label{font-size:8px;color:#7895af}
+.my-code-card .code-value{font-size:20px;font-weight:900;letter-spacing:3px;color:#fff;font-family:monospace;margin:3px 0}
+.my-code-card .code-role{font-size:8px;color:#55dc82}
+.code-room-info{margin:4px 0;padding:4px;border-top:1px solid rgba(94,176,255,.15);border-bottom:1px solid rgba(94,176,255,.15)}
+.code-room-name{font-size:12px;font-weight:900;color:#fff;margin-bottom:1px}
+.code-room-num{font-size:8px;color:#5eb0ff;font-weight:700}
+.my-code-card .code-actions{display:flex;gap:5px;margin-top:5px}
+.my-code-card .code-btn{flex:1;padding:5px;border-radius:8px;background:#0d5d91;color:#fff;font-size:9px;font-weight:800}
+.status-row{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-bottom:6px}
+.status-box{min-height:42px;display:grid;grid-template-columns:20px 1fr;grid-template-rows:1fr 1fr;align-items:center;text-align:right;padding:5px 6px;background:#071521;border:1px solid rgba(255,255,255,.055);border-radius:11px}
+.status-box .icon{grid-row:1 / span 2;font-size:14px;text-align:center}
+.status-box .val{font-size:9px;font-weight:900;color:#fff;display:block}
+.status-box .lbl{font-size:6px;color:#627990;display:block}
 .status-box.ok .val{color:#42d879}
-.voice-ptt{position:relative;display:grid;grid-template-columns:1fr 126px 1fr;align-items:center;gap:5px;min-height:145px;margin:2px 0 10px}
-.voice-box{min-height:72px;border-radius:16px;padding:8px 4px;background:#071521;border:1px solid rgba(255,255,255,.06);text-align:center;transition:.2s;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center}
-.voice-box.active{background:#0b2234;border-color:rgba(48,158,235,.48);box-shadow:0 0 18px rgba(31,143,218,.13)}
-.voice-box .vt-ico{font-size:21px;display:block;margin-bottom:3px}
-.voice-box .vt-name{font-size:10px;font-weight:900;color:#eaf4ff}
-.voice-box .vt-state{font-size:8px;margin-top:3px;color:#536b81}
+.voice-ptt{position:relative;display:grid;grid-template-columns:1fr 105px 1fr;align-items:center;gap:4px;min-height:120px;margin:2px 0 6px}
+.voice-box{min-height:60px;border-radius:13px;padding:6px 3px;background:#071521;border:1px solid rgba(255,255,255,.06);text-align:center;transition:.2s;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.voice-box.active{background:#0b2234;border-color:rgba(48,158,235,.48);box-shadow:0 0 14px rgba(31,143,218,.13)}
+.voice-box .vt-ico{font-size:18px;display:block;margin-bottom:2px}
+.voice-box .vt-name{font-size:9px;font-weight:900;color:#eaf4ff}
+.voice-box .vt-state{font-size:7px;margin-top:2px;color:#536b81}
 .voice-box.active .vt-state{color:#48db7e}
-.wave-visualizer{display:flex;align-items:center;justify-content:center;gap:2px;height:20px;margin-top:4px}
-.wave-visualizer i{display:block;width:2px;height:4px;background:#3fa9ff;border-radius:1px}
+.voice-ptt.disabled{opacity:.4;filter:grayscale(1);pointer-events:none}
+.wave-visualizer{display:flex;align-items:center;justify-content:center;gap:2px;height:16px;margin-top:2px}
+.wave-visualizer i{display:block;width:2px;height:3px;background:#3fa9ff;border-radius:1px}
 .wave-visualizer.active i{background:#5eb0ff;animation:waveBar .6s infinite ease-in-out}
 .wave-visualizer.active i:nth-child(1){animation-delay:0s}
 .wave-visualizer.active i:nth-child(2){animation-delay:.1s}
 .wave-visualizer.active i:nth-child(3){animation-delay:.2s}
 .wave-visualizer.active i:nth-child(4){animation-delay:.3s}
 .wave-visualizer.active i:nth-child(5){animation-delay:.4s}
-@keyframes waveBar{0%,100%{height:4px}50%{height:16px}}
-.ptt-wrap{position:relative;width:126px;height:126px;display:flex;justify-content:center;align-items:center}
-.ptt-ring{position:absolute;width:126px;height:126px;border-radius:50%;background:radial-gradient(circle,rgba(255,53,47,.30) 0%,rgba(255,53,47,.08) 43%,transparent 68%);animation:pttPulse 2s infinite;pointer-events:none;transition:.3s}
+@keyframes waveBar{0%,100%{height:3px}50%{height:13px}}
+.ptt-wrap{position:relative;width:105px;height:105px;display:flex;justify-content:center;align-items:center}
+.ptt-ring{position:absolute;width:105px;height:105px;border-radius:50%;background:radial-gradient(circle,rgba(255,53,47,.30) 0%,rgba(255,53,47,.08) 43%,transparent 68%);animation:pttPulse 2s infinite;pointer-events:none;transition:.3s}
 .ptt-ring.talking{background:radial-gradient(circle,rgba(63,169,255,.40) 0%,rgba(63,169,255,.15) 43%,transparent 68%);animation:pttPulseFast 1s infinite}
-@keyframes pttPulse{0%,100%{transform:scale(.96);opacity:.45}50%{transform:scale(1.10);opacity:.9}}
-@keyframes pttPulseFast{0%,100%{transform:scale(1);opacity:.7}50%{transform:scale(1.15);opacity:1}}
-.ptt-btn{width:105px;height:105px;border-radius:50%;background:radial-gradient(circle at 38% 28%,#ff5b50 0%,#ef3930 28%,#c6201d 62%,#721311 100%);border:5px solid #ed3932;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 0 0 7px rgba(231,76,60,.12),0 9px 30px rgba(0,0,0,.75);user-select:none;touch-action:none;position:relative;z-index:2}
-.ptt-btn.talking{background:radial-gradient(circle at 38% 28%,#5eb0ff 0%,#2f8fdd 32%,#0f5fa0 65%,#082a52 100%);border-color:#3fa9ff;box-shadow:0 0 0 10px rgba(63,169,255,.22),0 0 38px rgba(63,169,255,.85);transform:scale(.94)}
-.ptt-btn .ico{font-size:31px}
-.chat-section{flex:1;min-height:220px;display:flex;flex-direction:column;background:linear-gradient(180deg,#071725,#030a11);border:1px solid rgba(255,255,255,.065);border-radius:19px;overflow:hidden;margin-top:1px;margin-bottom:10px}
-.chat-head{height:43px;min-height:43px;display:flex;align-items:center;justify-content:space-between;padding:0 13px;background:#081a29;border-bottom:1px solid rgba(255,255,255,.06)}
-.chat-title{font-size:12px;font-weight:900}
-.chat-state{font-size:8px;color:#46d879}
+@keyframes pttPulse{0%,100%{transform:scale(.95);opacity:.45}50%{transform:scale(1.08);opacity:.9}}
+@keyframes pttPulseFast{0%,100%{transform:scale(1);opacity:.7}50%{transform:scale(1.12);opacity:1}}
+.ptt-btn{width:90px;height:90px;border-radius:50%;background:radial-gradient(circle at 38% 28%,#ff5b50 0%,#ef3930 28%,#c6201d 62%,#721311 100%);border:4px solid #ed3932;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 0 0 5px rgba(231,76,60,.12),0 6px 20px rgba(0,0,0,.7);user-select:none;touch-action:none;position:relative;z-index:2}
+.ptt-btn.talking{background:radial-gradient(circle at 38% 28%,#5eb0ff 0%,#2f8fdd 32%,#0f5fa0 65%,#082a52 100%);border-color:#3fa9ff;box-shadow:0 0 0 8px rgba(63,169,255,.22),0 0 28px rgba(63,169,255,.8);transform:scale(.94)}
+.ptt-btn .ico{font-size:26px}
+.chat-section{flex:1;min-height:160px;display:flex;flex-direction:column;background:linear-gradient(180deg,#071725,#030a11);border:1px solid rgba(255,255,255,.065);border-radius:15px;overflow:hidden;margin-top:2px;margin-bottom:6px}
+.chat-head{height:34px;min-height:34px;display:flex;align-items:center;justify-content:space-between;padding:0 10px;background:#081a29;border-bottom:1px solid rgba(255,255,255,.06)}
+.chat-title{font-size:10px;font-weight:900}
+.chat-state{font-size:7px;color:#46d879}
 .chat-state.typing{color:#ffc44d;font-style:italic}
-.chat-messages{flex:1;min-height:0;padding:11px;overflow-y:auto}
-.chat-empty{height:100%;display:flex;align-items:center;justify-content:center;color:#536a80;font-size:10px}
-.msg-bubble{margin-bottom:8px;max-width:85%;word-wrap:break-word}
+.chat-messages{flex:1;min-height:0;padding:8px;overflow-y:auto}
+.chat-empty{height:100%;display:flex;align-items:center;justify-content:center;color:#536a80;font-size:9px}
+.msg-bubble{margin-bottom:6px;max-width:85%;word-wrap:break-word}
 .msg-bubble.mine{align-self:flex-start;margin-right:auto}
 .msg-bubble.other{align-self:flex-end;margin-left:auto}
-.msg-bubble .sender{font-size:9px;font-weight:800;color:#5eb0ff;margin-bottom:3px;display:block}
-.msg-bubble .text{background:#0d304b;border-radius:13px;padding:8px 11px;font-size:11px;line-height:1.5}
+.msg-bubble .sender{font-size:8px;font-weight:800;color:#5eb0ff;margin-bottom:2px;display:block}
+.msg-bubble .text{background:#0d304b;border-radius:11px;padding:6px 9px;font-size:10px;line-height:1.4}
 .msg-bubble.other .text{background:#10243a;color:#eaf4ff}
 .msg-bubble.mine .text{background:#0d5d91;color:#fff}
-.msg-bubble .time{font-size:8px;color:#7290a8;margin-top:3px;display:block;padding:0 4px}
-.msg-bubble.system{max-width:100%;text-align:center;margin:6px auto}
-.msg-bubble.system .text{background:transparent;color:#8ab4dc;font-size:9px;padding:4px;font-style:italic}
-.chat-input{min-height:57px;display:flex;align-items:center;gap:5px;padding:8px;background:#040b12;border-top:1px solid rgba(255,255,255,.07);position:relative;z-index:10;flex-shrink:0}
-.icon-btn{width:36px;height:36px;min-width:36px;border-radius:50%;background:#0b1d2d;color:#c9e4fa;font-size:16px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.07);flex-shrink:0}
+.msg-bubble .time{font-size:7px;color:#7290a8;margin-top:2px;display:block;padding:0 3px}
+.msg-bubble.system{max-width:100%;text-align:center;margin:4px auto}
+.msg-bubble.system .text{background:transparent;color:#8ab4dc;font-size:8px;padding:3px;font-style:italic}
+.chat-input{min-height:46px;display:flex;align-items:center;gap:4px;padding:6px;background:#040b12;border-top:1px solid rgba(255,255,255,.07);position:relative;z-index:10;flex-shrink:0}
+.chat-input.disabled-chat{opacity:.4;pointer-events:none}
+.icon-btn{width:32px;height:32px;min-width:32px;border-radius:50%;background:#0b1d2d;color:#c9e4fa;font-size:14px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.07);flex-shrink:0}
 .icon-btn.rec{background:#e52e32;color:#fff;animation:recPulse .9s infinite}
-@keyframes recPulse{0%,100%{box-shadow:0 0 0 0 rgba(231,76,60,.5)}50%{box-shadow:0 0 0 9px rgba(231,76,60,0)}}
-.chat-input input{flex:1;height:38px;background:#07131e;border:1px solid rgba(255,255,255,.07);border-radius:20px;padding:0 12px;color:#fff;font-size:12px;outline:none;min-width:0}
+@keyframes recPulse{0%,100%{box-shadow:0 0 0 0 rgba(231,76,60,.5)}50%{box-shadow:0 0 0 7px rgba(231,76,60,0)}}
+.chat-input input{flex:1;height:32px;background:#07131e;border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:0 10px;color:#fff;font-size:11px;outline:none;min-width:0}
 .chat-input input::placeholder{color:#5c7184}
 .chat-input input:focus{border-color:rgba(49,157,232,.5);background:#091824}
-.send-btn{width:36px;height:36px;border-radius:50%;background:linear-gradient(145deg,#1594ff,#0757d8);color:#fff;font-size:14px;display:none;align-items:center;justify-content:center;flex-shrink:0}
+.send-btn{width:32px;height:32px;border-radius:50%;background:linear-gradient(145deg,#1594ff,#0757d8);color:#fff;font-size:12px;display:none;align-items:center;justify-content:center;flex-shrink:0}
 .send-btn.show{display:flex}
-.emoji-picker{position:absolute;bottom:60px;left:8px;width:290px;max-height:220px;overflow-y:auto;background:#081b2b;border:1px solid rgba(65,158,225,.28);border-radius:14px;padding:8px;display:none;z-index:65;grid-template-columns:repeat(7,1fr);gap:4px}
+.emoji-picker{position:absolute;bottom:52px;left:6px;width:250px;max-height:180px;overflow-y:auto;background:#081b2b;border:1px solid rgba(65,158,225,.28);border-radius:12px;padding:6px;display:none;z-index:65;grid-template-columns:repeat(7,1fr);gap:3px}
 .emoji-picker.show{display:grid}
-.emoji-picker button{width:100%;aspect-ratio:1;border-radius:8px;background:transparent;color:#fff;font-size:20px;display:flex;align-items:center;justify-content:center}
+.emoji-picker button{width:100%;aspect-ratio:1;border-radius:6px;background:transparent;color:#fff;font-size:16px;display:flex;align-items:center;justify-content:center}
 .emoji-picker button:active{background:#0d304b}
-.attach-menu{position:absolute;bottom:60px;right:9px;width:210px;background:#081b2b;border:1px solid rgba(65,158,225,.28);border-radius:16px;padding:7px;display:none;z-index:60}
+.attach-menu{position:absolute;bottom:52px;right:6px;width:180px;background:#081b2b;border:1px solid rgba(65,158,225,.28);border-radius:12px;padding:5px;display:none;z-index:60}
 .attach-menu.show{display:block}
-.attach-item{width:100%;min-height:40px;padding:8px 10px;border-radius:10px;background:transparent;color:#eaf4ff;text-align:right;font-size:11px;display:flex;align-items:center;gap:9px}
+.attach-item{width:100%;min-height:34px;padding:6px 8px;border-radius:8px;background:transparent;color:#eaf4ff;text-align:right;font-size:10px;display:flex;align-items:center;gap:7px}
 .attach-item:active{background:#0d304b}
-.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(520px,100%);height:70px;background:rgba(3,9,15,.98);border-top:1px solid rgba(255,255,255,.07);display:grid;grid-template-columns:repeat(4,1fr);z-index:40;backdrop-filter:blur(18px)}
-.nav-item{position:relative;background:transparent;color:#52687c;font-size:9px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
-.nav-item .ico{font-size:20px;line-height:20px}
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(520px,100%);height:60px;background:rgba(3,9,15,.98);border-top:1px solid rgba(255,255,255,.07);display:grid;grid-template-columns:repeat(4,1fr);z-index:40;backdrop-filter:blur(12px)}
+.nav-item{position:relative;background:transparent;color:#52687c;font-size:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px}
+.nav-item .ico{font-size:18px;line-height:18px}
 .nav-item.active{color:#3fa9ff}
-.nav-badge{position:absolute;top:7px;right:calc(50% - 22px);background:#ed3940;color:#fff;font-size:8px;font-weight:900;min-width:17px;height:17px;border-radius:9px;display:none;align-items:center;justify-content:center}
+.nav-badge{position:absolute;top:5px;right:calc(50% - 18px);background:#ed3940;color:#fff;font-size:7px;font-weight:900;min-width:14px;height:14px;border-radius:7px;display:none;align-items:center;justify-content:center}
 .nav-badge.show{display:flex}
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:80;display:none;align-items:flex-end;justify-content:center;backdrop-filter:blur(7px)}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:80;display:none;align-items:flex-end;justify-content:center;backdrop-filter:blur(5px)}
 .modal.show{display:flex}
-.modal-box{width:min(520px,100%);max-height:86vh;overflow-y:auto;background:#071827;border-radius:22px 22px 0 0;padding:17px;border:1px solid rgba(70,157,218,.2)}
-.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:13px}
-.modal-head h3{font-size:15px;color:#fff}
-.modal-head .close{width:33px;height:33px;border-radius:10px;background:#0b2134;color:#fff;font-size:19px}
-.modal-content{color:#eaf4ff;font-size:12px;line-height:1.7}
-.field{margin-bottom:11px}
-.field label{display:block;font-size:11px;color:#7894ad;margin-bottom:5px}
-.field input{width:100%;height:45px;background:#030b12;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:0 12px;color:#fff;font-size:14px;outline:none;text-align:center}
-.btn{width:100%;padding:12px;border-radius:12px;background:linear-gradient(135deg,#168cff,#0754d0);color:#fff;font-weight:800;font-size:13px;margin-top:6px}
+.modal-box{width:min(520px,100%);max-height:82vh;overflow-y:auto;background:#071827;border-radius:18px 18px 0 0;padding:14px;border:1px solid rgba(70,157,218,.2)}
+.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.modal-head h3{font-size:13px;color:#fff}
+.modal-head .close{width:28px;height:28px;border-radius:8px;background:#0b2134;color:#fff;font-size:16px}
+.modal-content{color:#eaf4ff;font-size:11px;line-height:1.5}
+.field{margin-bottom:9px}
+.field label{display:block;font-size:10px;color:#7894ad;margin-bottom:4px}
+.field input{width:100%;height:38px;background:#030b12;border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:0 10px;color:#fff;font-size:12px;outline:none;text-align:center}
+.btn{width:100%;padding:10px;border-radius:10px;background:linear-gradient(135deg,#168cff,#0754d0);color:#fff;font-weight:800;font-size:11px;margin-top:5px}
 .btn.success{background:linear-gradient(135deg,#1b9b54,#0d7035)}
 .btn.danger{background:linear-gradient(135deg,#ce2d40,#8b1928)}
 .btn.ghost{background:#0a2134;border:1px solid rgba(62,157,224,.22);color:#eaf4ff}
-.member-row{display:flex;align-items:center;gap:8px;padding:10px;background:#04101a;border-radius:12px;margin-bottom:6px;font-size:11px}
-.member-row .avatar{width:35px;height:35px;border-radius:50%;background:linear-gradient(135deg,#104e78,#092b45);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.member-row{display:flex;align-items:center;gap:6px;padding:8px;background:#04101a;border-radius:10px;margin-bottom:5px;font-size:10px}
+.member-row .avatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#104e78,#092b45);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
 .member-row .info{flex:1;min-width:0}
-.member-row .name{font-weight:700;font-size:12px;color:#fff}
-.member-row .role{font-size:9px;color:#82a0b9;margin-top:2px}
-.member-row .actions{display:flex;gap:4px}
-.member-row .mini-btn{padding:5px 8px;border-radius:8px;background:#0d5d91;color:#fff;font-size:9px;font-weight:700}
+.member-row .name{font-weight:700;font-size:11px;color:#fff}
+.member-row .role{font-size:8px;color:#82a0b9;margin-top:1px}
+.member-row .actions{display:flex;gap:3px}
+.member-row .mini-btn{padding:4px 6px;border-radius:6px;background:#0d5d91;color:#fff;font-size:8px;font-weight:700}
 .member-row .mini-btn.danger{background:#8b1928}
-.role-badge{display:inline-block;padding:2px 7px;border-radius:9px;font-size:9px;font-weight:700}
+.role-badge{display:inline-block;padding:1px 5px;border-radius:7px;font-size:8px;font-weight:700}
 .role-badge.owner{background:rgba(241,196,15,.2);color:#f1c40f}
 .role-badge.admin{background:rgba(73,170,255,.25);color:#49aaff}
 .role-badge.member{background:rgba(139,157,180,.2);color:#8b9db4}
-.rec-bar{position:fixed;bottom:82px;left:50%;transform:translateX(-50%);background:rgba(224,42,47,.97);color:#fff;padding:10px 18px;border-radius:22px;font-size:12px;font-weight:800;display:none;align-items:center;gap:9px;z-index:95}
+.rec-bar{position:fixed;bottom:70px;left:50%;transform:translateX(-50%);background:rgba(224,42,47,.97);color:#fff;padding:8px 14px;border-radius:18px;font-size:10px;font-weight:800;display:none;align-items:center;gap:7px;z-index:95}
 .rec-bar.show{display:flex}
-.rec-dot{width:9px;height:9px;background:#fff;border-radius:50%;animation:recPulse .8s infinite}
-.toast{position:fixed;left:50%;bottom:82px;transform:translateX(-50%) translateY(15px);padding:10px 17px;background:#0b2033;color:#fff;border:1px solid rgba(55,157,228,.32);border-radius:22px;font-size:11px;z-index:100;opacity:0;transition:.25s;pointer-events:none;max-width:90%;text-align:center}
+.rec-dot{width:7px;height:7px;background:#fff;border-radius:50%;animation:recPulse .8s infinite}
+.toast{position:fixed;left:50%;bottom:70px;transform:translateX(-50%) translateY(12px);padding:8px 14px;background:#0b2033;color:#fff;border:1px solid rgba(55,157,228,.32);border-radius:18px;font-size:10px;z-index:100;opacity:0;transition:.25s;pointer-events:none;max-width:90%;text-align:center}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-.empty-state{padding:25px 15px;text-align:center;color:#60788e;font-size:11px;line-height:1.7}
-.hidden{display:none!important}
+.empty-state{padding:18px 10px;text-align:center;color:#60788e;font-size:10px;line-height:1.5}
 </style>
 </head>
 <body>
@@ -274,10 +275,10 @@ button{border:0;cursor:pointer;font-family:inherit}
     <div class="chat-empty">لا توجد رسائل حالياً</div>
   </div>
 
-  <div class="chat-input" id="chatInputRow">
+  <div class="chat-input disabled-chat" id="chatInputRow">
     <button class="icon-btn" onclick="toggleEmojiPicker(event)" title="الوجوه">😊</button>
     <button class="icon-btn" onclick="toggleAttachMenu(event)" title="مرفقات">📎</button>
-    <button class="icon-btn" id="micBtn" title="اضغط مطولاً للتسجيل">🎙️</button>
+    <button class="icon-btn" id="micBtn" title="التسجيل">🎙️</button>
 
     <input id="chatInput" placeholder="اكتب رسالة..." autocomplete="off"
       onkeydown="if(event.key==='Enter'){event.preventDefault();sendMessage()}"
@@ -388,7 +389,7 @@ button{border:0;cursor:pointer;font-family:inherit}
       <input id="searchFingerprint" placeholder="S458" maxlength="4" style="text-transform:uppercase">
     </div>
     <button class="btn" onclick="searchUser()">🔍 بحث</button>
-    <div id="searchResults" class="modal-content" style="margin-top:12px"></div>
+    <div id="searchResults" class="modal-content" style="margin-top:10px"></div>
   </div>
 </div>
 
@@ -458,8 +459,8 @@ button{border:0;cursor:pointer;font-family:inherit}
 </div>
 
 <input type="file" id="fileInput" hidden multiple>
-
 <div class="toast" id="toast"></div>
+
 <script>
 "use strict";
 
@@ -469,15 +470,12 @@ const L = window.LivekitClient;
 const waves = [];
 const WAVE_NAMES = [
   "موجة القيادة", "موجة العمليات", "موجة الطوارئ", "موجة المساندة",
-  "موجة الاستطلاع", "موجة الإمداد", "موجة الاتصال", "موجة الدعم",
-  "موجة الأمن", "موجة الحماية", "موجة الرصد", "موجة التدخل",
-  "موجة الإخلاء", "موجة الإسعاف", "موجة الإنقاذ", "موجة الحراسة",
-  "موجة المتابعة", "موجة التنسيق", "موجة الاستجابة", "موجة المراقبة"
+  "موجة الاستطلاع", "موجة الإمداد", "موجة الاتصال", "موجة الدعم"
 ];
-for(let i = 0; i < 60; i++){
+for(let i = 0; i < 30; i++){
   const letter = String.fromCharCode(65 + Math.floor(Math.random() * 26));
   const numbers = Math.floor(100 + Math.random() * 900);
-  waves.push({code:letter+numbers,name:i<WAVE_NAMES.length?WAVE_NAMES[i]:"موجة "+(i+1),number:i+1});
+  waves.push({code:letter+numbers, name:i<WAVE_NAMES.length?WAVE_NAMES[i]:"موجة "+(i+1), number:i+1});
 }
 
 let waveIndex = 0;
@@ -486,21 +484,17 @@ let deviceId = localStorage.getItem("radioDeviceId") || "";
 let waveFingerprint = localStorage.getItem("radioWaveFingerprint") || "";
 let activeRoomId = localStorage.getItem("radioActiveRoomId") || "";
 let commMode = localStorage.getItem("radioCommMode") || "wave";
+
 let livekitRoom = null;
-let localAudioTrack = null;
-let isTalking = false;
 let waveRoom = null;
+let isTalking = false;
 let waveLocalAudioTrack = null;
 let naturalOn = true;
 let radioOn = false;
-let radioPreset = "basic";
 let roomsCache = [];
 let membersCache = [];
 let myRole = null;
 let myPersonalCode = null;
-let audioContext = null;
-let mediaStreamDest = null;
-let filterChain = null;
 let rawMicStream = null;
 let mediaRecorder = null;
 let recordedChunks = [];
@@ -510,38 +504,21 @@ let isRecording = false;
 
 const $ = id => document.getElementById(id);
 
-function playDeviceBeep(frequency = 1200, duration = 0.15){
-  try{
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    if(audioCtx.state === "suspended") audioCtx.resume();
-    const oscillator = audioCtx.createOscillator();
-    const gainNode = audioCtx.createGain();
-    oscillator.type = 'sine';
-    oscillator.frequency.setValueAtTime(frequency, audioCtx.currentTime);
-    gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
-    oscillator.connect(gainNode);
-    gainNode.connect(audioCtx.destination);
-    oscillator.start();
-    oscillator.stop(audioCtx.currentTime + duration);
-    setTimeout(() => { try{ audioCtx.close(); }catch(e){} }, (duration + 0.1) * 1000);
-  }catch(e){ console.error("Beep error:", e); }
-}
-function playStartBeep(){ playDeviceBeep(1400, 0.12); }
-function playStopBeep(){ playDeviceBeep(800, 0.15); }
-
 function toast(message){
   const el = $("toast");
   if(!el) return;
   el.textContent = message;
   el.classList.add("show");
   clearTimeout(el._timer);
-  el._timer = setTimeout(() => el.classList.remove("show"), 2800);
+  el._timer = setTimeout(() => el.classList.remove("show"), 2500);
 }
 
 function escapeHtml(value){
-  return String(value ?? "").replace(/[&<>"']/g,m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
+  return String(value ?? "").replace(/[&<>"']/g,m => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+  }[m]));
 }
+
 function formatDuration(seconds){
   const s = Math.max(0, Math.floor(seconds));
   return String(Math.floor(s/60)).padStart(2,"0") + ":" + String(s%60).padStart(2,"0");
@@ -552,56 +529,22 @@ async function initBattery(){
     if(!navigator.getBattery) return;
     const battery = await navigator.getBattery();
     const update = () => {
-      const value = Math.round(battery.level * 100);
-      if($("batteryVal")) $("batteryVal").textContent = value + "%" + (battery.charging ? " ⚡" : "");
+      if($("batteryVal")) $("batteryVal").textContent = Math.round(battery.level * 100) + "%";
     };
     update();
-    battery.addEventListener("levelchange", update);
-    battery.addEventListener("chargingchange", update);
   }catch(e){}
 }
 
 function updateNetwork(){
-  const el = $("networkVal");
-  const iconEl = $("networkIcon");
-  const pill = $("statusPill");
-  const dot = $("statusDot");
-  const label = $("statusLabel");
-  if(!el) return;
-  const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-  let type = "--", strength = "good", icon = "📶";
-  if(!navigator.onLine){ type = "غير متصل"; strength = "bad"; icon = "📵"; }
-  else {
-    const raw = (connection?.effectiveType || "").toLowerCase();
-    const connType = (connection?.type || "").toLowerCase();
-    let isWifi = false;
-    if(connType === "wifi" || connType === "ethernet") isWifi = true;
-    else if(connType === "cellular") isWifi = false;
-    else isWifi = (raw === "4g" || raw === "5g");
-    if(isWifi){ icon = "📶"; type = "WiFi"; strength = "good"; }
-    else {
-      icon = "📡";
-      if(raw === "4g"){ type = "4G"; strength = "good"; }
-      else if(raw === "3g"){ type = "3G"; strength = "weak"; }
-      else if(raw === "2g" || raw === "slow-2g"){ type = "2G"; strength = "weak"; }
-      else { type = "بيانات"; strength = "good"; }
-    }
-  }
-  el.textContent = type;
-  if(iconEl) iconEl.textContent = icon;
-  if(pill) pill.classList.remove("weak","bad");
-  if(strength === "weak") pill?.classList.add("weak");
-  if(strength === "bad") pill?.classList.add("bad");
-  if(strength === "good"){ if(label) label.textContent = "متصل"; if(dot) dot.style.background = "#39d353"; }
-  else if(strength === "weak"){ if(label) label.textContent = "شبكة ضعيفة"; if(dot) dot.style.background = "#ffc44d"; }
-  else { if(label) label.textContent = "غير متصل"; if(dot) dot.style.background = "#ff4d5e"; }
+  if($("networkVal")) $("networkVal").textContent = navigator.onLine ? "متصل" : "غير متصل";
 }
 
 function updateServerStatus(){
   const value = $("serverVal");
   if(!value) return;
   const isConnected = (commMode === "room" && livekitRoom && livekitRoom.state === "connected") ||
-                      (commMode === "wave" && waveRoom && waveRoom.state === "connected");
+                      (commMode === "wave" && waveRoom && waveRoom.state === "connected") ||
+                      navigator.onLine;
   value.textContent = isConnected ? "متصل" : "غير متصل";
   value.style.color = isConnected ? "#39d353" : "#ff4d5e";
 }
@@ -610,51 +553,36 @@ async function ensureDevice(){
   try{
     const response = await fetch(API + "/api/device", {
       method:"POST",
-      headers:{"Content-Type":"application/json","x-device-id":deviceId},
+      headers:{ "Content-Type":"application/json", "x-device-id":deviceId },
       body:JSON.stringify({ deviceId })
     });
     if(!response.ok) return;
     const data = await response.json();
-    if(data.deviceId){ deviceId = data.deviceId; localStorage.setItem("radioDeviceId", deviceId); }
+    if(data.deviceId){
+      deviceId = data.deviceId;
+      localStorage.setItem("radioDeviceId", deviceId);
+    }
     if(data.waveFingerprint){
       waveFingerprint = data.waveFingerprint;
       localStorage.setItem("radioWaveFingerprint", waveFingerprint);
-      await createWaveChannel();
     }
-  }catch(e){ console.error(e); }
-}
-
-async function createWaveChannel(){
-  if(!waveFingerprint) return;
-  try{
-    await fetch(API + "/api/wave-channels/create", {
-      method:"POST",
-      headers:{"Content-Type":"application/json","x-device-id":deviceId},
-      body:JSON.stringify({ fingerprint: waveFingerprint })
-    });
   }catch(e){}
 }
 
-/* ============ 🆕 تبديل وضع الاتصال ============ */
 async function setCommMode(mode){
   if(mode === commMode) return;
-
-  if(isTalking) await stopTalking();
+  if(isTalking) stopTalking();
 
   if(mode === "room"){
     if(waveRoom){ try{ await waveRoom.disconnect(); }catch(e){} waveRoom = null; }
-    /* 🆕 تعطيل المايك في وضع الغرفة */
     document.querySelector(".voice-ptt")?.classList.add("disabled");
-    /* 🆕 تفعيل المحادثة */
     document.getElementById("chatInputRow")?.classList.remove("disabled-chat");
-    toast("🏠 وضع الغرفة — استخدم المحادثة");
+    toast("🏠 وضع الغرفة (مفعل للمراسلة)");
   } else {
     if(livekitRoom){ try{ await livekitRoom.disconnect(); }catch(e){} livekitRoom = null; }
-    /* 🆕 تفعيل المايك في وضع الموجة */
     document.querySelector(".voice-ptt")?.classList.remove("disabled");
-    /* 🆕 تعطيل المحادثة */
     document.getElementById("chatInputRow")?.classList.add("disabled-chat");
-    toast("📻 وضع الموجة — استخدم المايك");
+    toast("📻 وضع الموجة (مفعل للحديث المباشر)");
   }
 
   commMode = mode;
@@ -665,7 +593,6 @@ async function setCommMode(mode){
   updateServerStatus();
 }
 
-/* ============ جلب الغرف ============ */
 async function loadRooms(){
   try{
     const response = await fetch(API + "/api/rooms", { headers:{ "x-device-id":deviceId } });
@@ -674,886 +601,210 @@ async function loadRooms(){
     roomsCache = Array.isArray(data.rooms) ? data.rooms : [];
     renderRoomsList();
     updateRoomsBadge();
-  }catch(e){ roomsCache = []; renderRoomsList(); }
+  }catch(e){ roomsCache = []; }
 }
 
-/* ============ اتصال LiveKit (غرفة) ============ */
 async function connectLiveKit(){
   try{
-    if(!L) return false;
-    if(!activeRoomId || activeRoomId === "") return false;
+    if(!L || !activeRoomId) return false;
     if(livekitRoom && livekitRoom.state === "connected") return true;
-    const response = await fetch(API + "/token?room=" + encodeURIComponent(activeRoomId), { headers:{ "x-device-id":deviceId } });
-    if(!response.ok) throw new Error("token");
-    const data = await response.json();
-    if(!data.token || !data.url) throw new Error("token-data");
-    livekitRoom = new L.Room({ adaptiveStream:true, dynacast:true });
-    livekitRoom.on(L.RoomEvent.TrackSubscribed, async (track) => {
-      try{
-        if(track.kind === L.Track.Kind.Audio){
-          const element = track.attach();
-          element.autoplay = true;
-          element.playsInline = true;
-          element.style.display = "none";
-          document.body.appendChild(element);
-          try{
-            const devices = await navigator.mediaDevices.enumerateDevices();
-            const speakers = devices.filter(d => d.kind === "audiooutput");
-            if(speakers.length > 0 && element.setSinkId){
-              await element.setSinkId(speakers[speakers.length - 1].deviceId);
-            }
-          }catch(err){}
-        }
-      }catch(e){}
+
+    const response = await fetch(API + "/token?room=" + encodeURIComponent(activeRoomId), {
+      headers:{ "x-device-id":deviceId }
     });
+    if(!response.ok) return false;
+    const data = await response.json();
+
+    livekitRoom = new L.Room();
     livekitRoom.on(L.RoomEvent.DataReceived, (payload) => {
       try{
         const text = new TextDecoder().decode(payload);
         const data = JSON.parse(text);
         if(data.senderDeviceId === deviceId) return;
         if(data.type === "radio-chat") appendChatBubble(data.text, data.name, false, data.time);
-        if(data.type === "radio-typing") showTypingIndicator(true, data.name);
-        if(data.type === "radio-file") appendChatBubble("📎 " + (data.fileName || "ملف"), data.name, false, null);
-        if(data.type === "radio-voice") appendChatBubble("🎙️ رسالة صوتية", data.name, false, null);
-        if(data.type === "radio-system") appendSystemMessage(data.text);
       }catch(e){}
     });
-    livekitRoom.on(L.RoomEvent.Disconnected, () => updateServerStatus());
+
     await livekitRoom.connect(data.url, data.token);
     updateServerStatus();
-    toast("✅ تم الاتصال بالغرفة");
     return true;
   }catch(e){
-    console.error(e);
     livekitRoom = null;
     updateServerStatus();
     return false;
   }
 }
 
-/* ============ اتصال الموجة ============ */
 async function connectWaveChannel(){
   try{
-    if(!L) return false;
-    if(!waveFingerprint || waveFingerprint === "") return false;
+    if(!L || !waveFingerprint) return false;
     if(waveRoom && waveRoom.state === "connected") return true;
-    const response = await fetch(API + "/wave-token?wave=" + encodeURIComponent(waveFingerprint), { headers:{ "x-device-id":deviceId } });
+
+    const response = await fetch(API + "/wave-token?wave=" + encodeURIComponent(waveFingerprint), {
+      headers:{ "x-device-id":deviceId }
+    });
     if(!response.ok) return false;
     const data = await response.json();
-    if(!data.token || !data.url) return false;
-    waveRoom = new L.Room({ adaptiveStream:true, dynacast:true });
-    waveRoom.on(L.RoomEvent.TrackSubscribed, async (track) => {
-      try{
-        if(track.kind === L.Track.Kind.Audio){
-          const element = track.attach();
-          element.autoplay = true;
-          element.playsInline = true;
-          element.style.display = "none";
-          document.body.appendChild(element);
-          try{
-            const devices = await navigator.mediaDevices.enumerateDevices();
-            const speakers = devices.filter(d => d.kind === "audiooutput");
-            if(speakers.length > 0 && element.setSinkId){
-              await element.setSinkId(speakers[speakers.length - 1].deviceId);
-            }
-          }catch(err){}
-        }
-      }catch(e){}
-    });
-    waveRoom.on(L.RoomEvent.DataReceived, (payload) => {
-      try{
-        const text = new TextDecoder().decode(payload);
-        const data = JSON.parse(text);
-        if(data.senderDeviceId === deviceId) return;
-        if(data.type === "radio-chat") appendChatBubble(data.text, data.name, false, data.time);
-      }catch(e){}
-    });
+
+    waveRoom = new L.Room();
     await waveRoom.connect(data.url, data.token);
+    updateServerStatus();
     return true;
-  }catch(e){ waveRoom = null; return false; }
+  }catch(e){
+    waveRoom = null;
+    updateServerStatus();
+    return false;
+  }
 }
 
-async function loadMyInfo(){
-  try{
-    if(!activeRoomId) return;
-    const response = await fetch(API + "/api/rooms/" + encodeURIComponent(activeRoomId) + "/members", { headers:{ "x-device-id":deviceId } });
-    if(!response.ok) return;
-    const data = await response.json();
-    membersCache = Array.isArray(data.members) ? data.members : [];
-    const me = membersCache.find(m => m.deviceId === deviceId);
-    if(me){
-      myRole = me.role || null;
-      if(me.personalCode && (myRole === "owner" || myRole === "admin")){
-        myPersonalCode = me.personalCode;
-        $("myCodeCard")?.classList.add("show");
-        if($("myCodeValue")) $("myCodeValue").textContent = me.personalCode;
-        if($("myCodeRole")) $("myCodeRole").textContent = myRole === "owner" ? "👑 مالك الغرفة" : "🛡️ مشرف";
-      }
-    }
-    const room = roomsCache.find(r => r.id === activeRoomId);
-    if(room){
-      if($("codeRoomName")) $("codeRoomName").textContent = room.name || "لا توجد غرفة";
-      if($("codeRoomNum")) $("codeRoomNum").textContent = "رقم الغرفة: " + (room.roomNumber || "-");
-    }
-  }catch(e){}
-}
-
-function buildRadioFilter(source){
-  if(!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
-  if(audioContext.state === "suspended") audioContext.resume().catch(()=>{});
-  const input = audioContext.createMediaStreamSource(source);
-  const high = audioContext.createBiquadFilter(); high.type = "highpass"; high.frequency.value = 320;
-  const low = audioContext.createBiquadFilter(); low.type = "lowpass"; low.frequency.value = 2800;
-  const peak = audioContext.createBiquadFilter(); peak.type = "peaking"; peak.frequency.value = 1700; peak.Q.value = 3; peak.gain.value = 6;
-  const compressor = audioContext.createDynamicsCompressor();
-  compressor.threshold.value = -24; compressor.knee.value = 10; compressor.ratio.value = 6; compressor.attack.value = 0.003; compressor.release.value = 0.12;
-  const shaper = audioContext.createWaveShaper();
-  const n = 1024; const curve = new Float32Array(n);
-  for(let i = 0; i < n; i++){ const x = (i * 2) / n - 1; curve[i] = Math.tanh(x * 2.5); }
-  shaper.curve = curve;
-  mediaStreamDest = audioContext.createMediaStreamDestination();
-  input.connect(high).connect(low).connect(peak).connect(compressor).connect(shaper).connect(mediaStreamDest);
-  filterChain = { input, high, low, peak, compressor, shaper };
-  return mediaStreamDest.stream;
-}
-function cleanupFilter(){
-  try{ if(filterChain){ filterChain.input.disconnect(); filterChain.high.disconnect(); filterChain.low.disconnect(); filterChain.peak.disconnect(); filterChain.compressor.disconnect(); filterChain.shaper.disconnect(); } }catch(e){}
-  filterChain = null; mediaStreamDest = null;
-}
-
-/* ============ زر PTT ============ */
 const pttBtn = $("pttBtn");
 const pttRing = $("pttRing");
-let activePointerId = null;
 
 if(pttBtn){
-  pttBtn.addEventListener("pointerdown", (e) => {
+  pttBtn.addEventListener("pointerdown", async (e) => {
     e.preventDefault();
-    e.stopPropagation();
-    if(activePointerId !== null) return;
-    activePointerId = e.pointerId;
-    try{ pttBtn.setPointerCapture(e.pointerId); }catch(x){}
-    startTalking(e);
+    if(commMode === "room"){ toast("⚠️ المايك مفعل في وضع الموجة فقط"); return; }
+    if(isTalking) return;
+    isTalking = true;
+    pttBtn.classList.add("talking");
+    pttRing.classList.add("talking");
+    $("waveVisualLeft")?.classList.add("active");
+    $("waveVisualRight")?.classList.add("active");
+
+    try{
+      await connectWaveChannel();
+      rawMicStream = await navigator.mediaDevices.getUserMedia({ audio:true });
+      toast("📻 تتحدث عبر الموجة " + currentWave.code);
+    }catch(err){
+      toast("⚠️ خطأ في الميكروفون");
+      stopTalking();
+    }
   });
+
   pttBtn.addEventListener("pointerup", (e) => {
     e.preventDefault();
-    e.stopPropagation();
-    if(activePointerId !== e.pointerId) return;
-    activePointerId = null;
-    stopTalking(e);
+    stopTalking();
   });
-  pttBtn.addEventListener("pointercancel", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if(activePointerId !== e.pointerId) return;
-    activePointerId = null;
-    stopTalking(e);
-  });
-  pttBtn.addEventListener("pointerleave", (e) => {
-    if(activePointerId !== e.pointerId) return;
-    if(e.buttons === 0){
-      activePointerId = null;
-      stopTalking(e);
-    }
-  });
-  pttBtn.addEventListener("contextmenu", e => e.preventDefault());
 }
 
-window.addEventListener("pointerup", (e) => {
-  if(activePointerId !== null && e.pointerId === activePointerId){
-    activePointerId = null;
-    if(isTalking) stopTalking(e);
-  }
-});
-window.addEventListener("blur", () => {
-  if(isTalking){ activePointerId = null; stopTalking(); }
-});
-
-/* ============ بدء/إيقاف التحدث ============ */
-async function startTalking(event){
-  if(event) event.preventDefault();
-  if(isTalking) return;
-
-  /* 🆕 تحقق من الوضع */
-  if(commMode === "room"){
-    toast("🏠 استخدم المحادثة في وضع الغرفة");
-    return;
-  }
-
-  if(radioOn) playStartBeep();
-
-  isTalking = true;
-  pttBtn.classList.add("talking");
-  pttRing.classList.add("talking");
-  $("waveVisualLeft")?.classList.add("active");
-  $("waveVisualRight")?.classList.add("active");
-
-  try{
-    /* وضع الموجة ← نداء عبر بصمة الموجة */
-    if(waveFingerprint){
-      const waveConnected = await connectWaveChannel();
-      if(waveConnected && waveRoom && waveRoom.state === "connected"){
-        rawMicStream = await navigator.mediaDevices.getUserMedia({
-          audio:{ echoCancellation:true, noiseSuppression:true, autoGainControl:true }
-        });
-        let stream = rawMicStream;
-        if(radioOn) stream = buildRadioFilter(rawMicStream);
-        waveLocalAudioTrack = await L.LocalAudioTrack.createTrack(stream.getAudioTracks()[0]);
-        await waveRoom.localParticipant.publishTrack(waveLocalAudioTrack);
-        waveLocalAudioTrack.enable();
-        toast("📻 تتحدث في الموجة");
-        return;
-      }
-    }
-
-    toast("⚠️ قناة الموجة غير متاحة");
-    await stopTalking();
-
-  }catch(error){
-    console.error("Start talking error:", error);
-    toast("⚠️ تعذر تشغيل الميكروفون");
-    await stopTalking();
-  }
-}
-
-async function stopTalking(event){
-  if(event){ event.preventDefault(); event.stopPropagation(); }
-
-  if(radioOn) playStopBeep();
-
-  /* 🆕 إيقاف فوري */
-  isTalking = false;
-
-  /* إيقاف الموجة */
-  if(waveLocalAudioTrack && waveRoom){
-    try{ await waveRoom.localParticipant.unpublishTrack(waveLocalAudioTrack); }catch(e){}
-    try{ waveLocalAudioTrack.stop(); }catch(e){}
-    waveLocalAudioTrack = null;
-  }
-  /* إيقاف الغرفة */
-  if(localAudioTrack && livekitRoom){
-    try{ await livekitRoom.localParticipant.unpublishTrack(localAudioTrack); }catch(e){}
-    try{ localAudioTrack.stop(); }catch(e){}
-    localAudioTrack = null;
-  }
-  /* إيقاف الميكروفون */
+function stopTalking(){
   if(rawMicStream){
-    try{ rawMicStream.getTracks().forEach(t => t.stop()); }catch(e){}
+    rawMicStream.getTracks().forEach(t => t.stop());
     rawMicStream = null;
   }
-  cleanupFilter();
-  pttBtn.classList.remove("talking");
-  pttRing.classList.remove("talking");
+  isTalking = false;
+  pttBtn?.classList.remove("talking");
+  pttRing?.classList.remove("talking");
   $("waveVisualLeft")?.classList.remove("active");
   $("waveVisualRight")?.classList.remove("active");
 }
 
 function setVoiceMode(mode){
-  if(mode === "natural" && naturalOn && !radioOn) return;
-  if(mode === "radio" && radioOn && !naturalOn) return;
-  if(isTalking) stopTalking();
-  cleanupFilter();
-  if(mode === "natural"){
-    naturalOn = true; radioOn = false;
-    $("voiceNatural")?.classList.add("active");
-    $("voiceRadio")?.classList.remove("active");
-    if($("naturalState")) $("naturalState").textContent = "مفعل";
-    if($("radioState")) $("radioState").textContent = "متوقف";
-    toast("🎧 تم تفعيل الصوت الطبيعي");
-  }
-  if(mode === "radio"){
-    naturalOn = false; radioOn = true;
-    $("voiceNatural")?.classList.remove("active");
-    $("voiceRadio")?.classList.add("active");
-    if($("naturalState")) $("naturalState").textContent = "متوقف";
-    if($("radioState")) $("radioState").textContent = "مفعل";
-    toast("📻 تم تفعيل الصوت اللاسلكي");
-    openPanel("radioPresetsPanel");
-  }
+  naturalOn = (mode === "natural");
+  radioOn = (mode === "radio");
+  $("voiceNatural")?.classList.toggle("active", naturalOn);
+  $("voiceRadio")?.classList.toggle("active", radioOn);
+  if($("naturalState")) $("naturalState").textContent = naturalOn ? "مفعل" : "متوقف";
+  if($("radioState")) $("radioState").textContent = radioOn ? "مفعل" : "متوقف";
+  toast(naturalOn ? "🎧 الصوت الطبيعي" : "📻 الصوت اللاسلكي");
 }
-function selectPreset(preset){ radioPreset = preset; closePanel("radioPresetsPanel"); toast("📻 تم اختيار إعداد الصوت"); }
-function testVoicePreset(){ toast("🔊 اختبار الصوت اللاسلكي"); }
 
 function changeWave(direction){
-  waveIndex += direction;
-  if(waveIndex < 0) waveIndex = waves.length - 1;
-  if(waveIndex >= waves.length) waveIndex = 0;
+  waveIndex = (waveIndex + direction + waves.length) % waves.length;
   currentWave = waves[waveIndex];
-  updateWaveUI();
-  toast("📻 " + currentWave.code);
-}
-function updateWaveUI(){
   if($("waveCode")) $("waveCode").textContent = currentWave.code;
   if($("waveNameDisplay")) $("waveNameDisplay").textContent = currentWave.name;
   if($("waveNum")) $("waveNum").textContent = currentWave.number;
+  toast("📻 " + currentWave.code);
 }
 
-function openWaveChannel(){
-  closeAllPanels();
-  const content = $("settingsContent");
-  if(!content) return;
-  content.innerHTML = `
-    <div class="member-row">
-      <div class="avatar">📻</div>
-      <div class="info">
-        <div class="name">قناتي اللاسلكية</div>
-        <div class="role" style="font-family:monospace;color:#5eb0ff;font-size:18px;letter-spacing:3px">${escapeHtml(waveFingerprint || "---")}</div>
-      </div>
-    </div>
-    <div style="margin-top:12px;padding:12px;background:#0a1828;border-radius:12px;font-size:11px;color:#9ab0c6;line-height:1.8">
-      📌 شارك هذا الرقم مع من تريد التحدث معهم.
-    </div>
-    <button class="btn" onclick="copyWaveCode()">📋 نسخ رقم القناة</button>
-    <button class="btn ghost" onclick="shareWaveCode()">📤 مشاركة</button>
-  `;
-  $("settingsPanel")?.classList.add("show");
-}
-async function copyWaveCode(){
-  if(!waveFingerprint) return;
-  try{ await navigator.clipboard.writeText(waveFingerprint); toast("✅ تم النسخ"); }catch(e){ toast("⚠️ تعذر النسخ"); }
-}
-async function shareWaveCode(){
-  if(!waveFingerprint) return;
-  const text = "رقم قناتي: " + waveFingerprint;
-  try{
-    if(navigator.share) await navigator.share({ text });
-    else { await navigator.clipboard.writeText(text); toast("✅ تم النسخ"); }
-  }catch(e){}
-}
-
-let lastPendingIds = [];
-async function checkWaveRequests(){
-  if(!waveFingerprint) return;
-  try{
-    const response = await fetch(API + "/api/wave-channels/" + encodeURIComponent(waveFingerprint) + "/pending", { headers:{ "x-device-id":deviceId } });
-    if(!response.ok) return;
-    const data = await response.json();
-    const pending = data.pendingRequests || [];
-    const newRequests = pending.filter(p => !lastPendingIds.includes(p.deviceId));
-    if(newRequests.length > 0){
-      showJoinRequest(newRequests[0]);
-      lastPendingIds = pending.map(p => p.deviceId);
-    }
-  }catch(e){}
-}
-
-function showJoinRequest(request){
-  const content = $("joinRequestContent");
-  if(!content) return;
-  content.innerHTML = `
-    <div class="member-row">
-      <div class="avatar">👤</div>
-      <div class="info">
-        <div class="name">${escapeHtml(request.name || "عضو جديد")}</div>
-        <div class="role">يريد الانضمام إلى قناتك</div>
-      </div>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px">
-      <button class="btn success" onclick="approveJoin('${escapeHtml(request.deviceId)}')">✅ موافق</button>
-      <button class="btn danger" onclick="rejectJoin('${escapeHtml(request.deviceId)}')">❌ إلغاء</button>
-    </div>
-  `;
-  openPanel("joinRequestPanel");
-}
-async function approveJoin(targetDeviceId){
-  try{
-    const response = await fetch(API + "/api/wave-channels/" + encodeURIComponent(waveFingerprint) + "/approve", {
-      method:"POST",
-      headers:{ "Content-Type":"application/json", "x-device-id":deviceId },
-      body:JSON.stringify({ targetDeviceId })
-    });
-    if(!response.ok) throw new Error();
-    toast("✅ تمت الموافقة");
-    closePanel("joinRequestPanel");
-  }catch(e){ toast("⚠️ تعذر"); }
-}
-async function rejectJoin(targetDeviceId){
-  try{
-    const response = await fetch(API + "/api/wave-channels/" + encodeURIComponent(waveFingerprint) + "/reject", {
-      method:"POST",
-      headers:{ "Content-Type":"application/json", "x-device-id":deviceId },
-      body:JSON.stringify({ targetDeviceId })
-    });
-    if(!response.ok) throw new Error();
-    toast("تم الرفض");
-    closePanel("joinRequestPanel");
-  }catch(e){ toast("⚠️ تعذر"); }
-}
-
-/* ============ المحادثة ============ */
 function onInputChange(){
   const input = $("chatInput");
   const send = $("sendBtn");
   if(!input || !send) return;
-  if(input.value.trim()) send.classList.add("show");
-  else send.classList.remove("show");
-  sendTypingIndicator();
+  send.classList.toggle("show", input.value.trim().length > 0);
 }
-let typingTimeout = null;
-function sendTypingIndicator(){
-  const room = commMode === "room" ? livekitRoom : waveRoom;
-  if(!room || room.state !== "connected") return;
-  clearTimeout(typingTimeout);
-  typingTimeout = setTimeout(() => {
-    try{
-      const msg = { type:"radio-typing", name:"أنت", senderDeviceId:deviceId };
-      const data = new TextEncoder().encode(JSON.stringify(msg));
-      room.localParticipant.publishData(data, { reliable:false });
-    }catch(e){}
-  }, 300);
-}
-function showTypingIndicator(show, name){
-  const state = $("chatState");
-  if(!state) return;
-  if(show){
-    state.textContent = "✏️ " + (name || "شخص") + " يكتب...";
-    state.classList.add("typing");
-    clearTimeout(window.__typingHide);
-    window.__typingHide = setTimeout(() => showTypingIndicator(false), 3000);
-  } else {
-    state.textContent = "● متصل";
-    state.classList.remove("typing");
-  }
-}
+
 function appendChatBubble(text, senderName, isMine, time){
   const container = $("chatMessages");
   if(!container) return;
-  const empty = container.querySelector(".chat-empty");
-  if(empty) empty.remove();
+  container.querySelector(".chat-empty")?.remove();
+
   const bubble = document.createElement("div");
   bubble.className = "msg-bubble " + (isMine ? "mine" : "other");
   const timeStr = time || new Date().toLocaleTimeString("ar-SA",{ hour:"2-digit", minute:"2-digit" });
-  bubble.innerHTML = (!isMine && senderName ? '<span class="sender">' + escapeHtml(senderName) + '</span>' : '') + '<div class="text">' + escapeHtml(text) + '</div>' + '<span class="time">' + escapeHtml(timeStr) + '</span>';
+
+  bubble.innerHTML = (!isMine && senderName ? '<span class="sender">' + escapeHtml(senderName) + '</span>' : '') +
+    '<div class="text">' + escapeHtml(text) + '</div>' +
+    '<span class="time">' + escapeHtml(timeStr) + '</span>';
+
   container.appendChild(bubble);
   container.scrollTop = container.scrollHeight;
 }
-function appendSystemMessage(text){
-  const container = $("chatMessages");
-  if(!container) return;
-  const empty = container.querySelector(".chat-empty");
-  if(empty) empty.remove();
-  const bubble = document.createElement("div");
-  bubble.className = "msg-bubble system";
-  bubble.innerHTML = '<div class="text">📢 ' + escapeHtml(text) + '</div>';
-  container.appendChild(bubble);
-  container.scrollTop = container.scrollHeight;
-}
+
 async function sendMessage(){
   const input = $("chatInput");
   if(!input) return;
   const text = input.value.trim();
   if(!text) return;
+  if(commMode === "wave"){ toast("⚠️ التراسل متاح في وضع الغرفة"); return; }
 
-  if(commMode === "wave"){
-    toast("📻 انضم لغرفة للكتابة");
-    return;
-  }
-
-  const room = livekitRoom;
-  if(!room || room.state !== "connected"){
-    toast("⚠️ انضم لغرفة أولاً");
-    return;
+  if(!livekitRoom || livekitRoom.state !== "connected"){
+    const connected = await connectLiveKit();
+    if(!connected){
+      toast("⚠️ انضم إلى غرفة أولاً لإرسال الرسائل");
+      return;
+    }
   }
 
   try{
-    const message = {
-      type:"radio-chat", text, name:"أنت",
-      senderDeviceId:deviceId,
-      time:new Date().toLocaleTimeString("ar-SA",{ hour:"2-digit", minute:"2-digit" })
-    };
+    const message = { type:"radio-chat", text, name:"أنت", senderDeviceId:deviceId, time:new Date().toLocaleTimeString("ar-SA",{ hour:"2-digit", minute:"2-digit" }) };
     const data = new TextEncoder().encode(JSON.stringify(message));
-    await room.localParticipant.publishData(data, { reliable:true });
+    await livekitRoom.localParticipant.publishData(data, { reliable:true });
     appendChatBubble(text, "أنت", true, message.time);
     input.value = "";
     onInputChange();
-  }catch(e){ toast("⚠️ تعذر الإرسال"); }
-}
-
-/* ============ Emoji Picker ============ */
-const EMOJIS = ["😀","😃","😄","😁","😆","😅","🤣","😂","🙂","🙃","😉","😊","😇","🥰","😍","🤩","😘","😗","😚","😙","😋","😛","😜","🤪","😝","🤑","🤗","🤭","🤫","🤔","🤐","🤨","😐","😑","😶","😏","😒","🙄","😬","🤥","😌","😔","😪","🤤","😴","😷","🤒","🤕","🤢","🤮","🤧","🥵","🥶","😵","🤯","🤠","🥳","😎","🤓","🧐","❤️","🧡","💛","💚","💙","💜","🖤","🤍","👍","👎","👏","🙌","🤝","💪","🙏","✌️","🤞","👌","🔥","⭐","✨","💯","🎉","🎊"];
-function initEmojiPicker(){
-  const picker = $("emojiPicker");
-  if(!picker) return;
-  picker.innerHTML = EMOJIS.map(e => '<button onclick="insertEmoji(\'' + e + '\')">' + e + '</button>').join("");
-}
-function toggleEmojiPicker(event){
-  if(event) event.stopPropagation();
-  if(commMode === "wave"){ toast("📻 انضم لغرفة للكتابة"); return; }
-  $("emojiPicker")?.classList.toggle("show");
-  $("attachMenu")?.classList.remove("show");
-}
-function insertEmoji(emoji){
-  const input = $("chatInput");
-  if(!input) return;
-  input.value += emoji;
-  input.focus();
-  onInputChange();
-}
-
-/* ============ المرفقات ============ */
-function toggleAttachMenu(event){
-  if(event) event.stopPropagation();
-  if(commMode === "wave"){ toast("📻 انضم لغرفة للكتابة"); return; }
-  $("attachMenu")?.classList.toggle("show");
-  $("emojiPicker")?.classList.remove("show");
-}
-document.addEventListener("click", event => {
-  const attach = $("attachMenu");
-  const emoji = $("emojiPicker");
-  if(attach && !attach.contains(event.target)) attach.classList.remove("show");
-  if(emoji && !emoji.contains(event.target)) emoji.classList.remove("show");
-});
-function pickFile(accept){
-  const input = $("fileInput");
-  if(!input) return;
-  input.accept = accept;
-  input.value = "";
-    input.click();
-}
-
-$("fileInput")?.addEventListener("change", async event => {
-  const files = Array.from(event.target.files || []);
-  if(!files.length) return;
-  if(commMode === "wave"){ toast("📻 انضم لغرفة أولاً"); return; }
-  const room = livekitRoom;
-  if(!room || room.state !== "connected"){ toast("⚠️ انضم لغرفة أولاً"); return; }
-
-  for(const file of files){
-    if(file.size > 3 * 1024 * 1024){ toast("⚠️ الملف أكبر من 3MB"); continue; }
-    try{
-      const reader = new FileReader();
-      reader.onload = async () => {
-        const message = { type:"radio-file", name:"أنت", fileName:file.name, fileType:file.type, data:reader.result };
-        const encoded = new TextEncoder().encode(JSON.stringify(message));
-        await room.localParticipant.publishData(encoded, { reliable:true });
-        appendChatBubble("📎 " + file.name, "أنت", true, null);
-      };
-      reader.readAsDataURL(file);
-    }catch(e){}
-  }
-  $("attachMenu")?.classList.remove("show");
-});
-
-function openContacts(){
-  $("attachMenu")?.classList.remove("show");
-  openPanel("contactsPanel");
-}
-
-/* ============ تسجيل صوتي ============ */
-async function startVoiceRecording(){
-  if(isRecording) return;
-  if(commMode === "wave"){ toast("📻 انضم لغرفة أولاً"); return; }
-  const room = livekitRoom;
-  if(!room || room.state !== "connected"){ toast("⚠️ انضم لغرفة أولاً"); return; }
-  try{
-    const stream = await navigator.mediaDevices.getUserMedia({ audio:true });
-    mediaRecorder = new MediaRecorder(stream);
-    recordedChunks = [];
-    isRecording = true;
-    recStart = Date.now();
-    $("recBar")?.classList.add("show");
-    recInterval = setInterval(() => {
-      if($("recTime")) $("recTime").textContent = formatDuration((Date.now() - recStart) / 1000);
-    }, 1000);
-    mediaRecorder.ondataavailable = event => { if(event.data.size) recordedChunks.push(event.data); };
-    mediaRecorder.onstop = async () => {
-      clearInterval(recInterval);
-      $("recBar")?.classList.remove("show");
-      const blob = new Blob(recordedChunks, { type: mediaRecorder.mimeType || "audio/webm" });
-      stream.getTracks().forEach(track => track.stop());
-      if(blob.size > 2 * 1024 * 1024){ toast("⚠️ التسجيل كبير"); return; }
-      if(!livekitRoom || livekitRoom.state !== "connected") return;
-      const reader = new FileReader();
-      reader.onload = async () => {
-        const message = { type:"radio-voice", name:"أنت", data:reader.result };
-        const encoded = new TextEncoder().encode(JSON.stringify(message));
-        try{
-          await livekitRoom.localParticipant.publishData(encoded, { reliable:true });
-          appendChatBubble("🎙️ رسالة صوتية", "أنت", true, null);
-        }catch(e){}
-      };
-      reader.readAsDataURL(blob);
-    };
-    mediaRecorder.start();
-  }catch(e){ isRecording = false; }
-}
-function stopVoiceRecording(){
-  if(mediaRecorder && isRecording){
-    try{ mediaRecorder.stop(); }catch(e){}
-    isRecording = false;
+  }catch(e){
+    toast("⚠️ تعذر إرسال الرسالة");
   }
 }
-$("micBtn")?.addEventListener("pointerdown", async event => {
-  event.preventDefault();
-  $("micBtn")?.classList.add("rec");
-  await startVoiceRecording();
-});
-$("micBtn")?.addEventListener("pointerup", event => {
-  event.preventDefault();
-  $("micBtn")?.classList.remove("rec");
-  stopVoiceRecording();
-});
 
-/* ============ الأعضاء ============ */
-async function loadMembers(){
-  if(!activeRoomId) return;
-  try{
-    const response = await fetch(API + "/api/rooms/" + encodeURIComponent(activeRoomId) + "/members", { headers:{ "x-device-id":deviceId } });
-    if(!response.ok) return;
-    const data = await response.json();
-    membersCache = Array.isArray(data.members) ? data.members : [];
-    renderMembersList();
-    loadMyInfo();
-  }catch(e){}
-}
-
-function renderMembersList(){
-  const container = $("membersContent");
-  if(!container) return;
-  if(!membersCache.length){
-    container.innerHTML = '<div class="empty-state">لا يوجد أعضاء حالياً</div>';
-    return;
-  }
-  container.innerHTML = membersCache.map(member => {
-    const role = member.role || "member";
-    const roleText = role === "owner" ? "👑 المالك" : role === "admin" ? "🛡️ مشرف" : "👤 عضو";
-    const isMe = member.deviceId === deviceId;
-    let actionsHtml = "";
-    if(myRole === "owner" && !isMe && role !== "owner"){
-      if(role === "admin"){ actionsHtml += '<button class="mini-btn danger" onclick="demoteMember(\'' + member.deviceId + '\')">سحب</button>'; }
-      else { actionsHtml += '<button class="mini-btn" onclick="promoteMember(\'' + member.deviceId + '\')">ترقية</button>'; }
-      actionsHtml += '<button class="mini-btn danger" onclick="removeMember(\'' + member.deviceId + '\')">حذف</button>';
-    }
-    return `
-      <div class="member-row">
-        <div class="avatar">${role === "owner" ? "👑" : role === "admin" ? "🛡️" : "👤"}</div>
-        <div class="info">
-          <div class="name">${escapeHtml(member.name || "عضو")} ${isMe ? '(أنت)' : ''}</div>
-          <div class="role">
-            <span class="role-badge ${role}">${roleText}</span>
-            ${member.personalCode ? ' • ID: <span style="color:#5eb0ff;font-family:monospace">' + escapeHtml(member.personalCode) + '</span>' : ''}
-          </div>
-        </div>
-        <div class="actions">${actionsHtml}</div>
-      </div>
-    `;
-  }).join("");
-}
-
-async function promoteMember(targetDeviceId){
-  try{
-    const response = await fetch(API + "/api/rooms/" + encodeURIComponent(activeRoomId) + "/promote", { method:"POST", headers:{ "Content-Type":"application/json", "x-device-id":deviceId }, body:JSON.stringify({ deviceId, targetDeviceId }) });
-    const data = await response.json();
-    if(!response.ok) throw new Error(data.error);
-    toast("🎉 تمت الترقية");
-    loadMembers();
-  }catch(e){ toast("⚠️ تعذر الترقية"); }
-}
-async function demoteMember(targetDeviceId){
-  if(!confirm("هل تريد سحب الإشراف؟")) return;
-  try{
-    const response = await fetch(API + "/api/rooms/" + encodeURIComponent(activeRoomId) + "/demote", { method:"POST", headers:{ "Content-Type":"application/json", "x-device-id":deviceId }, body:JSON.stringify({ deviceId, targetDeviceId }) });
-    const data = await response.json();
-    if(!response.ok) throw new Error(data.error);
-    toast("✅ تم سحب الإشراف");
-    loadMembers();
-  }catch(e){ toast("⚠️ تعذر"); }
-}
-async function removeMember(targetDeviceId){
-  if(!confirm("هل تريد حذف العضو؟")) return;
-  try{
-    const response = await fetch(API + "/api/rooms/" + encodeURIComponent(activeRoomId) + "/members/" + encodeURIComponent(targetDeviceId), { method:"DELETE", headers:{ "x-device-id":deviceId } });
-    const data = await response.json();
-    if(!response.ok) throw new Error(data.error);
-    toast("✅ تم الحذف");
-    loadMembers();
-  }catch(e){ toast("⚠️ تعذر"); }
-}
-
-async function copyMyCode(){
-  if(!myPersonalCode) return;
-  try{ await navigator.clipboard.writeText(myPersonalCode); toast("✅ تم النسخ"); }catch(e){ toast("⚠️ تعذر النسخ"); }
-}
-async function shareMyCode(){
-  if(!myPersonalCode) return;
-  const text = "رقم التعريف الخاص بي: " + myPersonalCode;
-  try{
-    if(navigator.share) await navigator.share({ text });
-    else { await navigator.clipboard.writeText(text); toast("✅ تم النسخ"); }
-  }catch(e){}
-}
-
-/* ============ البحث ============ */
-async function searchUser(){
-  const fp = $("searchFingerprint")?.value.trim().toUpperCase();
-  if(!fp) return toast("⚠️ اكتب بصمة الموجة");
-  const results = $("searchResults");
-  if(results) results.innerHTML = "جاري البحث...";
-  try{
-    const response = await fetch(API + "/api/search-user?fingerprint=" + encodeURIComponent(fp), { headers:{ "x-device-id":deviceId } });
-    const data = await response.json();
-    if(!response.ok){
-      if(results) results.innerHTML = '<div class="empty-state">لم يتم العثور على المستخدم</div>';
-      return;
-    }
-    if(results){
-      results.innerHTML = `
-        <div class="member-row">
-          <div class="avatar">📻</div>
-          <div class="info">
-            <div class="name">${escapeHtml(fp)}</div>
-            <div class="role">${data.hasWaveChannel ? '✅ قناة نشطة' : '⚠️ لا توجد قناة'}</div>
-          </div>
-          <div class="actions">
-            ${data.hasWaveChannel ? '<button class="mini-btn" onclick="sendJoinRequest(\'' + escapeHtml(fp) + '\')">طلب انضمام</button>' : ''}
-          </div>
-        </div>
-      `;
-    }
-  }catch(e){ if(results) results.innerHTML = '<div class="empty-state">خطأ في البحث</div>'; }
-}
-
-async function sendJoinRequest(fingerprint){
-  if(!fingerprint) return;
-  try{
-    const response = await fetch(API + "/api/wave-channels/join", { method:"POST", headers:{ "Content-Type":"application/json", "x-device-id":deviceId }, body:JSON.stringify({ fingerprint: fingerprint, memberName: "عضو جديد" }) });
-    const data = await response.json();
-    if(!response.ok) throw new Error(data.error);
-    closePanel("searchPanel");
-    toast("⏳ تم إرسال الطلب، انتظر الموافقة");
-  }catch(e){ toast("⚠️ تعذر إرسال الطلب"); }
-}
-
-/* ============ إنشاء/الانضمام ============ */
-async function createRoom(){
-  const name = $("newRoomName")?.value.trim();
-  if(!name) return toast("⚠️ اكتب اسم الغرفة");
-  try{
-    const response = await fetch(API + "/api/rooms", { method:"POST", headers:{ "Content-Type":"application/json", "x-device-id":deviceId }, body:JSON.stringify({ name }) });
-    const data = await response.json();
-    if(!response.ok) throw new Error(data.error);
-    activeRoomId = data.room.id;
-    localStorage.setItem("radioActiveRoomId", activeRoomId);
-    if($("codeRoomName")) $("codeRoomName").textContent = data.room.name || "لا توجد غرفة";
-    if($("codeRoomNum")) $("codeRoomNum").textContent = "رقم الغرفة: " + (data.room.roomNumber || "-");
-    $("myCodeCard")?.classList.add("show");
-    closeAllPanels();
-    await loadRooms();
-    await connectLiveKit();
-    await loadMyInfo();
-    await setCommMode("room");
-    toast("✅ تم إنشاء الغرفة");
-  }catch(e){ toast("⚠️ " + (e.message || "تعذر الإنشاء")); }
-}
-
-async function submitJoin(){
-  const code = $("joinCode")?.value.trim().toUpperCase();
-  const name = $("joinName")?.value.trim();
-  if(!code) return toast("⚠️ أدخل رقم التعريف");
-  if(!name) return toast("⚠️ اكتب اسمك");
-  try{
-    const response = await fetch(API + "/api/rooms/join", { method:"POST", headers:{ "Content-Type":"application/json", "x-device-id":deviceId }, body:JSON.stringify({ code, name }) });
-    const data = await response.json();
-    if(!response.ok) throw new Error(data.error);
-    activeRoomId = data.room.id;
-    localStorage.setItem("radioActiveRoomId", activeRoomId);
-    if($("codeRoomName")) $("codeRoomName").textContent = data.room.name || "لا توجد غرفة";
-    if($("codeRoomNum")) $("codeRoomNum").textContent = "رقم الغرفة: " + (data.room.roomNumber || "-");
-    closeAllPanels();
-    await loadRooms();
-    if(data.status === "approved"){
-      await connectLiveKit();
-      await loadMyInfo();
-      await setCommMode("room");
-      toast("✅ تم الانضمام");
-    } else {
-      toast("⏳ طلبك قيد المراجعة");
-    }
-  }catch(e){ toast("⚠️ " + (e.message || "تعذر الانضمام")); }
-}
-
-async function leaveRoom(){
-  try{ if(livekitRoom){ await livekitRoom.disconnect(); livekitRoom = null; } }catch(e){}
-  activeRoomId = "";
-  localStorage.removeItem("radioActiveRoomId");
-  if($("codeRoomName")) $("codeRoomName").textContent = "لا توجد غرفة";
-  if($("codeRoomNum")) $("codeRoomNum").textContent = "رقم الغرفة: -";
-  $("myCodeCard")?.classList.remove("show");
-  await setCommMode("wave");
-  closeAllPanels();
-  updateServerStatus();
-  toast("🚪 تم الخروج");
-}
-
-/* ============ Panels ============ */
 function openPanel(id){
-  closeAllPanels();
-  const panel = $(id);
-  if(!panel) return;
-  panel.classList.add("show");
+  document.querySelectorAll(".modal").forEach(m => m.classList.remove("show"));
+  $(id)?.classList.add("show");
   if(id === "roomsPanel") loadRooms();
-  if(id === "membersPanel") loadMembers();
-  if(id === "accountPanel") renderAccount();
-  if(id === "settingsPanel") renderSettings();
-}
-function closePanel(id){ $(id)?.classList.remove("show"); }
-function closeAllPanels(){
-  document.querySelectorAll(".modal").forEach(panel => panel.classList.remove("show"));
 }
 
-/* ============ عرض الغرف ============ */
+function closePanel(id){ $(id)?.classList.remove("show"); }
+
 function renderRoomsList(){
   const content = $("roomsContent");
   if(!content) return;
   if(!roomsCache.length){
-    content.innerHTML = '<div class="empty-state">لا توجد غرف حالياً<br>أنشئ غرفة جديدة</div>';
+    content.innerHTML = '<div class="empty-state">لا توجد غرف متاحة</div>';
     return;
   }
-  content.innerHTML = roomsCache.map(room => {
-    const roleIcon = room.isOwner ? "👑" : room.isMember ? "✅" : room.isPending ? "⏳" : "📻";
-    return `
-      <div class="member-row">
-        <div class="avatar">${roleIcon}</div>
-        <div class="info">
-          <div class="name">${escapeHtml(room.name)}</div>
-          <div class="role">رقم ${room.roomNumber || "?"} • ${room.memberCount} أعضاء</div>
-        </div>
-        <div class="actions">
-          ${room.isMember || room.isOwner ?
-            '<button class="mini-btn" onclick="selectRoom(\'' + escapeHtml(room.id) + '\')">دخول</button>' :
-            '<button class="mini-btn" onclick="requestJoin(\'' + escapeHtml(room.id) + '\')">طلب</button>'}
-        </div>
+  content.innerHTML = roomsCache.map(room => `
+    <div class="member-row">
+      <div class="avatar">📻</div>
+      <div class="info">
+        <div class="name">${escapeHtml(room.name)}</div>
+        <div class="role">رقم ${room.roomNumber || "?"}</div>
       </div>
-    `;
-  }).join("");
+      <div class="actions">
+        <button class="mini-btn" onclick="selectRoom('${escapeHtml(room.id)}')">دخول</button>
+      </div>
+    </div>
+  `).join("");
 }
 
 async function selectRoom(roomId){
   activeRoomId = roomId;
   localStorage.setItem("radioActiveRoomId", roomId);
-  const room = roomsCache.find(r => r.id === roomId);
-  if(room){
-    if($("codeRoomName")) $("codeRoomName").textContent = room.name || "لا توجد غرفة";
-    if($("codeRoomNum")) $("codeRoomNum").textContent = "رقم الغرفة: " + (room.roomNumber || "-");
-    $("myCodeCard")?.classList.add("show");
-  }
-  closeAllPanels();
+  closePanel("roomsPanel");
   await setCommMode("room");
   await connectLiveKit();
-  await loadMyInfo();
   toast("✅ تم الاتصال بالغرفة");
-}
-
-async function requestJoin(roomId){
-  const name = prompt("اكتب اسمك:", "عضو جديد");
-  if(!name) return;
-  try{
-    const response = await fetch(API + "/api/rooms/" + roomId + "/join", { method:"POST", headers:{ "Content-Type":"application/json", "x-device-id":deviceId }, body:JSON.stringify({ deviceId, memberName:name }) });
-    const data = await response.json();
-    if(!response.ok) throw new Error(data.error);
-    toast("⏳ " + (data.message || "تم إرسال الطلب"));
-    loadRooms();
-  }catch(e){ toast("⚠️ تعذر الإرسال"); }
 }
 
 function updateRoomsBadge(){
@@ -1564,114 +815,52 @@ function updateRoomsBadge(){
   badge.classList.toggle("show", count > 0);
 }
 
-function renderSettings(){
-  const content = $("settingsContent");
-  if(!content) return;
-  content.innerHTML = `
-    <div class="member-row">
-      <div class="avatar">📡</div>
-      <div class="info">
-        <div class="name">Radio Connect</div>
-        <div class="role">جهاز لاسلكي • v1.3</div>
-      </div>
-    </div>
-    <div class="member-row">
-      <div class="avatar">📻</div>
-      <div class="info">
-        <div class="name">بصمة الموجة</div>
-        <div class="role" style="font-family:monospace;color:#5eb0ff;font-size:16px;letter-spacing:2px">${escapeHtml(waveFingerprint || "---")}</div>
-      </div>
-    </div>
-  `;
-}
-
-function renderAccount(){
-  const content = $("accountContent");
-  if(!content) return;
-  content.innerHTML = `
-    <div class="member-row">
-      <div class="avatar">♙</div>
-      <div class="info">
-        <div class="name">دوري في الغرفة</div>
-        <div class="role">${myRole === "owner" ? "👑 مالك" : myRole === "admin" ? "🛡️ مشرف" : myRole === "member" ? "👤 عضو" : "لا يوجد"}</div>
-      </div>
-    </div>
-    <div class="member-row">
-      <div class="avatar">📻</div>
-      <div class="info">
-        <div class="name">بصمة الموجة</div>
-        <div class="role" style="font-family:monospace;color:#5eb0ff">${escapeHtml(waveFingerprint || "---")}</div>
-      </div>
-    </div>
-    <div class="member-row">
-      <div class="avatar">🆔</div>
-      <div class="info">
-        <div class="name">رقم الجهاز</div>
-        <div class="role" style="font-size:9px;word-break:break-all">${escapeHtml(deviceId)}</div>
-      </div>
-    </div>
-  `;
-}
-
 function switchNav(section){
-  document.querySelectorAll(".nav-item").forEach(item => item.classList.remove("active"));
-  if(section === "home"){ $("navHome")?.classList.add("active"); closeAllPanels(); }
+  document.querySelectorAll(".nav-item").forEach(i => i.classList.remove("active"));
+  if(section === "home") $("navHome")?.classList.add("active");
   if(section === "rooms"){ $("navRooms")?.classList.add("active"); openPanel("roomsPanel"); }
   if(section === "account"){ $("navAccount")?.classList.add("active"); openPanel("accountPanel"); }
 }
 
-async function testMic(){
+async function createRoom(){
+  const name = $("newRoomName")?.value.trim();
+  if(!name) return toast("⚠️ اكتب اسم الغرفة");
   try{
-    const stream = await navigator.mediaDevices.getUserMedia({ audio:true });
-    stream.getTracks().forEach(track => track.stop());
-    toast("✅ الميكروفون يعمل");
-  }catch(e){ toast("⚠️ تعذر الوصول"); }
+    const res = await fetch(API + "/api/rooms", {
+      method:"POST",
+      headers:{ "Content-Type":"application/json", "x-device-id":deviceId },
+      body:JSON.stringify({ name })
+    });
+    const data = await res.json();
+    if(!res.ok) throw new Error(data.error);
+    activeRoomId = data.room.id;
+    localStorage.setItem("radioActiveRoomId", activeRoomId);
+    closePanel("createPanel");
+    await setCommMode("room");
+    await connectLiveKit();
+    toast("✅ تم إنشاء الغرفة بنجاح");
+  }catch(e){ toast("⚠️ تعذر الإنشاء"); }
 }
 
-/* ============ البدء ============ */
 (async () => {
-  initEmojiPicker();
-  updateWaveUI();
   await ensureDevice();
   await initBattery();
   updateNetwork();
+  updateServerStatus();
 
   if(commMode === "room"){
     $("modeRoom")?.classList.add("active");
     $("modeWave")?.classList.remove("active");
     document.querySelector(".voice-ptt")?.classList.add("disabled");
     document.getElementById("chatInputRow")?.classList.remove("disabled-chat");
+    if(activeRoomId) await connectLiveKit();
   } else {
     $("modeWave")?.classList.add("active");
     $("modeRoom")?.classList.remove("active");
+    document.querySelector(".voice-ptt")?.classList.remove("disabled");
     document.getElementById("chatInputRow")?.classList.add("disabled-chat");
   }
-
-  window.addEventListener("online", () => { updateNetwork(); toast("✅ تم استعادة الاتصال"); });
-  window.addEventListener("offline", () => { updateNetwork(); toast("⚠️ انقطع الاتصال"); });
-
   await loadRooms();
-
-  if(activeRoomId && activeRoomId !== ""){
-    try{
-      const room = roomsCache.find(r => r.id === activeRoomId);
-      if(room){
-        if($("codeRoomName")) $("codeRoomName").textContent = room.name || "لا توجد غرفة";
-        if($("codeRoomNum")) $("codeRoomNum").textContent = "رقم الغرفة: " + (room.roomNumber || "-");
-        $("myCodeCard")?.classList.add("show");
-        if(commMode === "room"){
-          await connectLiveKit();
-          await loadMyInfo();
-        }
-      } else {
-        activeRoomId = "";
-        localStorage.removeItem("radioActiveRoomId");
-      }
-    }catch(e){}
-  }
-
-  setInterval(checkWaveRequests, 3000);
-  updateServerStatus();
 })();
 </script>
 
