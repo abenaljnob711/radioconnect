@@ -353,6 +353,7 @@ let isTalking = false;
 let waveLocalAudioTrack = null;
 let roomsCache = [];
 let rawMicStream = null;
+let localTestAudio = null;
 let audioCtx = null;
 
 let mediaRecorder = null;
@@ -453,7 +454,6 @@ async function connectLiveKit(){
       }catch(e){}
     });
 
-    // استقبال الصوت المباشر من الأعضاء الآخرين في الغرفة
     livekitRoom.on(L.RoomEvent.TrackSubscribed, (track, publication, participant) => {
       if(track.kind === "audio"){
         const audioElement = track.attach();
@@ -481,8 +481,6 @@ async function connectWaveChannel(){
     const data = await response.json();
 
     waveRoom = new L.Room();
-    
-    // استقبال الصوت المباشر للطرف الآخر فقط دون سماع صوت نفسك
     waveRoom.on(L.RoomEvent.TrackSubscribed, (track, publication, participant) => {
       if(track.kind === "audio"){
         const audioElement = track.attach();
@@ -516,7 +514,14 @@ if(pttBtn){
     try{
       rawMicStream = await navigator.mediaDevices.getUserMedia({ audio:{ echoCancellation:true, noiseSuppression:true } });
       
-      // لا يتم تشغيل صوت محلي لنفسك (لا تسمع نفسك)، الطرف الآخر فقط يسمعك تماماً مثل اتصال الجوال
+      // إذا لم يكن هناك متصلين بعد، نشغل اختبار صوتي محلي مؤقت لسماع صوتك للتأكد فقط من عمل الميكروفون
+      if(!waveRoom || waveRoom.participants.size === 0){
+        localTestAudio = new Audio();
+        localTestAudio.srcObject = rawMicStream;
+        localTestAudio.volume = 0.8;
+        localTestAudio.play().catch(()=>{});
+      }
+
       connectWaveChannel().then(() => {
         if(waveRoom && waveRoom.state === "connected" && rawMicStream){
           L.LocalAudioTrack.createTrack(rawMicStream.getAudioTracks()[0]).then(track => {
@@ -547,6 +552,10 @@ if(pttBtn){
 
 function stopTalking(){
   if(isTalking) playStopBeep();
+  if(localTestAudio){
+    try{ localTestAudio.pause(); localTestAudio.srcObject = null; }catch(e){}
+    localTestAudio = null;
+  }
   if(waveLocalAudioTrack && waveRoom){
     try{ waveRoom.localParticipant.unpublishTrack(waveLocalAudioTrack); waveLocalAudioTrack.stop(); }catch(e){}
     waveLocalAudioTrack = null;
@@ -641,7 +650,6 @@ async function sendMessage(){
   }
 }
 
-/* التسجيل الصوتي الكامل في الغرفة */
 async function startVoiceRecording(){
   if(isRecording) return;
   if(!activeRoomId){
