@@ -410,10 +410,12 @@ function updateActiveRoomUI(){
   if(activeRoomData){
     if($("codeRoomName")) $("codeRoomName").textContent = activeRoomData.name || "غرفة نشطة";
     if($("codeRoomNum")) $("codeRoomNum").textContent = "رقم الغرفة: " + (activeRoomData.roomNumber || activeRoomData.id || "-");
+    if($("myCodeValue")) $("myCodeValue").textContent = activeRoomData.roomCode || activeRoomData.code || "------";
     if($("activeChatTitle")) $("activeChatTitle").textContent = "💬 محادثة: " + (activeRoomData.name || "");
   } else {
     if($("codeRoomName")) $("codeRoomName").textContent = "لا توجد غرفة حالياً";
     if($("codeRoomNum")) $("codeRoomNum").textContent = "رقم الغرفة: -";
+    if($("myCodeValue")) $("myCodeValue").textContent = "------";
   }
 }
 
@@ -781,27 +783,27 @@ function renderRoomsList(){
         <div class="role">رقم الغرفة: ${room.roomNumber || room.id || "?"}</div>
       </div>
       <div class="actions">
-        <button class="btn" style="padding:4px 8px;margin:0;font-size:8px;" onclick="selectRoomFromObj('${escapeHtml(JSON.stringify(room).replace(/"/g, '&quot;'))}')">دخول</button>
+        <button class="btn" style="padding:4px 8px;margin:0;font-size:8px;" onclick="selectRoomId('${escapeHtml(room.id)}')">دخول</button>
       </div>
     </div>
   `).join("");
 }
 
-async function selectRoomFromObj(roomJson){
-  try{
-    const room = JSON.parse(roomJson);
-    activeRoomId = room.id;
-    activeRoomData = room;
-    localStorage.setItem("radioActiveRoomId", activeRoomId);
-    localStorage.setItem("radioActiveRoomData", JSON.stringify(activeRoomData));
-    closePanel("roomsPanel");
-    updateActiveRoomUI();
-    await connectLiveKit();
-    setCommMode("room");
-    toast("✅ تم الدخول للغرفة بنجاح: " + room.name);
-  }catch(e){
-    toast("⚠️ تعذر الدخول للغرفة");
+async function selectRoomId(roomId){
+  const room = roomsCache.find(r => r.id === roomId);
+  if(!room){
+    toast("⚠️ الغرفة غير موجودة");
+    return;
   }
+  activeRoomId = room.id;
+  activeRoomData = room;
+  localStorage.setItem("radioActiveRoomId", activeRoomId);
+  localStorage.setItem("radioActiveRoomData", JSON.stringify(activeRoomData));
+  closePanel("roomsPanel");
+  updateActiveRoomUI();
+  await connectLiveKit();
+  setCommMode("room");
+  toast("✅ تم الدخول للغرفة بنجاح: " + room.name);
 }
 
 function updateRoomsBadge(){
