@@ -41,6 +41,7 @@ button{border:0;cursor:pointer;font-family:inherit}
 .my-code-card .code-value{font-size:16px;font-weight:900;letter-spacing:2px;color:#fff;font-family:monospace;margin:2px 0}
 .code-room-info{margin:3px 0;padding:3px;border-top:1px solid rgba(94,176,255,.15);border-bottom:1px solid rgba(94,176,255,.15)}
 .code-room-name{font-size:10px;font-weight:900;color:#fff}
+.code-room-num{font-size:8px;color:#5eb0ff;font-weight:700}
 .code-actions{display:flex;gap:4px;margin-top:4px}
 .code-btn{flex:1;padding:4px;border-radius:6px;background:#0d5d91;color:#fff;font-size:8px;font-weight:800}
 
@@ -167,10 +168,11 @@ button{border:0;cursor:pointer;font-family:inherit}
 </div>
 
 <div class="my-code-card show" id="myCodeCard">
-  <div class="code-label">🆔 رقم التعريف الشخصي</div>
+  <div class="code-label">🆔 معلومات الغرفة النشطة</div>
   <div class="code-value" id="myCodeValue">------</div>
   <div class="code-room-info">
     <div class="code-room-name" id="codeRoomName">لا توجد غرفة حالياً</div>
+    <div class="code-room-num" id="codeRoomNum">رقم الغرفة: -</div>
   </div>
   <div class="code-actions">
     <button class="code-btn" onclick="copyMyCode()">📋 نسخ</button>
@@ -192,10 +194,10 @@ button{border:0;cursor:pointer;font-family:inherit}
   <div class="ptt-hint" id="pttHint">اضغط مطولاً للحديث عبر الموجة</div>
 </div>
 
-<!-- وضع الغرفة (المراسلة المتناسقة بملء الشاشة المتبقية) -->
+<!-- وضع الغرفة (المراسلة المتناسقة) -->
 <div class="chat-section" id="roomChatSection" style="display:none;">
   <div class="chat-head">
-    <span class="chat-title">💬 محادثة الغرفة</span>
+    <span class="chat-title" id="activeChatTitle">💬 محادثة الغرفة</span>
     <span class="chat-state" id="chatState">● متصل</span>
   </div>
 
@@ -345,6 +347,7 @@ let currentWave = waves[0];
 let deviceId = localStorage.getItem("radioDeviceId") || "";
 let waveFingerprint = localStorage.getItem("radioWaveFingerprint") || "";
 let activeRoomId = localStorage.getItem("radioActiveRoomId") || "";
+let activeRoomData = JSON.parse(localStorage.getItem("radioActiveRoomData") || "null");
 let commMode = localStorage.getItem("radioCommMode") || "wave";
 
 let livekitRoom = null;
@@ -401,6 +404,17 @@ function escapeHtml(value){
 function formatDuration(seconds){
   const s = Math.max(0, Math.floor(seconds));
   return String(Math.floor(s/60)).padStart(2,"0") + ":" + String(s%60).padStart(2,"0");
+}
+
+function updateActiveRoomUI(){
+  if(activeRoomData){
+    if($("codeRoomName")) $("codeRoomName").textContent = activeRoomData.name || "غرفة نشطة";
+    if($("codeRoomNum")) $("codeRoomNum").textContent = "رقم الغرفة: " + (activeRoomData.roomNumber || activeRoomData.id || "-");
+    if($("activeChatTitle")) $("activeChatTitle").textContent = "💬 محادثة: " + (activeRoomData.name || "");
+  } else {
+    if($("codeRoomName")) $("codeRoomName").textContent = "لا توجد غرفة حالياً";
+    if($("codeRoomNum")) $("codeRoomNum").textContent = "رقم الغرفة: -";
+  }
 }
 
 function setCommMode(mode){
@@ -514,7 +528,6 @@ if(pttBtn){
     try{
       rawMicStream = await navigator.mediaDevices.getUserMedia({ audio:{ echoCancellation:true, noiseSuppression:true } });
       
-      // إذا لم يكن هناك متصلين بعد، نشغل اختبار صوتي محلي مؤقت لسماع صوتك للتأكد فقط من عمل الميكروفون
       if(!waveRoom || waveRoom.participants.size === 0){
         localTestAudio = new Audio();
         localTestAudio.srcObject = rawMicStream;
@@ -765,22 +778,30 @@ function renderRoomsList(){
       <div class="avatar">📻</div>
       <div class="info">
         <div class="name">${escapeHtml(room.name)}</div>
-        <div class="role">رقم الغرفة: ${room.roomNumber || "?"}</div>
+        <div class="role">رقم الغرفة: ${room.roomNumber || room.id || "?"}</div>
       </div>
       <div class="actions">
-        <button class="btn" style="padding:4px 8px;margin:0;font-size:8px;" onclick="selectRoom('${escapeHtml(room.id)}')">دخول</button>
+        <button class="btn" style="padding:4px 8px;margin:0;font-size:8px;" onclick="selectRoomFromObj('${escapeHtml(JSON.stringify(room).replace(/"/g, '&quot;'))}')">دخول</button>
       </div>
     </div>
   `).join("");
 }
 
-async function selectRoom(roomId){
-  activeRoomId = roomId;
-  localStorage.setItem("radioActiveRoomId", roomId);
-  closePanel("roomsPanel");
-  await connectLiveKit();
-  setCommMode("room");
-  toast("✅ تم الدخول للغرفة بنجاح");
+async function selectRoomFromObj(roomJson){
+  try{
+    const room = JSON.parse(roomJson);
+    activeRoomId = room.id;
+    activeRoomData = room;
+    localStorage.setItem("radioActiveRoomId", activeRoomId);
+    localStorage.setItem("radioActiveRoomData", JSON.stringify(activeRoomData));
+    closePanel("roomsPanel");
+    updateActiveRoomUI();
+    await connectLiveKit();
+    setCommMode("room");
+    toast("✅ تم الدخول للغرفة بنجاح: " + room.name);
+  }catch(e){
+    toast("⚠️ تعذر الدخول للغرفة");
+  }
 }
 
 function updateRoomsBadge(){
@@ -810,8 +831,11 @@ async function createRoom(){
     const data = await res.json();
     if(!res.ok) throw new Error(data.error);
     activeRoomId = data.room.id;
+    activeRoomData = data.room;
     localStorage.setItem("radioActiveRoomId", activeRoomId);
+    localStorage.setItem("radioActiveRoomData", JSON.stringify(activeRoomData));
     closePanel("createPanel");
+    updateActiveRoomUI();
     await connectLiveKit();
     setCommMode("room");
     toast("✅ تم إنشاء الغرفة والدخول إليها");
@@ -838,6 +862,7 @@ async function testMic(){
     if(data.waveFingerprint) waveFingerprint = data.waveFingerprint;
   }catch(e){}
 
+  updateActiveRoomUI();
   setCommMode(commMode);
   await loadRooms();
   if(activeRoomId && commMode === "room") await connectLiveKit();
