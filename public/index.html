@@ -25,10 +25,6 @@ button{border:0;cursor:pointer;font-family:inherit}
 .status-pill{height:28px;min-width:80px;display:flex;align-items:center;justify-content:center;gap:4px;background:#071522;border:1px solid rgba(255,255,255,.07);border-radius:14px;font-size:8px;padding:0 6px}
 .status-pill .dot{width:6px;height:6px;border-radius:50%;background:#39d353;box-shadow:0 0 7px #39d353}
 .status-pill .lbl{color:#59dc83;font-weight:800}
-.status-pill.weak .dot{background:#ffc44d}
-.status-pill.weak .lbl{color:#ffc44d}
-.status-pill.bad .dot{background:#ff4d5e}
-.status-pill.bad .lbl{color:#ff4d5e}
 .ops-card{position:relative;background:linear-gradient(145deg,#0b1c2d,#06101a);border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:8px;margin-bottom:6px}
 .ops-top{min-height:55px;display:grid;grid-template-columns:36px 1fr 36px;align-items:center;gap:4px}
 .wave-center{text-align:center}
@@ -65,7 +61,7 @@ button{border:0;cursor:pointer;font-family:inherit}
 .ptt-ring.talking{background:radial-gradient(circle,rgba(63,169,255,.40) 0%,rgba(63,169,255,.15) 43%,transparent 68%);animation:pttPulseFast 1s infinite}
 @keyframes pttPulse{0%,100%{transform:scale(.95);opacity:.45}50%{transform:scale(1.08);opacity:.9}}
 @keyframes pttPulseFast{0%,100%{transform:scale(1);opacity:.7}50%{transform:scale(1.12);opacity:1}}
-.ptt-btn{width:96px;height:96px;border-radius:50%;background:radial-gradient(circle at 38% 28%,#ff5b50 0%,#ef3930 28%,#c6201d 62%,#721311 100%);border:4px solid #ed3932;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 0 0 5px rgba(231,76,60,.12),0 6px 20px rgba(0,0,0,.7);user-select:none;touch-action:none;position:relative;z-index:2}
+.ptt-btn{width:96px;height:96px;border-radius:50%;background:radial-gradient(circle at 38% 28%,#ff5b50 0%,#ef3930 28%,#c6201d 62%,#721311 100%);border:4px solid #ed3932;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 0 0 5px rgba(231,76,60,.12),0 6px 20px rgba(0,0,0,.7);user-select:none;-webkit-user-select:none;touch-action:none;position:relative;z-index:2}
 .ptt-btn.talking{background:radial-gradient(circle at 38% 28%,#5eb0ff 0%,#2f8fdd 32%,#0f5fa0 65%,#082a52 100%);border-color:#3fa9ff;box-shadow:0 0 0 8px rgba(63,169,255,.22),0 0 28px rgba(63,169,255,.8);transform:scale(.94)}
 .ptt-btn .ico{font-size:28px}
 .ptt-hint{font-size:9px;color:#7895af;margin-top:8px;font-weight:700}
@@ -102,12 +98,6 @@ button{border:0;cursor:pointer;font-family:inherit}
 .chat-input input:focus{border-color:rgba(49,157,232,.5);background:#091824}
 .send-btn{width:32px;height:32px;border-radius:50%;background:linear-gradient(145deg,#1594ff,#0757d8);color:#fff;font-size:12px;display:none;align-items:center;justify-content:center;flex-shrink:0}
 .send-btn.show{display:flex}
-.emoji-picker{position:absolute;bottom:52px;left:6px;width:250px;max-height:180px;overflow-y:auto;background:#081b2b;border:1px solid rgba(65,158,225,.28);border-radius:12px;padding:6px;display:none;z-index:65;grid-template-columns:repeat(7,1fr);gap:3px}
-.emoji-picker.show{display:grid}
-.emoji-picker button{width:100%;aspect-ratio:1;border-radius:6px;background:transparent;color:#fff;font-size:16px;display:flex;align-items:center;justify-content:center}
-.attach-menu{position:absolute;bottom:52px;right:6px;width:180px;background:#081b2b;border:1px solid rgba(65,158,225,.28);border-radius:12px;padding:5px;display:none;z-index:60}
-.attach-menu.show{display:block}
-.attach-item{width:100%;min-height:34px;padding:6px 8px;border-radius:8px;background:transparent;color:#eaf4ff;text-align:right;font-size:10px;display:flex;align-items:center;gap:7px}
 .bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(520px,100%);height:60px;background:rgba(3,9,15,.98);border-top:1px solid rgba(255,255,255,.07);display:grid;grid-template-columns:repeat(4,1fr);z-index:40;backdrop-filter:blur(12px)}
 .nav-item{position:relative;background:transparent;color:#52687c;font-size:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px}
 .nav-item .ico{font-size:18px;line-height:18px}
@@ -135,9 +125,6 @@ button{border:0;cursor:pointer;font-family:inherit}
 .member-row .role{font-size:8px;color:#82a0b9;margin-top:1px}
 .member-row .actions{display:flex;gap:3px}
 .member-row .mini-btn{padding:4px 6px;border-radius:6px;background:#0d5d91;color:#fff;font-size:8px;font-weight:700}
-.rec-bar{position:fixed;bottom:70px;left:50%;transform:translateX(-50%);background:rgba(224,42,47,.97);color:#fff;padding:8px 14px;border-radius:18px;font-size:10px;font-weight:800;display:none;align-items:center;gap:7px;z-index:95}
-.rec-bar.show{display:flex}
-.rec-dot{width:7px;height:7px;background:#fff;border-radius:50%;animation:recPulse .8s infinite}
 .toast{position:fixed;left:50%;bottom:70px;transform:translateX(-50%) translateY(12px);padding:8px 14px;background:#0b2033;color:#fff;border:1px solid rgba(55,157,228,.32);border-radius:18px;font-size:10px;z-index:1000;opacity:0;transition:.25s;pointer-events:none;max-width:90%;text-align:center}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .empty-state{padding:18px 10px;text-align:center;color:#60788e;font-size:10px;line-height:1.5}
@@ -222,8 +209,7 @@ button{border:0;cursor:pointer;font-family:inherit}
   </div>
 </div>
 
-<!-- تم إزالة مربعات الصوت القديمة واستبدالها بنظام PTT احترافي ونظيف -->
-<div class="voice-ptt-clean">
+<div class="voice-ptt-clean" id="waveViewSection">
   <div class="ptt-wrap">
     <div class="ptt-ring" id="pttRing"></div>
     <button class="ptt-btn" id="pttBtn">
@@ -236,37 +222,22 @@ button{border:0;cursor:pointer;font-family:inherit}
   <div class="ptt-hint" id="pttHint">اضغط مطولاً للحديث عبر الموجة</div>
 </div>
 
-<div class="chat-section">
+<div class="chat-section" id="roomChatSection" style="display:none;">
   <div class="chat-head">
-    <span class="chat-title">💬 المحادثة</span>
+    <span class="chat-title">💬 محادثة الغرفة</span>
     <span class="chat-state" id="chatState">● متصل</span>
   </div>
 
   <div class="chat-messages" id="chatMessages">
-    <div class="chat-empty">لا توجد رسائل حالياً</div>
+    <div class="chat-empty">لا توجد رسائل في الغرفة حالياً</div>
   </div>
 
   <div class="chat-input" id="chatInputRow">
-    <button class="icon-btn" onclick="toggleEmojiPicker(event)" title="الوجوه">😊</button>
-    <button class="icon-btn" onclick="toggleAttachMenu(event)" title="مرفقات">📎</button>
-    <button class="icon-btn" id="micBtn" title="التسجيل الصوتي الطبيعي">🎙️</button>
-
-    <input id="chatInput" placeholder="اكتب رسالة..." autocomplete="off"
+    <input id="chatInput" placeholder="اكتب رسالة أو اضغط للحديث..." autocomplete="off"
       onkeydown="if(event.key==='Enter'){event.preventDefault();sendMessage()}"
       oninput="onInputChange()">
 
     <button class="send-btn" id="sendBtn" onclick="sendMessage()">➤</button>
-
-    <div class="emoji-picker" id="emojiPicker"></div>
-
-    <div class="attach-menu" id="attachMenu">
-      <button class="attach-item" onclick="pickFile('image/*')"><span>🖼️</span> إرسال صورة</button>
-      <button class="attach-item" onclick="pickFile('video/*')"><span>🎥</span> إرسال فيديو</button>
-      <button class="attach-item" onclick="openContacts()"><span>👥</span> جهات الاتصال</button>
-      <button class="attach-item" onclick="pickFile('.pdf,.doc,.docx,.xls,.xlsx,.txt')"><span>📄</span> إرسال مستند</button>
-      <button class="attach-item" onclick="pickFile('audio/*')"><span>🎵</span> إرسال صوت</button>
-      <button class="attach-item" onclick="openPanel('membersPanel')"><span>👤</span> أعضاء الغرفة</button>
-    </div>
   </div>
 </div>
 
@@ -301,7 +272,6 @@ button{border:0;cursor:pointer;font-family:inherit}
     <button class="btn ghost" onclick="openPanel('createPanel')">➕ إنشاء غرفة جديدة</button>
     <button class="btn ghost" onclick="openPanel('joinPanel')">🔑 الانضمام لغرفة</button>
     <button class="btn ghost" onclick="openPanel('searchPanel')">🔍 البحث عن مستخدم</button>
-    <button class="btn ghost" onclick="openWaveChannel()">📻 قناتي اللاسلكية</button>
     <button class="btn danger" onclick="leaveRoom()">🚪 الخروج من الغرفة</button>
   </div>
 </div>
@@ -364,28 +334,6 @@ button{border:0;cursor:pointer;font-family:inherit}
   </div>
 </div>
 
-<div class="modal" id="membersPanel">
-  <div class="modal-box">
-    <div class="modal-head">
-      <h3>👥 أعضاء الغرفة</h3>
-      <button class="close" onclick="closePanel('membersPanel')">×</button>
-    </div>
-    <div class="modal-content" id="membersContent">جاري التحميل...</div>
-  </div>
-</div>
-
-<div class="modal" id="contactsPanel">
-  <div class="modal-box">
-    <div class="modal-head">
-      <h3>👥 جهات الاتصال</h3>
-      <button class="close" onclick="closePanel('contactsPanel')">×</button>
-    </div>
-    <div class="modal-content" id="contactsContent">
-      <div class="empty-state">لا توجد جهات اتصال حالياً</div>
-    </div>
-  </div>
-</div>
-
 <div class="modal" id="accountPanel">
   <div class="modal-box">
     <div class="modal-head">
@@ -396,13 +344,6 @@ button{border:0;cursor:pointer;font-family:inherit}
   </div>
 </div>
 
-<div class="rec-bar" id="recBar">
-  <span class="rec-dot"></span>
-  <span>جاري التسجيل الطبيعي</span>
-  <span id="recTime">00:00</span>
-</div>
-
-<input type="file" id="fileInput" hidden multiple>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -436,17 +377,10 @@ let waveLocalAudioTrack = null;
 let roomsCache = [];
 let rawMicStream = null;
 let localTestAudio = null;
-
 let audioCtx = null;
-let mediaRecorder = null;
-let recordedChunks = [];
-let recStart = 0;
-let recInterval = null;
-let isRecording = false;
 
 const $ = id => document.getElementById(id);
 
-/* مؤثرات صوتية احترافية لللاسلكي (Walkie-Talkie Beeps) */
 function playRadioBeep(freq = 1800, dur = 0.08){
   try{
     if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -484,64 +418,22 @@ function escapeHtml(value){
   }[m]));
 }
 
-function formatDuration(seconds){
-  const s = Math.max(0, Math.floor(seconds));
-  return String(Math.floor(s/60)).padStart(2,"0") + ":" + String(s%60).padStart(2,"0");
-}
-
-async function initBattery(){
-  try{
-    if(!navigator.getBattery) return;
-    const battery = await navigator.getBattery();
-    const update = () => {
-      if($("batteryVal")) $("batteryVal").textContent = Math.round(battery.level * 100) + "%";
-    };
-    update();
-  }catch(e){}
-}
-
-function updateNetwork(){
-  if($("networkVal")) $("networkVal").textContent = navigator.onLine ? "متصل" : "غير متصل";
-}
-
-function updateServerStatus(){
-  const value = $("serverVal");
-  if(!value) return;
-  const isConnected = navigator.onLine;
-  value.textContent = isConnected ? "متصل" : "غير متصل";
-  value.style.color = isConnected ? "#39d353" : "#ff4d5e";
-}
-
-async function ensureDevice(){
-  try{
-    const response = await fetch(API + "/api/device", {
-      method:"POST",
-      headers:{ "Content-Type":"application/json", "x-device-id":deviceId },
-      body:JSON.stringify({ deviceId })
-    });
-    if(!response.ok) return;
-    const data = await response.json();
-    if(data.deviceId){
-      deviceId = data.deviceId;
-      localStorage.setItem("radioDeviceId", deviceId);
-    }
-    if(data.waveFingerprint){
-      waveFingerprint = data.waveFingerprint;
-      localStorage.setItem("radioWaveFingerprint", waveFingerprint);
-    }
-  }catch(e){}
-}
-
 async function setCommMode(mode){
-  if(mode === commMode) return;
-  if(isTalking) stopTalking();
-
   commMode = mode;
   localStorage.setItem("radioCommMode", mode);
   document.querySelectorAll(".mode-btn").forEach(btn => btn.classList.remove("active"));
-  if(mode === "wave") $("modeWave")?.classList.add("active");
-  if(mode === "room") $("modeRoom")?.classList.add("active");
-  toast(mode === "wave" ? "📻 وضع الموجة (الحديث المباشر)" : "🏠 وضع الغرفة (المراسلة)");
+  
+  if(mode === "wave"){
+    $("modeWave")?.classList.add("active");
+    $("waveViewSection")?.style.setProperty("display", "flex", "important");
+    $("roomChatSection")?.style.setProperty("display", "none", "important");
+    toast("📻 وضع الموجة (الحديث المباشر)");
+  } else {
+    $("modeRoom")?.classList.add("active");
+    $("waveViewSection")?.style.setProperty("display", "none", "important");
+    $("roomChatSection")?.style.setProperty("display", "flex", "important");
+    toast("🏠 وضع الغرفة (المراسلة)");
+  }
 }
 
 async function loadRooms(){
@@ -573,16 +465,13 @@ async function connectLiveKit(){
         const data = JSON.parse(text);
         if(data.senderDeviceId === deviceId) return;
         if(data.type === "radio-chat") appendChatBubble(data.text, data.name, false, data.time);
-        if(data.type === "radio-voice") appendChatBubble("🎙️ رسالة صوتية طبيعية", data.name, false, null);
       }catch(e){}
     });
 
     await livekitRoom.connect(data.url, data.token);
-    updateServerStatus();
     return true;
   }catch(e){
     livekitRoom = null;
-    updateServerStatus();
     return false;
   }
 }
@@ -611,46 +500,51 @@ const pttBtn = $("pttBtn");
 const pttRing = $("pttRing");
 
 if(pttBtn){
-  pttBtn.addEventListener("pointerdown", async (e) => {
+  const startTalkingAction = async (e) => {
     e.preventDefault();
     if(isTalking) return;
     isTalking = true;
     pttBtn.classList.add("talking");
     pttRing.classList.add("talking");
     $("waveVisual")?.classList.add("active");
-    if($("pttHint")) $("pttHinttextContent") = "جاري الإرسال عبر الموجة...";
+    if($("pttHint")) $("pttHint").textContent = "جاري الإرسال عبر الموجة...";
 
     playStartBeep();
 
     try{
-      await connectWaveChannel();
       rawMicStream = await navigator.mediaDevices.getUserMedia({ audio:{ echoCancellation:true, noiseSuppression:true } });
       
-      if(waveRoom && waveRoom.state === "connected"){
-        waveLocalAudioTrack = await L.LocalAudioTrack.createTrack(rawMicStream.getAudioTracks()[0]);
-        await waveRoom.localParticipant.publishTrack(waveLocalAudioTrack);
-        waveLocalAudioTrack.enable();
-      } else {
-        localTestAudio = new Audio();
-        localTestAudio.srcObject = rawMicStream;
-        localTestAudio.volume = 1.0;
-        localTestAudio.play().catch(()=>{});
-      }
+      localTestAudio = new Audio();
+      localTestAudio.srcObject = rawMicStream;
+      localTestAudio.volume = 1.0;
+      localTestAudio.play().catch(()=>{});
+
+      connectWaveChannel().then(() => {
+        if(waveRoom && waveRoom.state === "connected" && rawMicStream){
+          L.LocalAudioTrack.createTrack(rawMicStream.getAudioTracks()[0]).then(track => {
+            waveLocalAudioTrack = track;
+            waveRoom.localParticipant.publishTrack(waveLocalAudioTrack);
+            waveLocalAudioTrack.enable();
+          });
+        }
+      });
       toast("📻 تتحدث الآن عبر الموجة " + currentWave.code);
     }catch(err){
       toast("⚠️ تعذر تشغيل الميكروفون");
       stopTalking();
     }
-  });
+  };
 
-  pttBtn.addEventListener("pointerup", (e) => {
+  const stopTalkingAction = (e) => {
     e.preventDefault();
     stopTalking();
-  });
-  pttBtn.addEventListener("pointercancel", (e) => {
-    e.preventDefault();
-    stopTalking();
-  });
+  };
+
+  pttBtn.addEventListener("pointerdown", startTalkingAction);
+  pttBtn.addEventListener("pointerup", stopTalkingAction);
+  pttBtn.addEventListener("pointercancel", stopTalkingAction);
+  pttBtn.addEventListener("touchstart", startTalkingAction, { passive:false });
+  pttBtn.addEventListener("touchend", stopTalkingAction, { passive:false });
 }
 
 function stopTalking(){
@@ -737,87 +631,6 @@ async function sendMessage(){
   }
 }
 
-async function startVoiceRecording(){
-  if(isRecording) return;
-  if(!activeRoomId){
-    toast("⚠️ أنشئ غرفة أولاً للتسجيل الصوتي");
-    openPanel("roomsPanel");
-    return;
-  }
-  if(!livekitRoom || livekitRoom.state !== "connected"){
-    await connectLiveKit();
-  }
-
-  try{
-    const stream = await navigator.mediaDevices.getUserMedia({ audio:true });
-    mediaRecorder = new MediaRecorder(stream);
-    recordedChunks = [];
-    isRecording = true;
-    recStart = Date.now();
-    $("recBar")?.classList.add("show");
-
-    recInterval = setInterval(() => {
-      if($("recTime")) $("recTime").textContent = formatDuration((Date.now() - recStart) / 1000);
-    }, 1000);
-
-    mediaRecorder.ondataavailable = event => {
-      if(event.data.size) recordedChunks.push(event.data);
-    };
-
-    mediaRecorder.onstop = async () => {
-      clearInterval(recInterval);
-      $("recBar")?.classList.remove("show");
-
-      const blob = new Blob(recordedChunks, { type: mediaRecorder.mimeType || "audio/webm" });
-      stream.getTracks().forEach(track => track.stop());
-
-      if(blob.size > 3 * 1024 * 1024){
-        toast("⚠️ حجم التسجيل كبير جداً");
-        return;
-      }
-
-      const reader = new FileReader();
-      reader.onload = async () => {
-        const message = { type:"radio-voice", name:"أنت", data:reader.result };
-        const encoded = new TextEncoder().encode(JSON.stringify(message));
-        try{
-          if(livekitRoom && livekitRoom.state === "connected"){
-            await livekitRoom.localParticipant.publishData(encoded, { reliable:true });
-          }
-          appendChatBubble("🎙️ رسالة صوتية طبيعية", "أنت", true, null);
-        }catch(e){
-          toast("⚠️ تعذر إرسال الصوت الطبيعي");
-        }
-      };
-      reader.readAsDataURL(blob);
-    };
-
-    mediaRecorder.start();
-  }catch(e){
-    isRecording = false;
-    toast("⚠️ تعذر الوصول للمايكروفون للتسجيل");
-  }
-}
-
-function stopVoiceRecording(){
-  if(mediaRecorder && isRecording){
-    try{ mediaRecorder.stop(); }catch(e){}
-    isRecording = false;
-  }
-}
-
-$("micBtn")?.addEventListener("pointerdown", async event => {
-  event.preventDefault();
-  $("micBtn")?.classList.add("rec");
-  await startVoiceRecording();
-});
-
-$("micBtn")?.addEventListener("pointerup", event => {
-  event.preventDefault();
-  $("micBtn")?.classList.remove("rec");
-  stopVoiceRecording();
-});
-
 function openPanel(id){
   document.querySelectorAll(".modal").forEach(m => m.classList.remove("show"));
   $(id)?.classList.add("show");
@@ -852,6 +665,7 @@ async function selectRoom(roomId){
   localStorage.setItem("radioActiveRoomId", roomId);
   closePanel("roomsPanel");
   await connectLiveKit();
+  setCommMode("room");
   toast("✅ تم الدخول للغرفة بنجاح");
 }
 
@@ -885,6 +699,7 @@ async function createRoom(){
     localStorage.setItem("radioActiveRoomId", activeRoomId);
     closePanel("createPanel");
     await connectLiveKit();
+    setCommMode("room");
     toast("✅ تم إنشاء الغرفة والدخول إليها");
   }catch(e){ toast("⚠️ تعذر الإنشاء"); }
 }
@@ -898,12 +713,20 @@ async function testMic(){
 }
 
 (async () => {
-  await ensureDevice();
-  await initBattery();
-  updateNetwork();
-  updateServerStatus();
+  try{
+    const res = await fetch(API + "/api/device", {
+      method:"POST",
+      headers:{ "Content-Type":"application/json", "x-device-id":deviceId },
+      body:JSON.stringify({ deviceId })
+    });
+    const data = await res.json();
+    if(data.deviceId) deviceId = data.deviceId;
+    if(data.waveFingerprint) waveFingerprint = data.waveFingerprint;
+  }catch(e){}
+
+  setCommMode(commMode);
   await loadRooms();
-  if(activeRoomId) await connectLiveKit();
+  if(activeRoomId && commMode === "room") await connectLiveKit();
 })();
 </script>
 
