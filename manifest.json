@@ -1,0 +1,12 @@
+{
+  "background_color": "#ffffff",
+  "dir": "ltr",
+  "display": "standalone",
+  "name": "Radio Connect",
+  "orientation": "any",
+  "scope": "/",
+  "short_name": "Radio Connect",
+  "start_url": "/",
+  "theme_color": "#ffffff",
+  "description": "Radio connect app"
+}
