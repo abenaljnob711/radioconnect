@@ -1,34 +1,12 @@
 {
-  "name": "Radio Connect - جهاز لاسلكي",
-  "short_name": "Radio Connect",
-  "description": "جهاز لاسلكي احترافي مع صوت لاسلكي عسكري ومحادثة فورية",
-  "start_url": "/",
+  "background_color": "#ffffff",
+  "dir": "ltr",
   "display": "standalone",
-  "orientation": "portrait",
-  "background_color": "#050b14",
-  "theme_color": "#07111f",
-  "lang": "ar",
-  "dir": "rtl",
-  "icons": [
-    {
-      "src": "/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
-    }
-  ],
-  "categories": ["communication", "utilities"],
-  "shortcuts": [
-    {
-      "name": "الغرف",
-      "url": "/?screen=rooms",
-      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
-    }
-  ]
+  "name": "Radio Connect",
+  "orientation": "any",
+  "scope": "/",
+  "short_name": "Radio Connect",
+  "start_url": "/",
+  "theme_color": "#ffffff",
+  "description": "Radio connect app"
 }
