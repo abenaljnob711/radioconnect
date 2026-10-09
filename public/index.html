@@ -12,51 +12,51 @@ html,body{height:100%;overflow:hidden;background:#01040a;color:#fff;font-family:
 body{height:100vh;overflow:hidden;position:fixed;width:100%}
 button,input{font:inherit}
 button{border:0;cursor:pointer;font-family:inherit}
-.app{max-width:520px;height:100vh;margin:auto;padding:6px 8px 0;display:flex;flex-direction:column;overflow:hidden;background:radial-gradient(circle at 50% 30%,rgba(35,70,110,.20),transparent 42%),linear-gradient(180deg,#07111d 0%,#02050a 55%,#010308 100%)}
-.app-scroll{flex:1;display:flex;flex-direction:column;overflow:hidden;padding-bottom:60px}
-.topbar{height:42px;display:grid;grid-template-columns:38px 1fr 86px;align-items:center;gap:5px;padding:2px 0 4px;flex-shrink:0}
+.app{max-width:520px;height:100vh;margin:auto;padding:4px 8px;display:flex;flex-direction:column;overflow:hidden;background:radial-gradient(circle at 50% 30%,rgba(35,70,110,.20),transparent 42%),linear-gradient(180deg,#07111d 0%,#02050a 55%,#010308 100%)}
+.app-scroll{flex:1;display:flex;flex-direction:column;overflow:hidden;padding-bottom:50px;min-height:0}
+.topbar{height:40px;display:grid;grid-template-columns:38px 1fr 86px;align-items:center;gap:5px;padding:2px 0;flex-shrink:0}
 .menu-btn{width:34px;height:34px;border-radius:10px;background:#0b1725;color:#dcecff;font-size:16px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.08)}
 .brand-wrap{display:flex;align-items:center;justify-content:center;gap:5px}
 .brand-icon{font-size:16px}
 .brand{text-align:center}
-.brand strong{display:block;font-size:12px;font-weight:900}
+.brand strong{display:block;font-size:11px;font-weight:900}
 .brand span{display:block;font-size:7px;color:#647c94}
-.status-pill{height:26px;min-width:76px;display:flex;align-items:center;justify-content:center;gap:4px;background:#071522;border:1px solid rgba(255,255,255,.07);border-radius:13px;font-size:8px;padding:0 6px}
+.status-pill{height:24px;min-width:70px;display:flex;align-items:center;justify-content:center;gap:4px;background:#071522;border:1px solid rgba(255,255,255,.07);border-radius:12px;font-size:8px;padding:0 6px}
 .status-pill .dot{width:5px;height:5px;border-radius:50%;background:#39d353;box-shadow:0 0 6px #39d353}
 .status-pill .lbl{color:#59dc83;font-weight:800}
-.ops-card{position:relative;background:linear-gradient(145deg,#0b1c2d,#06101a);border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:6px;margin-bottom:4px;flex-shrink:0}
-.ops-top{min-height:46px;display:grid;grid-template-columns:32px 1fr 32px;align-items:center;gap:4px}
+.ops-card{position:relative;background:linear-gradient(145deg,#0b1c2d,#06101a);border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:5px;margin-bottom:3px;flex-shrink:0}
+.ops-top{min-height:40px;display:grid;grid-template-columns:30px 1fr 30px;align-items:center;gap:4px}
 .wave-center{text-align:center}
 .wave-label-top{font-size:7px;color:#637c94}
-.wave-code-big{font-size:17px;line-height:19px;font-weight:900;letter-spacing:2px;color:#fff;font-family:monospace;text-shadow:0 0 8px rgba(54,159,255,.5)}
+.wave-code-big{font-size:15px;line-height:17px;font-weight:900;letter-spacing:2px;color:#fff;font-family:monospace;text-shadow:0 0 8px rgba(54,159,255,.5)}
 .wave-name-display{font-size:8px;color:#8ab4dc;margin-top:1px;font-weight:700}
 .wave-arrows{display:flex;justify-content:center;align-items:center}
-.arrow-btn{width:28px;height:28px;border-radius:50%;background:#0c2942;color:#fff;font-size:14px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(58,157,230,.32)}
-.mode-switch{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:4px;flex-shrink:0}
-.mode-btn{padding:6px;border-radius:10px;background:#071521;border:1px solid rgba(255,255,255,.06);color:#8ab4dc;font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:4px}
-.mode-btn.active{background:linear-gradient(145deg,#0b3a5e,#08253d);border-color:rgba(58,157,230,.5);color:#fff;box-shadow:0 0 10px rgba(58,157,230,.2)}
-.my-code-card{display:none;margin-bottom:4px;background:#081c2c;border:1px solid rgba(49,153,230,.3);border-radius:12px;padding:6px;text-align:center;flex-shrink:0}
+.arrow-btn{width:26px;height:26px;border-radius:50%;background:#0c2942;color:#fff;font-size:13px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(58,157,230,.32)}
+.mode-switch{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:3px;flex-shrink:0}
+.mode-btn{padding:5px;border-radius:8px;background:#071521;border:1px solid rgba(255,255,255,.06);color:#8ab4dc;font-size:8px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:4px}
+.mode-btn.active{background:linear-gradient(145deg,#0b3a5e,#08253d);border-color:rgba(58,157,230,.5);color:#fff;box-shadow:0 0 8px rgba(58,157,230,.2)}
+.my-code-card{display:none;margin-bottom:3px;background:#081c2c;border:1px solid rgba(49,153,230,.3);border-radius:10px;padding:5px;text-align:center;flex-shrink:0}
 .my-code-card.show{display:block}
 .my-code-card .code-label{font-size:7px;color:#7895af}
-.my-code-card .code-value{font-size:16px;font-weight:900;letter-spacing:2px;color:#fff;font-family:monospace;margin:2px 0}
-.code-room-info{margin:3px 0;padding:3px;border-top:1px solid rgba(94,176,255,.15);border-bottom:1px solid rgba(94,176,255,.15)}
-.code-room-name{font-size:10px;font-weight:900;color:#fff}
-.code-room-num{font-size:8px;color:#5eb0ff;font-weight:700}
-.code-actions{display:flex;gap:4px;margin-top:4px}
-.code-btn{flex:1;padding:4px;border-radius:6px;background:#0d5d91;color:#fff;font-size:8px;font-weight:800}
+.my-code-card .code-value{font-size:15px;font-weight:900;letter-spacing:2px;color:#fff;font-family:monospace;margin:1px 0}
+.code-room-info{margin:2px 0;padding:2px;border-top:1px solid rgba(94,176,255,.15);border-bottom:1px solid rgba(94,176,255,.15)}
+.code-room-name{font-size:9px;font-weight:900;color:#fff}
+.code-room-num{font-size:7px;color:#5eb0ff;font-weight:700}
+.code-actions{display:flex;gap:4px;margin-top:3px}
+.code-btn{flex:1;padding:3px;border-radius:5px;background:#0d5d91;color:#fff;font-size:8px;font-weight:800}
 
 .voice-ptt-clean{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;padding:10px 0}
 .voice-ptt-clean.disabled{display:none !important}
-.ptt-wrap{position:relative;width:120px;height:120px;display:flex;justify-content:center;align-items:center}
-.ptt-ring{position:absolute;width:120px;height:120px;border-radius:50%;background:radial-gradient(circle,rgba(255,53,47,.30) 0%,rgba(255,53,47,.08) 43%,transparent 68%);animation:pttPulse 2s infinite;pointer-events:none}
+.ptt-wrap{position:relative;width:110px;height:110px;display:flex;justify-content:center;align-items:center}
+.ptt-ring{position:absolute;width:110px;height:110px;border-radius:50%;background:radial-gradient(circle,rgba(255,53,47,.30) 0%,rgba(255,53,47,.08) 43%,transparent 68%);animation:pttPulse 2s infinite;pointer-events:none}
 .ptt-ring.talking{background:radial-gradient(circle,rgba(63,169,255,.40) 0%,rgba(63,169,255,.15) 43%,transparent 68%);animation:pttPulseFast 1s infinite}
 @keyframes pttPulse{0%,100%{transform:scale(.95);opacity:.45}50%{transform:scale(1.08);opacity:.9}}
 @keyframes pttPulseFast{0%,100%{transform:scale(1);opacity:.7}50%{transform:scale(1.12);opacity:1}}
-.ptt-btn{width:100px;height:100px;border-radius:50%;background:radial-gradient(circle at 38% 28%,#ff5b50 0%,#ef3930 28%,#c6201d 62%,#721311 100%);border:4px solid #ed3932;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 0 0 5px rgba(231,76,60,.12),0 6px 20px rgba(0,0,0,.7);user-select:none;-webkit-user-select:none;touch-action:none;position:relative;z-index:2}
-.ptt-btn.talking{background:radial-gradient(circle at 38% 28%,#5eb0ff 0%,#2f8fdd 32%,#0f5fa0 65%,#082a52 100%);border-color:#3fa9ff;box-shadow:0 0 0 8px rgba(63,169,255,.22),0 0 28px rgba(63,169,255,.8);transform:scale(.94)}
-.ptt-btn .ico{font-size:32px}
-.ptt-hint{font-size:9px;color:#7895af;margin-top:10px;font-weight:700}
-.wave-visualizer-clean{display:flex;align-items:center;justify-content:center;gap:3px;height:16px;margin-top:6px}
+.ptt-btn{width:90px;height:90px;border-radius:50%;background:radial-gradient(circle at 38% 28%,#ff5b50 0%,#ef3930 28%,#c6201d 62%,#721311 100%);border:4px solid #ed3932;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 0 0 4px rgba(231,76,60,.12),0 5px 16px rgba(0,0,0,.7);user-select:none;-webkit-user-select:none;touch-action:none;position:relative;z-index:2}
+.ptt-btn.talking{background:radial-gradient(circle at 38% 28%,#5eb0ff 0%,#2f8fdd 32%,#0f5fa0 65%,#082a52 100%);border-color:#3fa9ff;box-shadow:0 0 0 6px rgba(63,169,255,.22),0 0 24px rgba(63,169,255,.8);transform:scale(.94)}
+.ptt-btn .ico{font-size:28px}
+.ptt-hint{font-size:8px;color:#7895af;margin-top:8px;font-weight:700}
+.wave-visualizer-clean{display:flex;align-items:center;justify-content:center;gap:3px;height:14px;margin-top:4px}
 .wave-visualizer-clean i{display:block;width:3px;height:4px;background:#3fa9ff;border-radius:1px}
 .wave-visualizer-clean.active i{background:#5eb0ff;animation:waveBar .6s infinite ease-in-out}
 .wave-visualizer-clean.active i:nth-child(1){animation-delay:0s}
@@ -64,64 +64,62 @@ button{border:0;cursor:pointer;font-family:inherit}
 .wave-visualizer-clean.active i:nth-child(3){animation-delay:.2s}
 .wave-visualizer-clean.active i:nth-child(4){animation-delay:.3s}
 .wave-visualizer-clean.active i:nth-child(5){animation-delay:.4s}
-@keyframes waveBar{0%,100%{height:4px}50%{height:14px}}
+@keyframes waveBar{0%,100%{height:4px}50%{height:12px}}
 
-/* تعديل قسم الغرفة والمراسلة ليأخذ المساحة بالكامل ويظهر صندوق الكتابة بوضوح تام في الأسفل */
-.chat-section{flex:1;display:flex;flex-direction:column;background:linear-gradient(180deg,#071725,#030a11);border:1px solid rgba(255,255,255,.065);border-radius:14px;overflow:hidden;margin-top:2px;height:100%}
-.chat-head{height:32px;min-height:32px;display:flex;align-items:center;justify-content:space-between;padding:0 8px;background:#081a29;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0}
+.chat-section{flex:1;display:flex;flex-direction:column;background:linear-gradient(180deg,#071725,#030a11);border:1px solid rgba(255,255,255,.065);border-radius:12px;overflow:hidden;margin-top:2px;min-height:0}
+.chat-head{height:30px;min-height:30px;display:flex;align-items:center;justify-content:space-between;padding:0 8px;background:#081a29;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0}
 .chat-title{font-size:9px;font-weight:900}
 .chat-state{font-size:7px;color:#46d879}
-.chat-messages{flex:1;min-height:0;padding:8px;overflow-y:auto}
-.chat-empty{height:100%;display:flex;align-items:center;justify-content:center;color:#536a80;font-size:9px}
-.msg-bubble{margin-bottom:6px;max-width:85%;word-wrap:break-word}
+.chat-messages{flex:1;min-height:0;padding:6px;overflow-y:auto}
+.chat-empty{height:100%;display:flex;align-items:center;justify-content:center;color:#536a80;font-size:8px}
+.msg-bubble{margin-bottom:5px;max-width:85%;word-wrap:break-word}
 .msg-bubble.mine{align-self:flex-start;margin-right:auto}
 .msg-bubble.other{align-self:flex-end;margin-left:auto}
 .msg-bubble .sender{font-size:8px;font-weight:800;color:#5eb0ff;margin-bottom:2px;display:block}
-.msg-bubble .text{background:#0d304b;border-radius:10px;padding:5px 8px;font-size:10px;line-height:1.4}
+.msg-bubble .text{background:#0d304b;border-radius:8px;padding:4px 7px;font-size:9px;line-height:1.4}
 .msg-bubble.mine .text{background:#0d5d91;color:#fff}
-.msg-bubble .time{font-size:7px;color:#7290a8;margin-top:2px;display:block}
+.msg-bubble .time{font-size:6px;color:#7290a8;margin-top:1px;display:block}
 
-/* تثبيت شريط الكتابة والميكروفون في أسفل صندوق المراسلة بشكل دائم وواضح */
-.chat-input{min-height:50px;display:flex;align-items:center;gap:6px;padding:8px;background:#040b12;border-top:1px solid rgba(255,255,255,.07);flex-shrink:0;z-index:10}
-.icon-btn{width:34px;height:34px;min-width:34px;border-radius:50%;background:#0b1d2d;color:#c9e4fa;font-size:15px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.07);flex-shrink:0}
+.chat-input{height:46px;min-height:46px;display:flex;align-items:center;gap:4px;padding:5px;background:#040b12;border-top:1px solid rgba(255,255,255,.07);flex-shrink:0}
+.icon-btn{width:30px;height:30px;min-width:30px;border-radius:50%;background:#0b1d2d;color:#c9e4fa;font-size:13px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.07);flex-shrink:0}
 .icon-btn.rec{background:#e52e32;color:#fff;animation:recPulse .9s infinite}
-@keyframes recPulse{0%,100%{box-shadow:0 0 0 0 rgba(231,76,60,.5)}50%{box-shadow:0 0 0 7px rgba(231,76,60,0)}}
-.chat-input input{flex:1;height:34px;background:#07131e;border:1px solid rgba(255,255,255,.07);border-radius:17px;padding:0 12px;color:#fff;font-size:11px;outline:none;min-width:0}
-.send-btn{width:34px;height:34px;border-radius:50%;background:linear-gradient(145deg,#1594ff,#0757d8);color:#fff;font-size:12px;display:none;align-items:center;justify-content:center;flex-shrink:0}
+@keyframes recPulse{0%,100%{box-shadow:0 0 0 0 rgba(231,76,60,.5)}50%{box-shadow:0 0 0 6px rgba(231,76,60,0)}}
+.chat-input input{flex:1;height:30px;background:#07131e;border:1px solid rgba(255,255,255,.07);border-radius:15px;padding:0 10px;color:#fff;font-size:10px;outline:none;min-width:0}
+.send-btn{width:30px;height:30px;border-radius:50%;background:linear-gradient(145deg,#1594ff,#0757d8);color:#fff;font-size:10px;display:none;align-items:center;justify-content:center;flex-shrink:0}
 .send-btn.show{display:flex}
 
-.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(520px,100%);height:55px;background:rgba(3,9,15,.98);border-top:1px solid rgba(255,255,255,.07);display:grid;grid-template-columns:repeat(4,1fr);z-index:40;backdrop-filter:blur(12px)}
-.nav-item{position:relative;background:transparent;color:#52687c;font-size:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
-.nav-item .ico{font-size:16px}
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(520px,100%);height:50px;background:rgba(3,9,15,.98);border-top:1px solid rgba(255,255,255,.07);display:grid;grid-template-columns:repeat(4,1fr);z-index:40;backdrop-filter:blur(12px)}
+.nav-item{position:relative;background:transparent;color:#52687c;font-size:7px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+.nav-item .ico{font-size:15px}
 .nav-item.active{color:#3fa9ff}
-.nav-badge{position:absolute;top:4px;right:calc(50% - 16px);background:#ed3940;color:#fff;font-size:6px;font-weight:900;min-width:12px;height:12px;border-radius:6px;display:none;align-items:center;justify-content:center}
+.nav-badge{position:absolute;top:3px;right:calc(50% - 14px);background:#ed3940;color:#fff;font-size:6px;font-weight:900;min-width:11px;height:11px;border-radius:6px;display:none;align-items:center;justify-content:center}
 .nav-badge.show{display:flex}
 
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:900;display:none;align-items:flex-end;justify-content:center;backdrop-filter:blur(5px)}
 .modal.show{display:flex}
-.modal-box{width:min(520px,100%);max-height:82vh;overflow-y:auto;background:#071827;border-radius:16px 16px 0 0;padding:12px;border:1px solid rgba(70,157,218,.2);z-index:901}
-.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
-.modal-head h3{font-size:12px;color:#fff}
-.modal-head .close{width:26px;height:26px;border-radius:7px;background:#0b2134;color:#fff;font-size:14px}
-.modal-content{color:#eaf4ff;font-size:10px;line-height:1.4}
-.field{margin-bottom:8px}
-.field label{display:block;font-size:9px;color:#7894ad;margin-bottom:3px}
-.field input{width:100%;height:34px;background:#030b12;border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:0 8px;color:#fff;font-size:11px;outline:none;text-align:center}
-.btn{width:100%;padding:9px;border-radius:8px;background:linear-gradient(135deg,#168cff,#0754d0);color:#fff;font-weight:800;font-size:10px;margin-top:4px}
+.modal-box{width:min(520px,100%);max-height:82vh;overflow-y:auto;background:#071827;border-radius:14px 14px 0 0;padding:10px;border:1px solid rgba(70,157,218,.2);z-index:901}
+.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.modal-head h3{font-size:11px;color:#fff}
+.modal-head .close{width:24px;height:24px;border-radius:6px;background:#0b2134;color:#fff;font-size:13px}
+.modal-content{color:#eaf4ff;font-size:9px;line-height:1.4}
+.field{margin-bottom:6px}
+.field label{display:block;font-size:8px;color:#7894ad;margin-bottom:2px}
+.field input{width:100%;height:32px;background:#030b12;border:1px solid rgba(255,255,255,.08);border-radius:7px;padding:0 8px;color:#fff;font-size:10px;outline:none;text-align:center}
+.btn{width:100%;padding:8px;border-radius:7px;background:linear-gradient(135deg,#168cff,#0754d0);color:#fff;font-weight:800;font-size:9px;margin-top:3px}
 .btn.success{background:linear-gradient(135deg,#1b9b54,#0d7035)}
 .btn.danger{background:linear-gradient(135deg,#ce2d40,#8b1928)}
 .btn.ghost{background:#0a2134;border:1px solid rgba(62,157,224,.22);color:#eaf4ff}
-.member-row{display:flex;align-items:center;gap:6px;padding:6px;background:#04101a;border-radius:8px;margin-bottom:4px;font-size:9px}
-.member-row .avatar{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#104e78,#092b45);display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0}
+.member-row{display:flex;align-items:center;gap:5px;padding:5px;background:#04101a;border-radius:7px;margin-bottom:3px;font-size:8px}
+.member-row .avatar{width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#104e78,#092b45);display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0}
 .member-row .info{flex:1;min-width:0}
-.member-row .name{font-weight:700;font-size:10px;color:#fff}
-.member-row .role{font-size:7px;color:#82a0b9}
-.rec-bar{position:fixed;bottom:65px;left:50%;transform:translateX(-50%);background:rgba(224,42,47,.97);color:#fff;padding:6px 12px;border-radius:16px;font-size:9px;font-weight:800;display:none;align-items:center;gap:6px;z-index:95}
+.member-row .name{font-weight:700;font-size:9px;color:#fff}
+.member-row .role{font-size:6px;color:#82a0b9}
+.rec-bar{position:fixed;bottom:55px;left:50%;transform:translateX(-50%);background:rgba(224,42,47,.97);color:#fff;padding:5px 10px;border-radius:14px;font-size:8px;font-weight:800;display:none;align-items:center;gap:5px;z-index:95}
 .rec-bar.show{display:flex}
-.rec-dot{width:6px;height:6px;background:#fff;border-radius:50%;animation:recPulse .8s infinite}
-.toast{position:fixed;left:50%;bottom:65px;transform:translateX(-50%) translateY(10px);padding:6px 12px;background:#0b2033;color:#fff;border:1px solid rgba(55,157,228,.32);border-radius:14px;font-size:9px;z-index:1000;opacity:0;transition:.25s;pointer-events:none;max-width:90%;text-align:center}
+.rec-dot{width:5px;height:5px;background:#fff;border-radius:50%;animation:recPulse .8s infinite}
+.toast{position:fixed;left:50%;bottom:55px;transform:translateX(-50%) translateY(10px);padding:5px 10px;background:#0b2033;color:#fff;border:1px solid rgba(55,157,228,.32);border-radius:12px;font-size:8px;z-index:1000;opacity:0;transition:.25s;pointer-events:none;max-width:90%;text-align:center}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-.empty-state{padding:14px 8px;text-align:center;color:#60788e;font-size:9px}
+.empty-state{padding:12px 6px;text-align:center;color:#60788e;font-size:8px}
 </style>
 </head>
 <body>
@@ -197,7 +195,7 @@ button{border:0;cursor:pointer;font-family:inherit}
   <div class="ptt-hint" id="pttHint">اضغط مطولاً للحديث عبر الموجة</div>
 </div>
 
-<!-- وضع الغرفة (المراسلة المتناسقة بملء الشاشة المتبقية مع صندوق الكتابة الثابت في الأسفل) -->
+<!-- وضع الغرفة (المراسلة) -->
 <div class="chat-section" id="roomChatSection" style="display:none;">
   <div class="chat-head">
     <span class="chat-title" id="activeChatTitle">💬 محادثة الغرفة</span>
@@ -210,7 +208,7 @@ button{border:0;cursor:pointer;font-family:inherit}
 
   <div class="chat-input" id="chatInputRow">
     <button class="icon-btn" id="micBtn" title="التسجيل الصوتي">🎙️</button>
-    <input id="chatInput" placeholder="اكتب رسالة هنا..." autocomplete="off"
+    <input id="chatInput" placeholder="اكتب رسالة..." autocomplete="off"
       onkeydown="if(event.key==='Enter'){event.preventDefault();sendMessage()}"
       oninput="onInputChange()">
     <button class="send-btn" id="sendBtn" onclick="sendMessage()">➤</button>
@@ -415,6 +413,10 @@ function updateActiveRoomUI(){
     if($("codeRoomNum")) $("codeRoomNum").textContent = "رقم الغرفة: " + (activeRoomData.roomNumber || activeRoomData.id || "-");
     if($("activeChatTitle")) $("activeChatTitle").textContent = "💬 محادثة: " + (activeRoomData.name || "");
     if($("myCodeValue") && waveFingerprint) $("myCodeValue").textContent = waveFingerprint;
+  } else {
+    if($("codeRoomName")) $("codeRoomName").textContent = "لا توجد غرفة حالياً";
+    if($("codeRoomNum")) $("codeRoomNum").textContent = "رقم الغرفة: -";
+    if($("activeChatTitle")) $("activeChatTitle").textContent = "💬 محادثة الغرفة";
   }
 }
 
@@ -627,7 +629,7 @@ function appendAudioBubble(audioData, senderName, isMine){
   
   const timeStr = new Date().toLocaleTimeString("ar-SA",{ hour:"2-digit", minute:"2-digit" });
   bubble.innerHTML = (!isMine && senderName ? '<span class="sender">' + escapeHtml(senderName) + '</span>' : '') +
-    '<div class="text"><audio controls src="' + audioData + '" style="height:30px;width:100%"></audio></div>' +
+    '<div class="text"><audio controls src="' + audioData + '" style="height:26px;width:100%"></audio></div>' +
     '<span class="time">' + escapeHtml(timeStr) + '</span>';
 
   container.appendChild(bubble);
@@ -803,6 +805,21 @@ async function selectRoomFromObj(roomJson){
   }catch(e){
     toast("⚠️ تعذر الدخول للغرفة");
   }
+}
+
+async function leaveRoom(){
+  if(livekitRoom){
+    try{ await livekitRoom.disconnect(); }catch(e){}
+    livekitRoom = null;
+  }
+  activeRoomId = "";
+  activeRoomData = null;
+  localStorage.removeItem("radioActiveRoomId");
+  localStorage.removeItem("radioActiveRoomData");
+  updateActiveRoomUI();
+  closePanel("settingsPanel");
+  setCommMode("wave");
+  toast("🚪 تم الخروج من الغرفة بنجاح");
 }
 
 function updateRoomsBadge(){
