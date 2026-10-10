@@ -137,14 +137,15 @@ body::before {
   color: var(--cyan);
 }
 
-/* زر ⚙️ الجانبي */
+/* زر ☰ على اليسار */
 .menu-toggle {
   width: 42px; height: 42px;
   border-radius: 11px;
   background: linear-gradient(180deg, var(--card-2), var(--card));
   border: 1px solid var(--border);
   color: var(--cyan);
-  font-size: 20px;
+  font-size: 22px;
+  font-weight: 900;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -152,6 +153,7 @@ body::before {
   transition: all .2s;
   font-family: inherit;
   flex-shrink: 0;
+  line-height: 1;
 }
 .menu-toggle:active {
   transform: scale(.94);
@@ -631,7 +633,6 @@ body::before {
   color: var(--text-dim);
 }
 
-/* شريط مستوى الصوت أثناء PTT */
 .level-meter {
   display: none;
   margin: 8px 0 0;
@@ -821,6 +822,33 @@ body::before {
   color: #001418;
   font-size: 10px;
   font-weight: 800;
+}
+
+/* شاشة الغرفة الفارغة */
+.empty-room {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  gap: 14px;
+  color: var(--text-dim);
+}
+.empty-room-icon {
+  font-size: 60px;
+  opacity: .35;
+  filter: drop-shadow(0 0 20px rgba(0,229,255,.3));
+}
+.empty-room-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--cyan);
+}
+.empty-room-text {
+  font-size: 12.5px;
+  line-height: 1.7;
+  max-width: 260px;
 }
 
 .send-separator {
@@ -1104,8 +1132,7 @@ body::before {
   max-width: 90vw;
   text-align: center;
 }
-.toast.show { transform: translateX(-50%) translateY
-}
+.toast.show { transform: translateX(-50%) translateY(0); }
 .toast.success { border-color: var(--green); box-shadow: 0 8px 24px rgba(0,255,136,.3); }
 .toast.error { border-color: var(--red); box-shadow: 0 8px 24px rgba(255,42,77,.3); }
 
@@ -1271,23 +1298,23 @@ body::before {
 <div class="app">
 
   <!-- =========================================================
-       شاشة النداء اللاسلكي (الراديو)
+       شاشة النداء اللاسلكي
        ========================================================= -->
   <section class="screen active" id="screen-radio">
 
     <header class="top-header">
-      <div class="brand">
-        <span class="brand-icon">📻</span>
-        <div class="brand-text">
-          <span class="brand-title">Radio Connect</span>
-          <span class="brand-sub">راديو كونكت</span>
-        </div>
-      </div>
+      <button class="menu-toggle" id="menuToggle" title="الإعدادات">☰</button>
       <div class="header-right">
         <span>S458 • Q307</span>
         <span class="secure-badge">🛡️ آمن</span>
       </div>
-      <button class="menu-toggle" id="menuToggle" title="الإعدادات">⚙️</button>
+      <div class="brand">
+        <div class="brand-text">
+          <span class="brand-title">Radio Connect</span>
+          <span class="brand-sub">راديو كونكت</span>
+        </div>
+        <span class="brand-icon">📻</span>
+      </div>
     </header>
 
     <div class="status-row">
@@ -1364,13 +1391,13 @@ body::before {
   </section>
 
   <!-- =========================================================
-       شاشة الغرفة
+       شاشة الغرفة (فارغة)
        ========================================================= -->
   <section class="screen" id="screen-log">
 
     <div class="log-header">
       <div class="log-actions">
-        <span onclick="toast('القائمة')">☰</span>
+        <span style="cursor:default;">☰</span>
         <span onclick="toast('معلومات القناة')">ⓘ</span>
       </div>
       <div class="log-title">
@@ -1394,60 +1421,18 @@ body::before {
       </div>
     </div>
 
-    <!-- رسالة صوتية واردة -->
-    <div class="msg msg-in">
-      <div class="msg-header">
-        <span>📻 S458 • قبل 5 دقائق</span>
-      </div>
-      <div class="msg-body">
-        <div class="voice-msg">
-          <button class="play-btn" onclick="playDemo(this)">▶</button>
-          <div class="waveform" data-wave="in"></div>
-        </div>
-        <div class="voice-meta">
-          <span>21:38</span>
-          <span>رسالة صوتية • 00:12</span>
-        </div>
+    <!-- الرسائل تُضاف هنا -->
+    <div id="roomMessages"></div>
+
+    <!-- الشاشة الفارغة -->
+    <div class="empty-room" id="emptyRoom">
+      <div class="empty-room-icon">💬</div>
+      <div class="empty-room-title">لا توجد رسائل بعد</div>
+      <div class="empty-room-text">
+        اضغط على زر <b style="color:var(--cyan)">PTT</b> في تبويب النداء اللاسلكي
+        لإرسال أول رسالة صوتية في الغرفة.
       </div>
     </div>
-
-    <div class="send-separator">-- بدأ الإرسال • S458 • 21:38 • 12ث --</div>
-
-    <!-- رسالة نصية صادرة -->
-    <div class="msg msg-out">
-      <div class="msg-header">
-        <span>📻 Q307 • قبل 3 دقائق</span>
-      </div>
-      <div class="msg-body">
-        <div class="text-msg">
-          مستلم. سأتحرك إلى نقطة المراقبة الشمالية. لا
-          لا يوجد نشاط عند الإحداثيات الحالية.
-        </div>
-        <div class="voice-meta">
-          <span>21:40</span>
-          <span></span>
-        </div>
-      </div>
-    </div>
-
-    <!-- رسالة صوتية واردة -->
-    <div class="msg msg-in">
-      <div class="msg-header">
-        <span>📻 S458 • قبل دقيقة</span>
-      </div>
-      <div class="msg-body">
-        <div class="voice-msg">
-          <button class="play-btn" onclick="playDemo(this)">▶</button>
-          <div class="waveform" data-wave="mix"></div>
-        </div>
-        <div class="voice-meta">
-          <span>21:42</span>
-          <span>رسالة صوتية • 00:07</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="send-separator">-- سجل الإرسال • Q307 • 21:40 • 07ث --</div>
 
   </section>
 
@@ -1568,7 +1553,7 @@ body::before {
 </div>
 
 <!-- =========================================================
-     القائمة الجانبية (تفتح من زر ⚙️)
+     القائمة الجانبية
      ========================================================= -->
 <div class="side-menu-backdrop" id="menuBackdrop"></div>
 <aside class="side-menu" id="sideMenu">
@@ -1732,7 +1717,7 @@ body::before {
      ========================================================= -->
 <script>
 /* =========================================================
-   🎙️ PTT Engine — التسجيل والتشغيل الفعلي
+   🎙️ PTT Engine
    ========================================================= */
 const PTTEngine = {
   audioCtx: null,
@@ -1921,8 +1906,9 @@ function switchTab(tabName) {
     bottomInfo.style.display = 'block';
   }
 
+  if (sideMenu && sideMenu.classList.contains('open')) closeSideMenu();
+
   window.scrollTo(0, 0);
-  closeSideMenu();
 }
 
 /* Toast */
@@ -1968,9 +1954,19 @@ function closeSideMenu() {
   menuToggle.classList.remove('open');
 }
 
-menuToggle.addEventListener('click', () => {
-  if (sideMenu.classList.contains('open')) closeSideMenu();
-  else openSideMenu();
+/* toggle حقيقي */
+let menuBusy = false;
+menuToggle.addEventListener('click', (e) => {
+  e.stopPropagation();
+  if (menuBusy) return;
+  menuBusy = true;
+  setTimeout(() => menuBusy = false, 350);
+
+  if (sideMenu.classList.contains('open')) {
+    closeSideMenu();
+  } else {
+    openSideMenu();
+  }
 });
 menuBackdrop.addEventListener('click', closeSideMenu);
 
@@ -2052,8 +2048,7 @@ document.getElementById('searchQuery')?.addEventListener('input', (e) => {
   const cards = document.querySelectorAll('#searchResults .room-card');
   cards.forEach(card => {
     const text = card.textContent.toLowerCase();
-    card.style
-         card.style.display = (!q || text.includes(q)) ? 'flex' : 'none';
+    card.style.display = (!q || text.includes(q)) ? 'flex' : 'none';
   });
 });
 
@@ -2116,7 +2111,7 @@ chatPTT.addEventListener('touchend',   (e) => { e.preventDefault(); onPTTStop(ch
 chatPTT.addEventListener('touchcancel',(e) => { e.preventDefault(); onPTTStop(chatPTT);  }, { passive: false });
 
 /* =========================================================
-   توليد الموجات الصوتية
+   توليد الموجات
    ========================================================= */
 function generateWaveform(container, type = 'in') {
   if (!container) return;
@@ -2139,10 +2134,14 @@ document.querySelectorAll('.waveform').forEach(wf => {
 });
 
 /* =========================================================
-   إضافة رسالة صوتية حقيقية بعد PTT
+   إضافة رسالة صوتية
    ========================================================= */
 function addVoiceMessage(url, duration) {
-  const logScreen = document.getElementById('screen-log');
+  // إخفاء الشاشة الفارغة
+  const empty = document.getElementById('emptyRoom');
+  if (empty) empty.style.display = 'none';
+
+  const logScreen = document.getElementById('roomMessages');
   const now = new Date();
   const time = now.getHours().toString().padStart(2, '0') + ':' +
                now.getMinutes().toString().padStart(2, '0');
@@ -2212,32 +2211,6 @@ function playRealVoice(btn, url) {
   };
 }
 
-/* تشغيل الرسائل التجريبية الموجودة بالصفحة */
-function playDemo(btn) {
-  if (btn.dataset.playing === '1') {
-    btn.textContent = '▶';
-    btn.dataset.playing = '0';
-    return;
-  }
-  document.querySelectorAll('.play-btn').forEach(b => {
-    b.textContent = '▶';
-    b.dataset.playing = '0';
-  });
-  btn.textContent = '⏸';
-  btn.dataset.playing = '1';
-
-  PTTEngine.init().then(() => {
-    PTTEngine.playBeep(400, 0.5, 0.5);
-    setTimeout(() => PTTEngine.playBeep(500, 0.4, 0.4), 500);
-    setTimeout(() => PTTEngine.playBeep(450, 0.5, 0.5), 1000);
-  });
-
-  setTimeout(() => {
-    btn.textContent = '▶';
-    btn.dataset.playing = '0';
-  }, 2500);
-}
-
 /* =========================================================
    إرسال رسالة نصية
    ========================================================= */
@@ -2250,7 +2223,10 @@ chatInput?.addEventListener('keydown', (e) => {
 });
 
 function sendTextMessage(text) {
-  const logScreen = document.getElementById('screen-log');
+  const empty = document.getElementById('emptyRoom');
+  if (empty) empty.style.display = 'none';
+
+  const logScreen = document.getElementById('roomMessages');
   const now = new Date();
   const time = now.getHours().toString().padStart(2, '0') + ':' +
                now.getMinutes().toString().padStart(2, '0');
