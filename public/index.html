@@ -7,9 +7,6 @@
 <title>Radio Connect — راديو كونكت</title>
 
 <style>
-/* =========================================================
-   إعادة ضبط + متغيرات
-   ========================================================= */
 *, *::before, *::after {
   margin: 0; padding: 0; box-sizing: border-box;
   -webkit-tap-highlight-color: transparent;
@@ -65,9 +62,7 @@ body::before {
   margin: 0 auto;
 }
 
-/* =========================================================
-   الشاشات
-   ========================================================= */
+/* ===== الشاشات ===== */
 .screen {
   flex: 1;
   overflow-y: auto;
@@ -85,9 +80,7 @@ body::before {
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* =========================================================
-   الترويسة
-   ========================================================= */
+/* ===== الترويسة ===== */
 .top-header {
   display: flex;
   align-items: center;
@@ -137,7 +130,7 @@ body::before {
   color: var(--cyan);
 }
 
-/* زر ☰ على اليسار */
+/* زر ☰ */
 .menu-toggle {
   width: 42px; height: 42px;
   border-radius: 11px;
@@ -167,9 +160,7 @@ body::before {
   box-shadow: 0 0 18px rgba(0,229,255,.6);
 }
 
-/* =========================================================
-   القائمة الجانبية
-   ========================================================= */
+/* ===== القائمة الجانبية ===== */
 .side-menu {
   position: fixed;
   top: 0; right: 0;
@@ -304,9 +295,7 @@ body::before {
   background: rgba(0,229,255,.2);
 }
 
-/* =========================================================
-   شرائط الحالة
-   ========================================================= */
+/* ===== شرائط الحالة ===== */
 .status-row {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
@@ -357,9 +346,7 @@ body::before {
 
 .chip-label { font-size: 10px; color: var(--text-dim); }
 
-/* =========================================================
-   جهاز الراديو
-   ========================================================= */
+/* ===== جهاز الراديو ===== */
 .radio-stage {
   position: relative;
   height: 360px;
@@ -559,9 +546,7 @@ body::before {
   font-weight: 700;
 }
 
-/* =========================================================
-   بطاقة التعليمات
-   ========================================================= */
+/* ===== بطاقة التعليمات ===== */
 .instruction-card {
   background: linear-gradient(180deg, var(--card-2), var(--card));
   border: 1px solid var(--border);
@@ -649,9 +634,7 @@ body::before {
   transition: width .08s;
 }
 
-/* =========================================================
-   شريط التنقل السفلي
-   ========================================================= */
+/* ===== شريط التنقل السفلي ===== */
 .tab-bar {
   position: fixed;
   bottom: 0;
@@ -698,9 +681,6 @@ body::before {
 }
 .tab-icon { font-size: 22px; line-height: 1; }
 
-/* =========================================================
-   شريط معلومات سفلي
-   ========================================================= */
 .bottom-info {
   position: fixed;
   bottom: 68px;
@@ -717,9 +697,7 @@ body::before {
 }
 .bottom-info .hl { color: var(--cyan); font-weight: 700; }
 
-/* =========================================================
-   شاشة الغرفة
-   ========================================================= */
+/* ===== شاشة الغرفة ===== */
 .log-header {
   display: flex;
   align-items: center;
@@ -851,24 +829,7 @@ body::before {
   max-width: 260px;
 }
 
-.send-separator {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin: 14px 0;
-  font-size: 10.5px;
-  color: var(--text-dim);
-  font-weight: 600;
-  padding: 0 12px;
-}
-.send-separator::before,
-.send-separator::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--border), transparent);
-}
-
+/* فقاعات الرسائل */
 .msg {
   margin-bottom: 12px;
   position: relative;
@@ -981,9 +942,7 @@ body::before {
   font-weight: 500;
 }
 
-/* =========================================================
-   شريط الكتابة
-   ========================================================= */
+/* ===== شريط الكتابة ===== */
 .chat-input-bar {
   position: fixed;
   bottom: 68px;
@@ -1035,18 +994,35 @@ body::before {
   letter-spacing: .5px;
 }
 
-.chat-mic {
-  width: 38px; height: 38px;
+/* 🆕 زر الإرسال */
+.chat-send {
+  width: 42px; height: 42px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #00e5ff, #008fa8);
+  border: 1.5px solid var(--cyan);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--cyan);
-  font-size: 22px;
+  color: #001418;
+  font-size: 18px;
   cursor: pointer;
   flex-shrink: 0;
-  background: none;
-  border: none;
+  box-shadow: 0 0 16px rgba(0,229,255,.55);
+  transition: all .15s;
   font-family: inherit;
+  font-weight: 900;
+}
+.chat-send:active {
+  transform: scale(.9);
+  box-shadow: 0 0 28px rgba(0,229,255,.95);
+}
+.chat-send:disabled {
+  background: #2a2f38;
+  border-color: #3a4048;
+  color: #666;
+  cursor: not-allowed;
+  box-shadow: none;
+  opacity: .5;
 }
 
 .chat-input-wrap {
@@ -1069,7 +1045,9 @@ body::before {
   border: none;
   font-family: inherit;
   padding: 0;
+  transition: color .2s;
 }
+.chat-clip:active { color: var(--cyan); }
 
 .chat-input {
   flex: 1;
@@ -1083,9 +1061,7 @@ body::before {
 }
 .chat-input::placeholder { color: var(--text-dim); }
 
-/* =========================================================
-   الإعدادات
-   ========================================================= */
+/* ===== الإعدادات ===== */
 .settings-list {
   display: flex;
   flex-direction: column;
@@ -1111,9 +1087,7 @@ body::before {
 .setting-desc  { font-size: 11px; color: var(--text-dim); }
 .setting-value { font-size: 12px; color: var(--cyan); font-weight: 700; }
 
-/* =========================================================
-   Toast
-   ========================================================= */
+/* ===== Toast ===== */
 .toast {
   position: fixed;
   top: 20px;
@@ -1136,9 +1110,7 @@ body::before {
 .toast.success { border-color: var(--green); box-shadow: 0 8px 24px rgba(0,255,136,.3); }
 .toast.error { border-color: var(--red); box-shadow: 0 8px 24px rgba(255,42,77,.3); }
 
-/* =========================================================
-   Modal
-   ========================================================= */
+/* ===== Modal ===== */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -1242,6 +1214,12 @@ body::before {
   box-shadow: 0 0 18px rgba(0,229,255,.4);
 }
 .modal-btn:active { transform: scale(.97); }
+.modal-btn.danger {
+  background: linear-gradient(180deg, #ff2a4d, #b01530);
+  border-color: #ff5577;
+  color: #fff;
+  box-shadow: 0 0 18px rgba(255,42,77,.4);
+}
 
 .rooms-list {
   display: flex;
@@ -1291,15 +1269,146 @@ body::before {
   border: 1px solid rgba(0,229,255,.3);
   border-radius: 6px;
 }
+
+/* 🆕 شبكة خيارات المرفقات */
+.attach-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.attach-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 18px 12px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all .2s;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 700;
+}
+.attach-item:active {
+  border-color: var(--cyan);
+  transform: scale(.96);
+  box-shadow: 0 0 16px rgba(0,229,255,.25);
+}
+.attach-icon { font-size: 28px; }
+
+/* 🆕 خيارات أيقونة الغرفة */
+.icon-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-top: 6px;
+}
+.icon-option {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all .2s;
+}
+.icon-option:active { transform: scale(.94); }
+.icon-option.selected {
+  border-color: var(--cyan);
+  background: rgba(0,229,255,.1);
+  box-shadow: 0 0 16px rgba(0,229,255,.4);
+}
+
+/* 🆕 عنصر قائمة في نافذة الغرفة */
+.modal-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 12px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin-bottom: 8px;
+  color: var(--text);
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all .2s;
+  font-family: inherit;
+  text-align: right;
+  width: 100%;
+}
+.modal-menu-item:active {
+  transform: scale(.97);
+  border-color: var(--cyan);
+}
+.modal-menu-item .modal-menu-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: rgba(0,229,255,.1);
+  border: 1px solid rgba(0,229,255,.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+.modal-menu-item.danger {
+  color: #ff5577;
+}
+.modal-menu-item.danger .modal-menu-icon {
+  background: rgba(255,42,77,.1);
+  border-color: rgba(255,42,77,.3);
+}
+
+/* 🆕 رسالة مرفق (صورة/فيديو/مستند) */
+.attach-msg {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 4px;
+}
+.attach-msg-icon {
+  font-size: 32px;
+}
+.attach-msg-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.attach-msg-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+}
+.attach-msg-type {
+  font-size: 10px;
+  color: rgba(255,255,255,.65);
+}
+
+.attachment-preview-img {
+  max-width: 100%;
+  border-radius: 10px;
+  display: block;
+  margin-bottom: 6px;
+}
 </style>
 </head>
 <body>
 
 <div class="app">
 
-  <!-- =========================================================
-       شاشة النداء اللاسلكي
-       ========================================================= -->
+  <!-- ===== شاشة النداء اللاسلكي ===== -->
   <section class="screen active" id="screen-radio">
 
     <header class="top-header">
@@ -1390,18 +1499,16 @@ body::before {
 
   </section>
 
-  <!-- =========================================================
-       شاشة الغرفة (فارغة)
-       ========================================================= -->
+  <!-- ===== شاشة الغرفة ===== -->
   <section class="screen" id="screen-log">
 
     <div class="log-header">
       <div class="log-actions">
-        <span style="cursor:default;">☰</span>
+        <span id="roomMenuBtn" style="cursor:pointer;">☰</span>
         <span onclick="toast('معلومات القناة')">ⓘ</span>
       </div>
       <div class="log-title">
-        <h2>الغرفة <span style="font-size:14px;">←</span></h2>
+        <h2><span id="roomIcon">💬</span> <span id="roomNameLabel">الغرفة</span> <span style="font-size:14px;">←</span></h2>
         <span class="sub">📻 Q307 • CH 07 | S458 • Q307</span>
       </div>
     </div>
@@ -1421,10 +1528,8 @@ body::before {
       </div>
     </div>
 
-    <!-- الرسائل تُضاف هنا -->
     <div id="roomMessages"></div>
 
-    <!-- الشاشة الفارغة -->
     <div class="empty-room" id="emptyRoom">
       <div class="empty-room-icon">💬</div>
       <div class="empty-room-title">لا توجد رسائل بعد</div>
@@ -1436,9 +1541,7 @@ body::before {
 
   </section>
 
-  <!-- =========================================================
-       شاشة الإعدادات
-       ========================================================= -->
+  <!-- ===== شاشة الإعدادات ===== -->
   <section class="screen" id="screen-settings">
 
     <header class="top-header">
@@ -1493,12 +1596,12 @@ body::before {
         <span class="setting-value">مفعّلة</span>
       </div>
 
-      <div class="setting-item" onclick="toast('مستوى البطارية: 78%')">
+      <div class="setting-item" onclick="toast('مستوى البطارية: ' + batteryPercent + '%')">
         <div class="setting-info">
           <span class="setting-title">🔋 البطارية</span>
           <span class="setting-desc">حالة الجهاز</span>
         </div>
-        <span class="setting-value">78%</span>
+        <span class="setting-value" id="batteryValue">--%</span>
       </div>
 
       <div class="setting-item" onclick="toast('الإصدار 1.0.0')">
@@ -1513,9 +1616,7 @@ body::before {
 
   </section>
 
-  <!-- =========================================================
-       شريط التنقل السفلي
-       ========================================================= -->
+  <!-- ===== شريط التنقل السفلي ===== -->
   <nav class="tab-bar">
     <button class="tab" data-tab="log" onclick="switchTab('log')">
       <span class="tab-icon">💬</span>
@@ -1532,29 +1633,28 @@ body::before {
   </nav>
 
   <div class="bottom-info" id="bottomInfo">
-    إشارة: <span class="hl">قوي</span> • بطارية الراديو: <span class="hl">78%</span>
+    إشارة: <span class="hl">قوي</span> • بطارية الراديو: <span class="hl" id="bottomBattery">--%</span>
   </div>
 
-  <!-- شريط الكتابة -->
+  <!-- ===== شريط الكتابة ===== -->
   <div class="chat-input-bar" id="chatInputBar">
     <button class="chat-ptt" id="chatPTT" title="اضغط للتحدث">
       📻
       <span class="chat-ptt-label">PTT</span>
     </button>
 
-    <button class="chat-mic" onclick="toast('🎙️ اضغط PTT للتحدث')">🎤</button>
+    <!-- 🆕 زر الإرسال بدل المايك -->
+    <button class="chat-send" id="chatSend" onclick="handleSend()" title="إرسال" disabled>➤</button>
 
     <div class="chat-input-wrap">
-      <button class="chat-clip" onclick="toast('📎 إرفاق ملف')">📎</button>
+      <button class="chat-clip" id="chatClip" title="إرفاق">📎</button>
       <input type="text" class="chat-input" id="chatInput" placeholder="اكتب رسالة...">
     </div>
   </div>
 
 </div>
 
-<!-- =========================================================
-     القائمة الجانبية
-     ========================================================= -->
+<!-- ===== القائمة الجانبية ===== -->
 <div class="side-menu-backdrop" id="menuBackdrop"></div>
 <aside class="side-menu" id="sideMenu">
   <div class="side-menu-header">
@@ -1598,9 +1698,124 @@ body::before {
   </button>
 </aside>
 
-<!-- =========================================================
-     Modal: إنشاء غرفة
-     ========================================================= -->
+<!-- ===== Modal: قائمة الغرفة ===== -->
+<div class="modal-overlay" id="modalRoomMenu">
+  <div class="modal">
+    <div class="modal-title">☰ خيارات الغرفة</div>
+    <div class="modal-sub">إدارة الغرفة والدردشة</div>
+
+    <button class="modal-menu-item" onclick="openCreateRoom()">
+      <span class="modal-menu-icon">➕</span>
+      <span>إضافة غرفة جديدة</span>
+    </button>
+
+    <button class="modal-menu-item" onclick="openEditRoomName()">
+      <span class="modal-menu-icon">✏️</span>
+      <span>تعديل اسم الغرفة</span>
+    </button>
+
+    <button class="modal-menu-item" onclick="openEditRoomIcon()">
+      <span class="modal-menu-icon">🎨</span>
+      <span>تغيير أيقونة الغرفة</span>
+    </button>
+
+    <button class="modal-menu-item danger" onclick="confirmClearChat()">
+      <span class="modal-menu-icon">🗑️</span>
+      <span>مسح الدردشة كاملة</span>
+    </button>
+
+    <div class="modal-actions" style="grid-template-columns:1fr;margin-top:14px;">
+      <button class="modal-btn cancel" onclick="closeModal('modalRoomMenu')">إغلاق</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Modal: تعديل اسم الغرفة ===== -->
+<div class="modal-overlay" id="modalEditName">
+  <div class="modal">
+    <div class="modal-title">✏️ تعديل اسم الغرفة</div>
+    <div class="modal-sub">اكتب الاسم الجديد</div>
+
+    <div class="modal-field">
+      <label>اسم الغرفة</label>
+      <input type="text" id="newRoomName" placeholder="اسم جديد..." maxlength="30">
+    </div>
+
+    <div class="modal-actions">
+      <button class="modal-btn cancel" onclick="closeModal('modalEditName')">إلغاء</button>
+      <button class="modal-btn confirm" onclick="saveRoomName()">حفظ</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Modal: تغيير أيقونة الغرفة ===== -->
+<div class="modal-overlay" id="modalEditIcon">
+  <div class="modal">
+    <div class="modal-title">🎨 تغيير أيقونة الغرفة</div>
+    <div class="modal-sub">اختر أيقونة جديدة</div>
+
+    <div class="icon-grid" id="iconGrid">
+      <div class="icon-option" data-icon="💬">💬</div>
+      <div class="icon-option" data-icon="📻">📻</div>
+      <div class="icon-option" data-icon="📡">📡</div>
+      <div class="icon-option" data-icon="🎙️">🎙️</div>
+      <div class="icon-option" data-icon="🔊">🔊</div>
+      <div class="icon-option" data-icon="📞">📞</div>
+      <div class="icon-option" data-icon="🛡️">🛡️</div>
+      <div class="icon-option" data-icon="⚡">⚡</div>
+    </div>
+
+    <div class="modal-actions" style="grid-template-columns:1fr;margin-top:14px;">
+      <button class="modal-btn cancel" onclick="closeModal('modalEditIcon')">إغلاق</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Modal: تأكيد مسح الدردشة ===== -->
+<div class="modal-overlay" id="modalClearChat">
+  <div class="modal">
+    <div class="modal-title">🗑️ مسح الدردشة</div>
+    <div class="modal-sub">هل أنت متأكد من مسح كل الرسائل؟<br>لا يمكن التراجع عن هذا الإجراء.</div>
+
+    <div class="modal-actions">
+      <button class="modal-btn cancel" onclick="closeModal('modalClearChat')">إلغاء</button>
+      <button class="modal-btn danger" onclick="doClearChat()">مسح</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Modal: المرفقات ===== -->
+<div class="modal-overlay" id="modalAttach">
+  <div class="modal">
+    <div class="modal-title">📎 إرفاق ملف</div>
+    <div class="modal-sub">اختر نوع المحتوى الذي تريد إرساله</div>
+
+    <div class="attach-grid">
+      <button class="attach-item" onclick="pickFile('image')">
+        <span class="attach-icon">🖼️</span>
+        <span>صورة</span>
+      </button>
+      <button class="attach-item" onclick="pickFile('video')">
+        <span class="attach-icon">🎬</span>
+        <span>فيديو</span>
+      </button>
+      <button class="attach-item" onclick="pickFile('document')">
+        <span class="attach-icon">📄</span>
+        <span>مستند</span>
+      </button>
+      <button class="attach-item" onclick="pickContact()">
+        <span class="attach-icon">👥</span>
+        <span>جهة اتصال</span>
+      </button>
+    </div>
+
+    <div class="modal-actions" style="grid-template-columns:1fr;margin-top:14px;">
+      <button class="modal-btn cancel" onclick="closeModal('modalAttach')">إلغاء</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Modal: إنشاء غرفة ===== -->
 <div class="modal-overlay" id="modalCreate">
   <div class="modal">
     <div class="modal-title">➕ إنشاء غرفة جديدة</div>
@@ -1623,9 +1838,7 @@ body::before {
   </div>
 </div>
 
-<!-- =========================================================
-     Modal: إنشاء موجة
-     ========================================================= -->
+<!-- ===== Modal: إنشاء موجة ===== -->
 <div class="modal-overlay" id="modalWave">
   <div class="modal">
     <div class="modal-title">📡 إنشاء موجة</div>
@@ -1648,9 +1861,7 @@ body::before {
   </div>
 </div>
 
-<!-- =========================================================
-     Modal: دخول غرفة
-     ========================================================= -->
+<!-- ===== Modal: دخول غرفة ===== -->
 <div class="modal-overlay" id="modalJoin">
   <div class="modal">
     <div class="modal-title">🚪 دخول غرفة</div>
@@ -1669,9 +1880,7 @@ body::before {
   </div>
 </div>
 
-<!-- =========================================================
-     Modal: البحث
-     ========================================================= -->
+<!-- ===== Modal: البحث ===== -->
 <div class="modal-overlay" id="modalSearch">
   <div class="modal">
     <div class="modal-title">🔍 البحث</div>
@@ -1697,13 +1906,6 @@ body::before {
         </div>
         <span class="room-card-code">X9Y8</span>
       </div>
-      <div class="room-card" onclick="toast('فتح: غرفة القيادة', 'success')">
-        <div class="room-card-info">
-          <span class="room-card-name">غرفة القيادة</span>
-          <span class="room-card-meta">2 أعضاء • قناة 01</span>
-        </div>
-        <span class="room-card-code">CMD1</span>
-      </div>
     </div>
 
     <div class="modal-actions" style="grid-template-columns:1fr;margin-top:14px;">
@@ -1712,9 +1914,10 @@ body::before {
   </div>
 </div>
 
-<!-- =========================================================
-     JavaScript
-     ========================================================= -->
+<!-- ===== ملف إدخال مخفي للمرفقات ===== -->
+<input type="file" id="hiddenFileInput" style="display:none;">
+
+<!-- ===== JavaScript ===== -->
 <script>
 /* =========================================================
    🎙️ PTT Engine
@@ -1886,7 +2089,38 @@ const PTTEngine = {
 };
 
 /* =========================================================
-   UI — التنقل والإجراءات
+   🔋 البطارية الحقيقية
+   ========================================================= */
+let batteryPercent = null;
+
+async function initBattery() {
+  if (!navigator.getBattery && !navigator.battery) {
+    // المتصفح لا يدعم API البطارية
+    document.getElementById('batteryValue').textContent = '—';
+    document.getElementById('bottomBattery').textContent = '—';
+    return;
+  }
+  try {
+    const battery = await (navigator.getBattery ? navigator.getBattery() : Promise.resolve(navigator.battery));
+
+    const update = () => {
+      batteryPercent = Math.round(battery.level * 100);
+      document.getElementById('batteryValue').textContent = batteryPercent + '%';
+      document.getElementById('bottomBattery').textContent = batteryPercent + '%';
+    };
+
+    update();
+    battery.addEventListener('levelchange', update);
+    battery.addEventListener('chargingchange', update);
+  } catch (e) {
+    console.warn('فشل قراءة البطارية:', e);
+    document.getElementById('batteryValue').textContent = '—';
+    document.getElementById('bottomBattery').textContent = '—';
+  }
+}
+
+/* =========================================================
+   UI
    ========================================================= */
 function switchTab(tabName) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -1911,7 +2145,6 @@ function switchTab(tabName) {
   window.scrollTo(0, 0);
 }
 
-/* Toast */
 let toastTimer;
 function toast(msg, type = '') {
   let el = document.getElementById('toast');
@@ -1928,7 +2161,6 @@ function toast(msg, type = '') {
   toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
 }
 
-/* Modal */
 function openModal(id) { document.getElementById(id).classList.add('show'); closeSideMenu(); }
 function closeModal(id) { document.getElementById(id).classList.remove('show'); }
 
@@ -1938,7 +2170,7 @@ document.querySelectorAll('.modal-overlay').forEach(overlay => {
   });
 });
 
-/* القائمة الجانبية */
+/* ===== القائمة الجانبية ===== */
 const sideMenu = document.getElementById('sideMenu');
 const menuBackdrop = document.getElementById('menuBackdrop');
 const menuToggle = document.getElementById('menuToggle');
@@ -1954,13 +2186,12 @@ function closeSideMenu() {
   menuToggle.classList.remove('open');
 }
 
-/* toggle حقيقي */
 let menuBusy = false;
 menuToggle.addEventListener('click', (e) => {
   e.stopPropagation();
   if (menuBusy) return;
   menuBusy = true;
-  setTimeout(() => menuBusy = false, 350);
+  setTimeout(() => menuBusy = false, 300);
 
   if (sideMenu.classList.contains('open')) {
     closeSideMenu();
@@ -1970,13 +2201,13 @@ menuToggle.addEventListener('click', (e) => {
 });
 menuBackdrop.addEventListener('click', closeSideMenu);
 
-/* فتح Modals */
-function openCreateRoom() { openModal('modalCreate'); }
+/* ===== فتح Modals ===== */
+function openCreateRoom() { closeModal('modalRoomMenu'); openModal('modalCreate'); }
 function openCreateWave() { openModal('modalWave'); }
 function openJoinRoom()   { openModal('modalJoin'); }
 function openSearch()     { openModal('modalSearch'); }
 
-/* اختبار النداء */
+/* ===== اختبار النداء ===== */
 async function testCall() {
   const ok = await PTTEngine.init();
   if (!ok) { toast('❌ تعذّر تشغيل الصوت', 'error'); return; }
@@ -1986,7 +2217,7 @@ async function testCall() {
   closeSideMenu();
 }
 
-/* إنشاء غرفة */
+/* ===== إنشاء غرفة ===== */
 async function createRoom() {
   const name = document.getElementById('roomName').value.trim();
   const ch = document.getElementById('roomChannel').value.trim();
@@ -2004,12 +2235,13 @@ async function createRoom() {
   document.querySelectorAll('.chip-value')[1].innerHTML = `📻 ${ch.padStart(2,'0')}`;
   document.getElementById('channelValue').textContent = `CH ${ch.padStart(2,'0')}`;
   document.querySelectorAll('.lcd-row')[0].children[0].textContent = `CH ${ch.padStart(2,'0')}`;
+  document.getElementById('roomNameLabel').textContent = name;
 
   document.getElementById('roomName').value = '';
   document.getElementById('roomChannel').value = '07';
 }
 
-/* إنشاء موجة */
+/* ===== إنشاء موجة ===== */
 async function createWave() {
   const name = document.getElementById('waveName').value.trim();
   if (!name) { toast('⚠️ أدخل اسم الموجة', 'error'); return; }
@@ -2027,7 +2259,7 @@ async function createWave() {
   }, 1500);
 }
 
-/* دخول غرفة */
+/* ===== دخول غرفة ===== */
 async function joinRoom() {
   const code = document.getElementById('joinCode').value.trim().toUpperCase();
   if (!code) { toast('⚠️ أدخل رمز الغرفة', 'error'); return; }
@@ -2042,7 +2274,7 @@ async function joinRoom() {
   setTimeout(() => switchTab('log'), 500);
 }
 
-/* البحث الحي */
+/* ===== البحث الحي ===== */
 document.getElementById('searchQuery')?.addEventListener('input', (e) => {
   const q = e.target.value.toLowerCase().trim();
   const cards = document.querySelectorAll('#searchResults .room-card');
@@ -2052,7 +2284,7 @@ document.getElementById('searchQuery')?.addEventListener('input', (e) => {
   });
 });
 
-/* تغيير القناة */
+/* ===== تغيير القناة ===== */
 function changeChannel() {
   const cur = prompt('أدخل رقم القناة الجديد (01-99):',
     document.querySelectorAll('.chip-value')[1].textContent.replace(/\D/g, ''));
@@ -2066,7 +2298,311 @@ function changeChannel() {
 }
 
 /* =========================================================
-   PTT — الأحداث
+   🆕 قائمة الغرفة
+   ========================================================= */
+document.getElementById('roomMenuBtn').addEventListener('click', () => {
+  openModal('modalRoomMenu');
+});
+
+function openEditRoomName() {
+  closeModal('modalRoomMenu');
+  const cur = document.getElementById('roomNameLabel').textContent;
+  document.getElementById('newRoomName').value = cur === 'الغرفة' ? '' : cur;
+  openModal('modalEditName');
+}
+
+function saveRoomName() {
+  const name = document.getElementById('newRoomName').value.trim();
+  if (!name) { toast('⚠️ أدخل اسم الغرفة', 'error'); return; }
+  document.getElementById('roomNameLabel').textContent = name;
+  toast(`✅ تم تحديث اسم الغرفة إلى "${name}"`, 'success');
+  closeModal('modalEditName');
+}
+
+function openEditRoomIcon() {
+  closeModal('modalRoomMenu');
+  // تحديد الأيقونة الحالية
+  const current = document.getElementById('roomIcon').textContent;
+  document.querySelectorAll('#iconGrid .icon-option').forEach(el => {
+    el.classList.toggle('selected', el.dataset.icon === current);
+  });
+  openModal('modalEditIcon');
+}
+
+document.querySelectorAll('#iconGrid .icon-option').forEach(el => {
+  el.addEventListener('click', () => {
+    const icon = el.dataset.icon;
+    document.getElementById('roomIcon').textContent = icon;
+    toast(`✅ تم تغيير الأيقونة`, 'success');
+    closeModal('modalEditIcon');
+  });
+});
+
+function confirmClearChat() {
+  closeModal('modalRoomMenu');
+  openModal('modalClearChat');
+}
+
+function doClearChat() {
+  document.getElementById('roomMessages').innerHTML = '';
+  document.getElementById('emptyRoom').style.display = 'flex';
+  toast('🗑️ تم مسح الدردشة كاملة', 'success');
+  closeModal('modalClearChat');
+}
+
+/* =========================================================
+   🆕 المرفقات
+   ========================================================= */
+document.getElementById('chatClip').addEventListener('click', () => {
+  openModal('modalAttach');
+});
+
+function pickFile(type) {
+  const input = document.getElementById('hiddenFileInput');
+  if (type === 'image')  input.accept = 'image/*';
+  if (type === 'video')  input.accept = 'video/*';
+  if (type === 'document') input.accept = '.pdf,.doc,.docx,.txt,.xls,.xlsx,.ppt,.pptx';
+  input.value = '';
+  input.onchange = (e) => {
+    const file = e.target.files[0];
+    if (file) sendAttachment(type, file);
+  };
+  input.click();
+}
+
+function pickContact() {
+  closeModal('modalAttach');
+  // في الويب لا يمكن الوصول لجهات الاتصال الحقيقية بدون إذن خاص
+  // نرسل بطاقة جهة اتصال نموذجية
+  const fakeContact = { name: 'جهة اتصال تجريبية', phone: '+967 777 000 000' };
+  addContactMessage(fakeContact);
+}
+
+function sendAttachment(type, file) {
+  closeModal('modalAttach');
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    addAttachmentMessage(type, file.name, ev.target.result, file.size);
+  };
+  if (type === 'image' || type === 'video') {
+    reader.readAsDataURL(file);
+  } else {
+    reader.readAsDataURL(file);
+  }
+}
+
+/* =========================================================
+   🆕 إضافة الرسائل
+   ========================================================= */
+
+/* رسالة صوتية */
+function addVoiceMessage(url, duration) {
+  const empty = document.getElementById('emptyRoom');
+  if (empty) empty.style.display = 'none';
+
+  const logScreen = document.getElementById('roomMessages');
+  const now = new Date();
+  const time = fmtTime(now);
+  const durStr = duration.toFixed(1);
+
+  const msg = document.createElement('div');
+  msg.className = 'msg msg-out';
+  msg.innerHTML = `
+    <div class="msg-header"><span>📻 Q307 • الآن</span></div>
+    <div class="msg-body">
+      <div class="voice-msg">
+        <button class="play-btn" data-url="${url}">▶</button>
+        <div class="waveform" data-wave="out"></div>
+      </div>
+      <div class="voice-meta">
+        <span>${time}</span>
+        <span>${durStr}ث • تم الإرسال عبر PTT</span>
+      </div>
+    </div>
+  `;
+  logScreen.appendChild(msg);
+
+  const wf = msg.querySelector('.waveform');
+  if (wf) generateWaveform(wf, 'out');
+
+  const playBtn = msg.querySelector('.play-btn');
+  playBtn.addEventListener('click', () => playRealVoice(playBtn, url));
+
+  logScreen.scrollTop = logScreen.scrollHeight;
+  toast('✅ تم إرسال الرسالة الصوتية', 'success');
+}
+
+/* رسالة نصية */
+function sendTextMessage(text) {
+  const empty = document.getElementById('emptyRoom');
+  if (empty) empty.style.display = 'none';
+
+  const logScreen = document.getElementById('roomMessages');
+  const time = fmtTime(new Date());
+
+  const msg = document.createElement('div');
+  msg.className = 'msg msg-out';
+  msg.innerHTML = `
+    <div class="msg-header"><span>📻 Q307 • الآن</span></div>
+    <div class="msg-body">
+      <div class="text-msg">${escapeHtml(text)}</div>
+      <div class="voice-meta">
+        <span>${time}</span>
+        <span>✓ تم الإرسال</span>
+      </div>
+    </div>
+  `;
+  logScreen.appendChild(msg);
+  logScreen.scrollTop = logScreen.scrollHeight;
+  PTTEngine.init().then(() => PTTEngine.playBeep(1000, 0.08, 0.4));
+}
+
+/* رسالة مرفق */
+function addAttachmentMessage(type, name, dataUrl, size) {
+  const empty = document.getElementById('emptyRoom');
+  if (empty) empty.style.display = 'none';
+
+  const logScreen = document.getElementById('roomMessages');
+  const time = fmtTime(new Date());
+  const sizeKb = (size / 1024).toFixed(1);
+
+  let typeLabel = 'مستند';
+  let typeIcon = '📄';
+  if (type === 'image') { typeLabel = 'صورة'; typeIcon = '🖼️'; }
+  if (type === 'video') { typeLabel = 'فيديو'; typeIcon = '🎬'; }
+
+  let previewHtml = '';
+  if (type === 'image') {
+    previewHtml = `<img src="${dataUrl}" class="attachment-preview-img" alt="">`;
+  }
+
+  const msg = document.createElement('div');
+  msg.className = 'msg msg-out';
+  msg.innerHTML = `
+    <div class="msg-header"><span>📻 Q307 • الآن</span></div>
+    <div class="msg-body">
+      ${previewHtml}
+      <div class="attach-msg">
+        <span class="attach-msg-icon">${typeIcon}</span>
+        <div class="attach-msg-info">
+          <span class="attach-msg-name">${escapeHtml(name)}</span>
+          <span class="attach-msg-type">${typeLabel} • ${sizeKb} KB</span>
+        </div>
+      </div>
+      <div class="voice-meta">
+        <span>${time}</span>
+        <span>✓ تم الإرسال</span>
+      </div>
+    </div>
+  `;
+  logScreen.appendChild(msg);
+  logScreen.scrollTop = logScreen.scrollHeight;
+  PTTEngine.init().then(() => PTTEngine.playBeep(1000, 0.08, 0.4));
+  toast(`✅ تم إرسال ${typeLabel}`, 'success');
+}
+
+/* رسالة جهة اتصال */
+function addContactMessage(contact) {
+  const empty = document.getElementById('emptyRoom');
+  if (empty) empty.style.display = 'none';
+
+  const logScreen = document.getElementById('roomMessages');
+  const time = fmtTime(new Date());
+
+  const msg = document.createElement('div');
+  msg.className = 'msg msg-out';
+  msg.innerHTML = `
+    <div class="msg-header"><span>📻 Q307 • الآن</span></div>
+    <div class="msg-body">
+      <div class="attach-msg">
+        <span class="attach-msg-icon">👤</span>
+        <div class="attach-msg-info">
+          <span class="attach-msg-name">${escapeHtml(contact.name)}</span>
+          <span class="attach-msg-type">${escapeHtml(contact.phone)}</span>
+        </div>
+      </div>
+      <div class="voice-meta">
+        <span>${time}</span>
+        <span>✓ جهة اتصال</span>
+      </div>
+    </div>
+  `;
+  logScreen.appendChild(msg);
+  logScreen.scrollTop = logScreen.scrollHeight;
+  PTTEngine.init().then(() => PTTEngine.playBeep(1000, 0.08, 0.4));
+  toast('✅ تم إرسال جهة الاتصال', 'success');
+}
+
+/* أدوات مساعدة */
+function fmtTime(d) {
+  return d.getHours().toString().padStart(2, '0') + ':' +
+         d.getMinutes().toString().padStart(2, '0');
+}
+
+function escapeHtml(s) {
+  const div = document.createElement('div');
+  div.textContent = s;
+  return div.innerHTML;
+}
+
+/* تشغيل تسجيل صوتي */
+function playRealVoice(btn, url) {
+  if (btn.dataset.playing === '1') {
+    btn.textContent = '▶';
+    btn.dataset.playing = '0';
+    if (window._curAudio) {
+      window._curAudio.pause();
+      window._curAudio = null;
+    }
+    return;
+  }
+
+  document.querySelectorAll('.play-btn').forEach(b => {
+    b.textContent = '▶';
+    b.dataset.playing = '0';
+  });
+
+  const audio = new Audio(url);
+  window._curAudio = audio;
+  audio.volume = 1.0;
+  audio.play();
+
+  btn.textContent = '⏸';
+  btn.dataset.playing = '1';
+
+  audio.onended = () => {
+    btn.textContent = '▶';
+    btn.dataset.playing = '0';
+    window._curAudio = null;
+  };
+}
+
+/* =========================================================
+   شريط الكتابة — زر الإرسال
+   ========================================================= */
+const chatInput = document.getElementById('chatInput');
+const chatSend  = document.getElementById('chatSend');
+
+chatInput.addEventListener('input', () => {
+  chatSend.disabled = chatInput.value.trim().length === 0;
+});
+
+chatInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && chatInput.value.trim()) {
+    handleSend();
+  }
+});
+
+function handleSend() {
+  const text = chatInput.value.trim();
+  if (!text) return;
+  sendTextMessage(text);
+  chatInput.value = '';
+  chatSend.disabled = true;
+}
+
+/* =========================================================
+   PTT
    ========================================================= */
 const pttMain = document.getElementById('pttMain');
 const chatPTT = document.getElementById('chatPTT');
@@ -2087,8 +2623,10 @@ function onPTTStop(btn) {
   btn.classList.remove('holding');
   if (lcdStatus) lcdStatus.textContent = '•';
   const bi = document.getElementById('bottomInfo');
-  if (bi) bi.innerHTML = 'إشارة: <span class="hl">قوي</span> • بطارية الراديو: <span class="hl">78%</span>';
-
+  if (bi) {
+    const b = batteryPercent !== null ? batteryPercent + '%' : '—';
+    bi.innerHTML = `إشارة: <span class="hl">قوي</span> • بطارية الراديو: <span class="hl">${b}</span>`;
+  }
   PTTEngine.stopTalking();
 }
 
@@ -2129,136 +2667,6 @@ function generateWaveform(container, type = 'in') {
   }
 }
 
-document.querySelectorAll('.waveform').forEach(wf => {
-  generateWaveform(wf, wf.dataset.wave || 'in');
-});
-
-/* =========================================================
-   إضافة رسالة صوتية
-   ========================================================= */
-function addVoiceMessage(url, duration) {
-  // إخفاء الشاشة الفارغة
-  const empty = document.getElementById('emptyRoom');
-  if (empty) empty.style.display = 'none';
-
-  const logScreen = document.getElementById('roomMessages');
-  const now = new Date();
-  const time = now.getHours().toString().padStart(2, '0') + ':' +
-               now.getMinutes().toString().padStart(2, '0');
-  const durStr = duration.toFixed(1);
-
-  const msg = document.createElement('div');
-  msg.className = 'msg msg-out';
-  msg.style.animation = 'msgSlide .35s ease';
-
-  msg.innerHTML = `
-    <div class="msg-header">
-      <span>📻 Q307 • الآن</span>
-    </div>
-    <div class="msg-body">
-      <div class="voice-msg">
-        <button class="play-btn" data-url="${url}">▶</button>
-        <div class="waveform" data-wave="out"></div>
-      </div>
-      <div class="voice-meta">
-        <span>${time}</span>
-        <span>${durStr}ث • تم الإرسال عبر PTT</span>
-      </div>
-    </div>
-  `;
-
-  logScreen.appendChild(msg);
-
-  const wf = msg.querySelector('.waveform');
-  if (wf) generateWaveform(wf, 'out');
-
-  const playBtn = msg.querySelector('.play-btn');
-  playBtn.addEventListener('click', () => playRealVoice(playBtn, url));
-
-  logScreen.scrollTop = logScreen.scrollHeight;
-  toast('✅ تم إرسال الرسالة الصوتية', 'success');
-}
-
-/* تشغيل تسجيل حقيقي */
-function playRealVoice(btn, url) {
-  if (btn.dataset.playing === '1') {
-    btn.textContent = '▶';
-    btn.dataset.playing = '0';
-    if (window._curAudio) {
-      window._curAudio.pause();
-      window._curAudio = null;
-    }
-    return;
-  }
-
-  document.querySelectorAll('.play-btn').forEach(b => {
-    b.textContent = '▶';
-    b.dataset.playing = '0';
-  });
-
-  const audio = new Audio(url);
-  window._curAudio = audio;
-  audio.volume = 1.0;
-  audio.play();
-
-  btn.textContent = '⏸';
-  btn.dataset.playing = '1';
-
-  audio.onended = () => {
-    btn.textContent = '▶';
-    btn.dataset.playing = '0';
-    window._curAudio = null;
-  };
-}
-
-/* =========================================================
-   إرسال رسالة نصية
-   ========================================================= */
-const chatInput = document.getElementById('chatInput');
-chatInput?.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter' && chatInput.value.trim()) {
-    sendTextMessage(chatInput.value.trim());
-    chatInput.value = '';
-  }
-});
-
-function sendTextMessage(text) {
-  const empty = document.getElementById('emptyRoom');
-  if (empty) empty.style.display = 'none';
-
-  const logScreen = document.getElementById('roomMessages');
-  const now = new Date();
-  const time = now.getHours().toString().padStart(2, '0') + ':' +
-               now.getMinutes().toString().padStart(2, '0');
-
-  const msg = document.createElement('div');
-  msg.className = 'msg msg-out';
-  msg.style.animation = 'msgSlide .35s ease';
-  msg.innerHTML = `
-    <div class="msg-header">
-      <span>📻 Q307 • الآن</span>
-    </div>
-    <div class="msg-body">
-      <div class="text-msg">${escapeHtml(text)}</div>
-      <div class="voice-meta">
-        <span>${time}</span>
-        <span>✓ تم الإرسال</span>
-      </div>
-    </div>
-  `;
-
-  logScreen.appendChild(msg);
-  logScreen.scrollTop = logScreen.scrollHeight;
-  PTTEngine.init().then(() => PTTEngine.playBeep(1000, 0.08, 0.4));
-  toast('✅ تم إرسال الرسالة', 'success');
-}
-
-function escapeHtml(s) {
-  const div = document.createElement('div');
-  div.textContent = s;
-  return div.innerHTML;
-}
-
 /* =========================================================
    تهيئة أولى
    ========================================================= */
@@ -2272,6 +2680,9 @@ window.addEventListener('load', () => {
   document.addEventListener('touchstart', initOnce);
 
   document.getElementById('chatInputBar').classList.remove('active');
+
+  // 🔋 البطارية
+  initBattery();
 });
 
 /* منع قائمة الزر الأيمن */
