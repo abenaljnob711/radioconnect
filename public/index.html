@@ -1452,6 +1452,605 @@ body::before {
   font-family: 'Courier New', monospace;
   letter-spacing: 1px;
 }
+   <div class="app">
+
+  <!-- =========================================================
+       شاشة النداء اللاسلكي (الموجة)
+       ========================================================= -->
+  <section class="screen active" id="screen-radio">
+
+    <header class="top-header">
+      <button class="menu-toggle" id="menuToggle" title="الإعدادات">☰</button>
+      <div class="header-right">
+        <span>S458 • Q307</span>
+      </div>
+      <div class="brand">
+        <div class="brand-text">
+          <span class="brand-title">Radio Connect</span>
+          <span class="brand-sub">راديو كونكت</span>
+        </div>
+        <span class="brand-icon">📻</span>
+      </div>
+    </header>
+
+    <div class="status-row">
+      <div class="chip">
+        <div class="chip-value online">متصل</div>
+      </div>
+      <div class="chip">
+        <div class="chip-value">📻 07</div>
+        <div class="chip-label">القناة</div>
+      </div>
+      <div class="chip">
+        <div class="chip-value code" id="waveCodeChip">Q30712</div>
+        <div class="chip-label">رقم الموجة</div>
+      </div>
+    </div>
+
+    <div class="radio-stage">
+      <div class="radio-device">
+        <div class="antenna"></div>
+
+        <div class="knobs">
+          <div class="knob" title="VOL"></div>
+          <div class="knob" title="CH"></div>
+        </div>
+
+        <div class="body-main">
+          <div class="lcd">
+            <div class="lcd-row">
+              <span class="lcd-label" id="lcdLine1">CH 07</span>
+              <span id="lcdLine2">S458</span>
+            </div>
+            <div class="lcd-row">
+              <span class="lcd-label" id="lcdLine3">Q307 • RX</span>
+              <span id="lcdStatus">•</span>
+            </div>
+          </div>
+
+          <div class="side-btns">
+            <span class="side-btn">MENU</span>
+            <span class="side-btn">A/B</span>
+          </div>
+
+          <div class="speaker-grill"></div>
+        </div>
+
+        <button class="ptt-btn" id="pttMain">PTT</button>
+        <div class="ptt-sub">PRESS TO TALK</div>
+        <div class="ab-indicator">A/B</div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- =========================================================
+       شاشة الغرفة
+       ========================================================= -->
+  <section class="screen" id="screen-log">
+
+    <div class="log-header">
+      <div class="log-actions">
+        <span id="roomMenuBtn">☰</span>
+        <span onclick="toast('معلومات القناة')">ⓘ</span>
+      </div>
+      <div class="log-title">
+        <h2><span id="roomIcon">💬</span> <span id="roomNameLabel">الغرفة</span> <span style="font-size:14px;">←</span></h2>
+        <span class="sub" id="roomSubLabel">📻 Q307 • CH 07 | S458 • Q307</span>
+      </div>
+    </div>
+
+    <div class="encrypted-badge" id="roomBadge" style="display:none;">
+      <span class="encrypted-badge-inner">
+        متصل الآن: 2 &nbsp;|&nbsp; حالة: قناة آمنة - مشفّرة
+      </span>
+    </div>
+
+    <div class="room-users" id="roomUsers" style="display:none;">
+      <div class="user-pill active">
+        <span class="user-avatar">Q</span> Q307 (أنت)
+      </div>
+    </div>
+
+    <div id="roomMessages"></div>
+
+    <!-- الشاشة الفارغة -->
+    <div class="empty-room" id="emptyRoom">
+      <div class="empty-room-icon">💬</div>
+      <div class="empty-room-title">لا توجد غرفة بعد</div>
+      <div class="empty-room-text">
+        أنشئ غرفة للحصول على رقم خاص بك، ثم شاركه مع فريقك للانضمام.
+      </div>
+      <button class="empty-room-btn" onclick="openCreateRoom()">
+        ➕ إنشاء غرفة جديدة
+      </button>
+    </div>
+
+  </section>
+
+  <!-- =========================================================
+       شاشة الإعدادات
+       ========================================================= -->
+  <section class="screen" id="screen-settings">
+
+    <header class="top-header">
+      <div class="brand">
+        <span class="brand-icon">⚙️</span>
+        <div class="brand-text">
+          <span class="brand-title">الإعدادات</span>
+          <span class="brand-sub">Settings</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="settings-list">
+
+      <div class="setting-item" onclick="changeChannel()">
+        <div class="setting-info">
+          <span class="setting-title">📻 القناة الحالية</span>
+          <span class="setting-desc">اختر قناة للتواصل</span>
+        </div>
+        <span class="setting-value" id="channelValue">CH 07</span>
+      </div>
+
+      <div class="setting-item" onclick="toast('اسم الموجة: ' + waveName, 'success')">
+        <div class="setting-info">
+          <span class="setting-title">📡 اسم الموجة</span>
+          <span class="setting-desc">اسم موجتك الحالية</span>
+        </div>
+        <span class="setting-value" id="waveNameValue">—</span>
+      </div>
+
+      <div class="setting-item" onclick="toast('رقم الموجة: ' + waveCode, 'success')">
+        <div class="setting-info">
+          <span class="setting-title">🔑 رقم الموجة</span>
+          <span class="setting-desc">شارك هذا الرقم للانضمام</span>
+        </div>
+        <span class="setting-value" id="waveCodeValue">—</span>
+      </div>
+
+      <div class="setting-item" onclick="toast('المستخدم: Q307')">
+        <div class="setting-info">
+          <span class="setting-title">👤 معرّف المستخدم</span>
+          <span class="setting-desc">هويتك في القناة</span>
+        </div>
+        <span class="setting-value">Q307</span>
+      </div>
+
+      <div class="setting-item" onclick="testCall()">
+        <div class="setting-info">
+          <span class="setting-title">🔔 اختبار صوت النداء</span>
+          <span class="setting-desc">تأكد من أن الصوت يعمل</span>
+        </div>
+        <span class="setting-value">تجربة</span>
+      </div>
+
+      <div class="setting-item" onclick="toast('الإشعارات مفعّلة', 'success')">
+        <div class="setting-info">
+          <span class="setting-title">🔔 الإشعارات</span>
+          <span class="setting-desc">تنبيهات عند وصول نداء</span>
+        </div>
+        <span class="setting-value">مفعّلة</span>
+      </div>
+
+      <div class="setting-item" onclick="toast('مستوى البطارية: ' + (batteryPercent !== null ? batteryPercent : '—') + '%')">
+        <div class="setting-info">
+          <span class="setting-title">🔋 البطارية</span>
+          <span class="setting-desc">حالة الجهاز</span>
+        </div>
+        <span class="setting-value" id="batteryValue">--%</span>
+      </div>
+
+      <div class="setting-item" onclick="toast('الإصدار 1.0.0')">
+        <div class="setting-info">
+          <span class="setting-title">ℹ️ حول التطبيق</span>
+          <span class="setting-desc">Radio Connect</span>
+        </div>
+        <span class="setting-value">v1.0</span>
+      </div>
+
+    </div>
+
+  </section>
+
+  <!-- =========================================================
+       شريط التنقل السفلي
+       ========================================================= -->
+  <nav class="tab-bar">
+    <button class="tab" data-tab="log" onclick="switchTab('log')">
+      <span class="tab-icon">💬</span>
+      <span>الغرفة</span>
+    </button>
+    <button class="tab active" data-tab="radio" onclick="switchTab('radio')">
+      <span class="tab-icon">📡</span>
+      <span>النداء اللاسلكي</span>
+    </button>
+    <button class="tab" data-tab="settings" onclick="switchTab('settings')">
+      <span class="tab-icon">⚙️</span>
+      <span>الإعدادات</span>
+    </button>
+  </nav>
+
+  <div class="bottom-info" id="bottomInfo">
+    إشارة: <span class="hl">قوي</span> • بطارية الراديو: <span class="hl" id="bottomBattery">--%</span>
+  </div>
+
+  <!-- شريط الكتابة -->
+  <div class="chat-input-bar" id="chatInputBar">
+    <button class="chat-ptt" id="chatPTT" title="اضغط للتحدث">
+      📻
+      <span class="chat-ptt-label">PTT</span>
+    </button>
+
+    <button class="chat-send" id="chatSend" onclick="handleSend()" title="إرسال" disabled>➤</button>
+
+    <div class="chat-input-wrap">
+      <button class="chat-clip" id="chatClip" title="إرفاق">📎</button>
+      <input type="text" class="chat-input" id="chatInput" placeholder="اكتب رسالة...">
+    </div>
+  </div>
+
+</div>
+
+<!-- =========================================================
+     القائمة الجانبية
+     ========================================================= -->
+<div class="side-menu-backdrop" id="menuBackdrop"></div>
+<aside class="side-menu" id="sideMenu">
+  <div class="side-menu-header">
+    <div class="side-menu-title">
+      <span class="icon">⚙️</span>
+      <span>الإعدادات السريعة</span>
+    </div>
+    <button class="side-menu-close" onclick="closeSideMenu()">✕</button>
+  </div>
+
+  <button class="menu-item primary" onclick="openCreateWave()">
+    <span class="menu-icon">📡</span>
+    <span class="menu-text">
+      <span class="menu-label">إنشاء موجة</span>
+      <span class="menu-desc">بث نداء لاسلكي جديد</span>
+    </span>
+  </button>
+
+  <button class="menu-item" onclick="openEditWaveName()">
+    <span class="menu-icon">✏️</span>
+    <span class="menu-text">
+      <span class="menu-label">تعديل اسم الموجة</span>
+      <span class="menu-desc">غيّر اسم موجتك الحالية</span>
+    </span>
+  </button>
+
+  <button class="menu-item" onclick="openSearch()">
+    <span class="menu-icon">🔍</span>
+    <span class="menu-text">
+      <span class="menu-label">البحث</span>
+      <span class="menu-desc">ابحث عن موجة أو غرفة</span>
+    </span>
+  </button>
+
+  <button class="menu-item" onclick="testCall()">
+    <span class="menu-icon">🔔</span>
+    <span class="menu-text">
+      <span class="menu-label">اختبار النداء</span>
+      <span class="menu-desc">تجربة صوت النداء</span>
+    </span>
+  </button>
+</aside>
+
+<!-- =========================================================
+     Modal: قائمة الغرفة
+     ========================================================= -->
+<div class="modal-overlay" id="modalRoomMenu">
+  <div class="modal">
+    <div class="modal-title">☰ خيارات الغرفة</div>
+    <div class="modal-sub">إدارة الغرفة والدردشة</div>
+
+    <button class="modal-menu-item" onclick="openEditRoomName()">
+      <span class="modal-menu-icon">✏️</span>
+      <span>تعديل اسم الغرفة</span>
+    </button>
+
+    <button class="modal-menu-item" onclick="openEditRoomIcon()">
+      <span class="modal-menu-icon">🎨</span>
+      <span>تغيير أيقونة الغرفة</span>
+    </button>
+
+    <button class="modal-menu-item danger" onclick="confirmClearChat()">
+      <span class="modal-menu-icon">🗑️</span>
+      <span>مسح الدردشة كاملة</span>
+    </button>
+
+    <div class="modal-actions" style="grid-template-columns:1fr;margin-top:14px;">
+      <button class="modal-btn cancel" onclick="closeModal('modalRoomMenu')">إغلاق</button>
+    </div>
+  </div>
+</div>
+
+<!-- =========================================================
+     Modal: تعديل اسم الموجة
+     ========================================================= -->
+<div class="modal-overlay" id="modalEditWave">
+  <div class="modal">
+    <div class="modal-title">✏️ تعديل اسم الموجة</div>
+    <div class="modal-sub">اكتب الاسم الجديد للموجة</div>
+
+    <div class="modal-field">
+      <label>اسم الموجة</label>
+      <input type="text" id="newWaveName" placeholder="اسم الموجة..." maxlength="30">
+    </div>
+
+    <div class="modal-actions">
+      <button class="modal-btn cancel" onclick="closeModal('modalEditWave')">إلغاء</button>
+      <button class="modal-btn confirm" onclick="saveWaveName()">حفظ</button>
+    </div>
+  </div>
+</div>
+
+<!-- =========================================================
+     Modal: تعديل اسم الغرفة
+     ========================================================= -->
+<div class="modal-overlay" id="modalEditName">
+  <div class="modal">
+    <div class="modal-title">✏️ تعديل اسم الغرفة</div>
+    <div class="modal-sub">اكتب الاسم الجديد</div>
+
+    <div class="modal-field">
+      <label>اسم الغرفة</label>
+      <input type="text" id="newRoomName" placeholder="اسم جديد..." maxlength="30">
+    </div>
+
+    <div class="modal-actions">
+      <button class="modal-btn cancel" onclick="closeModal('modalEditName')">إلغاء</button>
+      <button class="modal-btn confirm" onclick="saveRoomName()">حفظ</button>
+    </div>
+  </div>
+</div>
+
+<!-- =========================================================
+     Modal: تغيير أيقونة الغرفة
+     ========================================================= -->
+<div class="modal-overlay" id="modalEditIcon">
+  <div class="modal">
+    <div class="modal-title">🎨 تغيير أيقونة الغرفة</div>
+    <div class="modal-sub">اختر أيقونة جديدة</div>
+
+    <div class="icon-grid" id="iconGrid">
+      <div class="icon-option" data-icon="💬">💬</div>
+      <div class="icon-option" data-icon="📻">📻</div>
+      <div class="icon-option" data-icon="📡">📡</div>
+      <div class="icon-option" data-icon="🎙️">🎙️</div>
+      <div class="icon-option" data-icon="🔊">🔊</div>
+      <div class="icon-option" data-icon="📞">📞</div>
+      <div class="icon-option" data-icon="🛡️">🛡️</div>
+      <div class="icon-option" data-icon="⚡">⚡</div>
+    </div>
+
+    <div class="modal-actions" style="grid-template-columns:1fr;margin-top:14px;">
+      <button class="modal-btn cancel" onclick="closeModal('modalEditIcon')">إغلاق</button>
+    </div>
+  </div>
+</div>
+
+<!-- =========================================================
+     Modal: تأكيد مسح الدردشة
+     ========================================================= -->
+<div class="modal-overlay" id="modalClearChat">
+  <div class="modal">
+    <div class="modal-title">🗑️ مسح الدردشة</div>
+    <div class="modal-sub">هل أنت متأكد من مسح كل الرسائل؟<br>لا يمكن التراجع.</div>
+
+    <div class="modal-actions">
+      <button class="modal-btn cancel" onclick="closeModal('modalClearChat')">إلغاء</button>
+      <button class="modal-btn danger" onclick="doClearChat()">مسح</button>
+    </div>
+  </div>
+</div>
+
+<!-- =========================================================
+     Modal: المرفقات
+     ========================================================= -->
+<div class="modal-overlay" id="modalAttach">
+  <div class="modal">
+    <div class="modal-title">📎 إرفاق ملف</div>
+    <div class="modal-sub">اختر نوع المحتوى</div>
+
+    <div class="attach-grid">
+      <button class="attach-item" onclick="pickFile('image')">
+        <span class="attach-icon">🖼️</span>
+        <span>صورة</span>
+      </button>
+      <button class="attach-item" onclick="pickFile('video')">
+        <span class="attach-icon">🎬</span>
+        <span>فيديو</span>
+      </button>
+      <button class="attach-item" onclick="pickFile('document')">
+        <span class="attach-icon">📄</span>
+        <span>مستند</span>
+      </button>
+      <button class="attach-item" onclick="pickContact()">
+        <span class="attach-icon">👥</span>
+        <span>جهة اتصال</span>
+      </button>
+    </div>
+
+    <div class="modal-actions" style="grid-template-columns:1fr;margin-top:14px;">
+      <button class="modal-btn cancel" onclick="closeModal('modalAttach')">إلغاء</button>
+    </div>
+  </div>
+</div>
+
+<!-- =========================================================
+     Modal: إنشاء غرفة
+     ========================================================= -->
+<div class="modal-overlay" id="modalCreate">
+  <div class="modal">
+    <div class="modal-title">➕ إنشاء غرفة جديدة</div>
+    <div class="modal-sub">سيُولَّد رقم غرفة خاص بك تلقائياً</div>
+
+    <div class="modal-field">
+      <label>اسم الغرفة</label>
+      <input type="text" id="roomName" placeholder="مثال: فريق المراقبة" maxlength="30">
+    </div>
+
+    <div class="modal-field">
+      <label>رقم القناة</label>
+      <input type="text" id="roomChannel" value="07" maxlength="2">
+    </div>
+
+    <div class="modal-actions">
+      <button class="modal-btn cancel" onclick="closeModal('modalCreate')">إلغاء</button>
+      <button class="modal-btn confirm" onclick="createRoom()">إنشاء</button>
+    </div>
+  </div>
+</div>
+
+<!-- =========================================================
+     Modal: إنشاء موجة
+     ========================================================= -->
+<div class="modal-overlay" id="modalWave">
+  <div class="modal">
+    <div class="modal-title">📡 إنشاء موجة</div>
+    <div class="modal-sub">سيُولَّد رقم موجة خاص بك تلقائياً</div>
+
+    <div class="modal-field">
+      <label>اسم الموجة</label>
+      <input type="text" id="waveName" placeholder="مثال: نداء استغاثة" maxlength="30">
+    </div>
+
+    <div class="modal-actions">
+      <button class="modal-btn cancel" onclick="closeModal('modalWave')">إلغاء</button>
+      <button class="modal-btn confirm" onclick="createWave()">إنشاء</button>
+    </div>
+  </div>
+</div>
+
+<!-- =========================================================
+     Modal: نتيجة إنشاء الموجة (عرض الرقم)
+     ========================================================= -->
+<div class="modal-overlay" id="modalWaveCreated">
+  <div class="modal">
+    <div class="modal-title">✅ تم إنشاء الموجة</div>
+    <div class="modal-sub">شارك هذا الرقم للانضمام إلى موجتك</div>
+
+    <div class="code-display">
+      <div class="code-display-label">رقم الموجة</div>
+      <div class="code-display-value" id="createdWaveCode">Q00000</div>
+      <div class="code-display-hint">
+        📤 شارك هذا الرقم مع من تريد التواصل معه<br>
+        🔍 سيبحث عنه من خانة "البحث"
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="modal-btn cancel" onclick="copyWaveCode()">📋 نسخ</button>
+      <button class="modal-btn confirm" onclick="closeModal('modalWaveCreated')">تمام</button>
+    </div>
+  </div>
+</div>
+
+<!-- =========================================================
+     Modal: نتيجة إنشاء الغرفة (عرض الرقم)
+     ========================================================= -->
+<div class="modal-overlay" id="modalRoomCreated">
+  <div class="modal">
+    <div class="modal-title">✅ تم إنشاء الغرفة</div>
+    <div class="modal-sub">شارك هذا الرقم للانضمام إلى غرفتك</div>
+
+    <div class="code-display">
+      <div class="code-display-label">رقم الغرفة</div>
+      <div class="code-display-value" id="createdRoomCode">G0000</div>
+      <div class="code-display-hint">
+        📤 شارك هذا الرقم مع فريقك<br>
+        🔍 سيبحث عنه من خانة "البحث"
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="modal-btn cancel" onclick="copyRoomCode()">📋 نسخ</button>
+      <button class="modal-btn confirm" onclick="closeModal('modalRoomCreated')">تمام</button>
+    </div>
+  </div>
+</div>
+
+<!-- =========================================================
+     Modal: البحث
+     ========================================================= -->
+<div class="modal-overlay" id="modalSearch">
+  <div class="modal">
+    <div class="modal-title">🔍 البحث</div>
+    <div class="modal-sub">ابحث عن موجة برقمها للانضمام</div>
+
+    <div class="modal-field">
+      <label>رقم الموجة</label>
+      <input type="text" id="searchQuery" class="code-input" placeholder="Q00000" maxlength="10">
+    </div>
+
+    <div class="modal-actions" style="grid-template-columns:1fr;margin-bottom:14px;">
+      <button class="modal-btn confirm" onclick="doSearch()">🔍 بحث</button>
+    </div>
+
+    <div id="searchResults">
+      <div class="no-results">
+        <span class="no-results-icon">🔎</span>
+        اكتب رقم الموجة واضغط بحث للعثور على المستخدم
+      </div>
+    </div>
+
+    <div class="modal-actions" style="grid-template-columns:1fr;margin-top:14px;">
+      <button class="modal-btn cancel" onclick="closeModal('modalSearch')">إغلاق</button>
+    </div>
+  </div>
+</div>
+
+<!-- =========================================================
+     Modal: نافذة الانضمام (موافق / إلغاء)
+     ========================================================= -->
+<div class="modal-overlay" id="modalJoinConfirm">
+  <div class="modal">
+    <div class="modal-title">📩 طلب انضمام</div>
+    <div class="modal-sub">هل تريد إرسال طلب انضمام لهذه الموجة؟</div>
+
+    <div class="join-request-info">
+      <div class="join-request-icon">📡</div>
+      <div class="join-request-name" id="joinTargetName">—</div>
+      <div class="join-request-code" id="joinTargetCode">Q00000</div>
+    </div>
+
+    <div class="modal-sub" style="margin-bottom:0;">
+      ⚠️ سيحتاج صاحب الموجة للموافقة على طلبك
+    </div>
+
+    <div class="modal-actions">
+      <button class="modal-btn cancel" onclick="cancelJoin()">❌ إلغاء</button>
+      <button class="modal-btn confirm" onclick="confirmJoin()">✅ موافق</button>
+    </div>
+  </div>
+</div>
+
+<!-- =========================================================
+     Modal: طلب انضمام وارد (لصاحب الموجة)
+     ========================================================= -->
+<div class="modal-overlay" id="modalIncomingRequest">
+  <div class="modal">
+    <div class="modal-title">🔔 طلب انضمام وارد</div>
+    <div class="modal-sub">شخص يريد الانضمام إلى موجتك</div>
+
+    <div class="join-request-info">
+      <div class="join-request-icon">👤</div>
+      <div class="join-request-name" id="incomingName">—</div>
+      <div class="join-request-code" id="incomingCode">—</div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="modal-btn danger" onclick="rejectIncoming()">❌ رفض</button>
+      <button class="modal-btn confirm" onclick="acceptIncoming()">✅ قبول</button>
+    </div>
+  </div>
+</div>
+
+<!-- ملف إدخال مخفي للمرفقات -->
+<input type="file" id="hiddenFileInput" style="display:none;">
 </style>
 </head>
 <body>
