@@ -31,6 +31,7 @@
   --blue-msg-2: #0f3550;
   --red-msg: #6b1220;
   --red-msg-2: #45080f;
+  --purple: #8b5cf6;
   --radius: 14px;
 }
 
@@ -44,15 +45,12 @@ body {
   position: relative;
 }
 
-/* خلفية زخرفية */
 body::before {
   content: '';
   position: fixed; inset: 0;
   background:
     radial-gradient(circle at 20% 20%, rgba(0,229,255,.06), transparent 45%),
-    radial-gradient(circle at 80% 80%, rgba(0,255,136,.05), transparent 45%),
-    repeating-linear-gradient(45deg, transparent 0, transparent 2px,
-      rgba(0,229,255,.015) 2px, rgba(0,229,255,.015) 3px);
+    radial-gradient(circle at 80% 80%, rgba(0,255,136,.05), transparent 45%);
   pointer-events: none;
   z-index: 0;
 }
@@ -139,6 +137,171 @@ body::before {
   color: var(--cyan);
 }
 
+/* زر ⚙️ الجانبي */
+.menu-toggle {
+  width: 42px; height: 42px;
+  border-radius: 11px;
+  background: linear-gradient(180deg, var(--card-2), var(--card));
+  border: 1px solid var(--border);
+  color: var(--cyan);
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all .2s;
+  font-family: inherit;
+  flex-shrink: 0;
+}
+.menu-toggle:active {
+  transform: scale(.94);
+  border-color: var(--cyan);
+  box-shadow: 0 0 14px rgba(0,229,255,.4);
+}
+.menu-toggle.open {
+  background: linear-gradient(180deg, #00e5ff, #008fa8);
+  color: #001418;
+  border-color: var(--cyan);
+  box-shadow: 0 0 18px rgba(0,229,255,.6);
+}
+
+/* =========================================================
+   القائمة الجانبية
+   ========================================================= */
+.side-menu {
+  position: fixed;
+  top: 0; right: 0;
+  height: 100vh;
+  width: 280px;
+  background: linear-gradient(180deg, var(--card-2), var(--bg));
+  border-left: 1px solid var(--cyan);
+  box-shadow: -12px 0 40px rgba(0,229,255,.25);
+  z-index: 300;
+  transform: translateX(110%);
+  transition: transform .32s cubic-bezier(.4,0,.2,1);
+  display: flex;
+  flex-direction: column;
+  padding: 20px 16px;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+.side-menu::-webkit-scrollbar { display: none; }
+.side-menu.open { transform: translateX(0); }
+
+.side-menu-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.7);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  z-index: 299;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .3s;
+}
+.side-menu-backdrop.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.side-menu-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 16px;
+}
+
+.side-menu-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--cyan);
+  text-shadow: 0 0 10px rgba(0,229,255,.5);
+}
+.side-menu-title .icon { font-size: 20px; }
+
+.side-menu-close {
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+}
+.side-menu-close:active {
+  border-color: var(--red);
+  color: var(--red);
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 12px;
+  background: linear-gradient(180deg, rgba(255,255,255,.02), transparent);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin-bottom: 10px;
+  color: var(--text);
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all .2s;
+  font-family: inherit;
+  text-align: right;
+  width: 100%;
+}
+.menu-item:active {
+  transform: scale(.97);
+  border-color: var(--cyan);
+  box-shadow: 0 0 16px rgba(0,229,255,.3);
+}
+
+.menu-item .menu-icon {
+  width: 40px; height: 40px;
+  border-radius: 11px;
+  background: rgba(0,229,255,.1);
+  border: 1px solid rgba(0,229,255,.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 19px;
+  flex-shrink: 0;
+}
+.menu-item .menu-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+.menu-item .menu-label {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: var(--text);
+}
+.menu-item .menu-desc {
+  font-size: 10.5px;
+  color: var(--text-dim);
+  font-weight: 500;
+}
+
+.menu-item.primary {
+  background: linear-gradient(180deg, rgba(0,229,255,.08), rgba(0,229,255,.02));
+  border-color: rgba(0,229,255,.4);
+}
+.menu-item.primary .menu-icon {
+  background: rgba(0,229,255,.2);
+}
+
 /* =========================================================
    شرائط الحالة
    ========================================================= */
@@ -204,13 +367,6 @@ body::before {
   margin: 8px 0 16px;
 }
 
-.radio-stage::after {
-  content: '';
-  position: absolute; inset: 0;
-  background: radial-gradient(ellipse at center, rgba(0,229,255,.08), transparent 60%);
-  pointer-events: none;
-}
-
 .radio-device {
   position: relative;
   width: 210px;
@@ -219,7 +375,6 @@ body::before {
           drop-shadow(0 0 30px rgba(0,229,255,.15));
 }
 
-/* الهوائي */
 .antenna {
   position: absolute;
   top: 0; right: 58px;
@@ -239,7 +394,6 @@ body::before {
   box-shadow: 0 0 6px rgba(0,229,255,.4);
 }
 
-/* أزرار علوية */
 .knobs {
   position: absolute;
   top: 88px; right: 18px;
@@ -264,7 +418,6 @@ body::before {
   border-radius: 2px;
 }
 
-/* الجسم الرئيسي */
 .body-main {
   position: absolute;
   top: 110px; left: 0; right: 0;
@@ -287,7 +440,6 @@ body::before {
   pointer-events: none;
 }
 
-/* الشاشة LCD */
 .lcd {
   position: absolute;
   top: 16px; left: 20px; right: 20px;
@@ -318,11 +470,8 @@ body::before {
   font-size: 11.5px;
 }
 
-.lcd-row .lcd-label {
-  color: #00cc70;
-}
+.lcd-row .lcd-label { color: #00cc70; }
 
-/* أزرار جانبية (MENU / A/B) */
 .side-btns {
   position: absolute;
   top: 92px; left: 12px; right: 12px;
@@ -341,7 +490,6 @@ body::before {
   border: 1px solid #2a2a2a;
 }
 
-/* شبكة السماعة */
 .speaker-grill {
   position: absolute;
   bottom: 14px; left: 24px; right: 24px;
@@ -353,7 +501,6 @@ body::before {
   box-shadow: inset 0 3px 6px rgba(0,0,0,.95);
 }
 
-/* زر PTT */
 .ptt-btn {
   position: absolute;
   top: 140px; left: 50%;
@@ -484,6 +631,23 @@ body::before {
   color: var(--text-dim);
 }
 
+/* شريط مستوى الصوت أثناء PTT */
+.level-meter {
+  display: none;
+  margin: 8px 0 0;
+  height: 6px;
+  background: rgba(0,0,0,.4);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.level-meter.active { display: block; }
+.level-meter-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--green), var(--cyan), var(--red));
+  transition: width .08s;
+}
+
 /* =========================================================
    شريط التنقل السفلي
    ========================================================= */
@@ -553,7 +717,7 @@ body::before {
 .bottom-info .hl { color: var(--cyan); font-weight: 700; }
 
 /* =========================================================
-   شاشة السجل
+   شاشة الغرفة
    ========================================================= */
 .log-header {
   display: flex;
@@ -617,7 +781,48 @@ body::before {
   animation: dotPulse 1.5s ease-in-out infinite;
 }
 
-/* فاصل إرسال */
+.room-users {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 4px 0 10px;
+  margin-bottom: 10px;
+  scrollbar-width: none;
+}
+.room-users::-webkit-scrollbar { display: none; }
+
+.user-pill {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  background: var(--card-2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-dim);
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.user-pill.active {
+  border-color: var(--green);
+  color: var(--green);
+  box-shadow: 0 0 8px rgba(0,255,136,.3);
+}
+
+.user-avatar {
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--cyan), var(--cyan-dark));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #001418;
+  font-size: 10px;
+  font-weight: 800;
+}
+
 .send-separator {
   display: flex;
   align-items: center;
@@ -636,7 +841,6 @@ body::before {
   background: linear-gradient(90deg, transparent, var(--border), transparent);
 }
 
-/* فقاعات الرسائل */
 .msg {
   margin-bottom: 12px;
   position: relative;
@@ -664,12 +868,6 @@ body::before {
 .msg-in  .msg-header { color: var(--cyan); justify-content: flex-end; }
 .msg-out .msg-header { color: #ff5577; }
 
-.msg-time {
-  font-size: 10px;
-  color: var(--text-dim);
-  font-weight: 500;
-}
-
 .msg-body {
   border-radius: 14px;
   padding: 12px 14px;
@@ -687,7 +885,6 @@ body::before {
   border-top-left-radius: 4px;
 }
 
-/* رسالة صوتية */
 .voice-msg {
   display: flex;
   align-items: center;
@@ -757,7 +954,7 @@ body::before {
 }
 
 /* =========================================================
-   شريط الكتابة السفلي (في السجل)
+   شريط الكتابة
    ========================================================= */
 .chat-input-bar {
   position: fixed;
@@ -907,7 +1104,8 @@ body::before {
   max-width: 90vw;
   text-align: center;
 }
-.toast.show { transform: translateX(-50%) translateY(0); }
+.toast.show { transform: translateX(-50%) translateY
+}
 .toast.success { border-color: var(--green); box-shadow: 0 8px 24px rgba(0,255,136,.3); }
 .toast.error { border-color: var(--red); box-shadow: 0 8px 24px rgba(255,42,77,.3); }
 
@@ -1018,7 +1216,6 @@ body::before {
 }
 .modal-btn:active { transform: scale(.97); }
 
-/* قائمة الغرف */
 .rooms-list {
   display: flex;
   flex-direction: column;
@@ -1074,7 +1271,7 @@ body::before {
 <div class="app">
 
   <!-- =========================================================
-       الشاشة 1: الراديو (مطابقة الصورة الأولى)
+       شاشة النداء اللاسلكي (الراديو)
        ========================================================= -->
   <section class="screen active" id="screen-radio">
 
@@ -1090,6 +1287,7 @@ body::before {
         <span>S458 • Q307</span>
         <span class="secure-badge">🛡️ آمن</span>
       </div>
+      <button class="menu-toggle" id="menuToggle" title="الإعدادات">⚙️</button>
     </header>
 
     <div class="status-row">
@@ -1104,9 +1302,8 @@ body::before {
         <div class="chip-value">🔒 AES-256</div>
         <div class="chip-label">تشفير</div>
       </div>
-          <!-- =========================================================
-         شاشة الراديو — تكملة
-         ========================================================= -->
+    </div>
+
     <div class="radio-stage">
       <div class="radio-device">
         <div class="antenna"></div>
@@ -1142,23 +1339,6 @@ body::before {
       </div>
     </div>
 
-    <!-- أزرار سريعة: إنشاء غرفة / دخول غرفة / بحث -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
-      <button class="action-btn primary" onclick="openCreateRoom()">
-        <span class="icon">➕</span> إنشاء غرفة
-      </button>
-      <button class="action-btn" onclick="openJoinRoom()">
-        <span class="icon">🚪</span> دخول غرفة
-      </button>
-      <button class="action-btn" onclick="openSearch()">
-        <span class="icon">🔍</span> البحث
-      </button>
-      <button class="action-btn" onclick="testBeep()">
-        <span class="icon">🔔</span> اختبار النداء
-      </button>
-    </div>
-
-    <!-- بطاقة التعليمات (مطابقة للصورة) -->
     <div class="instruction-card">
       <div class="instruction-title">
         اضغط على زر <span class="hl-cyan">PTT</span> الفعلي في الراديو للتحدث
@@ -1175,12 +1355,16 @@ body::before {
         <div class="hold-hint-text">اضغط مطولاً للحديث</div>
         <div class="hold-hint-en">Hold to Talk</div>
       </div>
+
+      <div class="level-meter" id="levelMeter">
+        <div class="level-meter-fill" id="levelFill"></div>
+      </div>
     </div>
 
   </section>
 
   <!-- =========================================================
-       الشاشة 2: السجل (مطابقة الصورة الثانية)
+       شاشة الغرفة
        ========================================================= -->
   <section class="screen" id="screen-log">
 
@@ -1190,7 +1374,7 @@ body::before {
         <span onclick="toast('معلومات القناة')">ⓘ</span>
       </div>
       <div class="log-title">
-        <h2>راديو كونكت <span style="font-size:14px;">←</span></h2>
+        <h2>الغرفة <span style="font-size:14px;">←</span></h2>
         <span class="sub">📻 Q307 • CH 07 | S458 • Q307</span>
       </div>
     </div>
@@ -1201,7 +1385,6 @@ body::before {
       </span>
     </div>
 
-    <!-- مستخدمو الغرفة -->
     <div class="room-users">
       <div class="user-pill active">
         <span class="user-avatar">S</span> S458
@@ -1211,26 +1394,26 @@ body::before {
       </div>
     </div>
 
-    <!-- ===== رسالة صوتية واردة (S458) ===== -->
+    <!-- رسالة صوتية واردة -->
     <div class="msg msg-in">
       <div class="msg-header">
         <span>📻 S458 • قبل 5 دقائق</span>
       </div>
       <div class="msg-body">
         <div class="voice-msg">
-          <button class="play-btn" onclick="playVoice(this)">▶</button>
+          <button class="play-btn" onclick="playDemo(this)">▶</button>
           <div class="waveform" data-wave="in"></div>
         </div>
         <div class="voice-meta">
           <span>21:38</span>
-          <span>رسالة صوتية • 00:12 • تم التسجيل عبر PTT قناة 07</span>
+          <span>رسالة صوتية • 00:12</span>
         </div>
       </div>
     </div>
 
     <div class="send-separator">-- بدأ الإرسال • S458 • 21:38 • 12ث --</div>
 
-    <!-- ===== رسالة نصية صادرة (Q307) ===== -->
+    <!-- رسالة نصية صادرة -->
     <div class="msg msg-out">
       <div class="msg-header">
         <span>📻 Q307 • قبل 3 دقائق</span>
@@ -1247,19 +1430,19 @@ body::before {
       </div>
     </div>
 
-    <!-- ===== رسالة صوتية واردة (S458) ===== -->
+    <!-- رسالة صوتية واردة -->
     <div class="msg msg-in">
       <div class="msg-header">
         <span>📻 S458 • قبل دقيقة</span>
       </div>
       <div class="msg-body">
         <div class="voice-msg">
-          <button class="play-btn" onclick="playVoice(this)">▶</button>
+          <button class="play-btn" onclick="playDemo(this)">▶</button>
           <div class="waveform" data-wave="mix"></div>
         </div>
         <div class="voice-meta">
           <span>21:42</span>
-          <span>رسالة صوتية • 00:07 • تم الإرسال — PTT</span>
+          <span>رسالة صوتية • 00:07</span>
         </div>
       </div>
     </div>
@@ -1269,7 +1452,7 @@ body::before {
   </section>
 
   <!-- =========================================================
-       الشاشة 3: الإعدادات
+       شاشة الإعدادات
        ========================================================= -->
   <section class="screen" id="screen-settings">
 
@@ -1290,7 +1473,7 @@ body::before {
           <span class="setting-title">📻 القناة الحالية</span>
           <span class="setting-desc">اختر قناة للتواصل</span>
         </div>
-        <span class="setting-value">CH 07</span>
+        <span class="setting-value" id="channelValue">CH 07</span>
       </div>
 
       <div class="setting-item" onclick="toast('التشفير: AES-256 مفعّل')">
@@ -1309,7 +1492,7 @@ body::before {
         <span class="setting-value">Q307</span>
       </div>
 
-      <div class="setting-item" onclick="testBeep()">
+      <div class="setting-item" onclick="testCall()">
         <div class="setting-info">
           <span class="setting-title">🔔 اختبار صوت النداء</span>
           <span class="setting-desc">تأكد من أن الصوت يعمل</span>
@@ -1350,12 +1533,12 @@ body::before {
        ========================================================= -->
   <nav class="tab-bar">
     <button class="tab" data-tab="log" onclick="switchTab('log')">
-      <span class="tab-icon">📋</span>
-      <span>السجل</span>
+      <span class="tab-icon">💬</span>
+      <span>الغرفة</span>
     </button>
     <button class="tab active" data-tab="radio" onclick="switchTab('radio')">
-      <span class="tab-icon">📻</span>
-      <span>الراديو</span>
+      <span class="tab-icon">📡</span>
+      <span>النداء اللاسلكي</span>
     </button>
     <button class="tab" data-tab="settings" onclick="switchTab('settings')">
       <span class="tab-icon">⚙️</span>
@@ -1363,21 +1546,18 @@ body::before {
     </button>
   </nav>
 
-  <!-- شريط معلومات سفلي -->
   <div class="bottom-info" id="bottomInfo">
     إشارة: <span class="hl">قوي</span> • بطارية الراديو: <span class="hl">78%</span>
   </div>
 
-  <!-- =========================================================
-       شريط الكتابة (يظهر فقط في شاشة السجل)
-       ========================================================= -->
+  <!-- شريط الكتابة -->
   <div class="chat-input-bar" id="chatInputBar">
     <button class="chat-ptt" id="chatPTT" title="اضغط للتحدث">
       📻
       <span class="chat-ptt-label">PTT</span>
     </button>
 
-    <button class="chat-mic" onclick="toast('🎙️ جاهز للتسجيل')">🎤</button>
+    <button class="chat-mic" onclick="toast('🎙️ اضغط PTT للتحدث')">🎤</button>
 
     <div class="chat-input-wrap">
       <button class="chat-clip" onclick="toast('📎 إرفاق ملف')">📎</button>
@@ -1386,6 +1566,52 @@ body::before {
   </div>
 
 </div>
+
+<!-- =========================================================
+     القائمة الجانبية (تفتح من زر ⚙️)
+     ========================================================= -->
+<div class="side-menu-backdrop" id="menuBackdrop"></div>
+<aside class="side-menu" id="sideMenu">
+  <div class="side-menu-header">
+    <div class="side-menu-title">
+      <span class="icon">⚙️</span>
+      <span>الإعدادات السريعة</span>
+    </div>
+    <button class="side-menu-close" onclick="closeSideMenu()">✕</button>
+  </div>
+
+  <button class="menu-item primary" onclick="openCreateWave()">
+    <span class="menu-icon">📡</span>
+    <span class="menu-text">
+      <span class="menu-label">إنشاء موجة</span>
+      <span class="menu-desc">بث نداء لاسلكي جديد</span>
+    </span>
+  </button>
+
+  <button class="menu-item" onclick="openCreateRoom()">
+    <span class="menu-icon">➕</span>
+    <span class="menu-text">
+      <span class="menu-label">إنشاء غرفة</span>
+      <span class="menu-desc">غرفة تواصل جديدة</span>
+    </span>
+  </button>
+
+  <button class="menu-item" onclick="openSearch()">
+    <span class="menu-icon">🔍</span>
+    <span class="menu-text">
+      <span class="menu-label">البحث</span>
+      <span class="menu-desc">بحث عن غرفة أو مستخدم</span>
+    </span>
+  </button>
+
+  <button class="menu-item" onclick="testCall()">
+    <span class="menu-icon">🔔</span>
+    <span class="menu-text">
+      <span class="menu-label">اختبار النداء</span>
+      <span class="menu-desc">تجربة صوت النداء</span>
+    </span>
+  </button>
+</aside>
 
 <!-- =========================================================
      Modal: إنشاء غرفة
@@ -1413,6 +1639,31 @@ body::before {
 </div>
 
 <!-- =========================================================
+     Modal: إنشاء موجة
+     ========================================================= -->
+<div class="modal-overlay" id="modalWave">
+  <div class="modal">
+    <div class="modal-title">📡 إنشاء موجة</div>
+    <div class="modal-sub">أرسل نداءً لاسلكياً لكل من في القناة</div>
+
+    <div class="modal-field">
+      <label>اسم الموجة</label>
+      <input type="text" id="waveName" placeholder="مثال: نداء استغاثة" maxlength="30">
+    </div>
+
+    <div class="modal-field">
+      <label>الأولوية</label>
+      <input type="text" id="wavePriority" value="عالية" readonly>
+    </div>
+
+    <div class="modal-actions">
+      <button class="modal-btn cancel" onclick="closeModal('modalWave')">إلغاء</button>
+      <button class="modal-btn confirm" onclick="createWave()">إرسال</button>
+    </div>
+  </div>
+</div>
+
+<!-- =========================================================
      Modal: دخول غرفة
      ========================================================= -->
 <div class="modal-overlay" id="modalJoin">
@@ -1422,7 +1673,7 @@ body::before {
 
     <div class="modal-field">
       <label>رمز الغرفة</label>
-      <input type="text" id="joinCode" placeholder="مثال: Q307-S458" maxlength="20"
+      <input type="text" id="joinCode" placeholder="مثال: R4X9" maxlength="20"
              style="text-align:center;letter-spacing:2px;font-family:'Courier New',monospace;font-weight:700;">
     </div>
 
@@ -1446,7 +1697,7 @@ body::before {
       <input type="text" id="searchQuery" placeholder="اسم المستخدم أو رمز الغرفة">
     </div>
 
-    <div class="rooms-list" id="searchResults" style="margin-top:8px;">
+    <div class="rooms-list" id="searchResults">
       <div class="room-card" onclick="toast('فتح: فريق المراقبة', 'success')">
         <div class="room-card-info">
           <span class="room-card-name">فريق المراقبة</span>
@@ -1461,6 +1712,13 @@ body::before {
         </div>
         <span class="room-card-code">X9Y8</span>
       </div>
+      <div class="room-card" onclick="toast('فتح: غرفة القيادة', 'success')">
+        <div class="room-card-info">
+          <span class="room-card-name">غرفة القيادة</span>
+          <span class="room-card-meta">2 أعضاء • قناة 01</span>
+        </div>
+        <span class="room-card-code">CMD1</span>
+      </div>
     </div>
 
     <div class="modal-actions" style="grid-template-columns:1fr;margin-top:14px;">
@@ -1474,19 +1732,26 @@ body::before {
      ========================================================= -->
 <script>
 /* =========================================================
-   Audio Engine — خدمة الصوت
+   🎙️ PTT Engine — التسجيل والتشغيل الفعلي
    ========================================================= */
-const MawjaAudio = {
-  ctx: null,
+const PTTEngine = {
+  audioCtx: null,
+  micStream: null,
+  mediaRecorder: null,
+  recordedChunks: [],
   beepBuffer: null,
+  isRecording: false,
+  analyser: null,
+  dataArray: null,
+  levelRAF: null,
 
   async init() {
-    if (this.ctx) return true;
+    if (this.audioCtx) return true;
     try {
       const AC = window.AudioContext || window.webkitAudioContext;
-      this.ctx = new AC();
-      if (this.ctx.state === 'suspended') await this.ctx.resume();
-      this.beepBuffer = this._makeBeep(0.35, 1000, 8);
+      this.audioCtx = new AC();
+      if (this.audioCtx.state === 'suspended') await this.audioCtx.resume();
+      this.beepBuffer = this._makeBeep(0.18, 1200, 10);
       return true;
     } catch (e) {
       console.error('فشل تهيئة الصوت:', e);
@@ -1495,9 +1760,9 @@ const MawjaAudio = {
   },
 
   _makeBeep(duration, freq, decay) {
-    const sr = this.ctx.sampleRate;
+    const sr = this.audioCtx.sampleRate;
     const len = Math.floor(sr * duration);
-    const buf = this.ctx.createBuffer(1, len, sr);
+    const buf = this.audioCtx.createBuffer(1, len, sr);
     const ch = buf.getChannelData(0);
     for (let i = 0; i < len; i++) {
       const t = i / sr;
@@ -1507,34 +1772,137 @@ const MawjaAudio = {
     return buf;
   },
 
-  playBeep() {
-    if (!this.ctx || !this.beepBuffer) return;
-    const src = this.ctx.createBufferSource();
-    const gain = this.ctx.createGain();
-    src.buffer = this.beepBuffer;
-    gain.gain.value = 1.0;
-    src.connect(gain).connect(this.ctx.destination);
+  playBeep(freq = 1200, dur = 0.18, vol = 0.9) {
+    if (!this.audioCtx) return;
+    const src = this.audioCtx.createBufferSource();
+    const gain = this.audioCtx.createGain();
+    src.buffer = this._makeBeep(dur, freq, 8);
+    gain.gain.value = vol;
+    src.connect(gain).connect(this.audioCtx.destination);
     src.start();
   },
 
-  playTalkSound(duration = 0.4) {
-    if (!this.ctx) return;
-    const osc = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
-    osc.type = 'square';
-    osc.frequency.value = 1200;
-    gain.gain.value = 0.15;
-    osc.connect(gain).connect(this.ctx.destination);
-    osc.start();
-    osc.stop(this.ctx.currentTime + duration);
+  playStartBeep() {
+    this.playBeep(1200, 0.15, 0.9);
+    setTimeout(() => this.playBeep(1400, 0.15, 0.9), 130);
+  },
+
+  playEndBeep() {
+    this.playBeep(700, 0.25, 0.85);
+  },
+
+  async startTalking() {
+    if (this.isRecording) return false;
+    await this.init();
+
+    try {
+      this.micStream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: false,
+          noiseSuppression: false,
+          autoGainControl: false
+        }
+      });
+
+      this.playStartBeep();
+
+      const source = this.audioCtx.createMediaStreamSource(this.micStream);
+      const gain = this.audioCtx.createGain();
+      gain.gain.value = 0.75;
+
+      const highPass = this.audioCtx.createBiquadFilter();
+      highPass.type = 'highpass';
+      highPass.frequency.value = 300;
+
+      const lowPass = this.audioCtx.createBiquadFilter();
+      lowPass.type = 'lowpass';
+      lowPass.frequency.value = 3400;
+
+      this.analyser = this.audioCtx.createAnalyser();
+      this.analyser.fftSize = 256;
+      this.dataArray = new Uint8Array(this.analyser.frequencyBinCount);
+
+      source.connect(highPass);
+      highPass.connect(lowPass);
+      lowPass.connect(this.analyser);
+      this.analyser.connect(gain);
+      gain.connect(this.audioCtx.destination);
+
+      this.recordedChunks = [];
+      this.mediaRecorder = new MediaRecorder(this.micStream);
+      this.mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) this.recordedChunks.push(e.data);
+      };
+      this.mediaRecorder.start(100);
+
+      this.isRecording = true;
+      this._startLevelMeter();
+      return true;
+
+    } catch (e) {
+      console.error('فشل الميكروفون:', e);
+      toast('❌ تعذّر الوصول للميكروفون', 'error');
+      return false;
+    }
+  },
+
+  async stopTalking() {
+    if (!this.isRecording) return;
+    this.isRecording = false;
+    this.playEndBeep();
+
+    if (this.mediaRecorder && this.mediaRecorder.state === 'recording') {
+      this.mediaRecorder.stop();
+    }
+    if (this.micStream) {
+      this.micStream.getTracks().forEach(t => t.stop());
+      this.micStream = null;
+    }
+
+    this._stopLevelMeter();
+
+    setTimeout(() => {
+      if (this.recordedChunks.length > 0) {
+        const blob = new Blob(this.recordedChunks, { type: 'audio/webm' });
+        const url = URL.createObjectURL(blob);
+        const duration = this.recordedChunks.length * 0.1;
+        addVoiceMessage(url, duration);
+      }
+      this.recordedChunks = [];
+    }, 200);
+  },
+
+  _startLevelMeter() {
+    const meter = document.getElementById('levelMeter');
+    const fill = document.getElementById('levelFill');
+    if (!meter || !fill) return;
+    meter.classList.add('active');
+
+    const loop = () => {
+      if (!this.analyser || !this.dataArray) return;
+      this.analyser.getByteFrequencyData(this.dataArray);
+      let sum = 0;
+      for (let i = 0; i < this.dataArray.length; i++) sum += this.dataArray[i];
+      const level = Math.min(100, (sum / this.dataArray.length) * 1.8);
+      fill.style.width = level + '%';
+      this.levelRAF = requestAnimationFrame(loop);
+    };
+    loop();
+  },
+
+  _stopLevelMeter() {
+    const meter = document.getElementById('levelMeter');
+    const fill = document.getElementById('levelFill');
+    if (meter) meter.classList.remove('active');
+    if (fill) fill.style.width = '0%';
+    if (this.levelRAF) cancelAnimationFrame(this.levelRAF);
+    this.levelRAF = null;
   }
 };
 
 /* =========================================================
    UI — التنقل والإجراءات
    ========================================================= */
-
-/* --- تبديل الشاشات --- */
 function switchTab(tabName) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -1554,53 +1922,75 @@ function switchTab(tabName) {
   }
 
   window.scrollTo(0, 0);
+  closeSideMenu();
 }
 
-/* --- Toast --- */
+/* Toast */
 let toastTimer;
 function toast(msg, type = '') {
-  const el = document.getElementById('toast') || (() => {
-    const t = document.createElement('div');
-    t.className = 'toast';
-    t.id = 'toast';
-    document.body.appendChild(t);
-    return t;
-  })();
-
+  let el = document.getElementById('toast');
+  if (!el) {
+    el = document.createElement('div');
+    el.className = 'toast';
+    el.id = 'toast';
+    document.body.appendChild(el);
+  }
   el.textContent = msg;
   el.className = 'toast ' + type;
   el.classList.add('show');
-
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
 }
 
-/* --- Modal --- */
-function openCreateRoom() { document.getElementById('modalCreate').classList.add('show'); }
-function openJoinRoom()   { document.getElementById('modalJoin').classList.add('show'); }
-function openSearch()     { document.getElementById('modalSearch').classList.add('show'); }
+/* Modal */
+function openModal(id) { document.getElementById(id).classList.add('show'); closeSideMenu(); }
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
 
-function closeModal(id) {
-  document.getElementById(id).classList.remove('show');
-}
-
-/* إغلاق عند النقر خارج الـ Modal */
 document.querySelectorAll('.modal-overlay').forEach(overlay => {
   overlay.addEventListener('click', (e) => {
     if (e.target === overlay) overlay.classList.remove('show');
   });
 });
 
-/* --- اختبار صوت النداء --- */
-async function testBeep() {
-  const ok = await MawjaAudio.init();
-  if (!ok) { toast('❌ تعذّر تشغيل الصوت', 'error'); return; }
-  toast('🔔 اختبار صوت النداء...', 'success');
-  MawjaAudio.playBeep();
-  setTimeout(() => MawjaAudio.playBeep(), 500);
+/* القائمة الجانبية */
+const sideMenu = document.getElementById('sideMenu');
+const menuBackdrop = document.getElementById('menuBackdrop');
+const menuToggle = document.getElementById('menuToggle');
+
+function openSideMenu() {
+  sideMenu.classList.add('open');
+  menuBackdrop.classList.add('show');
+  menuToggle.classList.add('open');
+}
+function closeSideMenu() {
+  sideMenu.classList.remove('open');
+  menuBackdrop.classList.remove('show');
+  menuToggle.classList.remove('open');
 }
 
-/* --- إنشاء غرفة --- */
+menuToggle.addEventListener('click', () => {
+  if (sideMenu.classList.contains('open')) closeSideMenu();
+  else openSideMenu();
+});
+menuBackdrop.addEventListener('click', closeSideMenu);
+
+/* فتح Modals */
+function openCreateRoom() { openModal('modalCreate'); }
+function openCreateWave() { openModal('modalWave'); }
+function openJoinRoom()   { openModal('modalJoin'); }
+function openSearch()     { openModal('modalSearch'); }
+
+/* اختبار النداء */
+async function testCall() {
+  const ok = await PTTEngine.init();
+  if (!ok) { toast('❌ تعذّر تشغيل الصوت', 'error'); return; }
+  toast('🔔 اختبار صوت النداء...', 'success');
+  PTTEngine.playStartBeep();
+  setTimeout(() => PTTEngine.playEndBeep(), 700);
+  closeSideMenu();
+}
+
+/* إنشاء غرفة */
 async function createRoom() {
   const name = document.getElementById('roomName').value.trim();
   const ch = document.getElementById('roomChannel').value.trim();
@@ -1609,102 +1999,124 @@ async function createRoom() {
   if (!/^\d{1,2}$/.test(ch)) { toast('⚠️ رقم قناة غير صالح', 'error'); return; }
 
   const code = 'R' + Math.random().toString(36).substring(2, 6).toUpperCase();
+  await PTTEngine.init();
+  PTTEngine.playBeep(1200, 0.2);
 
-  await MawjaAudio.init();
-  MawjaAudio.playBeep();
-
-  toast(`✅ تم إنشاء الغرفة "${name}" (${code})`, 'success');
+  toast(`✅ تم إنشاء "${name}" — الرمز: ${code}`, 'success');
   closeModal('modalCreate');
 
-  // تحديث شرائط الحالة
-  document.querySelectorAll('.chip-value')[1].innerHTML = `📻 ${ch}`;
+  document.querySelectorAll('.chip-value')[1].innerHTML = `📻 ${ch.padStart(2,'0')}`;
+  document.getElementById('channelValue').textContent = `CH ${ch.padStart(2,'0')}`;
+  document.querySelectorAll('.lcd-row')[0].children[0].textContent = `CH ${ch.padStart(2,'0')}`;
 
-  // تفريغ الحقول
   document.getElementById('roomName').value = '';
   document.getElementById('roomChannel').value = '07';
 }
 
-/* --- دخول غرفة --- */
+/* إنشاء موجة */
+async function createWave() {
+  const name = document.getElementById('waveName').value.trim();
+  if (!name) { toast('⚠️ أدخل اسم الموجة', 'error'); return; }
+
+  await PTTEngine.init();
+  PTTEngine.playStartBeep();
+
+  toast(`📡 تم إرسال الموجة "${name}"`, 'success');
+  closeModal('modalWave');
+  document.getElementById('waveName').value = '';
+
+  document.getElementById('lcdStatus').textContent = 'TX';
+  setTimeout(() => {
+    document.getElementById('lcdStatus').textContent = '•';
+  }, 1500);
+}
+
+/* دخول غرفة */
 async function joinRoom() {
   const code = document.getElementById('joinCode').value.trim().toUpperCase();
   if (!code) { toast('⚠️ أدخل رمز الغرفة', 'error'); return; }
 
-  await MawjaAudio.init();
-  MawjaAudio.playBeep();
+  await PTTEngine.init();
+  PTTEngine.playStartBeep();
 
-  toast(`✅ تم الدخول إلى الغرفة ${code}`, 'success');
+  toast(`✅ تم الدخول إلى ${code}`, 'success');
   closeModal('modalJoin');
   document.getElementById('joinCode').value = '';
 
   setTimeout(() => switchTab('log'), 500);
 }
 
-/* --- البحث الحي --- */
+/* البحث الحي */
 document.getElementById('searchQuery')?.addEventListener('input', (e) => {
   const q = e.target.value.toLowerCase().trim();
-  const results = document.getElementById('searchResults');
-  const cards = results.querySelectorAll('.room-card');
-
+  const cards = document.querySelectorAll('#searchResults .room-card');
   cards.forEach(card => {
     const text = card.textContent.toLowerCase();
-    card.style.display = (!q || text.includes(q)) ? 'flex' : 'none';
+    card.style
+         card.style.display = (!q || text.includes(q)) ? 'flex' : 'none';
   });
 });
 
-/* --- تغيير القناة --- */
+/* تغيير القناة */
 function changeChannel() {
   const cur = prompt('أدخل رقم القناة الجديد (01-99):',
     document.querySelectorAll('.chip-value')[1].textContent.replace(/\D/g, ''));
   if (cur && /^\d{1,2}$/.test(cur)) {
-    document.querySelectorAll('.chip-value')[1].innerHTML = `📻 ${cur.padStart(2, '0')}`;
-    document.querySelectorAll('.lcd-row')[0].children[0].textContent = `CH ${cur.padStart(2, '0')}`;
-    toast(`✅ تم تغيير القناة إلى ${cur.padStart(2, '0')}`, 'success');
+    const padded = cur.padStart(2, '0');
+    document.querySelectorAll('.chip-value')[1].innerHTML = `📻 ${padded}`;
+    document.getElementById('channelValue').textContent = `CH ${padded}`;
+    document.querySelectorAll('.lcd-row')[0].children[0].textContent = `CH ${padded}`;
+    toast(`✅ تم تغيير القناة إلى ${padded}`, 'success');
   }
 }
 
 /* =========================================================
-   PTT — زر التحدث
+   PTT — الأحداث
    ========================================================= */
 const pttMain = document.getElementById('pttMain');
 const chatPTT = document.getElementById('chatPTT');
 const lcdStatus = document.getElementById('lcdStatus');
 
-function startTalking(btn) {
+function onPTTStart(btn) {
   btn.classList.add('holding');
   if (lcdStatus) lcdStatus.textContent = 'TX';
-  MawjaAudio.playTalkSound(0.15);
+  const bi = document.getElementById('bottomInfo');
+  if (bi) bi.innerHTML = '<span style="color:#ff2a4d;font-weight:800;">🔴 جاري الإرسال... تحدّث الآن</span>';
 
-  // محاكاة صوت مستقبل بعد 2 ثانية
-  setTimeout(() => {
-    if (btn.classList.contains('holding')) {
-      toast('📡 تم الإرسال عبر القناة', 'success');
-    }
-  }, 2000);
+  PTTEngine.startTalking().then(ok => {
+    if (!ok) onPTTStop(btn);
+  });
 }
 
-function stopTalking(btn) {
+function onPTTStop(btn) {
   btn.classList.remove('holding');
   if (lcdStatus) lcdStatus.textContent = '•';
+  const bi = document.getElementById('bottomInfo');
+  if (bi) bi.innerHTML = 'إشارة: <span class="hl">قوي</span> • بطارية الراديو: <span class="hl">78%</span>';
+
+  PTTEngine.stopTalking();
 }
 
-/* الأحداث — الماوس */
-pttMain.addEventListener('mousedown', () => startTalking(pttMain));
-pttMain.addEventListener('mouseup',   () => stopTalking(pttMain));
-pttMain.addEventListener('mouseleave',() => stopTalking(pttMain));
+/* الماوس */
+pttMain.addEventListener('mousedown', (e) => { e.preventDefault(); onPTTStart(pttMain); });
+pttMain.addEventListener('mouseup',   (e) => { e.preventDefault(); onPTTStop(pttMain); });
+pttMain.addEventListener('mouseleave',(e) => { if (pttMain.classList.contains('holding')) onPTTStop(pttMain); });
 
-chatPTT.addEventListener('mousedown', () => startTalking(chatPTT));
-chatPTT.addEventListener('mouseup',   () => stopTalking(chatPTT));
-chatPTT.addEventListener('mouseleave',() => stopTalking(chatPTT));
+chatPTT.addEventListener('mousedown', (e) => { e.preventDefault(); onPTTStart(chatPTT); });
+chatPTT.addEventListener('mouseup',   (e) => { e.preventDefault(); onPTTStop(chatPTT); });
+chatPTT.addEventListener('mouseleave',(e) => { if (chatPTT.classList.contains('holding')) onPTTStop(chatPTT); });
 
-/* الأحداث — اللمس */
-pttMain.addEventListener('touchstart', (e) => { e.preventDefault(); startTalking(pttMain); }, {passive:false});
-pttMain.addEventListener('touchend',   (e) => { e.preventDefault(); stopTalking(pttMain); }, {passive:false});
+/* اللمس */
+pttMain.addEventListener('touchstart', (e) => { e.preventDefault(); onPTTStart(pttMain); }, { passive: false });
+pttMain.addEventListener('touchend',   (e) => { e.preventDefault(); onPTTStop(pttMain);  }, { passive: false });
+pttMain.addEventListener('touchcancel',(e) => { e.preventDefault(); onPTTStop(pttMain);  }, { passive: false });
 
-chatPTT.addEventListener('touchstart', (e) => { e.preventDefault(); startTalking(chatPTT); }, {passive:false});
-chatPTT.addEventListener('touchend',   (e) => { e.preventDefault(); stopTalking(chatPTT); }, {passive:false});
+chatPTT.addEventListener('touchstart', (e) => { e.preventDefault(); onPTTStart(chatPTT); }, { passive: false });
+chatPTT.addEventListener('touchend',   (e) => { e.preventDefault(); onPTTStop(chatPTT);  }, { passive: false });
+chatPTT.addEventListener('touchcancel',(e) => { e.preventDefault(); onPTTStop(chatPTT);  }, { passive: false });
 
 /* =========================================================
-   توليد موجات صوتية لكل رسالة
+   توليد الموجات الصوتية
    ========================================================= */
 function generateWaveform(container, type = 'in') {
   if (!container) return;
@@ -1713,16 +2125,11 @@ function generateWaveform(container, type = 'in') {
 
   for (let i = 0; i < bars; i++) {
     const span = document.createElement('span');
-    // شكل الموجة: يتغير حسب النوع
     const amp = type === 'mix'
       ? (i > bars * 0.6 ? Math.random() * 28 + 6 : Math.random() * 24 + 4)
       : Math.random() * 26 + 4;
-
     span.style.height = Math.max(4, amp) + 'px';
-
-    // تلوين الجزء الأحمر في الرسالة المختلطة
     if (type === 'mix' && i > bars * 0.6) span.classList.add('hot');
-
     container.appendChild(span);
   }
 }
@@ -1732,28 +2139,103 @@ document.querySelectorAll('.waveform').forEach(wf => {
 });
 
 /* =========================================================
-   تشغيل الرسائل الصوتية (تجريبي)
+   إضافة رسالة صوتية حقيقية بعد PTT
    ========================================================= */
-function playVoice(btn) {
-  const isPlaying = btn.textContent === '⏸';
-  const allBtns = document.querySelectorAll('.play-btn');
+function addVoiceMessage(url, duration) {
+  const logScreen = document.getElementById('screen-log');
+  const now = new Date();
+  const time = now.getHours().toString().padStart(2, '0') + ':' +
+               now.getMinutes().toString().padStart(2, '0');
+  const durStr = duration.toFixed(1);
 
-  allBtns.forEach(b => b.textContent = '▶');
+  const msg = document.createElement('div');
+  msg.className = 'msg msg-out';
+  msg.style.animation = 'msgSlide .35s ease';
 
-  if (!isPlaying) {
-    btn.textContent = '⏸';
-    MawjaAudio.init().then(() => {
-      MawjaAudio.playTalkSound(0.6);
-      setTimeout(() => {
-        MawjaAudio.playTalkSound(0.4);
-      }, 700);
-    });
-    toast('🔊 تشغيل الرسالة الصوتية...', 'success');
+  msg.innerHTML = `
+    <div class="msg-header">
+      <span>📻 Q307 • الآن</span>
+    </div>
+    <div class="msg-body">
+      <div class="voice-msg">
+        <button class="play-btn" data-url="${url}">▶</button>
+        <div class="waveform" data-wave="out"></div>
+      </div>
+      <div class="voice-meta">
+        <span>${time}</span>
+        <span>${durStr}ث • تم الإرسال عبر PTT</span>
+      </div>
+    </div>
+  `;
 
-    setTimeout(() => {
-      btn.textContent = '▶';
-    }, 2500);
+  logScreen.appendChild(msg);
+
+  const wf = msg.querySelector('.waveform');
+  if (wf) generateWaveform(wf, 'out');
+
+  const playBtn = msg.querySelector('.play-btn');
+  playBtn.addEventListener('click', () => playRealVoice(playBtn, url));
+
+  logScreen.scrollTop = logScreen.scrollHeight;
+  toast('✅ تم إرسال الرسالة الصوتية', 'success');
+}
+
+/* تشغيل تسجيل حقيقي */
+function playRealVoice(btn, url) {
+  if (btn.dataset.playing === '1') {
+    btn.textContent = '▶';
+    btn.dataset.playing = '0';
+    if (window._curAudio) {
+      window._curAudio.pause();
+      window._curAudio = null;
+    }
+    return;
   }
+
+  document.querySelectorAll('.play-btn').forEach(b => {
+    b.textContent = '▶';
+    b.dataset.playing = '0';
+  });
+
+  const audio = new Audio(url);
+  window._curAudio = audio;
+  audio.volume = 1.0;
+  audio.play();
+
+  btn.textContent = '⏸';
+  btn.dataset.playing = '1';
+
+  audio.onended = () => {
+    btn.textContent = '▶';
+    btn.dataset.playing = '0';
+    window._curAudio = null;
+  };
+}
+
+/* تشغيل الرسائل التجريبية الموجودة بالصفحة */
+function playDemo(btn) {
+  if (btn.dataset.playing === '1') {
+    btn.textContent = '▶';
+    btn.dataset.playing = '0';
+    return;
+  }
+  document.querySelectorAll('.play-btn').forEach(b => {
+    b.textContent = '▶';
+    b.dataset.playing = '0';
+  });
+  btn.textContent = '⏸';
+  btn.dataset.playing = '1';
+
+  PTTEngine.init().then(() => {
+    PTTEngine.playBeep(400, 0.5, 0.5);
+    setTimeout(() => PTTEngine.playBeep(500, 0.4, 0.4), 500);
+    setTimeout(() => PTTEngine.playBeep(450, 0.5, 0.5), 1000);
+  });
+
+  setTimeout(() => {
+    btn.textContent = '▶';
+    btn.dataset.playing = '0';
+  }, 2500);
 }
 
 /* =========================================================
@@ -1791,7 +2273,7 @@ function sendTextMessage(text) {
 
   logScreen.appendChild(msg);
   logScreen.scrollTop = logScreen.scrollHeight;
-  MawjaAudio.playTalkSound(0.1);
+  PTTEngine.init().then(() => PTTEngine.playBeep(1000, 0.08, 0.4));
   toast('✅ تم إرسال الرسالة', 'success');
 }
 
@@ -1805,16 +2287,14 @@ function escapeHtml(s) {
    تهيئة أولى
    ========================================================= */
 window.addEventListener('load', () => {
-  // تهيئة الصوت عند أول نقرة
   const initOnce = async () => {
-    await MawjaAudio.init();
+    await PTTEngine.init();
     document.removeEventListener('click', initOnce);
     document.removeEventListener('touchstart', initOnce);
   };
   document.addEventListener('click', initOnce);
   document.addEventListener('touchstart', initOnce);
 
-  // حالة شاشة السجل افتراضياً
   document.getElementById('chatInputBar').classList.remove('active');
 });
 
