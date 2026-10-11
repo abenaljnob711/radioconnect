@@ -42,10 +42,10 @@ jobs:
       - name: Install Capacitor
         run: |
           npm install -g @capacitor/cli
-          npm install @capacitor/core@6.0.0
-          npm install @capacitor/android@6.0.0
-          npm install @capacitor/assets@3.0.0
-          npm install @capacitor/contacts@6.0.0
+          npm install @capacitor/core@^6.2.0
+          npm install @capacitor/android@^6.2.0
+          npm install @capacitor/assets@^3.0.0
+          npm install @capacitor/contacts@^6.0.0 --legacy-peer-deps
 
       - name: Create www folder
         run: |
