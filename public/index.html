@@ -378,6 +378,13 @@ body::before {
   background: #0a0a0a;
   border-radius: 50%;
   box-shadow: 0 0 6px rgba(0,229,255,.4);
+  transition: all .15s ease;
+}
+
+/* ✅ التعديل 1: كلاس الإضاءة الخضراء لرأس الأريل */
+.antenna.transmitting::before {
+  background: #00ff00 !important;
+  box-shadow: 0 0 12px #00ff00, 0 0 24px #00ff00 !important;
 }
 
 .knobs {
@@ -2680,9 +2687,14 @@ const lcdStatus = document.getElementById('lcdStatus');
 
 function onPTTStartWave(btn) {
   btn.classList.add('holding');
+  
+  // ✅ التعديل 2: إضاءة رأس الأريل باللون الأخضر
+  const antenna = document.querySelector('.antenna');
+  if (antenna) antenna.classList.add('transmitting');
+  
   if (lcdStatus) lcdStatus.textContent = 'TX';
   const bi = document.getElementById('bottomInfo');
-  if (bi) bi.innerHTML = '<span style="color:#ff2a4d;font-weight:800;">🔴 جاري الإرسال... تحدّث الآن</span>';
+  if (bi) bi.innerHTML = '<span style="color:#00ff00;font-weight:800;">🟢 جاري الإرسال... تحدّث الآن</span>';
   PTTEngine.startTalkingWave().then(ok => {
     if (!ok) onPTTStopWave(btn);
   });
@@ -2690,6 +2702,11 @@ function onPTTStartWave(btn) {
 
 function onPTTStopWave(btn) {
   btn.classList.remove('holding');
+  
+  // ✅ التعديل 3: إطفاء إضاءة رأس الأريل
+  const antenna = document.querySelector('.antenna');
+  if (antenna) antenna.classList.remove('transmitting');
+  
   if (lcdStatus) lcdStatus.textContent = '•';
   const bi = document.getElementById('bottomInfo');
   if (bi) {
