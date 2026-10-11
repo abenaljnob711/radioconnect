@@ -346,7 +346,6 @@ body::before {
   text-shadow: 0 0 8px rgba(0,229,255,.6);
 }
 
-/* ✅ تم تصغير الراديو */
 .radio-stage {
   position: relative;
   height: 280px;
@@ -952,7 +951,6 @@ body::before {
 }
 .chat-input-bar.active { display: flex; }
 
-/* ✅ تم تصغير زر PTT في الدردشة */
 .chat-ptt {
   width: 46px; height: 46px;
   border-radius: 50%;
@@ -985,7 +983,6 @@ body::before {
   letter-spacing: .5px;
 }
 
-/* ✅ تم تصغير زر الإرسال */
 .chat-send {
   width: 46px; height: 46px;
   border-radius: 50%;
@@ -1500,45 +1497,214 @@ body::before {
 }
 .delete-confirm-btn:active { transform: scale(.97); }
 
+/* ✅ نافذة الإيموجي */
+.emoji-picker-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.75);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 700;
+  display: none;
+  align-items: flex-end;
+  justify-content: center;
+}
+.emoji-picker-overlay.show {
+  display: flex;
+  animation: fadeIn .25s ease;
+}
+.emoji-picker {
+  width: 100%;
+  max-width: 500px;
+  max-height: 60vh;
+  background: linear-gradient(180deg, var(--card-2), var(--bg));
+  border-top: 1px solid var(--cyan);
+  border-radius: 20px 20px 0 0;
+  padding: 16px;
+  overflow-y: auto;
+  box-shadow: 0 -10px 40px rgba(0,229,255,.3);
+}
+.emoji-picker-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+.emoji-picker-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--cyan);
+}
+.emoji-picker-close {
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  font-size: 16px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.emoji-picker-close:active {
+  border-color: var(--red);
+  color: var(--red);
+}
+.emoji-picker-category {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-dim);
+  margin: 12px 4px 8px;
+}
+.emoji-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 6px;
+}
+.emoji-item {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all .15s;
+  font-family: inherit;
+}
+.emoji-item:active {
+  background: rgba(0,229,255,.15);
+  transform: scale(.9);
+}
+
+/* ✅ نافذة الكاميرا المحسّنة */
 .camera-modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,.95);
+  background: #000;
   z-index: 900;
   display: none;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: 0;
 }
 .camera-modal-overlay.show { display: flex; }
-.camera-preview {
+
+.camera-container {
+  position: relative;
   width: 100%;
-  max-width: 400px;
-  border-radius: 12px;
-  border: 2px solid var(--cyan);
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
   background: #000;
 }
-.camera-actions {
+
+.camera-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #000;
+}
+
+.camera-top-bar {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  padding: 16px 18px;
   display: flex;
-  gap: 12px;
-  margin-top: 16px;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 10;
+  background: linear-gradient(180deg, rgba(0,0,0,.7), transparent);
 }
-.camera-btn {
-  padding: 12px 24px;
-  border-radius: 10px;
-  border: 1px solid var(--cyan);
-  background: linear-gradient(180deg, #00e5ff, #008fa8);
-  color: #001418;
-  font-family: inherit;
-  font-size: 14px;
-  font-weight: 800;
+
+.camera-close-btn {
+  width: 42px; height: 42px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.15);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,.3);
+  color: #fff;
+  font-size: 20px;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
 }
-.camera-btn.cancel {
-  background: transparent;
-  color: var(--text-dim);
-  border-color: var(--border);
+.camera-close-btn:active { transform: scale(.9); }
+
+.camera-hd-badge {
+  background: rgba(0,255,136,.2);
+  border: 1px solid rgba(0,255,136,.5);
+  color: #00ff88;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.camera-bottom-bar {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  padding: 24px 20px 40px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  z-index: 10;
+  background: linear-gradient(0deg, rgba(0,0,0,.8), transparent);
+}
+
+.camera-side-btn {
+  width: 52px; height: 52px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.15);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,.3);
+  color: #fff;
+  font-size: 22px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  transition: all .2s;
+}
+.camera-side-btn:active { transform: scale(.9); }
+.camera-side-btn.active {
+  background: rgba(255,255,220,.9);
+  border-color: #fff;
+  color: #000;
+  box-shadow: 0 0 30px rgba(255,255,200,.8);
+}
+
+.camera-shutter-btn {
+  width: 74px; height: 74px;
+  border-radius: 50%;
+  background: #fff;
+  border: 5px solid rgba(255,255,255,.5);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all .15s;
+  box-shadow: 0 0 25px rgba(255,255,255,.4);
+}
+.camera-shutter-btn:active {
+  transform: scale(.9);
+  border-color: rgba(0,229,255,.7);
+}
+.camera-shutter-inner {
+  width: 54px; height: 54px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #fff, #ddd);
 }
 </style>
 </head>
@@ -2101,11 +2267,34 @@ body::before {
   </div>
 </div>
 
+<!-- ✅ نافذة الإيموجي -->
+<div class="emoji-picker-overlay" id="emojiPickerOverlay">
+  <div class="emoji-picker">
+    <div class="emoji-picker-header">
+      <span class="emoji-picker-title">😊 الإيموجي</span>
+      <button class="emoji-picker-close" onclick="closeEmojiPicker()">✕</button>
+    </div>
+    <div id="emojiContent"></div>
+  </div>
+</div>
+
+<!-- ✅ نافذة الكاميرا الاحترافية -->
 <div class="camera-modal-overlay" id="cameraOverlay">
-  <video id="cameraPreview" class="camera-preview" autoplay playsinline></video>
-  <div class="camera-actions">
-    <button class="camera-btn cancel" onclick="closeCamera()">❌ إلغاء</button>
-    <button class="camera-btn" onclick="capturePhoto()">📸 التقاط</button>
+  <div class="camera-container">
+    <video id="cameraPreview" class="camera-preview" autoplay playsinline></video>
+
+    <div class="camera-top-bar">
+      <button class="camera-close-btn" onclick="closeCamera()">✕</button>
+      <div class="camera-hd-badge" id="hdBadge">HD ✓</div>
+    </div>
+
+    <div class="camera-bottom-bar">
+      <button class="camera-side-btn" id="flashBtn" onclick="toggleFlash()" title="فلاش">⚡</button>
+      <button class="camera-shutter-btn" onclick="capturePhoto()">
+        <div class="camera-shutter-inner"></div>
+      </button>
+      <button class="camera-side-btn" id="switchBtn" onclick="switchCamera()" title="تبديل الكاميرا">🔄</button>
+    </div>
   </div>
 </div>
 
@@ -2821,21 +3010,65 @@ function sendContact() {
 }
 
 /* ==========================================
-   الكاميرا
+   ✅ الكاميرا الاحترافية (فلاش + HD + تبديل)
    ========================================== */
 let cameraStream = null;
+let cameraFacing = 'environment';
+let flashOn = false;
+let currentVideoTrack = null;
 
 async function openCamera() {
   try {
-    cameraStream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: 'environment' }
-    });
+    // ✅ إيقاف أي كاميرا سابقة
+    if (cameraStream) {
+      cameraStream.getTracks().forEach(t => t.stop());
+      cameraStream = null;
+    }
+
+    // ✅ طلب أعلى دقة ممكنة (HD/FHD)
+    const constraints = {
+      video: {
+        facingMode: { ideal: cameraFacing },
+        width: { ideal: 1920 },
+        height: { ideal: 1080 },
+        frameRate: { ideal: 30 }
+      },
+      audio: false
+    };
+
+    cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
     const video = document.getElementById('cameraPreview');
     video.srcObject = cameraStream;
+    currentVideoTrack = cameraStream.getVideoTracks()[0];
+
+    // ✅ عرض دقة الكاميرا الفعلية
+    const settings = currentVideoTrack.getSettings();
+    const hdBadge = document.getElementById('hdBadge');
+    if (settings.width >= 1280) {
+      hdBadge.textContent = settings.width + '×' + settings.height + ' ✓';
+      hdBadge.style.display = 'inline-block';
+    } else {
+      hdBadge.textContent = 'SD';
+    }
+
+    // ✅ التحقق من دعم الفلاش
+    const caps = currentVideoTrack.getCapabilities ? currentVideoTrack.getCapabilities() : {};
+    const flashBtn = document.getElementById('flashBtn');
+    if (!caps.torch) {
+      flashBtn.style.opacity = '0.4';
+      flashBtn.style.pointerEvents = 'none';
+    } else {
+      flashBtn.style.opacity = '1';
+      flashBtn.style.pointerEvents = 'auto';
+    }
+
+    flashOn = false;
+    flashBtn.classList.remove('active');
+
     document.getElementById('cameraOverlay').classList.add('show');
   } catch (e) {
     console.error(e);
-    toast('❌ تعذّر فتح الكاميرا', 'error');
+    toast('❌ تعذّر فتح الكاميرا: ' + e.message, 'error');
   }
 }
 
@@ -2843,22 +3076,73 @@ function closeCamera() {
   if (cameraStream) {
     cameraStream.getTracks().forEach(t => t.stop());
     cameraStream = null;
+    currentVideoTrack = null;
   }
+  flashOn = false;
   document.getElementById('cameraOverlay').classList.remove('show');
+}
+
+async function toggleFlash() {
+  if (!currentVideoTrack) return;
+  try {
+    flashOn = !flashOn;
+    await currentVideoTrack.applyConstraints({
+      advanced: [{ torch: flashOn }]
+    });
+    const flashBtn = document.getElementById('flashBtn');
+    if (flashOn) {
+      flashBtn.classList.add('active');
+      toast('⚡ الفلاش مفعّل', 'success');
+    } else {
+      flashBtn.classList.remove('active');
+      toast('⚡ الفلاش مُطفأ');
+    }
+  } catch (e) {
+    console.error('خطأ الفلاش:', e);
+    toast('❌ الفلاش غير مدعوم على هذا الجهاز', 'error');
+    flashOn = false;
+  }
+}
+
+async function switchCamera() {
+  cameraFacing = cameraFacing === 'environment' ? 'user' : 'environment';
+  await openCamera();
+  toast(cameraFacing === 'user' ? '🤳 كاميرا أمامية' : '📷 كاميرا خلفية', 'success');
 }
 
 function capturePhoto() {
   const video = document.getElementById('cameraPreview');
-  if (!video.videoWidth) return;
+  if (!video.videoWidth) {
+    toast('⚠️ الكاميرا لم تجهز بعد', 'error');
+    return;
+  }
+
+  // ✅ استخدام الدقة الفعلية للفيديو (HD)
   const canvas = document.createElement('canvas');
   canvas.width = video.videoWidth;
   canvas.height = video.videoHeight;
   const ctx = canvas.getContext('2d');
-  ctx.drawImage(video, 0, 0);
-  const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+  // ✅ جودة عالية (0.92)
+  const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+
+  // ✅ وميض أبيض للتصوير
+  const flash = document.createElement('div');
+  flash.style.cssText = `
+    position:fixed;inset:0;background:#fff;z-index:9999;
+    pointer-events:none;opacity:0.9;
+    transition:opacity 0.3s ease;
+  `;
+  document.body.appendChild(flash);
+  setTimeout(() => { flash.style.opacity = '0'; }, 50);
+  setTimeout(() => { flash.remove(); }, 400);
+
   closeCamera();
   const size = Math.round(dataUrl.length * 0.75);
-  addAttachmentMessage('image', 'صورة_' + Date.now() + '.jpg', dataUrl, size);
+  addAttachmentMessage('image', 'صورة_HD_' + Date.now() + '.jpg', dataUrl, size);
 }
 
 function showFullImage(dataUrl) {
@@ -2969,6 +3253,7 @@ function renderOutgoingMessage(msg) {
   return el;
 }
 
+function renderIncomingMessage(msg)
 function renderIncomingMessage(msg) {
   const empty = document.getElementById('emptyRoom');
   if (empty) empty.style.display = 'none';
@@ -3233,13 +3518,52 @@ function changeChannel() {
 }
 
 /* ==========================================
-   ✅ زر الإيموجي
+   ✅ قائمة الإيموجي الكاملة
    ========================================== */
-document.getElementById('chatEmoji').addEventListener('click', () => {
-  const emojis = ['😀','😂','🥰','😎','🤔','😢','🔥','❤️','👍','👏','🙏','✨','📻','📡','🎉','💯','⚡','🚀','🎯','💪'];
-  chatInput.value += emojis[Math.floor(Math.random() * emojis.length)];
-  chatInput.dispatchEvent(new Event('input'));
+const EMOJI_DATA = {
+  'وجوه مبتسمة': ['😀','😃','😄','😁','😆','😅','🤣','😂','🙂','🙃','😉','😊','😇','🥰','😍','🤩','😘','😗','😚','😙','🥲','😋','😛','😜','🤪','😝','🤑','🤗','🤭','🤫','🤔','🤐','🤨','😐','😑','😶','😏','😒','🙄','😬','🤥','😌','😔','😪','🤤','😴','😷','🤒','🤕','🤢','🤮','🤧','🥵','🥶','🥴','😵','🤯','🤠','🥳','🥺','😢','😭','😤','😠','😡','🤬','😈','👿','💀','💩','🤡','👻','👽','🤖'],
+  'قلوب وحب': ['❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💔','❣️','💕','💞','💓','💗','💖','💘','💝','💟','♥️','💋','💌'],
+  'إشارات': ['👍','👎','👌','✌️','🤞','🤟','🤘','🤙','👈','👉','👆','👇','☝️','✋','🤚','🖐️','🖖','👋','🤝','🙏','✊','👊','🤛','🤜','👏','🙌','👐','🤲','💪','🦾'],
+  'أشياء': ['📻','📡','📱','💻','⌚','📷','📹','🎥','📞','☎️','🔔','🔕','📢','📣','🎵','🎶','🎤','🎧','🎼','🎹','🥁','🎸','🎺','🎻','🎬','📺','📼','🔊','🔉','🔈','🔇','⏰','⏱️','⏲️','🕰️','⌛','⏳','💡','🔦','🕯️','🧯','💎','🔑','🔒','🔓','🔨','🛠️','⚙️','🔧','🔩','🧰','📦','📫','📮','📊','📈','📉','📋','📌','📍','📎','🖇️','✂️','✏️','✒️','🖊️','🖋️','📝','💼','📁','📂','📅','📆','🗓️','📇'],
+  'رموز': ['✅','❌','❓','❔','❗','❕','💯','🔥','⭐','🌟','✨','⚡','💥','💫','💦','💨','🆗','🆕','🆒','🆓','🆙','🔝','🔙','🔚','🔛','🔜','⚠️','🚫','⛔','📵','🔞','☢️','☣️','⬆️','⬇️','⬅️','➡️','↗️','↘️','↙️','↖️','↕️','↔️','🔄','🔃','🔀','🔁','🔂','▶️','⏩','⏪','⏫','⏬','◀️','🔼','🔽'],
+  'طبيعة': ['🌞','🌝','🌚','🌛','🌜','🌙','⭐','🌟','💫','✨','☀️','⛅','☁️','🌧️','⛈️','🌩️','🌨️','❄️','☃️','⛄','🌬️','💨','💧','💦','☔','☂️','🌊','🌈','🔥','💥','🌱','🌿','☘️','🍀','🎋','🎍','🌴','🌳','🌲','🌵','🌾','🌻','🌺','🌹','🥀','🌷','🌼','🌸','💐','🍁','🍂','🍃']
+};
+
+function openEmojiPicker() {
+  const content = document.getElementById('emojiContent');
+  content.innerHTML = '';
+  for (const [category, emojis] of Object.entries(EMOJI_DATA)) {
+    const catEl = document.createElement('div');
+    catEl.className = 'emoji-picker-category';
+    catEl.textContent = category;
+    content.appendChild(catEl);
+
+    const grid = document.createElement('div');
+    grid.className = 'emoji-grid';
+    emojis.forEach(e => {
+      const btn = document.createElement('button');
+      btn.className = 'emoji-item';
+      btn.textContent = e;
+      btn.addEventListener('click', () => {
+        chatInput.value += e;
+        chatInput.dispatchEvent(new Event('input'));
+      });
+      grid.appendChild(btn);
+    });
+    content.appendChild(grid);
+  }
+  document.getElementById('emojiPickerOverlay').classList.add('show');
+}
+
+function closeEmojiPicker() {
+  document.getElementById('emojiPickerOverlay').classList.remove('show');
   chatInput.focus();
+}
+
+document.getElementById('chatEmoji').addEventListener('click', openEmojiPicker);
+
+document.getElementById('emojiPickerOverlay').addEventListener('click', (e) => {
+  if (e.target.id === 'emojiPickerOverlay') closeEmojiPicker();
 });
 
 /* ==========================================
@@ -3262,6 +3586,6 @@ document.addEventListener('contextmenu', e => e.preventDefault());
 window.addEventListener('beforeunload', () => {
   if (cameraStream) cameraStream.getTracks().forEach(t => t.stop());
 });
- </script>
+</script>
 </body>
-</html> 
+</html>  
