@@ -764,7 +764,6 @@ body::before {
 .msg {
   margin-bottom: 12px;
   position: relative;
-  /* ✅ تم إزالة max-width من هنا لتكون الفقاعة ذكية */
   animation: msgSlide .35s ease;
 }
 
@@ -788,15 +787,14 @@ body::before {
 .msg-in  .msg-header { color: var(--cyan); justify-content: flex-end; }
 .msg-out .msg-header { color: #ff5577; }
 
-/* ✅ تنسيق فقاعات الرسائل مثل الواتساب (تأخذ حجمها حسب النص) */
 .msg-body {
   border-radius: 10px;
   padding: 8px 12px 6px 12px;
   position: relative;
   border: none;
-  display: inline-block; /* ✅ هذا هو السر: الفقاعة تأخذ حجم النص فقط */
-  max-width: 85%; /* ✅ الحد الأقصى لعرض الفقاعة */
-  word-wrap: break-word; /* ✅ كسر الكلمات الطويلة */
+  display: inline-block;
+  max-width: 85%;
+  word-wrap: break-word;
   text-align: right;
 }
 
@@ -805,7 +803,6 @@ body::before {
   border-top-right-radius: 2px;
   color: #e9edef;
 }
-/* ✅ إرجاع اللون السابق (الأحمر الداكن) للرسائل الصادرة */
 .msg-out .msg-body {
   background: linear-gradient(135deg, var(--red-msg), var(--red-msg-2));
   border-top-left-radius: 2px;
@@ -818,7 +815,6 @@ body::before {
   gap: 10px;
 }
 
-/* ✅ تكبير زر التشغيل */
 .play-btn {
   width: 52px; height: 52px;
   border-radius: 50%;
@@ -846,7 +842,6 @@ body::before {
   color: #ff5577;
 }
 
-/* ✅ تكبير حجم الموجات الصوتية */
 .waveform {
   flex: 1;
   height: 36px;
@@ -874,12 +869,17 @@ body::before {
   color: rgba(255,255,255,.6);
   margin-top: 4px;
 }
-/* ✅ علامة الصح المزدوجة */
+/* ✅ العلامة الافتراضية هي ✓ (واحدة) */
 .msg-out .voice-meta::after {
-  content: '✓✓';
+  content: '✓';
   color: #53bdeb;
   font-size: 12px;
   margin-right: 4px;
+  transition: all 0.3s ease;
+}
+/* ✅ عند إضافة كلاس "delivered" تتحول إلى ✓✓ */
+.msg-out .voice-meta.delivered::after {
+  content: '✓✓';
 }
 .msg-in .voice-meta::after {
   content: '';
@@ -952,7 +952,6 @@ body::before {
 }
 .chat-input-bar.active { display: flex; }
 
-/* ✅ تكبير زر PTT في الدردشة */
 .chat-ptt {
   width: 52px; height: 52px;
   border-radius: 50%;
@@ -2523,6 +2522,12 @@ function addVoiceMessage(url, duration) {
   playBtn.addEventListener('click', () => playRealVoice(playBtn, url));
   logScreen.scrollTop = logScreen.scrollHeight;
   toast('✅ تم إرسال الرسالة الصوتية', 'success');
+  
+  // ✅ محاكاة استلام الطرف الآخر بعد 5 ثوانٍ
+  setTimeout(() => {
+    const meta = msg.querySelector('.voice-meta');
+    if (meta) meta.classList.add('delivered');
+  }, 5000);
 }
 
 function sendTextMessage(text) {
@@ -2544,6 +2549,12 @@ function sendTextMessage(text) {
   logScreen.appendChild(msg);
   logScreen.scrollTop = logScreen.scrollHeight;
   PTTEngine.playBeep(1000, 0.08, 0.4);
+  
+  // ✅ محاكاة استلام الطرف الآخر بعد 5 ثوانٍ
+  setTimeout(() => {
+    const meta = msg.querySelector('.voice-meta');
+    if (meta) meta.classList.add('delivered');
+  }, 5000);
 }
 
 function addAttachmentMessage(type, name, dataUrl, size) {
@@ -2584,6 +2595,12 @@ function addAttachmentMessage(type, name, dataUrl, size) {
   logScreen.scrollTop = logScreen.scrollHeight;
   PTTEngine.playBeep(1000, 0.08, 0.4);
   toast(`✅ تم إرسال ${typeLabel}`, 'success');
+  
+  // ✅ محاكاة استلام الطرف الآخر بعد 5 ثوانٍ
+  setTimeout(() => {
+    const meta = msg.querySelector('.voice-meta');
+    if (meta) meta.classList.add('delivered');
+  }, 5000);
 }
 
 function addContactMessage(contact) {
@@ -2612,6 +2629,12 @@ function addContactMessage(contact) {
   logScreen.scrollTop = logScreen.scrollHeight;
   PTTEngine.playBeep(1000, 0.08, 0.4);
   toast('✅ تم إرسال جهة الاتصال', 'success');
+  
+  // ✅ محاكاة استلام الطرف الآخر بعد 5 ثوانٍ
+  setTimeout(() => {
+    const meta = msg.querySelector('.voice-meta');
+    if (meta) meta.classList.add('delivered');
+  }, 5000);
 }
 
 function showFullImage(dataUrl) {
@@ -2707,7 +2730,6 @@ const lcdStatus = document.getElementById('lcdStatus');
 function onPTTStartWave(btn) {
   btn.classList.add('holding');
   
-  // ✅ إضاءة رأس الأريل باللون الأخضر
   const antenna = document.querySelector('.antenna');
   if (antenna) antenna.classList.add('transmitting');
   
@@ -2722,7 +2744,6 @@ function onPTTStartWave(btn) {
 function onPTTStopWave(btn) {
   btn.classList.remove('holding');
   
-  // ✅ إطفاء إضاءة رأس الأريل
   const antenna = document.querySelector('.antenna');
   if (antenna) antenna.classList.remove('transmitting');
   
