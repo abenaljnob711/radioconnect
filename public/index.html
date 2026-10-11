@@ -984,15 +984,15 @@ body::before {
 }
 
 .chat-send {
-  width: 46px; height: 46px;
+  width: 52px; height: 52px;
   border-radius: 50%;
   background: linear-gradient(180deg, #00e5ff, #008fa8);
   border: 1.5px solid var(--cyan);
-  display: flex;
+  display: none;
   align-items: center;
   justify-content: center;
   color: #001418;
-  font-size: 20px;
+  font-size: 22px;
   cursor: pointer;
   flex-shrink: 0;
   box-shadow: 0 0 16px rgba(0,229,255,.55);
@@ -1005,37 +1005,45 @@ body::before {
   box-shadow: 0 0 28px rgba(0,229,255,.95);
 }
 .chat-send:disabled {
-  background: #2a2f38;
-  border-color: #3a4048;
-  color: #666;
-  cursor: not-allowed;
-  box-shadow: none;
   opacity: .5;
+}
+
+/* ✅ أزرار الأيقونات داخل حقل الإدخال */
+.chat-icon-btn {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color .2s;
+  flex-shrink: 0;
+  font-size: 20px;
+  font-family: inherit;
+}
+.chat-icon-btn:active { color: var(--cyan); }
+
+/* ✅ إظهار/إخفاء الأزرار حسب الكتابة */
+.chat-input-bar.typing .chat-ptt { display: none; }
+.chat-input-bar.typing .chat-send { display: flex; }
+.chat-input-bar.typing .chat-icon-btn[id="chatCamera"],
+.chat-input-bar.typing .chat-icon-btn[id="chatClip"] {
+  display: none;
 }
 
 .chat-input-wrap {
   flex: 1;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   background: var(--card-2);
   border: 1px solid var(--border);
-  border-radius: 22px;
-  padding: 8px 14px;
-  min-height: 46px;
+  border-radius: 26px;
+  padding: 6px 12px;
+  min-height: 48px;
 }
-
-.chat-clip {
-  color: var(--text-dim);
-  font-size: 20px;
-  cursor: pointer;
-  background: none;
-  border: none;
-  font-family: inherit;
-  padding: 0;
-  transition: color .2s;
-}
-.chat-clip:active { color: var(--cyan); }
 
 .chat-input {
   flex: 1;
@@ -1500,7 +1508,6 @@ body::before {
 }
 .delete-confirm-btn:active { transform: scale(.97); }
 
-/* ✅ نافذة الكاميرا */
 .camera-modal-overlay {
   position: fixed;
   inset: 0;
@@ -1763,9 +1770,10 @@ body::before {
     <button class="chat-send" id="chatSend" onclick="handleSend()" title="إرسال" disabled>➤</button>
 
     <div class="chat-input-wrap">
-      <button class="chat-clip" id="chatClip" title="إرفاق">📎</button>
-      <button class="chat-clip" id="chatCamera" title="كاميرا">📷</button>
+      <button class="chat-icon-btn" id="chatCamera" title="كاميرا">📷</button>
+      <button class="chat-icon-btn" id="chatClip" title="إرفاق">📎</button>
       <input type="text" class="chat-input" id="chatInput" placeholder="اكتب رسالة...">
+      <button class="chat-icon-btn" id="chatEmoji" title="إيموجي">😊</button>
     </div>
   </div>
 
@@ -2173,7 +2181,7 @@ let menuBusy = false;
 let searchResultUser = null;
 
 /* ==========================================
-   محرك الصوت (PTT) - محلي
+   محرك الصوت (PTT)
    ========================================== */
 const PTTEngine = {
   audioCtx: null,
@@ -2353,7 +2361,7 @@ function updateMembersList(members) {
     return;
   }
   usersEl.style.display = 'flex';
-  usersEl.innerHTML = members.map((m, i) => {
+  usersEl.innerHTML = members.map((m) => {
     const isMe = m.id === currentUser.id;
     return `<div class="user-pill ${isMe ? 'active' : ''}">
       <span class="user-avatar">${(m.name || 'U').charAt(0)}</span>
@@ -2493,7 +2501,7 @@ async function initBattery() {
 }
 
 /* ==========================================
-   إنشاء غرفة / الانضمام
+   إنشاء موجة / غرفة
    ========================================== */
 function generateWaveCode() {
   const nums = Math.floor(10000 + Math.random() * 90000);
@@ -2563,10 +2571,7 @@ async function createRoom() {
       })
     });
     const data = await res.json();
-    if (!data.success) {
-      toast("⚠️ فشل إنشاء الغرفة", "error");
-      return;
-    }
+    if (!data.success) { toast("⚠️ فشل إنشاء الغرفة", "error"); return; }
 
     currentUser.roomName = name;
     currentUser.roomCode = data.roomId;
@@ -2673,9 +2678,7 @@ async function doSearch() {
     results.innerHTML = `<div class="no-results"><span class="no-results-icon">⚠️</span>اكتب رقم الغرفة أولاً</div>`;
     return;
   }
-
   results.innerHTML = `<div class="no-results"><span class="no-results-icon">⏳</span>جاري البحث...</div>`;
-
   try {
     const res = await fetch(SERVER_URL + "/api/search/" + encodeURIComponent(q));
     if (!res.ok) {
@@ -2726,10 +2729,7 @@ async function confirmJoin() {
       })
     });
     const data = await res.json();
-    if (!data.success) {
-      toast("⚠️ فشل الانضمام", "error");
-      return;
-    }
+    if (!data.success) { toast("⚠️ فشل الانضمام", "error"); return; }
 
     currentUser.roomCode = data.roomId;
     currentUser.roomName = data.roomName;
@@ -2760,7 +2760,7 @@ async function confirmJoin() {
 }
 
 /* ==========================================
-   المرفقات والملفات
+   المرفقات
    ========================================== */
 document.getElementById('chatClip').addEventListener('click', () => {
   openModal('modalAttach');
@@ -2859,7 +2859,7 @@ function showFullImage(dataUrl) {
 }
 
 /* ==========================================
-   توليد الموجات الصوتية
+   الموجات الصوتية
    ========================================== */
 function generateWaveform(container, type = 'in') {
   if (!container) return;
@@ -2908,7 +2908,6 @@ function renderOutgoingMessage(msg) {
   if (empty) empty.style.display = 'none';
   const logScreen = document.getElementById('roomMessages');
   const time = fmtTime(new Date(msg.time || Date.now()));
-
   let bodyHtml = '';
   if (msg.type === 'voice') {
     bodyHtml = `
@@ -2917,19 +2916,13 @@ function renderOutgoingMessage(msg) {
         <div class="waveform"></div>
         <span style="font-size:18px;opacity:.7;">🎤</span>
       </div>
-      <div class="voice-meta">
-        <span>${msg.duration || '?'}ث</span>
-        <span>${time}</span>
-      </div>
+      <div class="voice-meta"><span>${msg.duration || '?'}ث</span><span>${time}</span></div>
     `;
   } else if (msg.type === 'image' || msg.type === 'video') {
     const preview = msg.type === 'image'
       ? `<img src="${msg.dataUrl}" class="attachment-preview-img" onclick="showFullImage('${msg.dataUrl}')" alt="">`
       : `<video src="${msg.dataUrl}" class="attachment-preview-video" controls></video>`;
-    bodyHtml = `
-      ${preview}
-      <div class="voice-meta"><span>${time}</span></div>
-    `;
+    bodyHtml = `${preview}<div class="voice-meta"><span>${time}</span></div>`;
   } else if (msg.type === 'contact') {
     bodyHtml = `
       <div class="attach-msg">
@@ -2942,12 +2935,8 @@ function renderOutgoingMessage(msg) {
       <div class="voice-meta"><span>${time}</span></div>
     `;
   } else {
-    bodyHtml = `
-      <div class="text-msg">${escapeHtml(msg.text)}</div>
-      <div class="voice-meta"><span>${time}</span></div>
-    `;
+    bodyHtml = `<div class="text-msg">${escapeHtml(msg.text)}</div><div class="voice-meta"><span>${time}</span></div>`;
   }
-
   const el = document.createElement('div');
   el.className = 'msg msg-out';
   el.dataset.msgId = msg.id;
@@ -2957,12 +2946,10 @@ function renderOutgoingMessage(msg) {
   `;
   logScreen.appendChild(el);
   attachLongPressHandler(el);
-
   const wf = el.querySelector('.waveform');
   if (wf) generateWaveform(wf, 'out');
   const playBtn = el.querySelector('.play-btn');
   if (playBtn && msg.audioUrl) playBtn.addEventListener('click', () => playRealVoice(playBtn, msg.audioUrl));
-
   logScreen.scrollTop = logScreen.scrollHeight;
   return el;
 }
@@ -2972,7 +2959,6 @@ function renderIncomingMessage(msg) {
   if (empty) empty.style.display = 'none';
   const logScreen = document.getElementById('roomMessages');
   const time = fmtTime(new Date(msg.time || Date.now()));
-
   let bodyHtml = '';
   if (msg.type === 'voice') {
     bodyHtml = `
@@ -2981,19 +2967,13 @@ function renderIncomingMessage(msg) {
         <div class="waveform"></div>
         <span style="font-size:18px;opacity:.7;">🎤</span>
       </div>
-      <div class="voice-meta">
-        <span>${msg.duration || '?'}ث</span>
-        <span>${time}</span>
-      </div>
+      <div class="voice-meta"><span>${msg.duration || '?'}ث</span><span>${time}</span></div>
     `;
   } else if (msg.type === 'image' || msg.type === 'video') {
     const preview = msg.type === 'image'
       ? `<img src="${msg.dataUrl}" class="attachment-preview-img" onclick="showFullImage('${msg.dataUrl}')" alt="">`
       : `<video src="${msg.dataUrl}" class="attachment-preview-video" controls></video>`;
-    bodyHtml = `
-      ${preview}
-      <div class="voice-meta"><span>${time}</span></div>
-    `;
+    bodyHtml = `${preview}<div class="voice-meta"><span>${time}</span></div>`;
   } else if (msg.type === 'contact') {
     bodyHtml = `
       <div class="attach-msg">
@@ -3006,12 +2986,8 @@ function renderIncomingMessage(msg) {
       <div class="voice-meta"><span>${time}</span></div>
     `;
   } else {
-    bodyHtml = `
-      <div class="text-msg">${escapeHtml(msg.text)}</div>
-      <div class="voice-meta"><span>${time}</span></div>
-    `;
+    bodyHtml = `<div class="text-msg">${escapeHtml(msg.text)}</div><div class="voice-meta"><span>${time}</span></div>`;
   }
-
   const el = document.createElement('div');
   el.className = 'msg msg-in';
   el.dataset.msgId = msg.id;
@@ -3020,50 +2996,34 @@ function renderIncomingMessage(msg) {
     <div class="msg-body">${bodyHtml}</div>
   `;
   logScreen.appendChild(el);
-
   const wf = el.querySelector('.waveform');
   if (wf) generateWaveform(wf, 'in');
   const playBtn = el.querySelector('.play-btn');
   if (playBtn && msg.audioUrl) playBtn.addEventListener('click', () => playRealVoice(playBtn, msg.audioUrl));
-
   logScreen.scrollTop = logScreen.scrollHeight;
 }
 
 /* ==========================================
-   إرسال الرسائل (عبر Socket.io)
+   إرسال الرسائل
    ========================================== */
 function sendTextMessage(text) {
-  if (!currentUser.roomCode) {
-    toast('⚠️ لا توجد غرفة بعد', 'error');
-    return;
-  }
+  if (!currentUser.roomCode) { toast('⚠️ لا توجد غرفة بعد', 'error'); return; }
   const msg = {
-    id: nowId(),
-    type: 'text',
-    text: text,
-    sender: currentUser.id,
-    senderName: currentUser.name,
-    time: Date.now(),
-    roomId: currentUser.roomCode
+    id: nowId(), type: 'text', text: text,
+    sender: currentUser.id, senderName: currentUser.name,
+    time: Date.now(), roomId: currentUser.roomCode
   };
   socket.emit("send_message", { roomId: currentUser.roomCode, message: msg });
   renderOutgoingMessage(msg);
 }
 
 function addVoiceMessage(url, duration) {
-  if (!currentUser.roomCode) {
-    toast('⚠️ لا توجد غرفة بعد', 'error');
-    return;
-  }
+  if (!currentUser.roomCode) { toast('⚠️ لا توجد غرفة بعد', 'error'); return; }
   const msg = {
-    id: nowId(),
-    type: 'voice',
-    audioUrl: url,
+    id: nowId(), type: 'voice', audioUrl: url,
     duration: parseFloat(duration).toFixed(1),
-    sender: currentUser.id,
-    senderName: currentUser.name,
-    time: Date.now(),
-    roomId: currentUser.roomCode
+    sender: currentUser.id, senderName: currentUser.name,
+    time: Date.now(), roomId: currentUser.roomCode
   };
   socket.emit("send_message", { roomId: currentUser.roomCode, message: msg });
   renderOutgoingMessage(msg);
@@ -3071,40 +3031,24 @@ function addVoiceMessage(url, duration) {
 }
 
 function addAttachmentMessage(type, name, dataUrl, size) {
-  if (!currentUser.roomCode) {
-    toast('⚠️ لا توجد غرفة بعد', 'error');
-    return;
-  }
+  if (!currentUser.roomCode) { toast('⚠️ لا توجد غرفة بعد', 'error'); return; }
   const msg = {
-    id: nowId(),
-    type: type,
-    fileName: name,
-    dataUrl: dataUrl,
-    fileSize: size,
-    sender: currentUser.id,
-    senderName: currentUser.name,
-    time: Date.now(),
-    roomId: currentUser.roomCode
+    id: nowId(), type: type, fileName: name, dataUrl: dataUrl, fileSize: size,
+    sender: currentUser.id, senderName: currentUser.name,
+    time: Date.now(), roomId: currentUser.roomCode
   };
   socket.emit("send_message", { roomId: currentUser.roomCode, message: msg });
   renderOutgoingMessage(msg);
-  toast(`✅ تم إرسال ${type === 'image' ? 'صورة' : type === 'video' ? 'فيديو' : 'ملف'}`, 'success');
+  toast(`✅ تم إرسال الملف`, 'success');
 }
 
 function addContactMessage(contact) {
-  if (!currentUser.roomCode) {
-    toast('⚠️ لا توجد غرفة بعد', 'error');
-    return;
-  }
+  if (!currentUser.roomCode) { toast('⚠️ لا توجد غرفة بعد', 'error'); return; }
   const msg = {
-    id: nowId(),
-    type: 'contact',
-    contactName: contact.name,
-    contactPhone: contact.phone,
-    sender: currentUser.id,
-    senderName: currentUser.name,
-    time: Date.now(),
-    roomId: currentUser.roomCode
+    id: nowId(), type: 'contact',
+    contactName: contact.name, contactPhone: contact.phone,
+    sender: currentUser.id, senderName: currentUser.name,
+    time: Date.now(), roomId: currentUser.roomCode
   };
   socket.emit("send_message", { roomId: currentUser.roomCode, message: msg });
   renderOutgoingMessage(msg);
@@ -3117,8 +3061,16 @@ function addContactMessage(contact) {
 const chatInput = document.getElementById('chatInput');
 const chatSend  = document.getElementById('chatSend');
 
+// ✅ تعديل: إظهار/إخفاء الأزرار حسب الكتابة
 chatInput.addEventListener('input', () => {
-  chatSend.disabled = chatInput.value.trim().length === 0;
+  const isEmpty = chatInput.value.trim().length === 0;
+  chatSend.disabled = isEmpty;
+  const bar = document.getElementById('chatInputBar');
+  if (isEmpty) {
+    bar.classList.remove('typing');
+  } else {
+    bar.classList.add('typing');
+  }
 });
 
 chatInput.addEventListener('keydown', (e) => {
@@ -3133,11 +3085,12 @@ function handleSend() {
   sendTextMessage(text);
   chatInput.value = '';
   chatSend.disabled = true;
+  document.getElementById('chatInputBar').classList.remove('typing');
   setTimeout(() => { chatInput.focus(); }, 50);
 }
 
 /* ==========================================
-   PTT (الضغط للتحدث)
+   PTT
    ========================================== */
 const pttMain = document.getElementById('pttMain');
 const chatPTT = document.getElementById('chatPTT');
@@ -3150,9 +3103,7 @@ function onPTTStartWave(btn) {
   if (lcdStatus) lcdStatus.textContent = 'TX';
   const bi = document.getElementById('bottomInfo');
   if (bi) bi.innerHTML = '<span style="color:#00ff00;font-weight:800;">🟢 جاري الإرسال... تحدّث الآن</span>';
-  PTTEngine.startTalkingWave().then(ok => {
-    if (!ok) onPTTStopWave(btn);
-  });
+  PTTEngine.startTalkingWave().then(ok => { if (!ok) onPTTStopWave(btn); });
 }
 
 function onPTTStopWave(btn) {
@@ -3170,9 +3121,7 @@ function onPTTStopWave(btn) {
 
 function onPTTStartRoom(btn) {
   btn.classList.add('holding');
-  PTTEngine.startTalkingRoom().then(ok => {
-    if (!ok) onPTTStopRoom(btn);
-  });
+  PTTEngine.startTalkingRoom().then(ok => { if (!ok) onPTTStopRoom(btn); });
 }
 
 function onPTTStopRoom(btn) {
@@ -3183,7 +3132,6 @@ function onPTTStopRoom(btn) {
 pttMain.addEventListener('mousedown', (e) => { e.preventDefault(); onPTTStartWave(pttMain); });
 pttMain.addEventListener('mouseup',   (e) => { e.preventDefault(); onPTTStopWave(pttMain); });
 pttMain.addEventListener('mouseleave',(e) => { if (pttMain.classList.contains('holding')) onPTTStopWave(pttMain); });
-
 pttMain.addEventListener('touchstart', (e) => { e.preventDefault(); onPTTStartWave(pttMain); }, { passive: false });
 pttMain.addEventListener('touchend',   (e) => { e.preventDefault(); onPTTStopWave(pttMain);  }, { passive: false });
 pttMain.addEventListener('touchcancel',(e) => { e.preventDefault(); onPTTStopWave(pttMain);  }, { passive: false });
@@ -3191,13 +3139,12 @@ pttMain.addEventListener('touchcancel',(e) => { e.preventDefault(); onPTTStopWav
 chatPTT.addEventListener('mousedown', (e) => { e.preventDefault(); onPTTStartRoom(chatPTT); });
 chatPTT.addEventListener('mouseup',   (e) => { e.preventDefault(); onPTTStopRoom(chatPTT); });
 chatPTT.addEventListener('mouseleave',(e) => { if (chatPTT.classList.contains('holding')) onPTTStopRoom(chatPTT); });
-
 chatPTT.addEventListener('touchstart', (e) => { e.preventDefault(); onPTTStartRoom(chatPTT); }, { passive: false });
 chatPTT.addEventListener('touchend',   (e) => { e.preventDefault(); onPTTStopRoom(chatPTT);  }, { passive: false });
 chatPTT.addEventListener('touchcancel',(e) => { e.preventDefault(); onPTTStopRoom(chatPTT);  }, { passive: false });
 
 /* ==========================================
-   حذف الرسالة بالضغط المطول
+   حذف الرسالة
    ========================================== */
 let selectedMessageForDelete = null;
 
@@ -3248,7 +3195,7 @@ function attachLongPressHandler(msgElement) {
 }
 
 /* ==========================================
-   اختبار الصوت وتغيير القناة
+   اختبار الصوت
    ========================================== */
 async function testCall() {
   const ok = await PTTEngine.init();
@@ -3272,7 +3219,17 @@ function changeChannel() {
 }
 
 /* ==========================================
-   التهيئة عند التحميل
+   ✅ زر الإيموجي
+   ========================================== */
+document.getElementById('chatEmoji').addEventListener('click', () => {
+  const emojis = ['😀','😂','🥰','😎','🤔','😢','🔥','❤️','👍','👏','🙏','✨','📻','📡','🎉','💯','⚡','🚀','🎯','💪'];
+  chatInput.value += emojis[Math.floor(Math.random() * emojis.length)];
+  chatInput.dispatchEvent(new Event('input'));
+  chatInput.focus();
+});
+
+/* ==========================================
+   التهيئة
    ========================================== */
 window.addEventListener('load', () => {
   const initOnce = async () => {
@@ -3291,6 +3248,6 @@ document.addEventListener('contextmenu', e => e.preventDefault());
 window.addEventListener('beforeunload', () => {
   if (cameraStream) cameraStream.getTracks().forEach(t => t.stop());
 });
-</script>
+  </script>
 </body>
-</html>  
+</html>
