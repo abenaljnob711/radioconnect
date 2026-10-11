@@ -348,7 +348,7 @@ body::before {
 
 .radio-stage {
   position: relative;
-  height: 360px;
+  height: 280px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -357,8 +357,8 @@ body::before {
 
 .radio-device {
   position: relative;
-  width: 210px;
-  height: 320px;
+  width: 170px;
+  height: 260px;
   filter: drop-shadow(0 20px 40px rgba(0,0,0,.8))
           drop-shadow(0 0 30px rgba(0,229,255,.15));
 }
@@ -952,7 +952,7 @@ body::before {
 .chat-input-bar.active { display: flex; }
 
 .chat-ptt {
-  width: 52px; height: 52px;
+  width: 46px; height: 46px;
   border-radius: 50%;
   background: linear-gradient(180deg, #ff2a4d, #b01530);
   border: 1.5px solid #ff5577;
@@ -984,7 +984,7 @@ body::before {
 }
 
 .chat-send {
-  width: 52px; height: 52px;
+  width: 46px; height: 46px;
   border-radius: 50%;
   background: linear-gradient(180deg, #00e5ff, #008fa8);
   border: 1.5px solid var(--cyan);
@@ -2790,11 +2790,38 @@ function pickFile(type) {
   input.click();
 }
 
-function pickContact() {
+
+async function pickContact() {
   closeModal('modalAttach');
+
+  // ✅ محاولة فتح قائمة جهات الاتصال الحقيقية
+  if ('contacts' in navigator && 'select' in navigator.contacts) {
+    try {
+      const props = ['name', 'tel'];
+      const opts = { multiple: false };
+      const contacts = await navigator.contacts.select(props, opts);
+
+      if (contacts && contacts.length > 0) {
+        const c = contacts[0];
+        const name = (c.name && c.name[0]) || 'بدون اسم';
+        const phone = (c.tel && c.tel[0]) || '';
+        if (phone) {
+          addContactMessage({ name, phone });
+          return;
+        }
+      }
+      return;
+    } catch (e) {
+      console.warn('لم يستطع فتح جهات الاتصال:', e);
+      // سنستخدم النافذة اليدوية كحل بديل
+    }
+  }
+
+  // ✅ حل بديل (iOS أو متصفح لا يدعم Contacts API)
   document.getElementById('contactName').value = '';
   document.getElementById('contactPhone').value = '';
   openModal('modalContact');
+  toast('📱 اكتب بيانات جهة الاتصال يدوياً', 'success');
 }
 
 function sendContact() {
