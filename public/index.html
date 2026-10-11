@@ -7,9 +7,6 @@
 <title>Radio Connect — راديو كونكت</title>
 
 <style>
-/* =========================================================
-   إعادة ضبط + متغيرات
-   ========================================================= */
 *, *::before, *::after {
   margin: 0; padding: 0; box-sizing: border-box;
   -webkit-tap-highlight-color: transparent;
@@ -65,9 +62,6 @@ body::before {
   margin: 0 auto;
 }
 
-/* =========================================================
-   الشاشات
-   ========================================================= */
 .screen {
   flex: 1;
   overflow-y: auto;
@@ -85,9 +79,6 @@ body::before {
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* =========================================================
-   الترويسة
-   ========================================================= */
 .top-header {
   display: flex;
   align-items: center;
@@ -131,7 +122,6 @@ body::before {
   font-weight: 700;
 }
 
-/* زر ☰ */
 .menu-toggle {
   width: 42px; height: 42px;
   border-radius: 11px;
@@ -161,9 +151,6 @@ body::before {
   box-shadow: 0 0 18px rgba(0,229,255,.6);
 }
 
-/* =========================================================
-   القائمة الجانبية
-   ========================================================= */
 .side-menu {
   position: fixed;
   top: 0; right: 0;
@@ -298,9 +285,6 @@ body::before {
   background: rgba(0,229,255,.2);
 }
 
-/* =========================================================
-   شرائط الحالة
-   ========================================================= */
 .status-row {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
@@ -351,7 +335,6 @@ body::before {
 
 .chip-label { font-size: 10px; color: var(--text-dim); }
 
-/* 🆕 خانة رقم التعريف */
 .chip-value.code {
   color: var(--cyan);
   font-family: 'Courier New', monospace;
@@ -361,9 +344,6 @@ body::before {
   text-shadow: 0 0 8px rgba(0,229,255,.6);
 }
 
-/* =========================================================
-   جهاز الراديو
-   ========================================================= */
 .radio-stage {
   position: relative;
   height: 360px;
@@ -563,9 +543,6 @@ body::before {
   font-weight: 700;
 }
 
-/* =========================================================
-   شريط التنقل السفلي
-   ========================================================= */
 .tab-bar {
   position: fixed;
   bottom: 0;
@@ -628,9 +605,6 @@ body::before {
 }
 .bottom-info .hl { color: var(--cyan); font-weight: 700; }
 
-/* =========================================================
-   شاشة الغرفة
-   ========================================================= */
 .log-header {
   display: flex;
   align-items: center;
@@ -735,7 +709,6 @@ body::before {
   font-weight: 800;
 }
 
-/* شاشة الغرفة الفارغة */
 .empty-room {
   display: flex;
   flex-direction: column;
@@ -762,7 +735,6 @@ body::before {
   max-width: 260px;
 }
 
-/* 🆕 زر إنشاء غرفة في الشاشة الفارغة */
 .empty-room-btn {
   margin-top: 14px;
   padding: 14px 28px;
@@ -782,7 +754,6 @@ body::before {
   box-shadow: 0 0 32px rgba(0,229,255,.8);
 }
 
-/* فقاعات الرسائل */
 .msg {
   margin-bottom: 12px;
   position: relative;
@@ -895,7 +866,6 @@ body::before {
   font-weight: 500;
 }
 
-/* مرفقات في الرسائل */
 .attach-msg {
   display: flex;
   align-items: center;
@@ -936,9 +906,6 @@ body::before {
   margin-bottom: 6px;
 }
 
-/* =========================================================
-   شريط الكتابة
-   ========================================================= */
 .chat-input-bar {
   position: fixed;
   bottom: 68px;
@@ -1056,9 +1023,6 @@ body::before {
 }
 .chat-input::placeholder { color: var(--text-dim); }
 
-/* =========================================================
-   الإعدادات
-   ========================================================= */
 .settings-list {
   display: flex;
   flex-direction: column;
@@ -1084,9 +1048,6 @@ body::before {
 .setting-desc  { font-size: 11px; color: var(--text-dim); }
 .setting-value { font-size: 12px; color: var(--cyan); font-weight: 700; }
 
-/* =========================================================
-   Toast
-   ========================================================= */
 .toast {
   position: fixed;
   top: 20px;
@@ -1109,9 +1070,6 @@ body::before {
 .toast.success { border-color: var(--green); box-shadow: 0 8px 24px rgba(0,255,136,.3); }
 .toast.error { border-color: var(--red); box-shadow: 0 8px 24px rgba(255,42,77,.3); }
 
-/* =========================================================
-   Modal
-   ========================================================= */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -1238,7 +1196,6 @@ body::before {
   cursor: not-allowed;
 }
 
-/* نافذة نتيجة البحث */
 .search-result-card {
   display: flex;
   align-items: center;
@@ -1284,7 +1241,6 @@ body::before {
   letter-spacing: 1px;
 }
 
-/* رسالة "لا توجد نتائج" */
 .no-results {
   text-align: center;
   padding: 24px 12px;
@@ -1299,7 +1255,6 @@ body::before {
   opacity: .4;
 }
 
-/* 🆕 شبكة خيارات المرفقات */
 .attach-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1331,7 +1286,6 @@ body::before {
 }
 .attach-icon { font-size: 28px; }
 
-/* 🆕 خيارات أيقونة الغرفة */
 .icon-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -1357,7 +1311,6 @@ body::before {
   box-shadow: 0 0 16px rgba(0,229,255,.4);
 }
 
-/* 🆕 عنصر قائمة في نافذة الغرفة */
 .modal-menu-item {
   display: flex;
   align-items: center;
@@ -1398,7 +1351,6 @@ body::before {
   border-color: rgba(255,42,77,.3);
 }
 
-/* 🆕 عرض رقم التعريف بعد الإنشاء */
 .code-display {
   text-align: center;
   padding: 18px;
@@ -1427,7 +1379,6 @@ body::before {
   line-height: 1.6;
 }
 
-/* 🆕 طلب انضمام وارد */
 .join-request-info {
   padding: 16px;
   background: rgba(0,229,255,.05);
@@ -1457,9 +1408,6 @@ body::before {
 <body>
   <div class="app">
 
-  <!-- =========================================================
-       شاشة النداء اللاسلكي (الموجة)
-       ========================================================= -->
   <section class="screen active" id="screen-radio">
 
     <header class="top-header">
@@ -1527,9 +1475,6 @@ body::before {
 
   </section>
 
-  <!-- =========================================================
-       شاشة الغرفة
-       ========================================================= -->
   <section class="screen" id="screen-log">
 
     <div class="log-header">
@@ -1557,7 +1502,6 @@ body::before {
 
     <div id="roomMessages"></div>
 
-    <!-- الشاشة الفارغة -->
     <div class="empty-room" id="emptyRoom">
       <div class="empty-room-icon">💬</div>
       <div class="empty-room-title">لا توجد غرفة بعد</div>
@@ -1571,9 +1515,6 @@ body::before {
 
   </section>
 
-  <!-- =========================================================
-       شاشة الإعدادات
-       ========================================================= -->
   <section class="screen" id="screen-settings">
 
     <header class="top-header">
@@ -1656,9 +1597,6 @@ body::before {
 
   </section>
 
-  <!-- =========================================================
-       شريط التنقل السفلي
-       ========================================================= -->
   <nav class="tab-bar">
     <button class="tab" data-tab="log" onclick="switchTab('log')">
       <span class="tab-icon">💬</span>
@@ -1678,7 +1616,6 @@ body::before {
     إشارة: <span class="hl">قوي</span> • بطارية الراديو: <span class="hl" id="bottomBattery">--%</span>
   </div>
 
-  <!-- شريط الكتابة -->
   <div class="chat-input-bar" id="chatInputBar">
     <button class="chat-ptt" id="chatPTT" title="اضغط للتحدث">
       📻
@@ -1695,9 +1632,6 @@ body::before {
 
 </div>
 
-<!-- =========================================================
-     القائمة الجانبية
-     ========================================================= -->
 <div class="side-menu-backdrop" id="menuBackdrop"></div>
 <aside class="side-menu" id="sideMenu">
   <div class="side-menu-header">
@@ -1741,9 +1675,6 @@ body::before {
   </button>
 </aside>
 
-<!-- =========================================================
-     Modal: قائمة الغرفة
-     ========================================================= -->
 <div class="modal-overlay" id="modalRoomMenu">
   <div class="modal">
     <div class="modal-title">☰ خيارات الغرفة</div>
@@ -1770,9 +1701,6 @@ body::before {
   </div>
 </div>
 
-<!-- =========================================================
-     Modal: تعديل اسم الموجة
-     ========================================================= -->
 <div class="modal-overlay" id="modalEditWave">
   <div class="modal">
     <div class="modal-title">✏️ تعديل اسم الموجة</div>
@@ -1790,9 +1718,6 @@ body::before {
   </div>
 </div>
 
-<!-- =========================================================
-     Modal: تعديل اسم الغرفة
-     ========================================================= -->
 <div class="modal-overlay" id="modalEditName">
   <div class="modal">
     <div class="modal-title">✏️ تعديل اسم الغرفة</div>
@@ -1810,9 +1735,6 @@ body::before {
   </div>
 </div>
 
-<!-- =========================================================
-     Modal: تغيير أيقونة الغرفة
-     ========================================================= -->
 <div class="modal-overlay" id="modalEditIcon">
   <div class="modal">
     <div class="modal-title">🎨 تغيير أيقونة الغرفة</div>
@@ -1835,9 +1757,6 @@ body::before {
   </div>
 </div>
 
-<!-- =========================================================
-     Modal: تأكيد مسح الدردشة
-     ========================================================= -->
 <div class="modal-overlay" id="modalClearChat">
   <div class="modal">
     <div class="modal-title">🗑️ مسح الدردشة</div>
@@ -1850,9 +1769,6 @@ body::before {
   </div>
 </div>
 
-<!-- =========================================================
-     Modal: المرفقات
-     ========================================================= -->
 <div class="modal-overlay" id="modalAttach">
   <div class="modal">
     <div class="modal-title">📎 إرفاق ملف</div>
@@ -1883,9 +1799,6 @@ body::before {
   </div>
 </div>
 
-<!-- =========================================================
-     Modal: إنشاء غرفة
-     ========================================================= -->
 <div class="modal-overlay" id="modalCreate">
   <div class="modal">
     <div class="modal-title">➕ إنشاء غرفة جديدة</div>
@@ -1908,9 +1821,6 @@ body::before {
   </div>
 </div>
 
-<!-- =========================================================
-     Modal: إنشاء موجة
-     ========================================================= -->
 <div class="modal-overlay" id="modalWave">
   <div class="modal">
     <div class="modal-title">📡 إنشاء موجة</div>
@@ -1928,9 +1838,6 @@ body::before {
   </div>
 </div>
 
-<!-- =========================================================
-     Modal: نتيجة إنشاء الموجة (عرض الرقم)
-     ========================================================= -->
 <div class="modal-overlay" id="modalWaveCreated">
   <div class="modal">
     <div class="modal-title">✅ تم إنشاء الموجة</div>
@@ -1952,9 +1859,6 @@ body::before {
   </div>
 </div>
 
-<!-- =========================================================
-     Modal: نتيجة إنشاء الغرفة (عرض الرقم)
-     ========================================================= -->
 <div class="modal-overlay" id="modalRoomCreated">
   <div class="modal">
     <div class="modal-title">✅ تم إنشاء الغرفة</div>
@@ -1976,9 +1880,6 @@ body::before {
   </div>
 </div>
 
-<!-- =========================================================
-     Modal: البحث
-     ========================================================= -->
 <div class="modal-overlay" id="modalSearch">
   <div class="modal">
     <div class="modal-title">🔍 البحث</div>
@@ -2006,9 +1907,6 @@ body::before {
   </div>
 </div>
 
-<!-- =========================================================
-     Modal: نافذة الانضمام (موافق / إلغاء)
-     ========================================================= -->
 <div class="modal-overlay" id="modalJoinConfirm">
   <div class="modal">
     <div class="modal-title">📩 طلب انضمام</div>
@@ -2031,9 +1929,6 @@ body::before {
   </div>
 </div>
 
-<!-- =========================================================
-     Modal: طلب انضمام وارد (لصاحب الموجة)
-     ========================================================= -->
 <div class="modal-overlay" id="modalIncomingRequest">
   <div class="modal">
     <div class="modal-title">🔔 طلب انضمام وارد</div>
@@ -2052,12 +1947,9 @@ body::before {
   </div>
 </div>
 
-<!-- ملف إدخال مخفي للمرفقات -->
 <input type="file" id="hiddenFileInput" style="display:none;">
+
 <script>
-/* =========================================================
-   الحالة العامة
-   ========================================================= */
 let currentUser = {
   id: 'Q307',
   name: 'أنا',
@@ -2072,730 +1964,6 @@ let batteryPercent = null;
 let menuBusy = false;
 let searchResultUser = null;
 
-/* =========================================================
-   🎙️ PTT Engine
-   ========================================================= */
-const PTTEngine = {
-  audioCtx: null,
-  micStream: null,
-  mediaRecorder: null,
-  recordedChunks: [],
-  beepBuffer: null,
-  isRecording: false,
-  analyser: null,
-  dataArray: null,
-
-  async init() {
-    if (this.audioCtx) return true;
-    try {
-      const AC = window.AudioContext || window.webkitAudioContext;
-      this.audioCtx = new AC();
-      if (this.audioCtx.state === 'suspended') await this.audioCtx.resume();
-      this.beepBuffer = this._makeBeep(0.18, 1200, 10);
-      return true;
-    } catch (e) {
-      console.error('فشل تهيئة الصوت:', e);
-      return false;
-    }
-  },
-
-  _makeBeep(duration, freq, decay) {
-    const sr = this.audioCtx.sampleRate;
-    const len = Math.floor(sr * duration);
-    const buf = this.audioCtx.createBuffer(1, len, sr);
-    const ch = buf.getChannelData(0);
-    for (let i = 0; i < len; i++) {
-      const t = i / sr;
-      const env = Math.exp(-decay * t) * Math.min(1, t * 60);
-      ch[i] = Math.sin(2 * Math.PI * freq * t) * env;
-    }
-    return buf;
-  },
-
-  playBeep(freq = 1200, dur = 0.18, vol = 0.9) {
-    if (!this.audioCtx) return;
-    const src = this.audioCtx.createBufferSource();
-    const gain = this.audioCtx.createGain();
-    src.buffer = this._makeBeep(dur, freq, 8);
-    gain.gain.value = vol;
-    src.connect(gain).connect(this.audioCtx.destination);
-    src.start();
-  },
-
-  playStartBeep() {
-    this.playBeep(1200, 0.15, 0.9);
-    setTimeout(() => this.playBeep(1400, 0.15, 0.9), 130);
-  },
-
-  playEndBeep() {
-    this.playBeep(700, 0.25, 0.85);
-  },
-
-  async startTalking() {
-    if (this.isRecording) return false;
-    await this.init();
-
-    try {
-      this.micStream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          echoCancellation: false,
-          noiseSuppression: false,
-          autoGainControl: false
-        }
-      });
-
-      this.playStartBeep();
-
-      const source = this.audioCtx.createMediaStreamSource(this.micStream);
-      const gain = this.audioCtx.createGain();
-      gain.gain.value = 0.75;
-
-      const highPass = this.audioCtx.createBiquadFilter();
-      highPass.type = 'highpass';
-      highPass.frequency.value = 300;
-
-      const lowPass = this.audioCtx.createBiquadFilter();
-      lowPass.type = 'lowpass';
-      lowPass.frequency.value = 3400;
-
-      source.connect(highPass);
-      highPass.connect(lowPass);
-      lowPass.connect(gain);
-      gain.connect(this.audioCtx.destination);
-
-      this.recordedChunks = [];
-      this.mediaRecorder = new MediaRecorder(this.micStream);
-      this.mediaRecorder.ondataavailable = (e) => {
-        if (e.data.size > 0) this.recordedChunks.push(e.data);
-      };
-      this.mediaRecorder.start(100);
-
-      this.isRecording = true;
-      return true;
-
-    } catch (e) {
-      console.error('فشل الميكروفون:', e);
-      toast('❌ تعذّر الوصول للميكروفون', 'error');
-      return false;
-    }
-  },
-
-  async stopTalking() {
-    if (!this.isRecording) return;
-    this.isRecording = false;
-    this.playEndBeep();
-
-    if (this.mediaRecorder && this.mediaRecorder.state === 'recording') {
-      this.mediaRecorder.stop();
-    }
-    if (this.micStream) {
-      this.micStream.getTracks().forEach(t => t.stop());
-      this.micStream = null;
-    }
-
-    setTimeout(() => {
-      if (this.recordedChunks.length > 0) {
-        const blob = new Blob(this.recordedChunks, { type: 'audio/webm' });
-        const url = URL.createObjectURL(blob);
-        const duration = this.recordedChunks.length * 0.1;
-        addVoiceMessage(url, duration);
-      }
-      this.recordedChunks = [];
-    }, 200);
-  }
-};
-
-/* =========================================================
-   🔋 البطارية
-   ========================================================= */
-async function initBattery() {
-  if (!navigator.getBattery) {
-    document.getElementById('batteryValue').textContent = '—';
-    document.getElementById('bottomBattery').textContent = '—';
-    return;
-  }
-  try {
-    const battery = await navigator.getBattery();
-    const update = () => {
-      batteryPercent = Math.round(battery.level * 100);
-      document.getElementById('batteryValue').textContent = batteryPercent + '%';
-      document.getElementById('bottomBattery').textContent = batteryPercent + '%';
-    };
-    update();
-    battery.addEventListener('levelchange', update);
-  } catch (e) {
-    document.getElementById('batteryValue').textContent = '—';
-    document.getElementById('bottomBattery').textContent = '—';
-  }
-}
-
-/* =========================================================
-   🔑 توليد الأرقام
-   ========================================================= */
-function generateWaveCode() {
-  // Q + 5 أرقام
-  const nums = Math.floor(10000 + Math.random() * 90000);
-  return 'Q' + nums;
-}
-
-function generateRoomCode() {
-  // G + 4 أرقام
-  const nums = Math.floor(1000 + Math.random() * 9000);
-  return 'G' + nums;
-}
-
-/* =========================================================
-   التنقل
-   ========================================================= */
-function switchTab(tabName) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-
-  document.getElementById('screen-' + tabName).classList.add('active');
-  document.querySelector(`.tab[data-tab="${tabName}"]`).classList.add('active');
-
-  const chatBar = document.getElementById('chatInputBar');
-  const bottomInfo = document.getElementById('bottomInfo');
-
-  if (tabName === 'log') {
-    chatBar.classList.add('active');
-    bottomInfo.style.display = 'none';
-  } else {
-    chatBar.classList.remove('active');
-    bottomInfo.style.display = 'block';
-  }
-
-  if (sideMenu && sideMenu.classList.contains('open')) closeSideMenu();
-  window.scrollTo(0, 0);
-}
-
-/* =========================================================
-   Toast
-   ========================================================= */
-let toastTimer;
-function toast(msg, type = '') {
-  let el = document.getElementById('toast');
-  if (!el) {
-    el = document.createElement('div');
-    el.className = 'toast';
-    el.id = 'toast';
-    document.body.appendChild(el);
-  }
-  el.textContent = msg;
-  el.className = 'toast ' + type;
-  el.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.remove('show'), 2400);
-}
-
-/* =========================================================
-   Modal
-   ========================================================= */
-function openModal(id) { document.getElementById(id).classList.add('show'); closeSideMenu(); }
-function closeModal(id) { document.getElementById(id).classList.remove('show'); }
-
-document.querySelectorAll('.modal-overlay').forEach(overlay => {
-  overlay.addEventListener('click', (e) => {
-    if (e.target === overlay) overlay.classList.remove('show');
-  });
-});
-
-/* =========================================================
-   القائمة الجانبية
-   ========================================================= */
-const sideMenu = document.getElementById('sideMenu');
-const menuBackdrop = document.getElementById('menuBackdrop');
-const menuToggle = document.getElementById('menuToggle');
-
-function openSideMenu() {
-  sideMenu.classList.add('open');
-  menuBackdrop.classList.add('show');
-  menuToggle.classList.add('open');
-}
-function closeSideMenu() {
-  sideMenu.classList.remove('open');
-  menuBackdrop.classList.remove('show');
-  menuToggle.classList.remove('open');
-}
-
-menuToggle.addEventListener('click', (e) => {
-  e.stopPropagation();
-  if (menuBusy) return;
-  menuBusy = true;
-  setTimeout(() => menuBusy = false, 300);
-
-  if (sideMenu.classList.contains('open')) {
-    closeSideMenu();
-  } else {
-    openSideMenu();
-  }
-});
-menuBackdrop.addEventListener('click', closeSideMenu);
-
-/* =========================================================
-   فتح Modals
-   ========================================================= */
-function openCreateWave() { openModal('modalWave'); }
-function openCreateRoom() { openModal('modalCreate'); }
-function openSearch()     { openModal('modalSearch'); }
-function openEditWaveName() {
-  document.getElementById('newWaveName').value = currentUser.waveName || '';
-  openModal('modalEditWave');
-}
-
-/* =========================================================
-   إنشاء موجة
-   ========================================================= */
-async function createWave() {
-  const name = document.getElementById('waveName').value.trim();
-  if (!name) { toast('⚠️ أدخل اسم الموجة', 'error'); return; }
-
-  const code = generateWaveCode();
-  currentUser.waveName = name;
-  currentUser.waveCode = code;
-
-  await PTTEngine.init();
-  PTTEngine.playStartBeep();
-
-  document.getElementById('createdWaveCode').textContent = code;
-  document.getElementById('waveName').value = '';
-  closeModal('modalWave');
-  openModal('modalWaveCreated');
-
-  // تحديث الواجهة
-  document.getElementById('waveCodeChip').textContent = code;
-  document.getElementById('waveNameValue').textContent = name;
-  document.getElementById('waveCodeValue').textContent = code;
-  document.getElementById('lcdLine1').textContent = code;
-  document.getElementById('lcdLine3').textContent = currentUser.id + ' • TX';
-
-  toast(`✅ تم إنشاء الموجة "${name}"`, 'success');
-}
-
-function copyWaveCode() {
-  if (!currentUser.waveCode) return;
-  navigator.clipboard.writeText(currentUser.waveCode).then(() => {
-    toast('📋 تم نسخ الرقم', 'success');
-  }).catch(() => {
-    toast('رقم الموجة: ' + currentUser.waveCode, 'success');
-  });
-}
-
-/* =========================================================
-   تعديل اسم الموجة
-   ========================================================= */
-function saveWaveName() {
-  const name = document.getElementById('newWaveName').value.trim();
-  if (!name) { toast('⚠️ أدخل اسماً', 'error'); return; }
-  currentUser.waveName = name;
-  document.getElementById('waveNameValue').textContent = name;
-  toast(`✅ تم تحديث اسم الموجة إلى "${name}"`, 'success');
-  closeModal('modalEditWave');
-}
-
-/* =========================================================
-   إنشاء غرفة
-   ========================================================= */
-async function createRoom() {
-  const name = document.getElementById('roomName').value.trim();
-  const ch = document.getElementById('roomChannel').value.trim();
-
-  if (!name) { toast('⚠️ أدخل اسم الغرفة', 'error'); return; }
-  if (!/^\d{1,2}$/.test(ch)) { toast('⚠️ رقم قناة غير صالح', 'error'); return; }
-
-  const code = generateRoomCode();
-  currentUser.roomName = name;
-  currentUser.roomCode = code;
-
-  await PTTEngine.init();
-  PTTEngine.playStartBeep();
-
-  document.getElementById('createdRoomCode').textContent = code;
-  document.getElementById('roomName').value = '';
-  document.getElementById('roomChannel').value = '07';
-  closeModal('modalCreate');
-  openModal('modalRoomCreated');
-
-  // تحديث واجهة الغرفة
-  document.getElementById('roomNameLabel').textContent = name;
-  document.getElementById('roomIcon').textContent = '💬';
-  document.getElementById('roomBadge').style.display = 'block';
-  document.getElementById('roomUsers').style.display = 'flex';
-  document.getElementById('emptyRoom').style.display = 'none';
-  document.getElementById('roomSubLabel').textContent =
-    `📻 ${code} • CH ${ch.padStart(2,'0')}`;
-
-  // تحديث القناة في الموجة
-  document.querySelectorAll('.chip-value')[1].innerHTML = `📻 ${ch.padStart(2,'0')}`;
-  document.getElementById('channelValue').textContent = `CH ${ch.padStart(2,'0')}`;
-
-  toast(`✅ تم إنشاء الغرفة "${name}"`, 'success');
-}
-
-function copyRoomCode() {
-  if (!currentUser.roomCode) return;
-  navigator.clipboard.writeText(currentUser.roomCode).then(() => {
-    toast('📋 تم نسخ الرقم', 'success');
-  }).catch(() => {
-    toast('رقم الغرفة: ' + currentUser.roomCode, 'success');
-  });
-}
-
-/* =========================================================
-   تعديل اسم الغرفة + الأيقونة
-   ========================================================= */
-function openEditRoomName() {
-  closeModal('modalRoomMenu');
-  document.getElementById('newRoomName').value = currentUser.roomName || '';
-  openModal('modalEditName');
-}
-
-function saveRoomName() {
-  const name = document.getElementById('newRoomName').value.trim();
-  if (!name) { toast('⚠️ أدخل اسماً', 'error'); return; }
-  currentUser.roomName = name;
-  document.getElementById('roomNameLabel').textContent = name;
-  toast(`✅ تم تحديث اسم الغرفة`, 'success');
-  closeModal('modalEditName');
-}
-
-function openEditRoomIcon() {
-  closeModal('modalRoomMenu');
-  const current = document.getElementById('roomIcon').textContent;
-  document.querySelectorAll('#iconGrid .icon-option').forEach(el => {
-    el.classList.toggle('selected', el.dataset.icon === current);
-  });
-  openModal('modalEditIcon');
-}
-
-document.querySelectorAll('#iconGrid .icon-option').forEach(el => {
-  el.addEventListener('click', () => {
-    const icon = el.dataset.icon;
-    document.getElementById('roomIcon').textContent = icon;
-    currentUser.roomIcon = icon;
-    toast(`✅ تم تغيير الأيقونة`, 'success');
-    closeModal('modalEditIcon');
-  });
-});
-
-function confirmClearChat() {
-  closeModal('modalRoomMenu');
-  openModal('modalClearChat');
-}
-
-function doClearChat() {
-  document.getElementById('roomMessages').innerHTML = '';
-  document.getElementById('emptyRoom').style.display = 'flex';
-  document.getElementById('roomBadge').style.display = 'none';
-  document.getElementById('roomUsers').style.display = 'none';
-  toast('🗑️ تم مسح الدردشة', 'success');
-  closeModal('modalClearChat');
-}
-
-/* =========================================================
-   قائمة الغرفة
-   ========================================================= */
-document.getElementById('roomMenuBtn').addEventListener('click', () => {
-  openModal('modalRoomMenu');
-});
-
-/* =========================================================
-   🔍 البحث + الانضمام
-   ========================================================= */
-function doSearch() {
-  const q = document.getElementById('searchQuery').value.trim().toUpperCase();
-  const results = document.getElementById('searchResults');
-
-  if (!q) {
-    results.innerHTML = `
-      <div class="no-results">
-        <span class="no-results-icon">⚠️</span>
-        اكتب رقم الموجة أولاً
-      </div>
-    `;
-    return;
-  }
-
-  if (!/^[A-Z]\d{4,5}$/.test(q)) {
-    results.innerHTML = `
-      <div class="no-results">
-        <span class="no-results-icon">⚠️</span>
-        صيغة الرقم غير صحيحة<br>
-        <span style="color:var(--cyan);font-size:11px;">مثال: Q12345 (موجة) أو G1234 (غرفة)</span>
-      </div>
-    `;
-    return;
-  }
-
-  // محاكاة النتيجة (لأنه محلي)
-  // في النسخة الحقيقية: هنا نستعلم من Firebase
-  const fakeName = q.startsWith('Q') ? 'أحمد العُمري' : 'فريق الاستطلاع';
-  const type = q.startsWith('Q') ? 'موجة' : 'غرفة';
-
-  searchResultUser = { code: q, name: fakeName, type: type };
-
-  results.innerHTML = `
-    <div class="search-result-card" onclick="openJoinConfirm()">
-      <div class="search-result-icon">${q.startsWith('Q') ? '📡' : '💬'}</div>
-      <div class="search-result-info">
-        <div class="search-result-name">${fakeName}</div>
-        <div class="search-result-code">${q}</div>
-      </div>
-      <span style="color:var(--cyan);font-size:18px;">→</span>
-    </div>
-  `;
-}
-
-function openJoinConfirm() {
-  if (!searchResultUser) return;
-  document.getElementById('joinTargetName').textContent = searchResultUser.name;
-  document.getElementById('joinTargetCode').textContent = searchResultUser.code;
-  closeModal('modalSearch');
-  openModal('modalJoinConfirm');
-}
-
-function cancelJoin() {
-  closeModal('modalJoinConfirm');
-  toast('❌ تم الإلغاء');
-  searchResultUser = null;
-}
-
-async function confirmJoin() {
-  if (!searchResultUser) return;
-  await PTTEngine.init();
-  PTTEngine.playStartBeep();
-
-  closeModal('modalJoinConfirm');
-  toast(`📨 تم إرسال طلب الانضمام إلى ${searchResultUser.name}`, 'success');
-
-  // بعد ثانيتين: نحاكي موافقة صاحب الموجة (محلياً)
-  setTimeout(() => {
-    // إظهار نافذة طلب الانضمام الوارد (محاكاة استجابة المالك)
-    document.getElementById('incomingName').textContent = searchResultUser.name;
-    document.getElementById('incomingCode').textContent = currentUser.waveCode || 'Q00000';
-    openModal('modalIncomingRequest');
-  }, 2000);
-
-  searchResultUser = null;
-}
-
-function acceptIncoming() {
-  closeModal('modalIncomingRequest');
-  PTTEngine.playBeep(1500, 0.2, 0.9);
-
-  toast('✅ تم القبول — أنتما الآن فريق واحد', 'success');
-
-  // إضافة المستخدم للغرفة
-  const users = document.getElementById('roomUsers');
-  users.style.display = 'flex';
-  users.innerHTML = `
-    <div class="user-pill active">
-      <span class="user-avatar">Q</span> Q307 (أنت)
-    </div>
-    <div class="user-pill">
-      <span class="user-avatar">A</span> ${document.getElementById('incomingName').textContent || 'مستخدم'}
-    </div>
-  `;
-
-  // إظهار رسالة نظام
-  const msgs = document.getElementById('roomMessages');
-  document.getElementById('emptyRoom').style.display = 'none';
-
-  const sysMsg = document.createElement('div');
-  sysMsg.style.cssText = 'text-align:center;padding:14px;color:var(--green);font-size:12px;font-weight:700;';
-  sysMsg.textContent = '✅ انضم مستخدم جديد إلى الموجة';
-  msgs.appendChild(sysMsg);
-}
-
-function rejectIncoming() {
-  closeModal('modalIncomingRequest');
-  toast('❌ تم الرفض', 'error');
-}
-
-/* =========================================================
-   اختبار النداء
-   ========================================================= */
-async function testCall() {
-  const ok = await PTTEngine.init();
-  if (!ok) { toast('❌ تعذّر تشغيل الصوت', 'error'); return; }
-  toast('🔔 اختبار صوت النداء...', 'success');
-  PTTEngine.playStartBeep();
-  setTimeout(() => PTTEngine.playEndBeep(), 700);
-  closeSideMenu();
-}
-
-/* =========================================================
-   تغيير القناة
-   ========================================================= */
-function changeChannel() {
-  const cur = prompt('أدخل رقم القناة الجديد (01-99):',
-    document.querySelectorAll('.chip-value')[1].textContent.replace(/\D/g, ''));
-  if (cur && /^\d{1,2}$/.test(cur)) {
-    const padded = cur.padStart(2, '0');
-    document.querySelectorAll('.chip-value')[1].innerHTML = `📻 ${padded}`;
-    document.getElementById('channelValue').textContent = `CH ${padded}`;
-    document.querySelector('.lcd-row .lcd-label').textContent = `CH ${padded}`;
-    toast(`✅ تم تغيير القناة إلى ${padded}`, 'success');
-  }
-}
-
-/* =========================================================
-   📎 المرفقات (تفتح من الجهاز فعلياً)
-   ========================================================= */
-document.getElementById('chatClip').addEventListener('click', () => {
-  openModal('modalAttach');
-});
-
-function pickFile(type) {
-  const input = document.getElementById('hiddenFileInput');
-  if (type === 'image')    input.accept = 'image/*';
-  if (type === 'video')    input.accept = 'video/*';
-  if (type === 'document') input.accept = '.pdf,.doc,.docx,.txt,.xls,.xlsx,.ppt,.pptx,.zip';
-
-  input.value = '';
-  input.onchange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      closeModal('modalAttach');
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        addAttachmentMessage(type, file.name, ev.target.result, file.size);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-  input.click();
-}
-
-function pickContact() {
-  closeModal('modalAttach');
-
-  // في المتصفح لا يوجد وصول مباشر لجهات الاتصال
-  // محلياً: نطلب اسم ورقم من المستخدم
-  const name = prompt('اسم جهة الاتصال:');
-  if (!name) return;
-  const phone = prompt('رقم الهاتف:');
-  if (!phone) return;
-
-  addContactMessage({ name, phone });
-}
-
-/* =========================================================
-   إضافة الرسائل
-   ========================================================= */
-
-/* رسالة صوتية */
-function addVoiceMessage(url, duration) {
-  const empty = document.getElementById('emptyRoom');
-  if (empty) empty.style.display = 'none';
-
-  const logScreen = document.getElementById('roomMessages');
-  const time = fmtTime(new Date());
-  const durStr = duration.toFixed(1);
-
-  const msg = document.createElement('div');
-  msg.className = 'msg msg-out';
-  msg.innerHTML = `
-    <div class="msg-header"><span>📻 ${currentUser.id} • الآن</span></div>
-    <div class="msg-body">
-      <div class="voice-msg">
-        <button class="play-btn" data-url="${url}">▶</button>
-        <div class="waveform"></div>
-      </div>
-      <div class="voice-meta">
-        <span>${time}</span>
-        <span>${durStr}ث • PTT</span>
-      </div>
-    </div>
-  `;
-  logScreen.appendChild(msg);
-
-  const wf = msg.querySelector('.waveform');
-  if (wf) generateWaveform(wf, 'out');
-
-  const playBtn = msg.querySelector('.play-btn');
-  playBtn.addEventListener('click', () => playRealVoice(playBtn, url));
-
-  logScreen.scrollTop = logScreen.scrollHeight;
-  toast('✅ تم إرسال الرسالة الصوتية', 'success');
-}
-
-/* رسالة نصية */
-function sendTextMessage(text) {
-  const empty = document.getElementById('emptyRoom');
-  if (empty) empty.style.display = 'none';
-
-  const logScreen = document.getElementById('roomMessages');
-  const time = fmtTime(new Date());
-
-  const msg = document.createElement('div');
-  msg.className = 'msg msg-out';
-  msg.innerHTML = `
-    <div class="msg-header"><span>📻 ${currentUser.id} • الآن</span></div>
-    <div class="msg-body">
-      <div class="text-msg">${escapeHtml(text)}</div>
-      <div class="voice-meta">
-        <span>${time}</span>
-        <span>✓ تم الإرسال</span>
-      </div>
-    </div>
-  `;
-  logScreen.appendChild(msg);
-  logScreen.scrollTop = logScreen.scrollHeight;
-  PTTEngine.init().then(() => PTTEngine.playBeep(1000, 0.08, 0.4));
-}
-
-/* رسالة مرفق */
-function addAttachmentMessage(type, name, dataUrl, size) {
-  const empty = document.getElementById('emptyRoom');
-  if (empty) empty.style.display = 'none';
-
-  const logScreen = document.getElementById('roomMessages');
-  const time = fmtTime(new Date());
-  const sizeKb = (size / 1024).toFixed(1);
-
-  let typeLabel = 'مستند';
-  let typeIcon = '📄';
-  if (type === 'image') { typeLabel = 'صورة'; typeIcon = '🖼️'; }
-  if (type === 'video') { typeLabel = 'فيديو'; typeIcon = '🎬'; }
-
-  let previewHtml = '';
-  if (type === 'image') {
-    previewHtml = `<img src="${dataUrl}" class="attachment-preview-img" onclick="showFullImage('${dataUrl}')" alt="">`;
-  } else if (type === 'video') {
-    previewHtml = `<video src="${dataUrl}" class="attachment-preview-video" controls></video>`;
-  }
-
-  const msg = document.createElement('div');
-  msg.className = 'msg msg-out';
-  msg.innerHTML = `
-    <div class="msg-header"><span>📻 ${currentUser.id} • الآن</span></div>
-    <div class="msg-body">
-      ${previewHtml}
-      <div class="attach-msg">
-        <span class="attach-msg-icon">${typeIcon}</span>
-        <div class="attach-msg-info">
-<script>
-/* =========================================================
-   الحالة العامة
-   ========================================================= */
-let currentUser = {
-  id: 'Q307',
-  name: 'أنا',
-  waveCode: null,
-  waveName: null,
-  roomCode: null,
-  roomName: null,
-  roomIcon: '💬'
-};
-
-let batteryPercent = null;
-let menuBusy = false;
-let searchResultUser = null;
-
-/* =========================================================
-   🎙️ PTT Engine — نسخة مزدوجة
-   ========================================================= */
 const PTTEngine = {
   audioCtx: null,
   micStream: null,
@@ -2841,36 +2009,23 @@ const PTTEngine = {
     src.start();
   },
 
-  /* ============================================================
-     ✅ PTT من الموجة (مع beep)
-     ============================================================ */
   async startTalkingWave() {
     if (this.isRecording) return false;
     await this.init();
-
     try {
       this.micStream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          echoCancellation: false,
-          noiseSuppression: false,
-          autoGainControl: false
-        }
+        audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false }
       });
-
-      // 🎵 beep في الموجة فقط
       this.playBeep(1200, 0.15, 0.9);
       setTimeout(() => this.playBeep(1400, 0.15, 0.9), 130);
-
       this.recordedChunks = [];
       this.mediaRecorder = new MediaRecorder(this.micStream);
       this.mediaRecorder.ondataavailable = (e) => {
         if (e.data.size > 0) this.recordedChunks.push(e.data);
       };
       this.mediaRecorder.start(100);
-
       this.isRecording = true;
       return true;
-
     } catch (e) {
       console.error('فشل الميكروفون:', e);
       toast('❌ تعذّر الوصول للميكروفون', 'error');
@@ -2881,10 +2036,7 @@ const PTTEngine = {
   async stopTalkingWave() {
     if (!this.isRecording) return;
     this.isRecording = false;
-
-    // 🎵 beep نهاية في الموجة فقط
     this.playBeep(700, 0.25, 0.85);
-
     if (this.mediaRecorder && this.mediaRecorder.state === 'recording') {
       this.mediaRecorder.stop();
     }
@@ -2892,7 +2044,6 @@ const PTTEngine = {
       this.micStream.getTracks().forEach(t => t.stop());
       this.micStream = null;
     }
-
     setTimeout(() => {
       if (this.recordedChunks.length > 0) {
         const blob = new Blob(this.recordedChunks, { type: 'audio/webm' });
@@ -2904,34 +2055,21 @@ const PTTEngine = {
     }, 200);
   },
 
-  /* ============================================================
-     ✅ PTT من الغرفة (بدون beep — صوت طبيعي)
-     ============================================================ */
   async startTalkingRoom() {
     if (this.isRecording) return false;
     await this.init();
-
     try {
       this.micStream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true
-        }
+        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
       });
-
-      // ❌ لا يوجد beep — صوت طبيعي نظيف
-
       this.recordedChunks = [];
       this.mediaRecorder = new MediaRecorder(this.micStream);
       this.mediaRecorder.ondataavailable = (e) => {
         if (e.data.size > 0) this.recordedChunks.push(e.data);
       };
       this.mediaRecorder.start(100);
-
       this.isRecording = true;
       return true;
-
     } catch (e) {
       console.error('فشل الميكروفون:', e);
       toast('❌ تعذّر الوصول للميكروفون', 'error');
@@ -2942,9 +2080,6 @@ const PTTEngine = {
   async stopTalkingRoom() {
     if (!this.isRecording) return;
     this.isRecording = false;
-
-    // ❌ لا يوجد beep في النهاية
-
     if (this.mediaRecorder && this.mediaRecorder.state === 'recording') {
       this.mediaRecorder.stop();
     }
@@ -2952,7 +2087,6 @@ const PTTEngine = {
       this.micStream.getTracks().forEach(t => t.stop());
       this.micStream = null;
     }
-
     setTimeout(() => {
       if (this.recordedChunks.length > 0) {
         const blob = new Blob(this.recordedChunks, { type: 'audio/webm' });
@@ -2962,18 +2096,9 @@ const PTTEngine = {
       }
       this.recordedChunks = [];
     }, 200);
-  },
-
-  /* ✅ للتوافق مع الكود القديم */
-  startTalking() { return this.startTalkingWave(); },
-  stopTalking() { return this.stopTalkingWave(); },
-  playStartBeep() {},
-  playEndBeep() {}
+  }
 };
 
-/* =========================================================
-   🔋 البطارية
-   ========================================================= */
 async function initBattery() {
   if (!navigator.getBattery) {
     document.getElementById('batteryValue').textContent = '—';
@@ -2995,9 +2120,6 @@ async function initBattery() {
   }
 }
 
-/* =========================================================
-   🔑 توليد الأرقام
-   ========================================================= */
 function generateWaveCode() {
   const nums = Math.floor(10000 + Math.random() * 90000);
   return 'Q' + nums;
@@ -3008,13 +2130,9 @@ function generateRoomCode() {
   return 'G' + nums;
 }
 
-/* =========================================================
-   التنقل
-   ========================================================= */
 function switchTab(tabName) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-
   document.getElementById('screen-' + tabName).classList.add('active');
   document.querySelector(`.tab[data-tab="${tabName}"]`).classList.add('active');
 
@@ -3033,9 +2151,6 @@ function switchTab(tabName) {
   window.scrollTo(0, 0);
 }
 
-/* =========================================================
-   Toast
-   ========================================================= */
 let toastTimer;
 function toast(msg, type = '') {
   let el = document.getElementById('toast');
@@ -3052,9 +2167,6 @@ function toast(msg, type = '') {
   toastTimer = setTimeout(() => el.classList.remove('show'), 2400);
 }
 
-/* =========================================================
-   Modal
-   ========================================================= */
 function openModal(id) { document.getElementById(id).classList.add('show'); closeSideMenu(); }
 function closeModal(id) { document.getElementById(id).classList.remove('show'); }
 
@@ -3064,9 +2176,6 @@ document.querySelectorAll('.modal-overlay').forEach(overlay => {
   });
 });
 
-/* =========================================================
-   القائمة الجانبية
-   ========================================================= */
 const sideMenu = document.getElementById('sideMenu');
 const menuBackdrop = document.getElementById('menuBackdrop');
 const menuToggle = document.getElementById('menuToggle');
@@ -3087,18 +2196,11 @@ menuToggle.addEventListener('click', (e) => {
   if (menuBusy) return;
   menuBusy = true;
   setTimeout(() => menuBusy = false, 300);
-
-  if (sideMenu.classList.contains('open')) {
-    closeSideMenu();
-  } else {
-    openSideMenu();
-  }
+  if (sideMenu.classList.contains('open')) closeSideMenu();
+  else openSideMenu();
 });
 menuBackdrop.addEventListener('click', closeSideMenu);
 
-/* =========================================================
-   فتح Modals
-   ========================================================= */
 function openCreateWave() { openModal('modalWave'); }
 function openCreateRoom() { openModal('modalCreate'); }
 function openSearch()     { openModal('modalSearch'); }
@@ -3107,31 +2209,23 @@ function openEditWaveName() {
   openModal('modalEditWave');
 }
 
-/* =========================================================
-   إنشاء موجة
-   ========================================================= */
 async function createWave() {
   const name = document.getElementById('waveName').value.trim();
   if (!name) { toast('⚠️ أدخل اسم الموجة', 'error'); return; }
-
   const code = generateWaveCode();
   currentUser.waveName = name;
   currentUser.waveCode = code;
-
   await PTTEngine.init();
   PTTEngine.playBeep(1200, 0.2);
-
   document.getElementById('createdWaveCode').textContent = code;
   document.getElementById('waveName').value = '';
   closeModal('modalWave');
   openModal('modalWaveCreated');
-
   document.getElementById('waveCodeChip').textContent = code;
   document.getElementById('waveNameValue').textContent = name;
   document.getElementById('waveCodeValue').textContent = code;
   document.getElementById('lcdLine1').textContent = code;
   document.getElementById('lcdLine3').textContent = currentUser.id + ' • TX';
-
   toast(`✅ تم إنشاء الموجة "${name}"`, 'success');
 }
 
@@ -3144,9 +2238,6 @@ function copyWaveCode() {
   });
 }
 
-/* =========================================================
-   تعديل اسم الموجة
-   ========================================================= */
 function saveWaveName() {
   const name = document.getElementById('newWaveName').value.trim();
   if (!name) { toast('⚠️ أدخل اسماً', 'error'); return; }
@@ -3156,29 +2247,21 @@ function saveWaveName() {
   closeModal('modalEditWave');
 }
 
-/* =========================================================
-   إنشاء غرفة
-   ========================================================= */
 async function createRoom() {
   const name = document.getElementById('roomName').value.trim();
   const ch = document.getElementById('roomChannel').value.trim();
-
   if (!name) { toast('⚠️ أدخل اسم الغرفة', 'error'); return; }
   if (!/^\d{1,2}$/.test(ch)) { toast('⚠️ رقم قناة غير صالح', 'error'); return; }
-
   const code = generateRoomCode();
   currentUser.roomName = name;
   currentUser.roomCode = code;
-
   await PTTEngine.init();
   PTTEngine.playBeep(1200, 0.2);
-
   document.getElementById('createdRoomCode').textContent = code;
   document.getElementById('roomName').value = '';
   document.getElementById('roomChannel').value = '07';
   closeModal('modalCreate');
   openModal('modalRoomCreated');
-
   document.getElementById('roomNameLabel').textContent = name;
   document.getElementById('roomIcon').textContent = '💬';
   document.getElementById('roomBadge').style.display = 'block';
@@ -3186,10 +2269,8 @@ async function createRoom() {
   document.getElementById('emptyRoom').style.display = 'none';
   document.getElementById('roomSubLabel').textContent =
     `📻 ${code} • CH ${ch.padStart(2,'0')}`;
-
   document.querySelectorAll('.chip-value')[1].innerHTML = `📻 ${ch.padStart(2,'0')}`;
   document.getElementById('channelValue').textContent = `CH ${ch.padStart(2,'0')}`;
-
   toast(`✅ تم إنشاء الغرفة "${name}"`, 'success');
 }
 
@@ -3202,9 +2283,6 @@ function copyRoomCode() {
   });
 }
 
-/* =========================================================
-   تعديل اسم الغرفة + الأيقونة
-   ========================================================= */
 function openEditRoomName() {
   closeModal('modalRoomMenu');
   document.getElementById('newRoomName').value = currentUser.roomName || '';
@@ -3253,46 +2331,24 @@ function doClearChat() {
   closeModal('modalClearChat');
 }
 
-/* =========================================================
-   قائمة الغرفة
-   ========================================================= */
 document.getElementById('roomMenuBtn').addEventListener('click', () => {
   openModal('modalRoomMenu');
 });
 
-/* =========================================================
-   🔍 البحث + الانضمام
-   ========================================================= */
 function doSearch() {
   const q = document.getElementById('searchQuery').value.trim().toUpperCase();
   const results = document.getElementById('searchResults');
-
   if (!q) {
-    results.innerHTML = `
-      <div class="no-results">
-        <span class="no-results-icon">⚠️</span>
-        اكتب رقم الموجة أولاً
-      </div>
-    `;
+    results.innerHTML = `<div class="no-results"><span class="no-results-icon">⚠️</span>اكتب رقم الموجة أولاً</div>`;
     return;
   }
-
   if (!/^[A-Z]\d{4,5}$/.test(q)) {
-    results.innerHTML = `
-      <div class="no-results">
-        <span class="no-results-icon">⚠️</span>
-        صيغة الرقم غير صحيحة<br>
-        <span style="color:var(--cyan);font-size:11px;">مثال: Q12345 (موجة) أو G1234 (غرفة)</span>
-      </div>
-    `;
+    results.innerHTML = `<div class="no-results"><span class="no-results-icon">⚠️</span>صيغة الرقم غير صحيحة<br><span style="color:var(--cyan);font-size:11px;">مثال: Q12345 (موجة) أو G1234 (غرفة)</span></div>`;
     return;
   }
-
   const fakeName = q.startsWith('Q') ? 'أحمد العُمري' : 'فريق الاستطلاع';
   const type = q.startsWith('Q') ? 'موجة' : 'غرفة';
-
   searchResultUser = { code: q, name: fakeName, type: type };
-
   results.innerHTML = `
     <div class="search-result-card" onclick="openJoinConfirm()">
       <div class="search-result-icon">${q.startsWith('Q') ? '📡' : '💬'}</div>
@@ -3323,39 +2379,28 @@ async function confirmJoin() {
   if (!searchResultUser) return;
   await PTTEngine.init();
   PTTEngine.playBeep(1200, 0.2);
-
   closeModal('modalJoinConfirm');
   toast(`📨 تم إرسال طلب الانضمام إلى ${searchResultUser.name}`, 'success');
-
   setTimeout(() => {
     document.getElementById('incomingName').textContent = searchResultUser.name;
     document.getElementById('incomingCode').textContent = currentUser.waveCode || 'Q00000';
     openModal('modalIncomingRequest');
   }, 2000);
-
   searchResultUser = null;
 }
 
 function acceptIncoming() {
   closeModal('modalIncomingRequest');
   PTTEngine.playBeep(1500, 0.2, 0.9);
-
   toast('✅ تم القبول — أنتما الآن فريق واحد', 'success');
-
   const users = document.getElementById('roomUsers');
   users.style.display = 'flex';
   users.innerHTML = `
-    <div class="user-pill active">
-      <span class="user-avatar">Q</span> Q307 (أنت)
-    </div>
-    <div class="user-pill">
-      <span class="user-avatar">A</span> ${document.getElementById('incomingName').textContent || 'مستخدم'}
-    </div>
+    <div class="user-pill active"><span class="user-avatar">Q</span> Q307 (أنت)</div>
+    <div class="user-pill"><span class="user-avatar">A</span> ${document.getElementById('incomingName').textContent || 'مستخدم'}</div>
   `;
-
   const msgs = document.getElementById('roomMessages');
   document.getElementById('emptyRoom').style.display = 'none';
-
   const sysMsg = document.createElement('div');
   sysMsg.style.cssText = 'text-align:center;padding:14px;color:var(--green);font-size:12px;font-weight:700;';
   sysMsg.textContent = '✅ انضم مستخدم جديد إلى الموجة';
@@ -3367,9 +2412,6 @@ function rejectIncoming() {
   toast('❌ تم الرفض', 'error');
 }
 
-/* =========================================================
-   اختبار النداء
-   ========================================================= */
 async function testCall() {
   const ok = await PTTEngine.init();
   if (!ok) { toast('❌ تعذّر تشغيل الصوت', 'error'); return; }
@@ -3379,9 +2421,6 @@ async function testCall() {
   closeSideMenu();
 }
 
-/* =========================================================
-   تغيير القناة
-   ========================================================= */
 function changeChannel() {
   const cur = prompt('أدخل رقم القناة الجديد (01-99):',
     document.querySelectorAll('.chip-value')[1].textContent.replace(/\D/g, ''));
@@ -3394,9 +2433,6 @@ function changeChannel() {
   }
 }
 
-/* =========================================================
-   📎 المرفقات
-   ========================================================= */
 document.getElementById('chatClip').addEventListener('click', () => {
   openModal('modalAttach');
 });
@@ -3406,7 +2442,6 @@ function pickFile(type) {
   if (type === 'image')    input.accept = 'image/*';
   if (type === 'video')    input.accept = 'video/*';
   if (type === 'document') input.accept = '.pdf,.doc,.docx,.txt,.xls,.xlsx,.ppt,.pptx,.zip';
-
   input.value = '';
   input.onchange = (e) => {
     const file = e.target.files[0];
@@ -3431,19 +2466,12 @@ function pickContact() {
   addContactMessage({ name, phone });
 }
 
-/* =========================================================
-   إضافة الرسائل
-   ========================================================= */
-
-/* رسالة صوتية */
 function addVoiceMessage(url, duration) {
   const empty = document.getElementById('emptyRoom');
   if (empty) empty.style.display = 'none';
-
   const logScreen = document.getElementById('roomMessages');
   const time = fmtTime(new Date());
   const durStr = duration.toFixed(1);
-
   const msg = document.createElement('div');
   msg.className = 'msg msg-out';
   msg.innerHTML = `
@@ -3460,25 +2488,19 @@ function addVoiceMessage(url, duration) {
     </div>
   `;
   logScreen.appendChild(msg);
-
   const wf = msg.querySelector('.waveform');
   if (wf) generateWaveform(wf, 'out');
-
   const playBtn = msg.querySelector('.play-btn');
   playBtn.addEventListener('click', () => playRealVoice(playBtn, url));
-
   logScreen.scrollTop = logScreen.scrollHeight;
   toast('✅ تم إرسال الرسالة الصوتية', 'success');
 }
 
-/* رسالة نصية */
 function sendTextMessage(text) {
   const empty = document.getElementById('emptyRoom');
   if (empty) empty.style.display = 'none';
-
   const logScreen = document.getElementById('roomMessages');
   const time = fmtTime(new Date());
-
   const msg = document.createElement('div');
   msg.className = 'msg msg-out';
   msg.innerHTML = `
@@ -3496,27 +2518,22 @@ function sendTextMessage(text) {
   PTTEngine.playBeep(1000, 0.08, 0.4);
 }
 
-/* رسالة مرفق */
 function addAttachmentMessage(type, name, dataUrl, size) {
   const empty = document.getElementById('emptyRoom');
   if (empty) empty.style.display = 'none';
-
   const logScreen = document.getElementById('roomMessages');
   const time = fmtTime(new Date());
   const sizeKb = (size / 1024).toFixed(1);
-
   let typeLabel = 'مستند';
   let typeIcon = '📄';
   if (type === 'image') { typeLabel = 'صورة'; typeIcon = '🖼️'; }
   if (type === 'video') { typeLabel = 'فيديو'; typeIcon = '🎬'; }
-
   let previewHtml = '';
   if (type === 'image') {
     previewHtml = `<img src="${dataUrl}" class="attachment-preview-img" onclick="showFullImage('${dataUrl}')" alt="">`;
   } else if (type === 'video') {
     previewHtml = `<video src="${dataUrl}" class="attachment-preview-video" controls></video>`;
   }
-
   const msg = document.createElement('div');
   msg.className = 'msg msg-out';
   msg.innerHTML = `
@@ -3542,14 +2559,11 @@ function addAttachmentMessage(type, name, dataUrl, size) {
   toast(`✅ تم إرسال ${typeLabel}`, 'success');
 }
 
-/* رسالة جهة اتصال */
 function addContactMessage(contact) {
   const empty = document.getElementById('emptyRoom');
   if (empty) empty.style.display = 'none';
-
   const logScreen = document.getElementById('roomMessages');
   const time = fmtTime(new Date());
-
   const msg = document.createElement('div');
   msg.className = 'msg msg-out';
   msg.innerHTML = `
@@ -3579,7 +2593,7 @@ function showFullImage(dataUrl) {
   overlay.style.cssText = `
     position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:9999;
     display:flex;align-items:center;justify-content:center;padding:20px;
-    cursor:zoom-out;animation:fadeIn .25s ease;
+    cursor:zoom-out;
   `;
   overlay.innerHTML = `<img src="${dataUrl}" style="max-width:100%;max-height:100%;border-radius:8px;">`;
   overlay.addEventListener('click', () => overlay.remove());
@@ -3607,20 +2621,16 @@ function playRealVoice(btn, url) {
     }
     return;
   }
-
   document.querySelectorAll('.play-btn').forEach(b => {
     b.textContent = '▶';
     b.dataset.playing = '0';
   });
-
   const audio = new Audio(url);
   window._curAudio = audio;
   audio.volume = 1.0;
   audio.play();
-
   btn.textContent = '⏸';
   btn.dataset.playing = '1';
-
   audio.onended = () => {
     btn.textContent = '▶';
     btn.dataset.playing = '0';
@@ -3632,7 +2642,6 @@ function generateWaveform(container, type = 'in') {
   if (!container) return;
   container.innerHTML = '';
   const bars = 45;
-
   for (let i = 0; i < bars; i++) {
     const span = document.createElement('span');
     const amp = type === 'mix'
@@ -3644,9 +2653,6 @@ function generateWaveform(container, type = 'in') {
   }
 }
 
-/* =========================================================
-   شريط الكتابة
-   ========================================================= */
 const chatInput = document.getElementById('chatInput');
 const chatSend  = document.getElementById('chatSend');
 
@@ -3668,20 +2674,15 @@ function handleSend() {
   chatSend.disabled = true;
 }
 
-/* =========================================================
-   PTT — الموجة (مع beep) + الغرفة (بدون beep)
-   ========================================================= */
 const pttMain = document.getElementById('pttMain');
 const chatPTT = document.getElementById('chatPTT');
 const lcdStatus = document.getElementById('lcdStatus');
 
-/* ✅ الموجة — مع beep */
 function onPTTStartWave(btn) {
   btn.classList.add('holding');
   if (lcdStatus) lcdStatus.textContent = 'TX';
   const bi = document.getElementById('bottomInfo');
   if (bi) bi.innerHTML = '<span style="color:#ff2a4d;font-weight:800;">🔴 جاري الإرسال... تحدّث الآن</span>';
-
   PTTEngine.startTalkingWave().then(ok => {
     if (!ok) onPTTStopWave(btn);
   });
@@ -3698,10 +2699,8 @@ function onPTTStopWave(btn) {
   PTTEngine.stopTalkingWave();
 }
 
-/* ✅ الغرفة — بدون beep */
 function onPTTStartRoom(btn) {
   btn.classList.add('holding');
-
   PTTEngine.startTalkingRoom().then(ok => {
     if (!ok) onPTTStopRoom(btn);
   });
@@ -3712,7 +2711,6 @@ function onPTTStopRoom(btn) {
   PTTEngine.stopTalkingRoom();
 }
 
-/* ===== زر PTT الرئيسي (الموجة) — مع beep ===== */
 pttMain.addEventListener('mousedown', (e) => { e.preventDefault(); onPTTStartWave(pttMain); });
 pttMain.addEventListener('mouseup',   (e) => { e.preventDefault(); onPTTStopWave(pttMain); });
 pttMain.addEventListener('mouseleave',(e) => { if (pttMain.classList.contains('holding')) onPTTStopWave(pttMain); });
@@ -3721,7 +2719,6 @@ pttMain.addEventListener('touchstart', (e) => { e.preventDefault(); onPTTStartWa
 pttMain.addEventListener('touchend',   (e) => { e.preventDefault(); onPTTStopWave(pttMain);  }, { passive: false });
 pttMain.addEventListener('touchcancel',(e) => { e.preventDefault(); onPTTStopWave(pttMain);  }, { passive: false });
 
-/* ===== زر PTT في الغرفة — بدون beep ===== */
 chatPTT.addEventListener('mousedown', (e) => { e.preventDefault(); onPTTStartRoom(chatPTT); });
 chatPTT.addEventListener('mouseup',   (e) => { e.preventDefault(); onPTTStopRoom(chatPTT); });
 chatPTT.addEventListener('mouseleave',(e) => { if (chatPTT.classList.contains('holding')) onPTTStopRoom(chatPTT); });
@@ -3730,9 +2727,6 @@ chatPTT.addEventListener('touchstart', (e) => { e.preventDefault(); onPTTStartRo
 chatPTT.addEventListener('touchend',   (e) => { e.preventDefault(); onPTTStopRoom(chatPTT);  }, { passive: false });
 chatPTT.addEventListener('touchcancel',(e) => { e.preventDefault(); onPTTStopRoom(chatPTT);  }, { passive: false });
 
-/* =========================================================
-   تهيئة أولى
-   ========================================================= */
 window.addEventListener('load', () => {
   const initOnce = async () => {
     await PTTEngine.init();
@@ -3741,7 +2735,6 @@ window.addEventListener('load', () => {
   };
   document.addEventListener('click', initOnce);
   document.addEventListener('touchstart', initOnce);
-
   document.getElementById('chatInputBar').classList.remove('active');
   initBattery();
 });
