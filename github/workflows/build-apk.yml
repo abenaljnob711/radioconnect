@@ -1,0 +1,66 @@
+name: Build APK
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup Java JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Capacitor dependencies
+        run: |
+          npm install -g @capacitor/cli
+          npm install @capacitor/core @capacitor/android @capacitor/assets
+
+      - name: Create www folder
+        run: |
+          mkdir -p www
+          cp -r public/* www/ 2>/dev/null || true
+
+      - name: Generate icons
+        run: |
+          mkdir -p resources
+          cp public/icon.png resources/icon.png 2>/dev/null || true
+          npx @capacitor/assets generate --android 2>/dev/null || true
+
+      - name: Add Android platform
+        run: |
+          npx cap add android || true
+          npx cap sync android
+
+      - name: Build APK
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: Rename APK
+        run: |
+          cp android/app/build/outputs/apk/debug/app-debug.apk radio-connect.apk
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: radio-connect-apk
+          path: radio-connect.apk
+          retention-days: 30
