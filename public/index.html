@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#05080c">
 <title>Radio Connect — راديو كونكت</title>
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
 
 <style>
 *, *::before, *::after {
@@ -1428,7 +1430,6 @@ body::before {
   letter-spacing: 1px;
 }
 
-/* ✅ نافذة تأكيد الحذف */
 .delete-confirm-overlay {
   position: fixed;
   inset: 0;
@@ -1498,6 +1499,48 @@ body::before {
   box-shadow: 0 0 18px rgba(255,42,77,.4);
 }
 .delete-confirm-btn:active { transform: scale(.97); }
+
+/* ✅ نافذة الكاميرا */
+.camera-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.95);
+  z-index: 900;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.camera-modal-overlay.show { display: flex; }
+.camera-preview {
+  width: 100%;
+  max-width: 400px;
+  border-radius: 12px;
+  border: 2px solid var(--cyan);
+  background: #000;
+}
+.camera-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+}
+.camera-btn {
+  padding: 12px 24px;
+  border-radius: 10px;
+  border: 1px solid var(--cyan);
+  background: linear-gradient(180deg, #00e5ff, #008fa8);
+  color: #001418;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.camera-btn.cancel {
+  background: transparent;
+  color: var(--text-dim);
+  border-color: var(--border);
+}
 </style>
 </head>
 <body>
@@ -1521,7 +1564,7 @@ body::before {
 
     <div class="status-row">
       <div class="chip">
-        <div class="chip-value online">متصل</div>
+        <div class="chip-value online" id="connStatus">متصل</div>
       </div>
       <div class="chip">
         <div class="chip-value">📻 07</div>
@@ -1585,7 +1628,7 @@ body::before {
 
     <div class="encrypted-badge" id="roomBadge" style="display:none;">
       <span class="encrypted-badge-inner">
-        متصل الآن: 2 &nbsp;|&nbsp; حالة: قناة آمنة - مشفّرة
+        متصل الآن: <span id="membersCount">1</span> &nbsp;|&nbsp; حالة: قناة آمنة - مشفّرة
       </span>
     </div>
 
@@ -1632,7 +1675,7 @@ body::before {
         <span class="setting-value" id="channelValue">CH 07</span>
       </div>
 
-      <div class="setting-item" onclick="toast('اسم الموجة: ' + waveName, 'success')">
+      <div class="setting-item" onclick="toast('اسم الموجة: ' + (currentUser.waveName || '—'), 'success')">
         <div class="setting-info">
           <span class="setting-title">📡 اسم الموجة</span>
           <span class="setting-desc">اسم موجتك الحالية</span>
@@ -1640,7 +1683,7 @@ body::before {
         <span class="setting-value" id="waveNameValue">—</span>
       </div>
 
-      <div class="setting-item" onclick="toast('رقم الموجة: ' + waveCode, 'success')">
+      <div class="setting-item" onclick="toast('رقم الموجة: ' + (currentUser.waveCode || '—'), 'success')">
         <div class="setting-info">
           <span class="setting-title">🔑 رقم الموجة</span>
           <span class="setting-desc">شارك هذا الرقم للانضمام</span>
@@ -1648,12 +1691,12 @@ body::before {
         <span class="setting-value" id="waveCodeValue">—</span>
       </div>
 
-      <div class="setting-item" onclick="toast('المستخدم: Q307')">
+      <div class="setting-item" onclick="toast('المستخدم: ' + currentUser.id)">
         <div class="setting-info">
           <span class="setting-title">👤 معرّف المستخدم</span>
           <span class="setting-desc">هويتك في القناة</span>
         </div>
-        <span class="setting-value">Q307</span>
+        <span class="setting-value" id="userIdValue">Q307</span>
       </div>
 
       <div class="setting-item" onclick="testCall()">
@@ -1680,12 +1723,12 @@ body::before {
         <span class="setting-value" id="batteryValue">--%</span>
       </div>
 
-      <div class="setting-item" onclick="toast('الإصدار 1.0.0')">
+      <div class="setting-item" onclick="toast('الإصدار 2.0.0')">
         <div class="setting-info">
           <span class="setting-title">ℹ️ حول التطبيق</span>
           <span class="setting-desc">Radio Connect</span>
         </div>
-        <span class="setting-value">v1.0</span>
+        <span class="setting-value">v2.0</span>
       </div>
 
     </div>
@@ -1721,6 +1764,7 @@ body::before {
 
     <div class="chat-input-wrap">
       <button class="chat-clip" id="chatClip" title="إرفاق">📎</button>
+      <button class="chat-clip" id="chatCamera" title="كاميرا">📷</button>
       <input type="text" class="chat-input" id="chatInput" placeholder="اكتب رسالة...">
     </div>
   </div>
@@ -1894,6 +1938,28 @@ body::before {
   </div>
 </div>
 
+<div class="modal-overlay" id="modalContact">
+  <div class="modal">
+    <div class="modal-title">👥 جهة اتصال</div>
+    <div class="modal-sub">أدخل بيانات جهة الاتصال</div>
+
+    <div class="modal-field">
+      <label>الاسم</label>
+      <input type="text" id="contactName" placeholder="اسم الشخص..." maxlength="40">
+    </div>
+
+    <div class="modal-field">
+      <label>رقم الهاتف</label>
+      <input type="tel" id="contactPhone" placeholder="+967..." maxlength="20">
+    </div>
+
+    <div class="modal-actions">
+      <button class="modal-btn cancel" onclick="closeModal('modalContact')">إلغاء</button>
+      <button class="modal-btn confirm" onclick="sendContact()">إرسال</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modalCreate">
   <div class="modal">
     <div class="modal-title">➕ إنشاء غرفة جديدة</div>
@@ -1978,11 +2044,11 @@ body::before {
 <div class="modal-overlay" id="modalSearch">
   <div class="modal">
     <div class="modal-title">🔍 البحث</div>
-    <div class="modal-sub">ابحث عن موجة برقمها للانضمام</div>
+    <div class="modal-sub">ابحث عن غرفة برقمها للانضمام</div>
 
     <div class="modal-field">
-      <label>رقم الموجة</label>
-      <input type="text" id="searchQuery" class="code-input" placeholder="Q00000" maxlength="10">
+      <label>رقم الغرفة</label>
+      <input type="text" id="searchQuery" class="code-input" placeholder="RAD-1234" maxlength="15">
     </div>
 
     <div class="modal-actions" style="grid-template-columns:1fr;margin-bottom:14px;">
@@ -1992,7 +2058,7 @@ body::before {
     <div id="searchResults">
       <div class="no-results">
         <span class="no-results-icon">🔎</span>
-        اكتب رقم الموجة واضغط بحث للعثور على المستخدم
+        اكتب رقم الغرفة واضغط بحث للعثور عليها
       </div>
     </div>
 
@@ -2005,44 +2071,21 @@ body::before {
 <div class="modal-overlay" id="modalJoinConfirm">
   <div class="modal">
     <div class="modal-title">📩 طلب انضمام</div>
-    <div class="modal-sub">هل تريد إرسال طلب انضمام لهذه الموجة؟</div>
+    <div class="modal-sub">هل تريد الانضمام إلى هذه الغرفة؟</div>
 
     <div class="join-request-info">
       <div class="join-request-icon">📡</div>
       <div class="join-request-name" id="joinTargetName">—</div>
-      <div class="join-request-code" id="joinTargetCode">Q00000</div>
-    </div>
-
-    <div class="modal-sub" style="margin-bottom:0;">
-      ⚠️ سيحتاج صاحب الموجة للموافقة على طلبك
+      <div class="join-request-code" id="joinTargetCode">RAD-0000</div>
     </div>
 
     <div class="modal-actions">
       <button class="modal-btn cancel" onclick="cancelJoin()">❌ إلغاء</button>
-      <button class="modal-btn confirm" onclick="confirmJoin()">✅ موافق</button>
+      <button class="modal-btn confirm" onclick="confirmJoin()">✅ انضمام</button>
     </div>
   </div>
 </div>
 
-<div class="modal-overlay" id="modalIncomingRequest">
-  <div class="modal">
-    <div class="modal-title">🔔 طلب انضمام وارد</div>
-    <div class="modal-sub">شخص يريد الانضمام إلى موجتك</div>
-
-    <div class="join-request-info">
-      <div class="join-request-icon">👤</div>
-      <div class="join-request-name" id="incomingName">—</div>
-      <div class="join-request-code" id="incomingCode">—</div>
-    </div>
-
-    <div class="modal-actions">
-      <button class="modal-btn danger" onclick="rejectIncoming()">❌ رفض</button>
-      <button class="modal-btn confirm" onclick="acceptIncoming()">✅ قبول</button>
-    </div>
-  </div>
-</div>
-
-<!-- ✅ نافذة تأكيد حذف الرسالة -->
 <div class="delete-confirm-overlay" id="deleteConfirmOverlay">
   <div class="delete-confirm-box">
     <div class="delete-confirm-icon">🗑️</div>
@@ -2055,11 +2098,66 @@ body::before {
   </div>
 </div>
 
+<div class="camera-modal-overlay" id="cameraOverlay">
+  <video id="cameraPreview" class="camera-preview" autoplay playsinline></video>
+  <div class="camera-actions">
+    <button class="camera-btn cancel" onclick="closeCamera()">❌ إلغاء</button>
+    <button class="camera-btn" onclick="capturePhoto()">📸 التقاط</button>
+  </div>
+</div>
+
 <input type="file" id="hiddenFileInput" style="display:none;">
 
 <script>
+  /* ==========================================
+   ✅ الاتصال بالسيرفر (Socket.io)
+   ========================================== */
+const SERVER_URL = "https://radio-connect-server.onrender.com";
+const socket = io(SERVER_URL, {
+  transports: ["websocket", "polling"],
+  reconnection: true,
+  reconnectionDelay: 1000,
+  reconnectionAttempts: 15
+});
+
+let isSocketConnected = false;
+
+socket.on("connect", () => {
+  isSocketConnected = true;
+  console.log("✅ متصل بالسيرفر:", socket.id);
+  const statusEl = document.getElementById("connStatus");
+  if (statusEl) {
+    statusEl.textContent = "متصل";
+    statusEl.classList.add("online");
+  }
+  if (currentUser.roomCode && currentUser.roomCode.startsWith("RAD-")) {
+    socket.emit("join_room", {
+      roomId: currentUser.roomCode,
+      deviceId: currentUser.id,
+      userName: currentUser.name
+    });
+  }
+});
+
+socket.on("disconnect", () => {
+  isSocketConnected = false;
+  console.log("❌ انقطع الاتصال بالسيرفر");
+  const statusEl = document.getElementById("connStatus");
+  if (statusEl) {
+    statusEl.textContent = "غير متصل";
+    statusEl.classList.remove("online");
+  }
+});
+
+socket.on("connect_error", (err) => {
+  console.error("خطأ الاتصال:", err.message);
+});
+
+/* ==========================================
+   بيانات المستخدم
+   ========================================== */
 let currentUser = {
-  id: 'Q307',
+  id: 'Q' + Math.floor(100 + Math.random() * 900),
   name: 'أنا',
   waveCode: null,
   waveName: null,
@@ -2068,10 +2166,15 @@ let currentUser = {
   roomIcon: '💬'
 };
 
+document.getElementById('userIdValue').textContent = currentUser.id;
+
 let batteryPercent = null;
 let menuBusy = false;
 let searchResultUser = null;
 
+/* ==========================================
+   محرك الصوت (PTT) - محلي
+   ========================================== */
 const PTTEngine = {
   audioCtx: null,
   micStream: null,
@@ -2207,56 +2310,85 @@ const PTTEngine = {
   }
 };
 
-async function initBattery() {
-  if (!navigator.getBattery) {
-    document.getElementById('batteryValue').textContent = '—';
-    document.getElementById('bottomBattery').textContent = '—';
+/* ==========================================
+   أحداث Socket.io الواردة
+   ========================================== */
+socket.on("new_message", (msg) => {
+  if (!msg) return;
+  if (msg.sender === currentUser.id) return;
+  renderIncomingMessage(msg);
+});
+
+socket.on("previous_messages", (messages) => {
+  if (!messages || !messages.length) return;
+  const empty = document.getElementById('emptyRoom');
+  if (empty) empty.style.display = 'none';
+  const logScreen = document.getElementById('roomMessages');
+  logScreen.innerHTML = '';
+  messages.forEach(msg => {
+    if (msg.sender === currentUser.id) renderOutgoingMessage(msg);
+    else renderIncomingMessage(msg);
+  });
+});
+
+socket.on("member_joined", ({ deviceId, userName, members }) => {
+  updateMembersList(members);
+  if (deviceId !== currentUser.id) {
+    toast(`👤 ${userName} انضم للغرفة`, "success");
+  }
+});
+
+socket.on("member_left", ({ deviceId, members }) => {
+  updateMembersList(members);
+});
+
+function updateMembersList(members) {
+  if (!members) return;
+  const countEl = document.getElementById('membersCount');
+  if (countEl) countEl.textContent = members.length;
+  const usersEl = document.getElementById('roomUsers');
+  if (!usersEl) return;
+  if (members.length === 0) {
+    usersEl.style.display = 'none';
     return;
   }
-  try {
-    const battery = await navigator.getBattery();
-    const update = () => {
-      batteryPercent = Math.round(battery.level * 100);
-      document.getElementById('batteryValue').textContent = batteryPercent + '%';
-      document.getElementById('bottomBattery').textContent = batteryPercent + '%';
-    };
-    update();
-    battery.addEventListener('levelchange', update);
-  } catch (e) {
-    document.getElementById('batteryValue').textContent = '—';
-    document.getElementById('bottomBattery').textContent = '—';
+  usersEl.style.display = 'flex';
+  usersEl.innerHTML = members.map((m, i) => {
+    const isMe = m.id === currentUser.id;
+    return `<div class="user-pill ${isMe ? 'active' : ''}">
+      <span class="user-avatar">${(m.name || 'U').charAt(0)}</span>
+      ${escapeHtml(m.name || 'مستخدم')}${isMe ? ' (أنت)' : ''}
+    </div>`;
+  }).join('');
+}
+
+/* ==========================================
+   دوال مساعدة
+   ========================================== */
+function nowId() {
+  return 'msg_' + Date.now() + '_' + Math.floor(Math.random() * 9999);
+}
+
+function fmtTime(d) {
+  return d.getHours().toString().padStart(2, '0') + ':' +
+         d.getMinutes().toString().padStart(2, '0');
+}
+
+function escapeHtml(s) {
+  const div = document.createElement('div');
+  div.textContent = s == null ? '' : s;
+  return div.innerHTML;
+}
+
+function isEmptyRoom() {
+  return document.getElementById('roomMessages').children.length === 0;
+}
+
+function checkEmptyRoom() {
+  if (isEmptyRoom()) {
+    document.getElementById('emptyRoom').style.display = 'flex';
+    document.getElementById('roomBadge').style.display = 'none';
   }
-}
-
-function generateWaveCode() {
-  const nums = Math.floor(10000 + Math.random() * 90000);
-  return 'Q' + nums;
-}
-
-function generateRoomCode() {
-  const nums = Math.floor(1000 + Math.random() * 9000);
-  return 'G' + nums;
-}
-
-function switchTab(tabName) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.getElementById('screen-' + tabName).classList.add('active');
-  document.querySelector(`.tab[data-tab="${tabName}"]`).classList.add('active');
-
-  const chatBar = document.getElementById('chatInputBar');
-  const bottomInfo = document.getElementById('bottomInfo');
-
-  if (tabName === 'log') {
-    chatBar.classList.add('active');
-    bottomInfo.style.display = 'none';
-  } else {
-    chatBar.classList.remove('active');
-    bottomInfo.style.display = 'block';
-  }
-
-  if (sideMenu && sideMenu.classList.contains('open')) closeSideMenu();
-  window.scrollTo(0, 0);
 }
 
 let toastTimer;
@@ -2284,6 +2416,9 @@ document.querySelectorAll('.modal-overlay').forEach(overlay => {
   });
 });
 
+/* ==========================================
+   القوائم الجانبية
+   ========================================== */
 const sideMenu = document.getElementById('sideMenu');
 const menuBackdrop = document.getElementById('menuBackdrop');
 const menuToggle = document.getElementById('menuToggle');
@@ -2309,9 +2444,66 @@ menuToggle.addEventListener('click', (e) => {
 });
 menuBackdrop.addEventListener('click', closeSideMenu);
 
+/* ==========================================
+   التبويبات
+   ========================================== */
+function switchTab(tabName) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('screen-' + tabName).classList.add('active');
+  document.querySelector(`.tab[data-tab="${tabName}"]`).classList.add('active');
+
+  const chatBar = document.getElementById('chatInputBar');
+  const bottomInfo = document.getElementById('bottomInfo');
+
+  if (tabName === 'log') {
+    chatBar.classList.add('active');
+    bottomInfo.style.display = 'none';
+  } else {
+    chatBar.classList.remove('active');
+    bottomInfo.style.display = 'block';
+  }
+
+  if (sideMenu && sideMenu.classList.contains('open')) closeSideMenu();
+  window.scrollTo(0, 0);
+}
+
+/* ==========================================
+   البطارية
+   ========================================== */
+async function initBattery() {
+  if (!navigator.getBattery) {
+    document.getElementById('batteryValue').textContent = '—';
+    document.getElementById('bottomBattery').textContent = '—';
+    return;
+  }
+  try {
+    const battery = await navigator.getBattery();
+    const update = () => {
+      batteryPercent = Math.round(battery.level * 100);
+      document.getElementById('batteryValue').textContent = batteryPercent + '%';
+      document.getElementById('bottomBattery').textContent = batteryPercent + '%';
+    };
+    update();
+    battery.addEventListener('levelchange', update);
+  } catch (e) {
+    document.getElementById('batteryValue').textContent = '—';
+    document.getElementById('bottomBattery').textContent = '—';
+  }
+}
+
+/* ==========================================
+   إنشاء غرفة / الانضمام
+   ========================================== */
+function generateWaveCode() {
+  const nums = Math.floor(10000 + Math.random() * 90000);
+  return 'Q' + nums;
+}
+
 function openCreateWave() { openModal('modalWave'); }
 function openCreateRoom() { openModal('modalCreate'); }
 function openSearch()     { openModal('modalSearch'); }
+
 function openEditWaveName() {
   document.getElementById('newWaveName').value = currentUser.waveName || '';
   openModal('modalEditWave');
@@ -2333,7 +2525,6 @@ async function createWave() {
   document.getElementById('waveNameValue').textContent = name;
   document.getElementById('waveCodeValue').textContent = code;
   document.getElementById('lcdLine1').textContent = code;
-  document.getElementById('lcdLine3').textContent = currentUser.id + ' • TX';
   toast(`✅ تم إنشاء الموجة "${name}"`, 'success');
 }
 
@@ -2351,7 +2542,7 @@ function saveWaveName() {
   if (!name) { toast('⚠️ أدخل اسماً', 'error'); return; }
   currentUser.waveName = name;
   document.getElementById('waveNameValue').textContent = name;
-  toast(`✅ تم تحديث اسم الموجة إلى "${name}"`, 'success');
+  toast(`✅ تم تحديث اسم الموجة`, 'success');
   closeModal('modalEditWave');
 }
 
@@ -2360,26 +2551,55 @@ async function createRoom() {
   const ch = document.getElementById('roomChannel').value.trim();
   if (!name) { toast('⚠️ أدخل اسم الغرفة', 'error'); return; }
   if (!/^\d{1,2}$/.test(ch)) { toast('⚠️ رقم قناة غير صالح', 'error'); return; }
-  const code = generateRoomCode();
-  currentUser.roomName = name;
-  currentUser.roomCode = code;
-  await PTTEngine.init();
-  PTTEngine.playBeep(1200, 0.2);
-  document.getElementById('createdRoomCode').textContent = code;
-  document.getElementById('roomName').value = '';
-  document.getElementById('roomChannel').value = '07';
-  closeModal('modalCreate');
-  openModal('modalRoomCreated');
-  document.getElementById('roomNameLabel').textContent = name;
-  document.getElementById('roomIcon').textContent = '💬';
-  document.getElementById('roomBadge').style.display = 'block';
-  document.getElementById('roomUsers').style.display = 'flex';
-  document.getElementById('emptyRoom').style.display = 'none';
-  document.getElementById('roomSubLabel').textContent =
-    `📻 ${code} • CH ${ch.padStart(2,'0')}`;
-  document.querySelectorAll('.chip-value')[1].innerHTML = `📻 ${ch.padStart(2,'0')}`;
-  document.getElementById('channelValue').textContent = `CH ${ch.padStart(2,'0')}`;
-  toast(`✅ تم إنشاء الغرفة "${name}"`, 'success');
+
+  try {
+    const res = await fetch(SERVER_URL + "/api/rooms/create", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: name,
+        channel: ch.padStart(2, '0'),
+        deviceId: currentUser.id
+      })
+    });
+    const data = await res.json();
+    if (!data.success) {
+      toast("⚠️ فشل إنشاء الغرفة", "error");
+      return;
+    }
+
+    currentUser.roomName = name;
+    currentUser.roomCode = data.roomId;
+
+    await PTTEngine.init();
+    PTTEngine.playBeep(1200, 0.2);
+
+    document.getElementById('createdRoomCode').textContent = data.roomId;
+    document.getElementById('roomName').value = '';
+    document.getElementById('roomChannel').value = '07';
+    closeModal('modalCreate');
+    openModal('modalRoomCreated');
+
+    document.getElementById('roomNameLabel').textContent = name;
+    document.getElementById('roomIcon').textContent = '💬';
+    document.getElementById('roomBadge').style.display = 'block';
+    document.getElementById('roomUsers').style.display = 'flex';
+    document.getElementById('emptyRoom').style.display = 'none';
+    document.getElementById('roomSubLabel').textContent = `📻 ${data.roomId} • CH ${ch.padStart(2, '0')}`;
+    document.getElementById('channelValue').textContent = `CH ${ch.padStart(2, '0')}`;
+    document.getElementById('lcdLine1').textContent = data.roomId;
+
+    socket.emit("join_room", {
+      roomId: data.roomId,
+      deviceId: currentUser.id,
+      userName: currentUser.name
+    });
+
+    toast(`✅ تم إنشاء الغرفة "${name}"`, 'success');
+  } catch (e) {
+    console.error(e);
+    toast("❌ خطأ في الاتصال بالسيرفر", "error");
+  }
 }
 
 function copyRoomCode() {
@@ -2443,30 +2663,40 @@ document.getElementById('roomMenuBtn').addEventListener('click', () => {
   openModal('modalRoomMenu');
 });
 
-function doSearch() {
+/* ==========================================
+   البحث والانضمام
+   ========================================== */
+async function doSearch() {
   const q = document.getElementById('searchQuery').value.trim().toUpperCase();
   const results = document.getElementById('searchResults');
   if (!q) {
-    results.innerHTML = `<div class="no-results"><span class="no-results-icon">⚠️</span>اكتب رقم الموجة أولاً</div>`;
+    results.innerHTML = `<div class="no-results"><span class="no-results-icon">⚠️</span>اكتب رقم الغرفة أولاً</div>`;
     return;
   }
-  if (!/^[A-Z]\d{4,5}$/.test(q)) {
-    results.innerHTML = `<div class="no-results"><span class="no-results-icon">⚠️</span>صيغة الرقم غير صحيحة<br><span style="color:var(--cyan);font-size:11px;">مثال: Q12345 (موجة) أو G1234 (غرفة)</span></div>`;
-    return;
-  }
-  const fakeName = q.startsWith('Q') ? 'أحمد العُمري' : 'فريق الاستطلاع';
-  const type = q.startsWith('Q') ? 'موجة' : 'غرفة';
-  searchResultUser = { code: q, name: fakeName, type: type };
-  results.innerHTML = `
-    <div class="search-result-card" onclick="openJoinConfirm()">
-      <div class="search-result-icon">${q.startsWith('Q') ? '📡' : '💬'}</div>
-      <div class="search-result-info">
-        <div class="search-result-name">${fakeName}</div>
-        <div class="search-result-code">${q}</div>
+
+  results.innerHTML = `<div class="no-results"><span class="no-results-icon">⏳</span>جاري البحث...</div>`;
+
+  try {
+    const res = await fetch(SERVER_URL + "/api/search/" + encodeURIComponent(q));
+    if (!res.ok) {
+      results.innerHTML = `<div class="no-results"><span class="no-results-icon">❌</span>لا توجد غرفة بهذا الرقم</div>`;
+      return;
+    }
+    const data = await res.json();
+    searchResultUser = { code: data.roomId, name: data.roomName };
+    results.innerHTML = `
+      <div class="search-result-card" onclick="openJoinConfirm()">
+        <div class="search-result-icon">💬</div>
+        <div class="search-result-info">
+          <div class="search-result-name">${escapeHtml(data.roomName)}</div>
+          <div class="search-result-code">${data.roomId} • ${data.membersCount} عضو</div>
+        </div>
+        <span style="color:var(--cyan);font-size:18px;">→</span>
       </div>
-      <span style="color:var(--cyan);font-size:18px;">→</span>
-    </div>
-  `;
+    `;
+  } catch (e) {
+    results.innerHTML = `<div class="no-results"><span class="no-results-icon">❌</span>خطأ في الاتصال بالسيرفر</div>`;
+  }
 }
 
 function openJoinConfirm() {
@@ -2485,64 +2715,59 @@ function cancelJoin() {
 
 async function confirmJoin() {
   if (!searchResultUser) return;
-  await PTTEngine.init();
-  PTTEngine.playBeep(1200, 0.2);
-  closeModal('modalJoinConfirm');
-  toast(`📨 تم إرسال طلب الانضمام إلى ${searchResultUser.name}`, 'success');
-  setTimeout(() => {
-    document.getElementById('incomingName').textContent = searchResultUser.name;
-    document.getElementById('incomingCode').textContent = currentUser.waveCode || 'Q00000';
-    openModal('modalIncomingRequest');
-  }, 2000);
+  try {
+    const res = await fetch(SERVER_URL + "/api/rooms/join", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        roomId: searchResultUser.code,
+        deviceId: currentUser.id,
+        userName: currentUser.name
+      })
+    });
+    const data = await res.json();
+    if (!data.success) {
+      toast("⚠️ فشل الانضمام", "error");
+      return;
+    }
+
+    currentUser.roomCode = data.roomId;
+    currentUser.roomName = data.roomName;
+
+    await PTTEngine.init();
+    PTTEngine.playBeep(1200, 0.2);
+
+    document.getElementById('roomNameLabel').textContent = data.roomName;
+    document.getElementById('roomBadge').style.display = 'block';
+    document.getElementById('roomUsers').style.display = 'flex';
+    document.getElementById('emptyRoom').style.display = 'none';
+    document.getElementById('roomSubLabel').textContent = `📻 ${data.roomId} • CH ${data.channel}`;
+
+    socket.emit("join_room", {
+      roomId: data.roomId,
+      deviceId: currentUser.id,
+      userName: currentUser.name
+    });
+
+    closeModal('modalJoinConfirm');
+    toast(`✅ انضممت إلى "${data.roomName}"`, 'success');
+    switchTab('log');
+  } catch (e) {
+    console.error(e);
+    toast("❌ خطأ في الانضمام", "error");
+  }
   searchResultUser = null;
 }
 
-function acceptIncoming() {
-  closeModal('modalIncomingRequest');
-  PTTEngine.playBeep(1500, 0.2, 0.9);
-  toast('✅ تم القبول — أنتما الآن فريق واحد', 'success');
-  const users = document.getElementById('roomUsers');
-  users.style.display = 'flex';
-  users.innerHTML = `
-    <div class="user-pill active"><span class="user-avatar">Q</span> Q307 (أنت)</div>
-    <div class="user-pill"><span class="user-avatar">A</span> ${document.getElementById('incomingName').textContent || 'مستخدم'}</div>
-  `;
-  const msgs = document.getElementById('roomMessages');
-  document.getElementById('emptyRoom').style.display = 'none';
-  const sysMsg = document.createElement('div');
-  sysMsg.style.cssText = 'text-align:center;padding:14px;color:var(--green);font-size:12px;font-weight:700;';
-  sysMsg.textContent = '✅ انضم مستخدم جديد إلى الموجة';
-  msgs.appendChild(sysMsg);
-}
-
-function rejectIncoming() {
-  closeModal('modalIncomingRequest');
-  toast('❌ تم الرفض', 'error');
-}
-
-async function testCall() {
-  const ok = await PTTEngine.init();
-  if (!ok) { toast('❌ تعذّر تشغيل الصوت', 'error'); return; }
-  toast('🔔 اختبار صوت النداء...', 'success');
-  PTTEngine.playBeep(1200, 0.15, 0.9);
-  setTimeout(() => PTTEngine.playBeep(700, 0.25, 0.85), 700);
-  closeSideMenu();
-}
-
-function changeChannel() {
-  const cur = prompt('أدخل رقم القناة الجديد (01-99):',
-    document.querySelectorAll('.chip-value')[1].textContent.replace(/\D/g, ''));
-  if (cur && /^\d{1,2}$/.test(cur)) {
-    const padded = cur.padStart(2, '0');
-    document.querySelectorAll('.chip-value')[1].innerHTML = `📻 ${padded}`;
-    document.getElementById('channelValue').textContent = `CH ${padded}`;
-    document.querySelector('.lcd-row .lcd-label').textContent = `CH ${padded}`;
-    toast(`✅ تم تغيير القناة إلى ${padded}`, 'success');
-  }
-}
-
+/* ==========================================
+   المرفقات والملفات
+   ========================================== */
 document.getElementById('chatClip').addEventListener('click', () => {
   openModal('modalAttach');
+});
+
+document.getElementById('chatCamera').addEventListener('click', () => {
+  openCamera();
 });
 
 function pickFile(type) {
@@ -2567,155 +2792,58 @@ function pickFile(type) {
 
 function pickContact() {
   closeModal('modalAttach');
-  const name = prompt('اسم جهة الاتصال:');
-  if (!name) return;
-  const phone = prompt('رقم الهاتف:');
-  if (!phone) return;
+  document.getElementById('contactName').value = '';
+  document.getElementById('contactPhone').value = '';
+  openModal('modalContact');
+}
+
+function sendContact() {
+  const name = document.getElementById('contactName').value.trim();
+  const phone = document.getElementById('contactPhone').value.trim();
+  if (!name || !phone) { toast('⚠️ املأ الحقلين', 'error'); return; }
+  closeModal('modalContact');
   addContactMessage({ name, phone });
 }
 
-function addVoiceMessage(url, duration) {
-  const empty = document.getElementById('emptyRoom');
-  if (empty) empty.style.display = 'none';
-  const logScreen = document.getElementById('roomMessages');
-  const time = fmtTime(new Date());
-  const durStr = duration.toFixed(1);
-  const msg = document.createElement('div');
-  msg.className = 'msg msg-out';
-  msg.innerHTML = `
-    <div class="msg-header"><span>📻 ${currentUser.id} • الآن</span></div>
-    <div class="msg-body">
-      <div class="voice-msg">
-        <button class="play-btn" data-url="${url}">▶</button>
-        <div class="waveform"></div>
-        <span style="font-size:18px;opacity:.7;">🎤</span>
-      </div>
-      <div class="voice-meta">
-        <span>${durStr}ث</span>
-        <span>${time}</span>
-      </div>
-    </div>
-  `;
-  logScreen.appendChild(msg);
-  attachLongPressHandler(msg);
-  const wf = msg.querySelector('.waveform');
-  if (wf) generateWaveform(wf, 'out');
-  const playBtn = msg.querySelector('.play-btn');
-  playBtn.addEventListener('click', () => playRealVoice(playBtn, url));
-  logScreen.scrollTop = logScreen.scrollHeight;
-  toast('✅ تم إرسال الرسالة الصوتية', 'success');
+/* ==========================================
+   الكاميرا
+   ========================================== */
+let cameraStream = null;
 
-  setTimeout(() => {
-    const meta = msg.querySelector('.voice-meta');
-    if (meta) meta.classList.add('delivered');
-  }, 5000);
-}
-
-function sendTextMessage(text) {
-  const empty = document.getElementById('emptyRoom');
-  if (empty) empty.style.display = 'none';
-  const logScreen = document.getElementById('roomMessages');
-  const time = fmtTime(new Date());
-  const msg = document.createElement('div');
-  msg.className = 'msg msg-out';
-  msg.innerHTML = `
-    <div class="msg-header"><span>📻 ${currentUser.id} • الآن</span></div>
-    <div class="msg-body">
-      <div class="text-msg">${escapeHtml(text)}</div>
-      <div class="voice-meta">
-        <span>${time}</span>
-      </div>
-    </div>
-  `;
-  logScreen.appendChild(msg);
-  attachLongPressHandler(msg);
-  logScreen.scrollTop = logScreen.scrollHeight;
-  PTTEngine.playBeep(1000, 0.08, 0.4);
-
-  setTimeout(() => {
-    const meta = msg.querySelector('.voice-meta');
-    if (meta) meta.classList.add('delivered');
-  }, 5000);
-}
-
-function addAttachmentMessage(type, name, dataUrl, size) {
-  const empty = document.getElementById('emptyRoom');
-  if (empty) empty.style.display = 'none';
-  const logScreen = document.getElementById('roomMessages');
-  const time = fmtTime(new Date());
-  const sizeKb = (size / 1024).toFixed(1);
-  let typeLabel = 'مستند';
-  let typeIcon = '📄';
-  if (type === 'image') { typeLabel = 'صورة'; typeIcon = '🖼️'; }
-  if (type === 'video') { typeLabel = 'فيديو'; typeIcon = '🎬'; }
-  let previewHtml = '';
-  if (type === 'image') {
-    previewHtml = `<img src="${dataUrl}" class="attachment-preview-img" onclick="showFullImage('${dataUrl}')" alt="">`;
-  } else if (type === 'video') {
-    previewHtml = `<video src="${dataUrl}" class="attachment-preview-video" controls></video>`;
+async function openCamera() {
+  try {
+    cameraStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'environment' }
+    });
+    const video = document.getElementById('cameraPreview');
+    video.srcObject = cameraStream;
+    document.getElementById('cameraOverlay').classList.add('show');
+  } catch (e) {
+    console.error(e);
+    toast('❌ تعذّر فتح الكاميرا', 'error');
   }
-  const msg = document.createElement('div');
-  msg.className = 'msg msg-out';
-  msg.innerHTML = `
-    <div class="msg-header"><span>📻 ${currentUser.id} • الآن</span></div>
-    <div class="msg-body">
-      ${previewHtml}
-      <div class="attach-msg">
-        <span class="attach-msg-icon">${typeIcon}</span>
-        <div class="attach-msg-info">
-          <span class="attach-msg-name">${escapeHtml(name)}</span>
-          <span class="attach-msg-type">${typeLabel} • ${sizeKb} KB</span>
-        </div>
-      </div>
-      <div class="voice-meta">
-        <span>${time}</span>
-      </div>
-    </div>
-  `;
-  logScreen.appendChild(msg);
-  attachLongPressHandler(msg);
-  logScreen.scrollTop = logScreen.scrollHeight;
-  PTTEngine.playBeep(1000, 0.08, 0.4);
-  toast(`✅ تم إرسال ${typeLabel}`, 'success');
-
-  setTimeout(() => {
-    const meta = msg.querySelector('.voice-meta');
-    if (meta) meta.classList.add('delivered');
-  }, 5000);
 }
 
-function addContactMessage(contact) {
-  const empty = document.getElementById('emptyRoom');
-  if (empty) empty.style.display = 'none';
-  const logScreen = document.getElementById('roomMessages');
-  const time = fmtTime(new Date());
-  const msg = document.createElement('div');
-  msg.className = 'msg msg-out';
-  msg.innerHTML = `
-    <div class="msg-header"><span>📻 ${currentUser.id} • الآن</span></div>
-    <div class="msg-body">
-      <div class="attach-msg">
-        <span class="attach-msg-icon">👤</span>
-        <div class="attach-msg-info">
-          <span class="attach-msg-name">${escapeHtml(contact.name)}</span>
-          <span class="attach-msg-type">${escapeHtml(contact.phone)}</span>
-        </div>
-      </div>
-      <div class="voice-meta">
-        <span>${time}</span>
-      </div>
-    </div>
-  `;
-  logScreen.appendChild(msg);
-  attachLongPressHandler(msg);
-  logScreen.scrollTop = logScreen.scrollHeight;
-  PTTEngine.playBeep(1000, 0.08, 0.4);
-  toast('✅ تم إرسال جهة الاتصال', 'success');
+function closeCamera() {
+  if (cameraStream) {
+    cameraStream.getTracks().forEach(t => t.stop());
+    cameraStream = null;
+  }
+  document.getElementById('cameraOverlay').classList.remove('show');
+}
 
-  setTimeout(() => {
-    const meta = msg.querySelector('.voice-meta');
-    if (meta) meta.classList.add('delivered');
-  }, 5000);
+function capturePhoto() {
+  const video = document.getElementById('cameraPreview');
+  if (!video.videoWidth) return;
+  const canvas = document.createElement('canvas');
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(video, 0, 0);
+  const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+  closeCamera();
+  const size = Math.round(dataUrl.length * 0.75);
+  addAttachmentMessage('image', 'صورة_' + Date.now() + '.jpg', dataUrl, size);
 }
 
 function showFullImage(dataUrl) {
@@ -2730,15 +2858,19 @@ function showFullImage(dataUrl) {
   document.body.appendChild(overlay);
 }
 
-function fmtTime(d) {
-  return d.getHours().toString().padStart(2, '0') + ':' +
-         d.getMinutes().toString().padStart(2, '0');
-}
-
-function escapeHtml(s) {
-  const div = document.createElement('div');
-  div.textContent = s;
-  return div.innerHTML;
+/* ==========================================
+   توليد الموجات الصوتية
+   ========================================== */
+function generateWaveform(container, type = 'in') {
+  if (!container) return;
+  container.innerHTML = '';
+  const bars = 40;
+  for (let i = 0; i < bars; i++) {
+    const span = document.createElement('span');
+    const amp = Math.random() * 26 + 4;
+    span.style.height = Math.max(4, amp) + 'px';
+    container.appendChild(span);
+  }
 }
 
 function playRealVoice(btn, url) {
@@ -2768,21 +2900,220 @@ function playRealVoice(btn, url) {
   };
 }
 
-function generateWaveform(container, type = 'in') {
-  if (!container) return;
-  container.innerHTML = '';
-  const bars = 45;
-  for (let i = 0; i < bars; i++) {
-    const span = document.createElement('span');
-    const amp = type === 'mix'
-      ? (i > bars * 0.6 ? Math.random() * 28 + 6 : Math.random() * 24 + 4)
-      : Math.random() * 26 + 4;
-    span.style.height = Math.max(4, amp) + 'px';
-    if (type === 'mix' && i > bars * 0.6) span.classList.add('hot');
-    container.appendChild(span);
+/* ==========================================
+   عرض الرسائل
+   ========================================== */
+function renderOutgoingMessage(msg) {
+  const empty = document.getElementById('emptyRoom');
+  if (empty) empty.style.display = 'none';
+  const logScreen = document.getElementById('roomMessages');
+  const time = fmtTime(new Date(msg.time || Date.now()));
+
+  let bodyHtml = '';
+  if (msg.type === 'voice') {
+    bodyHtml = `
+      <div class="voice-msg">
+        <button class="play-btn" data-url="${msg.audioUrl}">▶</button>
+        <div class="waveform"></div>
+        <span style="font-size:18px;opacity:.7;">🎤</span>
+      </div>
+      <div class="voice-meta">
+        <span>${msg.duration || '?'}ث</span>
+        <span>${time}</span>
+      </div>
+    `;
+  } else if (msg.type === 'image' || msg.type === 'video') {
+    const preview = msg.type === 'image'
+      ? `<img src="${msg.dataUrl}" class="attachment-preview-img" onclick="showFullImage('${msg.dataUrl}')" alt="">`
+      : `<video src="${msg.dataUrl}" class="attachment-preview-video" controls></video>`;
+    bodyHtml = `
+      ${preview}
+      <div class="voice-meta"><span>${time}</span></div>
+    `;
+  } else if (msg.type === 'contact') {
+    bodyHtml = `
+      <div class="attach-msg">
+        <span class="attach-msg-icon">👤</span>
+        <div class="attach-msg-info">
+          <span class="attach-msg-name">${escapeHtml(msg.contactName)}</span>
+          <span class="attach-msg-type">${escapeHtml(msg.contactPhone)}</span>
+        </div>
+      </div>
+      <div class="voice-meta"><span>${time}</span></div>
+    `;
+  } else {
+    bodyHtml = `
+      <div class="text-msg">${escapeHtml(msg.text)}</div>
+      <div class="voice-meta"><span>${time}</span></div>
+    `;
   }
+
+  const el = document.createElement('div');
+  el.className = 'msg msg-out';
+  el.dataset.msgId = msg.id;
+  el.innerHTML = `
+    <div class="msg-header"><span>📻 ${escapeHtml(msg.senderName || currentUser.name)} • الآن</span></div>
+    <div class="msg-body">${bodyHtml}</div>
+  `;
+  logScreen.appendChild(el);
+  attachLongPressHandler(el);
+
+  const wf = el.querySelector('.waveform');
+  if (wf) generateWaveform(wf, 'out');
+  const playBtn = el.querySelector('.play-btn');
+  if (playBtn && msg.audioUrl) playBtn.addEventListener('click', () => playRealVoice(playBtn, msg.audioUrl));
+
+  logScreen.scrollTop = logScreen.scrollHeight;
+  return el;
 }
 
+function renderIncomingMessage(msg) {
+  const empty = document.getElementById('emptyRoom');
+  if (empty) empty.style.display = 'none';
+  const logScreen = document.getElementById('roomMessages');
+  const time = fmtTime(new Date(msg.time || Date.now()));
+
+  let bodyHtml = '';
+  if (msg.type === 'voice') {
+    bodyHtml = `
+      <div class="voice-msg">
+        <button class="play-btn" data-url="${msg.audioUrl}">▶</button>
+        <div class="waveform"></div>
+        <span style="font-size:18px;opacity:.7;">🎤</span>
+      </div>
+      <div class="voice-meta">
+        <span>${msg.duration || '?'}ث</span>
+        <span>${time}</span>
+      </div>
+    `;
+  } else if (msg.type === 'image' || msg.type === 'video') {
+    const preview = msg.type === 'image'
+      ? `<img src="${msg.dataUrl}" class="attachment-preview-img" onclick="showFullImage('${msg.dataUrl}')" alt="">`
+      : `<video src="${msg.dataUrl}" class="attachment-preview-video" controls></video>`;
+    bodyHtml = `
+      ${preview}
+      <div class="voice-meta"><span>${time}</span></div>
+    `;
+  } else if (msg.type === 'contact') {
+    bodyHtml = `
+      <div class="attach-msg">
+        <span class="attach-msg-icon">👤</span>
+        <div class="attach-msg-info">
+          <span class="attach-msg-name">${escapeHtml(msg.contactName)}</span>
+          <span class="attach-msg-type">${escapeHtml(msg.contactPhone)}</span>
+        </div>
+      </div>
+      <div class="voice-meta"><span>${time}</span></div>
+    `;
+  } else {
+    bodyHtml = `
+      <div class="text-msg">${escapeHtml(msg.text)}</div>
+      <div class="voice-meta"><span>${time}</span></div>
+    `;
+  }
+
+  const el = document.createElement('div');
+  el.className = 'msg msg-in';
+  el.dataset.msgId = msg.id;
+  el.innerHTML = `
+    <div class="msg-header"><span>📻 ${escapeHtml(msg.senderName || 'مستخدم')} • الآن</span></div>
+    <div class="msg-body">${bodyHtml}</div>
+  `;
+  logScreen.appendChild(el);
+
+  const wf = el.querySelector('.waveform');
+  if (wf) generateWaveform(wf, 'in');
+  const playBtn = el.querySelector('.play-btn');
+  if (playBtn && msg.audioUrl) playBtn.addEventListener('click', () => playRealVoice(playBtn, msg.audioUrl));
+
+  logScreen.scrollTop = logScreen.scrollHeight;
+}
+
+/* ==========================================
+   إرسال الرسائل (عبر Socket.io)
+   ========================================== */
+function sendTextMessage(text) {
+  if (!currentUser.roomCode) {
+    toast('⚠️ لا توجد غرفة بعد', 'error');
+    return;
+  }
+  const msg = {
+    id: nowId(),
+    type: 'text',
+    text: text,
+    sender: currentUser.id,
+    senderName: currentUser.name,
+    time: Date.now(),
+    roomId: currentUser.roomCode
+  };
+  socket.emit("send_message", { roomId: currentUser.roomCode, message: msg });
+  renderOutgoingMessage(msg);
+}
+
+function addVoiceMessage(url, duration) {
+  if (!currentUser.roomCode) {
+    toast('⚠️ لا توجد غرفة بعد', 'error');
+    return;
+  }
+  const msg = {
+    id: nowId(),
+    type: 'voice',
+    audioUrl: url,
+    duration: parseFloat(duration).toFixed(1),
+    sender: currentUser.id,
+    senderName: currentUser.name,
+    time: Date.now(),
+    roomId: currentUser.roomCode
+  };
+  socket.emit("send_message", { roomId: currentUser.roomCode, message: msg });
+  renderOutgoingMessage(msg);
+  toast('✅ تم إرسال الرسالة الصوتية', 'success');
+}
+
+function addAttachmentMessage(type, name, dataUrl, size) {
+  if (!currentUser.roomCode) {
+    toast('⚠️ لا توجد غرفة بعد', 'error');
+    return;
+  }
+  const msg = {
+    id: nowId(),
+    type: type,
+    fileName: name,
+    dataUrl: dataUrl,
+    fileSize: size,
+    sender: currentUser.id,
+    senderName: currentUser.name,
+    time: Date.now(),
+    roomId: currentUser.roomCode
+  };
+  socket.emit("send_message", { roomId: currentUser.roomCode, message: msg });
+  renderOutgoingMessage(msg);
+  toast(`✅ تم إرسال ${type === 'image' ? 'صورة' : type === 'video' ? 'فيديو' : 'ملف'}`, 'success');
+}
+
+function addContactMessage(contact) {
+  if (!currentUser.roomCode) {
+    toast('⚠️ لا توجد غرفة بعد', 'error');
+    return;
+  }
+  const msg = {
+    id: nowId(),
+    type: 'contact',
+    contactName: contact.name,
+    contactPhone: contact.phone,
+    sender: currentUser.id,
+    senderName: currentUser.name,
+    time: Date.now(),
+    roomId: currentUser.roomCode
+  };
+  socket.emit("send_message", { roomId: currentUser.roomCode, message: msg });
+  renderOutgoingMessage(msg);
+  toast('✅ تم إرسال جهة الاتصال', 'success');
+}
+
+/* ==========================================
+   الإدخال والإرسال
+   ========================================== */
 const chatInput = document.getElementById('chatInput');
 const chatSend  = document.getElementById('chatSend');
 
@@ -2802,22 +3133,20 @@ function handleSend() {
   sendTextMessage(text);
   chatInput.value = '';
   chatSend.disabled = true;
-  // ✅ إبقاء الكيبورد مفتوحاً بعد الإرسال
-  setTimeout(() => {
-    chatInput.focus();
-  }, 50);
+  setTimeout(() => { chatInput.focus(); }, 50);
 }
 
+/* ==========================================
+   PTT (الضغط للتحدث)
+   ========================================== */
 const pttMain = document.getElementById('pttMain');
 const chatPTT = document.getElementById('chatPTT');
 const lcdStatus = document.getElementById('lcdStatus');
 
 function onPTTStartWave(btn) {
   btn.classList.add('holding');
-
   const antenna = document.querySelector('.antenna');
   if (antenna) antenna.classList.add('transmitting');
-
   if (lcdStatus) lcdStatus.textContent = 'TX';
   const bi = document.getElementById('bottomInfo');
   if (bi) bi.innerHTML = '<span style="color:#00ff00;font-weight:800;">🟢 جاري الإرسال... تحدّث الآن</span>';
@@ -2828,10 +3157,8 @@ function onPTTStartWave(btn) {
 
 function onPTTStopWave(btn) {
   btn.classList.remove('holding');
-
   const antenna = document.querySelector('.antenna');
   if (antenna) antenna.classList.remove('transmitting');
-
   if (lcdStatus) lcdStatus.textContent = '•';
   const bi = document.getElementById('bottomInfo');
   if (bi) {
@@ -2869,7 +3196,9 @@ chatPTT.addEventListener('touchstart', (e) => { e.preventDefault(); onPTTStartRo
 chatPTT.addEventListener('touchend',   (e) => { e.preventDefault(); onPTTStopRoom(chatPTT);  }, { passive: false });
 chatPTT.addEventListener('touchcancel',(e) => { e.preventDefault(); onPTTStopRoom(chatPTT);  }, { passive: false });
 
-// ✅ منطق حذف الرسالة بالضغط المطول
+/* ==========================================
+   حذف الرسالة بالضغط المطول
+   ========================================== */
 let selectedMessageForDelete = null;
 
 function openDeleteConfirm(msgElement) {
@@ -2889,12 +3218,7 @@ function confirmDeleteMessage() {
     selectedMessageForDelete.style.transform = 'translateX(50px)';
     setTimeout(() => {
       selectedMessageForDelete.remove();
-      const msgs = document.getElementById('roomMessages');
-      if (msgs.children.length === 0) {
-        document.getElementById('emptyRoom').style.display = 'flex';
-        document.getElementById('roomBadge').style.display = 'none';
-        document.getElementById('roomUsers').style.display = 'none';
-      }
+      checkEmptyRoom();
     }, 300);
     toast('🗑️ تم حذف الرسالة', 'success');
   }
@@ -2904,33 +3228,52 @@ function confirmDeleteMessage() {
 
 function attachLongPressHandler(msgElement) {
   let pressTimer = null;
-
   const startPress = () => {
     pressTimer = setTimeout(() => {
       openDeleteConfirm(msgElement);
       if (navigator.vibrate) navigator.vibrate(30);
     }, 600);
   };
-
   const cancelPress = () => {
-    if (pressTimer) {
-      clearTimeout(pressTimer);
-      pressTimer = null;
-    }
+    if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; }
   };
-
   msgElement.addEventListener('mousedown', startPress);
   msgElement.addEventListener('mouseup', cancelPress);
   msgElement.addEventListener('mouseleave', cancelPress);
-
   msgElement.addEventListener('touchstart', startPress, { passive: true });
   msgElement.addEventListener('touchend', cancelPress);
   msgElement.addEventListener('touchmove', cancelPress, { passive: true });
   msgElement.addEventListener('touchcancel', cancelPress);
-
   msgElement.addEventListener('contextmenu', (e) => e.preventDefault());
 }
 
+/* ==========================================
+   اختبار الصوت وتغيير القناة
+   ========================================== */
+async function testCall() {
+  const ok = await PTTEngine.init();
+  if (!ok) { toast('❌ تعذّر تشغيل الصوت', 'error'); return; }
+  toast('🔔 اختبار صوت النداء...', 'success');
+  PTTEngine.playBeep(1200, 0.15, 0.9);
+  setTimeout(() => PTTEngine.playBeep(700, 0.25, 0.85), 700);
+  closeSideMenu();
+}
+
+function changeChannel() {
+  const cur = prompt('أدخل رقم القناة الجديد (01-99):',
+    document.querySelectorAll('.chip-value')[1].textContent.replace(/\D/g, ''));
+  if (cur && /^\d{1,2}$/.test(cur)) {
+    const padded = cur.padStart(2, '0');
+    document.querySelectorAll('.chip-value')[1].innerHTML = `📻 ${padded}`;
+    document.getElementById('channelValue').textContent = `CH ${padded}`;
+    document.querySelector('.lcd-row .lcd-label').textContent = `CH ${padded}`;
+    toast(`✅ تم تغيير القناة إلى ${padded}`, 'success');
+  }
+}
+
+/* ==========================================
+   التهيئة عند التحميل
+   ========================================== */
 window.addEventListener('load', () => {
   const initOnce = async () => {
     await PTTEngine.init();
@@ -2944,6 +3287,10 @@ window.addEventListener('load', () => {
 });
 
 document.addEventListener('contextmenu', e => e.preventDefault());
+
+window.addEventListener('beforeunload', () => {
+  if (cameraStream) cameraStream.getTracks().forEach(t => t.stop());
+});
 </script>
 </body>
-</html>
+</html>  
