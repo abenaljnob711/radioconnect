@@ -381,7 +381,6 @@ body::before {
   transition: all .15s ease;
 }
 
-/* ✅ كلاس الإضاءة الخضراء لرأس الأريل */
 .antenna.transmitting::before {
   background: #00ff00 !important;
   box-shadow: 0 0 12px #00ff00, 0 0 24px #00ff00 !important;
@@ -869,7 +868,6 @@ body::before {
   color: rgba(255,255,255,.6);
   margin-top: 4px;
 }
-/* ✅ العلامة الافتراضية هي ✓ (واحدة) */
 .msg-out .voice-meta::after {
   content: '✓';
   color: #53bdeb;
@@ -877,7 +875,6 @@ body::before {
   margin-right: 4px;
   transition: all 0.3s ease;
 }
-/* ✅ عند إضافة كلاس "delivered" تتحول إلى ✓✓ */
 .msg-out .voice-meta.delivered::after {
   content: '✓✓';
 }
@@ -1430,6 +1427,77 @@ body::before {
   font-family: 'Courier New', monospace;
   letter-spacing: 1px;
 }
+
+/* ✅ نافذة تأكيد الحذف */
+.delete-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.75);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 800;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.delete-confirm-overlay.show {
+  display: flex;
+  animation: fadeIn .25s ease;
+}
+.delete-confirm-box {
+  width: 100%;
+  max-width: 320px;
+  background: linear-gradient(180deg, var(--card-2), var(--bg));
+  border: 1px solid var(--red);
+  border-radius: 16px;
+  padding: 20px 18px;
+  box-shadow: 0 20px 60px rgba(255,42,77,.35);
+  text-align: center;
+}
+.delete-confirm-icon {
+  font-size: 40px;
+  margin-bottom: 10px;
+}
+.delete-confirm-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: #ff5577;
+  margin-bottom: 6px;
+}
+.delete-confirm-text {
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-bottom: 18px;
+  line-height: 1.6;
+}
+.delete-confirm-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.delete-confirm-btn {
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all .2s;
+}
+.delete-confirm-btn.cancel {
+  background: transparent;
+  border-color: var(--border);
+  color: var(--text-dim);
+}
+.delete-confirm-btn.delete {
+  background: linear-gradient(180deg, #ff2a4d, #b01530);
+  border-color: #ff5577;
+  color: #fff;
+  box-shadow: 0 0 18px rgba(255,42,77,.4);
+}
+.delete-confirm-btn:active { transform: scale(.97); }
 </style>
 </head>
 <body>
@@ -1970,6 +2038,19 @@ body::before {
     <div class="modal-actions">
       <button class="modal-btn danger" onclick="rejectIncoming()">❌ رفض</button>
       <button class="modal-btn confirm" onclick="acceptIncoming()">✅ قبول</button>
+    </div>
+  </div>
+</div>
+
+<!-- ✅ نافذة تأكيد حذف الرسالة -->
+<div class="delete-confirm-overlay" id="deleteConfirmOverlay">
+  <div class="delete-confirm-box">
+    <div class="delete-confirm-icon">🗑️</div>
+    <div class="delete-confirm-title">حذف الرسالة</div>
+    <div class="delete-confirm-text">هل أنت متأكد من حذف هذه الرسالة؟<br>لا يمكن التراجع عن هذا الإجراء.</div>
+    <div class="delete-confirm-actions">
+      <button class="delete-confirm-btn cancel" onclick="cancelDeleteMessage()">إلغاء</button>
+      <button class="delete-confirm-btn delete" onclick="confirmDeleteMessage()">حذف</button>
     </div>
   </div>
 </div>
@@ -2516,14 +2597,14 @@ function addVoiceMessage(url, duration) {
     </div>
   `;
   logScreen.appendChild(msg);
+  attachLongPressHandler(msg);
   const wf = msg.querySelector('.waveform');
   if (wf) generateWaveform(wf, 'out');
   const playBtn = msg.querySelector('.play-btn');
   playBtn.addEventListener('click', () => playRealVoice(playBtn, url));
   logScreen.scrollTop = logScreen.scrollHeight;
   toast('✅ تم إرسال الرسالة الصوتية', 'success');
-  
-  // ✅ محاكاة استلام الطرف الآخر بعد 5 ثوانٍ
+
   setTimeout(() => {
     const meta = msg.querySelector('.voice-meta');
     if (meta) meta.classList.add('delivered');
@@ -2547,10 +2628,10 @@ function sendTextMessage(text) {
     </div>
   `;
   logScreen.appendChild(msg);
+  attachLongPressHandler(msg);
   logScreen.scrollTop = logScreen.scrollHeight;
   PTTEngine.playBeep(1000, 0.08, 0.4);
-  
-  // ✅ محاكاة استلام الطرف الآخر بعد 5 ثوانٍ
+
   setTimeout(() => {
     const meta = msg.querySelector('.voice-meta');
     if (meta) meta.classList.add('delivered');
@@ -2592,11 +2673,11 @@ function addAttachmentMessage(type, name, dataUrl, size) {
     </div>
   `;
   logScreen.appendChild(msg);
+  attachLongPressHandler(msg);
   logScreen.scrollTop = logScreen.scrollHeight;
   PTTEngine.playBeep(1000, 0.08, 0.4);
   toast(`✅ تم إرسال ${typeLabel}`, 'success');
-  
-  // ✅ محاكاة استلام الطرف الآخر بعد 5 ثوانٍ
+
   setTimeout(() => {
     const meta = msg.querySelector('.voice-meta');
     if (meta) meta.classList.add('delivered');
@@ -2626,11 +2707,11 @@ function addContactMessage(contact) {
     </div>
   `;
   logScreen.appendChild(msg);
+  attachLongPressHandler(msg);
   logScreen.scrollTop = logScreen.scrollHeight;
   PTTEngine.playBeep(1000, 0.08, 0.4);
   toast('✅ تم إرسال جهة الاتصال', 'success');
-  
-  // ✅ محاكاة استلام الطرف الآخر بعد 5 ثوانٍ
+
   setTimeout(() => {
     const meta = msg.querySelector('.voice-meta');
     if (meta) meta.classList.add('delivered');
@@ -2721,6 +2802,10 @@ function handleSend() {
   sendTextMessage(text);
   chatInput.value = '';
   chatSend.disabled = true;
+  // ✅ إبقاء الكيبورد مفتوحاً بعد الإرسال
+  setTimeout(() => {
+    chatInput.focus();
+  }, 50);
 }
 
 const pttMain = document.getElementById('pttMain');
@@ -2729,10 +2814,10 @@ const lcdStatus = document.getElementById('lcdStatus');
 
 function onPTTStartWave(btn) {
   btn.classList.add('holding');
-  
+
   const antenna = document.querySelector('.antenna');
   if (antenna) antenna.classList.add('transmitting');
-  
+
   if (lcdStatus) lcdStatus.textContent = 'TX';
   const bi = document.getElementById('bottomInfo');
   if (bi) bi.innerHTML = '<span style="color:#00ff00;font-weight:800;">🟢 جاري الإرسال... تحدّث الآن</span>';
@@ -2743,10 +2828,10 @@ function onPTTStartWave(btn) {
 
 function onPTTStopWave(btn) {
   btn.classList.remove('holding');
-  
+
   const antenna = document.querySelector('.antenna');
   if (antenna) antenna.classList.remove('transmitting');
-  
+
   if (lcdStatus) lcdStatus.textContent = '•';
   const bi = document.getElementById('bottomInfo');
   if (bi) {
@@ -2783,6 +2868,68 @@ chatPTT.addEventListener('mouseleave',(e) => { if (chatPTT.classList.contains('h
 chatPTT.addEventListener('touchstart', (e) => { e.preventDefault(); onPTTStartRoom(chatPTT); }, { passive: false });
 chatPTT.addEventListener('touchend',   (e) => { e.preventDefault(); onPTTStopRoom(chatPTT);  }, { passive: false });
 chatPTT.addEventListener('touchcancel',(e) => { e.preventDefault(); onPTTStopRoom(chatPTT);  }, { passive: false });
+
+// ✅ منطق حذف الرسالة بالضغط المطول
+let selectedMessageForDelete = null;
+
+function openDeleteConfirm(msgElement) {
+  selectedMessageForDelete = msgElement;
+  document.getElementById('deleteConfirmOverlay').classList.add('show');
+}
+
+function cancelDeleteMessage() {
+  selectedMessageForDelete = null;
+  document.getElementById('deleteConfirmOverlay').classList.remove('show');
+}
+
+function confirmDeleteMessage() {
+  if (selectedMessageForDelete) {
+    selectedMessageForDelete.style.transition = 'all 0.3s ease';
+    selectedMessageForDelete.style.opacity = '0';
+    selectedMessageForDelete.style.transform = 'translateX(50px)';
+    setTimeout(() => {
+      selectedMessageForDelete.remove();
+      const msgs = document.getElementById('roomMessages');
+      if (msgs.children.length === 0) {
+        document.getElementById('emptyRoom').style.display = 'flex';
+        document.getElementById('roomBadge').style.display = 'none';
+        document.getElementById('roomUsers').style.display = 'none';
+      }
+    }, 300);
+    toast('🗑️ تم حذف الرسالة', 'success');
+  }
+  selectedMessageForDelete = null;
+  document.getElementById('deleteConfirmOverlay').classList.remove('show');
+}
+
+function attachLongPressHandler(msgElement) {
+  let pressTimer = null;
+
+  const startPress = () => {
+    pressTimer = setTimeout(() => {
+      openDeleteConfirm(msgElement);
+      if (navigator.vibrate) navigator.vibrate(30);
+    }, 600);
+  };
+
+  const cancelPress = () => {
+    if (pressTimer) {
+      clearTimeout(pressTimer);
+      pressTimer = null;
+    }
+  };
+
+  msgElement.addEventListener('mousedown', startPress);
+  msgElement.addEventListener('mouseup', cancelPress);
+  msgElement.addEventListener('mouseleave', cancelPress);
+
+  msgElement.addEventListener('touchstart', startPress, { passive: true });
+  msgElement.addEventListener('touchend', cancelPress);
+  msgElement.addEventListener('touchmove', cancelPress, { passive: true });
+  msgElement.addEventListener('touchcancel', cancelPress);
+
+  msgElement.addEventListener('contextmenu', (e) => e.preventDefault());
+}
 
 window.addEventListener('load', () => {
   const initOnce = async () => {
