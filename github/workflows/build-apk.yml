@@ -27,36 +27,75 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Install Capacitor dependencies
+      - name: Verify public folder exists
         run: |
-          npm install -g @capacitor/cli
-          npm install @capacitor/core @capacitor/android @capacitor/assets
+          echo "=== Contents of public/ ==="
+          ls -la public/
+          echo "=== Checking index.html ==="
+          if [ ! -f "public/index.html" ]; then
+            echo "ERROR: public/index.html not found!"
+            exit 1
+          fi
 
-      - name: Create www folder
+      - name: Create capacitor.config.json
+        run: |
+          cat > capacitor.config.json << 'EOF'
+          {
+            "appId": "com.radioconnect.app",
+            "appName": "Radio Connect",
+            "webDir": "www",
+            "server": {
+              "url": "https://radio-connect-server.onrender.com",
+              "cleartext": false,
+              "androidScheme": "https"
+            },
+            "android": {
+              "allowMixedContent": true,
+              "captureInput": true,
+              "webContentsDebuggingEnabled": true
+            }
+          }
+          EOF
+          cat capacitor.config.json
+
+      - name: Install Capacitor
+        run: |
+          npm init -y
+          npm install @capacitor/core@latest @capacitor/cli@latest @capacitor/android@latest
+
+      - name: Prepare www folder
         run: |
           mkdir -p www
-          cp -r public/* www/ 2>/dev/null || true
-
-      - name: Generate icons
-        run: |
-          mkdir -p resources
-          cp public/icon.png resources/icon.png 2>/dev/null || true
-          npx @capacitor/assets generate --android 2>/dev/null || true
+          cp -r public/* www/
+          rm -f www/package.json www/gitignore www/manifest.json www/server.js
+          ls -la www/
 
       - name: Add Android platform
         run: |
-          npx cap add android || true
+          npx cap add android
           npx cap sync android
+          ls -la android/
 
       - name: Build APK
         run: |
           cd android
           chmod +x gradlew
-          ./gradlew assembleDebug
+          ./gradlew assembleDebug --stacktrace
+
+      - name: Verify APK
+        run: |
+          ls -la android/app/build/outputs/apk/debug/
+          APK_SIZE=$(stat -c%s android/app/build/outputs/apk/debug/app-debug.apk)
+          echo "APK size: $APK_SIZE bytes"
+          if [ "$APK_SIZE" -lt 1000000 ]; then
+            echo "ERROR: APK is too small! Something went wrong."
+            exit 1
+          fi
 
       - name: Rename APK
         run: |
           cp android/app/build/outputs/apk/debug/app-debug.apk radio-connect.apk
+          ls -la radio-connect.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
