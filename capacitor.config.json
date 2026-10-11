@@ -1,0 +1,15 @@
+{
+  "appId": "com.radioconnect.app",
+  "appName": "Radio Connect",
+  "webDir": "www",
+  "server": {
+    "url": "https://radio-connect-server.onrender.com",
+    "cleartext": false,
+    "androidScheme": "https"
+  },
+  "android": {
+    "allowMixedContent": true,
+    "captureInput": true,
+    "webContentsDebuggingEnabled": true
+  }
+}
