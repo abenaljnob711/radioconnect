@@ -62,7 +62,7 @@ body::before {
   margin: 0 auto;
 }
 
-/* ✅ التعديل: الترتيب من الأسفل للأعلى (مثل الواتساب) */
+/* ✅ التراجع عن الخطأ: إعادة الشاشات لطبيعتها */
 .screen {
   flex: 1;
   overflow-y: auto;
@@ -71,24 +71,9 @@ body::before {
   padding: 14px 14px 160px;
   animation: fadeIn .3s ease;
   scrollbar-width: none;
-  display: flex;
-  flex-direction: column-reverse;
 }
-/* ✅ تعديل خاص: إعادة الشاشات الأخرى للوضع الطبيعي */
-#screen-radio, #screen-settings {
-  flex-direction: column !important;
-}
-
 .screen::-webkit-scrollbar { display: none; }
 .screen.active { display: block; }
-/* ✅ التعديل: تفعيل الفليكس للشاشة النشطة */
-.screen.active {
-  display: flex;
-  flex-direction: column-reverse;
-}
-#screen-radio.active, #screen-settings.active {
-  flex-direction: column !important;
-}
 
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(8px); }
