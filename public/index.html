@@ -764,7 +764,7 @@ body::before {
 .msg {
   margin-bottom: 12px;
   position: relative;
-  max-width: 92%;
+  /* ✅ تم إزالة max-width من هنا لتكون الفقاعة ذكية */
   animation: msgSlide .35s ease;
 }
 
@@ -788,20 +788,26 @@ body::before {
 .msg-in  .msg-header { color: var(--cyan); justify-content: flex-end; }
 .msg-out .msg-header { color: #ff5577; }
 
-/* ✅ تنسيق فقاعات الرسائل مثل الواتساب */
+/* ✅ تنسيق فقاعات الرسائل مثل الواتساب (تأخذ حجمها حسب النص) */
 .msg-body {
   border-radius: 10px;
   padding: 8px 12px 6px 12px;
   position: relative;
   border: none;
+  display: inline-block; /* ✅ هذا هو السر: الفقاعة تأخذ حجم النص فقط */
+  max-width: 85%; /* ✅ الحد الأقصى لعرض الفقاعة */
+  word-wrap: break-word; /* ✅ كسر الكلمات الطويلة */
+  text-align: right;
 }
+
 .msg-in .msg-body {
   background: #202c33;
   border-top-right-radius: 2px;
   color: #e9edef;
 }
+/* ✅ إرجاع اللون السابق (الأحمر الداكن) للرسائل الصادرة */
 .msg-out .msg-body {
-  background: #005c4b;
+  background: linear-gradient(135deg, var(--red-msg), var(--red-msg-2));
   border-top-left-radius: 2px;
   color: #e9edef;
 }
@@ -835,9 +841,9 @@ body::before {
   transform: scale(.94);
 }
 .msg-out .play-btn {
-  background: rgba(0,255,136,.15);
-  border-color: #00ff88;
-  color: #00ff88;
+  background: rgba(255,42,77,.2);
+  border-color: #ff5577;
+  color: #ff5577;
 }
 
 /* ✅ تكبير حجم الموجات الصوتية */
@@ -857,7 +863,7 @@ body::before {
   opacity: .9;
 }
 .waveform span.hot { background: #ff5577; }
-.msg-out .waveform span { background: #00ff88; }
+.msg-out .waveform span { background: #ff5577; }
 
 .voice-meta {
   display: flex;
