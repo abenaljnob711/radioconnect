@@ -45,7 +45,6 @@ jobs:
           npm install @capacitor/core@^6.2.0
           npm install @capacitor/android@^6.2.0
           npm install @capacitor/assets@^3.0.0
-          npm install @capacitor/contacts@latest --legacy-peer-deps || echo "Contacts plugin not found, continuing without it"
 
       - name: Create www folder
         run: |
