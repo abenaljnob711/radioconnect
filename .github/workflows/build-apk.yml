@@ -27,7 +27,6 @@ jobs:
 
       - name: Setup Android SDK
         run: |
-          # Use cmdline-tools (modern approach)
           mkdir -p $ANDROID_HOME/cmdline-tools
           cd $ANDROID_HOME/cmdline-tools
           if [ ! -d "latest" ]; then
@@ -55,6 +54,18 @@ jobs:
         run: |
           npx cap add android
           npx cap sync android
+
+      - name: Add Permissions to AndroidManifest
+        run: |
+          MANIFEST="android/app/src/main/AndroidManifest.xml"
+          if [ -f "$MANIFEST" ]; then
+            sed -i 's|<application|<uses-permission android:name="android.permission.INTERNET"/>\n    <uses-permission android:name="android.permission.RECORD_AUDIO"/>\n    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>\n    <uses-permission android:name="android.permission.CAMERA"/>\n    <uses-permission android:name="android.permission.READ_CONTACTS"/>\n    <uses-permission android:name="android.permission.WRITE_CONTACTS"/>\n    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>\n    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>\n    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>\n    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO"/>\n    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO"/>\n    <application|' "$MANIFEST"
+            echo "===== AndroidManifest.xml after modification ====="
+            cat "$MANIFEST"
+          else
+            echo "ERROR: AndroidManifest.xml not found!"
+            exit 1
+          fi
 
       - name: Build APK
         run: |
