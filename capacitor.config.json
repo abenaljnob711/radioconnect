@@ -1,0 +1,22 @@
+{
+  "appId": "com.radioconnect.app",
+  "appName": "Radio Connect",
+  "webDir": "public",
+  "server": {
+    "url": "https://radio-connect-server.onrender.com",
+    "cleartext": false,
+    "androidScheme": "https"
+  },
+  "android": {
+    "allowMixedContent": true,
+    "captureInput": true,
+    "webContentsDebuggingEnabled": true
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 2000,
+      "backgroundColor": "#05080c",
+      "showSpinner": false
+    }
+  }
+}
