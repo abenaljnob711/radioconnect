@@ -346,6 +346,7 @@ body::before {
   text-shadow: 0 0 8px rgba(0,229,255,.6);
 }
 
+/* ✅ تم تصغير الراديو */
 .radio-stage {
   position: relative;
   height: 280px;
@@ -365,37 +366,37 @@ body::before {
 
 .antenna {
   position: absolute;
-  top: 0; right: 58px;
-  width: 20px; height: 95px;
+  top: 0; right: 46px;
+  width: 16px; height: 76px;
   background: linear-gradient(90deg, #0a0a0a, #2b2b2b 40%, #0a0a0a);
-  border-radius: 10px 10px 3px 3px;
+  border-radius: 8px 8px 2px 2px;
   box-shadow: inset -2px 0 3px rgba(0,0,0,.8);
 }
 .antenna::before {
   content: '';
   position: absolute;
-  top: -8px; left: 50%;
+  top: -6px; left: 50%;
   transform: translateX(-50%);
-  width: 12px; height: 12px;
+  width: 10px; height: 10px;
   background: #0a0a0a;
   border-radius: 50%;
-  box-shadow: 0 0 6px rgba(0,229,255,.4);
+  box-shadow: 0 0 5px rgba(0,229,255,.4);
   transition: all .15s ease;
 }
 
 .antenna.transmitting::before {
   background: #00ff00 !important;
-  box-shadow: 0 0 12px #00ff00, 0 0 24px #00ff00 !important;
+  box-shadow: 0 0 10px #00ff00, 0 0 20px #00ff00 !important;
 }
 
 .knobs {
   position: absolute;
-  top: 88px; right: 18px;
-  display: flex; gap: 20px;
+  top: 70px; right: 14px;
+  display: flex; gap: 16px;
 }
 
 .knob {
-  width: 28px; height: 28px;
+  width: 22px; height: 22px;
   border-radius: 50%;
   background: radial-gradient(circle at 35% 35%, #4a4a4a, #0d0d0d);
   border: 2px solid #1c1c1c;
@@ -407,17 +408,17 @@ body::before {
   position: absolute;
   top: 3px; left: 50%;
   transform: translateX(-50%);
-  width: 3px; height: 9px;
+  width: 2px; height: 7px;
   background: #888;
   border-radius: 2px;
 }
 
 .body-main {
   position: absolute;
-  top: 110px; left: 0; right: 0;
-  height: 210px;
+  top: 88px; left: 0; right: 0;
+  height: 172px;
   background: linear-gradient(180deg, #1e1e1e, #0a0a0a);
-  border-radius: 18px;
+  border-radius: 14px;
   border: 2px solid #0a0a0a;
   box-shadow:
     inset 0 2px 4px rgba(255,255,255,.06),
@@ -428,31 +429,31 @@ body::before {
 .body-main::before {
   content: '';
   position: absolute;
-  inset: 6px;
-  border-radius: 13px;
+  inset: 5px;
+  border-radius: 10px;
   border: 1px solid rgba(0,229,255,.08);
   pointer-events: none;
 }
 
 .lcd {
   position: absolute;
-  top: 16px; left: 20px; right: 20px;
-  height: 65px;
+  top: 12px; left: 16px; right: 16px;
+  height: 52px;
   background: #0a1a0f;
   border: 2px solid #050505;
-  border-radius: 6px;
+  border-radius: 5px;
   box-shadow:
-    inset 0 0 14px rgba(0,255,136,.18),
+    inset 0 0 12px rgba(0,255,136,.18),
     inset 0 2px 4px rgba(0,0,0,.9),
-    0 0 14px rgba(0,255,136,.15);
+    0 0 12px rgba(0,255,136,.15);
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 6px 10px;
+  padding: 5px 8px;
   font-family: 'Courier New', monospace;
   color: var(--green);
   text-shadow: 0 0 7px rgba(0,255,136,.9);
-  font-size: 12px;
+  font-size: 10px;
   font-weight: 700;
   letter-spacing: .5px;
   line-height: 1.6;
@@ -461,34 +462,34 @@ body::before {
 .lcd-row {
   display: flex;
   justify-content: space-between;
-  font-size: 11.5px;
+  font-size: 9.5px;
 }
 
 .lcd-row .lcd-label { color: #00cc70; }
 
 .side-btns {
   position: absolute;
-  top: 92px; left: 12px; right: 12px;
+  top: 74px; left: 10px; right: 10px;
   display: flex;
   justify-content: space-between;
-  font-size: 8px;
+  font-size: 7px;
   color: #666;
   letter-spacing: .5px;
   font-weight: 700;
 }
 
 .side-btn {
-  padding: 2px 7px;
+  padding: 2px 6px;
   background: #1a1a1a;
-  border-radius: 4px;
+  border-radius: 3px;
   border: 1px solid #2a2a2a;
 }
 
 .speaker-grill {
   position: absolute;
-  bottom: 14px; left: 24px; right: 24px;
-  height: 46px;
-  border-radius: 6px;
+  bottom: 10px; left: 20px; right: 20px;
+  height: 38px;
+  border-radius: 5px;
   background: repeating-linear-gradient(90deg,
     #050505 0, #050505 3px,
     #1a1a1a 3px, #1a1a1a 6px);
@@ -497,10 +498,10 @@ body::before {
 
 .ptt-btn {
   position: absolute;
-  top: 140px; left: 50%;
+  top: 112px; left: 50%;
   transform: translateX(-50%);
-  width: 105px; height: 62px;
-  border-radius: 14px;
+  width: 85px; height: 50px;
+  border-radius: 12px;
   background: linear-gradient(180deg, #0a2a3a, #041520);
   border: 2px solid var(--cyan);
   box-shadow:
@@ -512,7 +513,7 @@ body::before {
   justify-content: center;
   color: var(--cyan);
   font-weight: 900;
-  font-size: 23px;
+  font-size: 19px;
   letter-spacing: 2px;
   text-shadow: 0 0 12px rgba(0,229,255,.95);
   cursor: pointer;
@@ -534,9 +535,9 @@ body::before {
 
 .ptt-sub {
   position: absolute;
-  top: 212px; left: 50%;
+  top: 168px; left: 50%;
   transform: translateX(-50%);
-  font-size: 8px;
+  font-size: 7px;
   color: var(--cyan-dark);
   letter-spacing: 1.5px;
   font-weight: 700;
@@ -545,8 +546,8 @@ body::before {
 
 .ab-indicator {
   position: absolute;
-  top: 175px; right: 14px;
-  font-size: 9px;
+  top: 140px; right: 12px;
+  font-size: 8px;
   color: #555;
   font-weight: 700;
 }
@@ -951,6 +952,7 @@ body::before {
 }
 .chat-input-bar.active { display: flex; }
 
+/* ✅ تم تصغير زر PTT في الدردشة */
 .chat-ptt {
   width: 46px; height: 46px;
   border-radius: 50%;
@@ -960,7 +962,7 @@ body::before {
   align-items: center;
   justify-content: center;
   color: #fff;
-  font-size: 24px;
+  font-size: 22px;
   cursor: pointer;
   flex-shrink: 0;
   box-shadow: 0 0 16px rgba(255,42,77,.55);
@@ -983,8 +985,9 @@ body::before {
   letter-spacing: .5px;
 }
 
+/* ✅ تم تصغير زر الإرسال */
 .chat-send {
-  width: 44px; height: 44px;
+  width: 46px; height: 46px;
   border-radius: 50%;
   background: linear-gradient(180deg, #00e5ff, #008fa8);
   border: 1.5px solid var(--cyan);
@@ -992,7 +995,7 @@ body::before {
   align-items: center;
   justify-content: center;
   color: #001418;
-  font-size: 22px;
+  font-size: 20px;
   cursor: pointer;
   flex-shrink: 0;
   box-shadow: 0 0 16px rgba(0,229,255,.55);
@@ -1004,11 +1007,8 @@ body::before {
   transform: scale(.9);
   box-shadow: 0 0 28px rgba(0,229,255,.95);
 }
-.chat-send:disabled {
-  opacity: .5;
-}
+.chat-send:disabled { opacity: .5; }
 
-/* ✅ أزرار الأيقونات داخل حقل الإدخال */
 .chat-icon-btn {
   background: none;
   border: none;
@@ -1025,13 +1025,8 @@ body::before {
 }
 .chat-icon-btn:active { color: var(--cyan); }
 
-/* ✅ إظهار/إخفاء الأزرار حسب الكتابة */
 .chat-input-bar.typing .chat-ptt { display: none; }
 .chat-input-bar.typing .chat-send { display: flex; }
-.chat-input-bar.typing .chat-icon-btn[id="chatCamera"],
-.chat-input-bar.typing .chat-icon-btn[id="chatClip"] {
-  display: none;
-}
 
 .chat-input-wrap {
   flex: 1;
@@ -1042,7 +1037,7 @@ body::before {
   border: 1px solid var(--border);
   border-radius: 26px;
   padding: 6px 12px;
-  min-height: 48px;
+  min-height: 46px;
 }
 
 .chat-input {
@@ -1225,10 +1220,7 @@ body::before {
   box-shadow: 0 0 18px rgba(255,42,77,.4);
 }
 .modal-btn:active { transform: scale(.97); }
-.modal-btn:disabled {
-  opacity: .4;
-  cursor: not-allowed;
-}
+.modal-btn:disabled { opacity: .4; cursor: not-allowed; }
 
 .search-result-card {
   display: flex;
@@ -1770,7 +1762,6 @@ body::before {
     <button class="chat-send" id="chatSend" onclick="handleSend()" title="إرسال" disabled>➤</button>
 
     <div class="chat-input-wrap">
-      <button class="chat-icon-btn" id="chatCamera" title="كاميرا">📷</button>
       <button class="chat-icon-btn" id="chatClip" title="إرفاق">📎</button>
       <input type="text" class="chat-input" id="chatInput" placeholder="اكتب رسالة...">
       <button class="chat-icon-btn" id="chatEmoji" title="إيموجي">😊</button>
@@ -1937,6 +1928,10 @@ body::before {
       <button class="attach-item" onclick="pickContact()">
         <span class="attach-icon">👥</span>
         <span>جهة اتصال</span>
+      </button>
+      <button class="attach-item" onclick="closeModal('modalAttach'); openCamera();">
+        <span class="attach-icon">📷</span>
+        <span>كاميرا</span>
       </button>
     </div>
 
@@ -2117,7 +2112,7 @@ body::before {
 <input type="file" id="hiddenFileInput" style="display:none;">
 
 <script>
-  /* ==========================================
+ /* ==========================================
    ✅ الاتصال بالسيرفر (Socket.io)
    ========================================== */
 const SERVER_URL = "https://radio-connect-server.onrender.com";
@@ -2766,10 +2761,6 @@ document.getElementById('chatClip').addEventListener('click', () => {
   openModal('modalAttach');
 });
 
-document.getElementById('chatCamera').addEventListener('click', () => {
-  openCamera();
-});
-
 function pickFile(type) {
   const input = document.getElementById('hiddenFileInput');
   if (type === 'image')    input.accept = 'image/*';
@@ -2790,11 +2781,10 @@ function pickFile(type) {
   input.click();
 }
 
-
+/* ✅ جهات الاتصال الحقيقية (Android) */
 async function pickContact() {
   closeModal('modalAttach');
 
-  // ✅ محاولة فتح قائمة جهات الاتصال الحقيقية
   if ('contacts' in navigator && 'select' in navigator.contacts) {
     try {
       const props = ['name', 'tel'];
@@ -2813,11 +2803,9 @@ async function pickContact() {
       return;
     } catch (e) {
       console.warn('لم يستطع فتح جهات الاتصال:', e);
-      // سنستخدم النافذة اليدوية كحل بديل
     }
   }
 
-  // ✅ حل بديل (iOS أو متصفح لا يدعم Contacts API)
   document.getElementById('contactName').value = '';
   document.getElementById('contactPhone').value = '';
   openModal('modalContact');
@@ -3088,7 +3076,6 @@ function addContactMessage(contact) {
 const chatInput = document.getElementById('chatInput');
 const chatSend  = document.getElementById('chatSend');
 
-// ✅ تعديل: إظهار/إخفاء الأزرار حسب الكتابة
 chatInput.addEventListener('input', () => {
   const isEmpty = chatInput.value.trim().length === 0;
   chatSend.disabled = isEmpty;
@@ -3275,6 +3262,6 @@ document.addEventListener('contextmenu', e => e.preventDefault());
 window.addEventListener('beforeunload', () => {
   if (cameraStream) cameraStream.getTracks().forEach(t => t.stop());
 });
-  </script>
+ </script>
 </body>
-</html>
+</html> 
