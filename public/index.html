@@ -2833,6 +2833,39 @@ function pickFile(type) {
 async function pickContact() {
   closeModal('modalAttach');
 
+  // ✅ أولاً: محاولة استخدام Capacitor Contacts (للـ APK)
+  try {
+    if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Contacts) {
+      const Contacts = window.Capacitor.Plugins.Contacts;
+      
+      const permStatus = await Contacts.requestPermissions();
+      if (permStatus.contacts !== 'granted') {
+        toast('⚠️ يجب السماح بالوصول لجهات الاتصال', 'error');
+        return;
+      }
+
+      const result = await Contacts.pickContact({
+        projection: {
+          name: true,
+          phones: true
+        }
+      });
+
+      if (result && result.name) {
+        const name = result.name.display || result.name.given || 'بدون اسم';
+        const phone = (result.phones && result.phones[0] && result.phones[0].number) || '';
+        if (phone) {
+          addContactMessage({ name, phone });
+          return;
+        }
+      }
+      return;
+    }
+  } catch (e) {
+    console.warn('Capacitor Contacts غير متاح:', e);
+  }
+
+  // ✅ ثانياً: Contacts API (للمتصفح)
   if ('contacts' in navigator && 'select' in navigator.contacts) {
     try {
       const props = ['name', 'tel'];
@@ -2850,9 +2883,16 @@ async function pickContact() {
       }
       return;
     } catch (e) {
-      console.warn('لم يستطع فتح جهات الاتصال:', e);
+      console.warn('Contacts API غير متاح:', e);
     }
   }
+
+  // ✅ ثالثاً: الإدخال اليدوي (الحل الأخير)
+  document.getElementById('contactName').value = '';
+  document.getElementById('contactPhone').value = '';
+  openModal('modalContact');
+  toast('📱 اكتب بيانات جهة الاتصال يدوياً', 'success');
+}
 
   document.getElementById('contactName').value = '';
   document.getElementById('contactPhone').value = '';
