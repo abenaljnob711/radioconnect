@@ -62,6 +62,7 @@ body::before {
   margin: 0 auto;
 }
 
+/* ✅ التعديل: الترتيب من الأسفل للأعلى (مثل الواتساب) */
 .screen {
   flex: 1;
   overflow-y: auto;
@@ -70,9 +71,24 @@ body::before {
   padding: 14px 14px 160px;
   animation: fadeIn .3s ease;
   scrollbar-width: none;
+  display: flex;
+  flex-direction: column-reverse;
 }
+/* ✅ تعديل خاص: إعادة الشاشات الأخرى للوضع الطبيعي */
+#screen-radio, #screen-settings {
+  flex-direction: column !important;
+}
+
 .screen::-webkit-scrollbar { display: none; }
 .screen.active { display: block; }
+/* ✅ التعديل: تفعيل الفليكس للشاشة النشطة */
+.screen.active {
+  display: flex;
+  flex-direction: column-reverse;
+}
+#screen-radio.active, #screen-settings.active {
+  flex-direction: column !important;
+}
 
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(8px); }
@@ -381,7 +397,7 @@ body::before {
   transition: all .15s ease;
 }
 
-/* ✅ التعديل 1: كلاس الإضاءة الخضراء لرأس الأريل */
+/* ✅ كلاس الإضاءة الخضراء لرأس الأريل */
 .antenna.transmitting::before {
   background: #00ff00 !important;
   box-shadow: 0 0 12px #00ff00, 0 0 24px #00ff00 !important;
@@ -2688,7 +2704,7 @@ const lcdStatus = document.getElementById('lcdStatus');
 function onPTTStartWave(btn) {
   btn.classList.add('holding');
   
-  // ✅ التعديل 2: إضاءة رأس الأريل باللون الأخضر
+  // ✅ إضاءة رأس الأريل باللون الأخضر
   const antenna = document.querySelector('.antenna');
   if (antenna) antenna.classList.add('transmitting');
   
@@ -2703,7 +2719,7 @@ function onPTTStartWave(btn) {
 function onPTTStopWave(btn) {
   btn.classList.remove('holding');
   
-  // ✅ التعديل 3: إطفاء إضاءة رأس الأريل
+  // ✅ إطفاء إضاءة رأس الأريل
   const antenna = document.querySelector('.antenna');
   if (antenna) antenna.classList.remove('transmitting');
   
