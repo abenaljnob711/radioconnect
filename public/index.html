@@ -1495,47 +1495,6 @@ body::before {
   box-shadow: 0 0 18px rgba(255,42,77,.4);
 }
 .delete-confirm-btn:active { transform: scale(.97); }
-
-.camera-modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,.95);
-  z-index: 900;
-  display: none;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-}
-.camera-modal-overlay.show { display: flex; }
-.camera-preview {
-  width: 100%;
-  max-width: 400px;
-  border-radius: 12px;
-  border: 2px solid var(--cyan);
-  background: #000;
-}
-.camera-actions {
-  display: flex;
-  gap: 12px;
-  margin-top: 16px;
-}
-.camera-btn {
-  padding: 12px 24px;
-  border-radius: 10px;
-  border: 1px solid var(--cyan);
-  background: linear-gradient(180deg, #00e5ff, #008fa8);
-  color: #001418;
-  font-family: inherit;
-  font-size: 14px;
-  font-weight: 800;
-  cursor: pointer;
-}
-.camera-btn.cancel {
-  background: transparent;
-  color: var(--text-dim);
-  border-color: var(--border);
-}
 </style>
 </head>
 <body>
@@ -2102,17 +2061,38 @@ body::before {
   </div>
 </div>
 
-<div class="camera-modal-overlay" id="cameraOverlay">
-  <video id="cameraPreview" class="camera-preview" autoplay playsinline></video>
-  <div class="camera-actions">
-    <button class="camera-btn cancel" onclick="closeCamera()">❌ إلغاء</button>
-    <button class="camera-btn" onclick="capturePhoto()">📸 التقاط</button>
-  </div>
-</div>
-
 <input type="file" id="hiddenFileInput" style="display:none;">
 
 <script>
+  /* ==========================================
+   ✅ بيانات المستخدم (يُعرَّف أولاً)
+   ========================================== */
+  const savedUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+
+  let currentUser = {
+    id: savedUser.id || 'Q' + Math.floor(100 + Math.random() * 900),
+    name: savedUser.name || 'أنا',
+    waveCode: savedUser.waveCode || null,
+    waveName: savedUser.waveName || null,
+    roomCode: savedUser.roomCode || null,
+    roomName: savedUser.roomName || null,
+    roomIcon: savedUser.roomIcon || '💬'
+  };
+
+  function saveCurrentUser() {
+    try {
+      localStorage.setItem('currentUser', JSON.stringify(currentUser));
+    } catch (e) {
+      console.warn('فشل حفظ البيانات:', e);
+    }
+  }
+
+  document.getElementById('userIdValue').textContent = currentUser.id;
+
+  let batteryPercent = null;
+  let menuBusy = false;
+  let searchResultUser = null;
+
   /* ==========================================
    ✅ الاتصال بالسيرفر (Socket.io)
    ========================================== */
@@ -2157,35 +2137,6 @@ body::before {
   socket.on("connect_error", (err) => {
     console.error("خطأ الاتصال:", err.message);
   });
-
-  /* ==========================================
-   ✅ بيانات المستخدم
-   ========================================== */
-  const savedUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
-
-  let currentUser = {
-    id: savedUser.id || 'Q' + Math.floor(100 + Math.random() * 900),
-    name: savedUser.name || 'أنا',
-    waveCode: savedUser.waveCode || null,
-    waveName: savedUser.waveName || null,
-    roomCode: savedUser.roomCode || null,
-    roomName: savedUser.roomName || null,
-    roomIcon: savedUser.roomIcon || '💬'
-  };
-
-  function saveCurrentUser() {
-    try {
-      localStorage.setItem('currentUser', JSON.stringify(currentUser));
-    } catch (e) {
-      console.warn('فشل حفظ البيانات:', e);
-    }
-  }
-
-  document.getElementById('userIdValue').textContent = currentUser.id;
-
-  let batteryPercent = null;
-  let menuBusy = false;
-  let searchResultUser = null;
 
   /* ==========================================
    ✅ أحداث Socket الواردة
@@ -2828,7 +2779,7 @@ body::before {
   }
 
   /* ==========================================
-   ✅ الكاميرا
+   ✅ الكاميرا (فتح كاميرا الجوال الأصلية)
    ========================================== */
   function openCamera() {
     const input = document.createElement('input');
@@ -3359,10 +3310,6 @@ body::before {
   });
 
   document.addEventListener('contextmenu', e => e.preventDefault());
-
-  window.addEventListener('beforeunload', () => {
-    if (cameraStream) cameraStream.getTracks().forEach(t => t.stop());
-  });
 </script>
 </body>
 </html>
