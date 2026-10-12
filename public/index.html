@@ -2157,11 +2157,1117 @@ function respondWaveRequest(accepted) {
   pendingWaveRequest = null;
 }
 
-/* ==========================================================
-   ⚠️ الجزء 2 (بقية JavaScript) سيأتي في الرد التالي
-   ========================================================== */
 
-// --- ضع هنا علامة الانتظار ---
-// </script>
-// </body>
-// </html>
+/* ==========================================
+   محرك الصوت (PTT + البث الحي)
+   ========================================== */
+const PTTEngine = {
+  audioCtx: null,
+  micStream: null,
+  mediaRecorder: null,
+  recordedChunks: [],
+  isRecording: false,
+  livekitRoom: null,
+
+  async init() {
+    if (this.audioCtx) return true;
+    try {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      this.audioCtx = new AC();
+      if (this.audioCtx.state === 'suspended') await this.audioCtx.resume();
+      return true;
+    } catch (e) {
+      console.error('فشل تهيئة الصوت:', e);
+      return false;
+    }
+  },
+
+  playBeep(freq = 1200, dur = 0.18, vol = 0.9) {
+    if (!this.audioCtx) return;
+    try {
+      const sr = this.audioCtx.sampleRate;
+      const len = Math.floor(sr * dur);
+      const buf = this.audioCtx.createBuffer(1, len, sr);
+      const ch = buf.getChannelData(0);
+      for (let i = 0; i < len; i++) {
+        const t = i / sr;
+        const env = Math.exp(-8 * t) * Math.min(1, t * 60);
+        ch[i] = Math.sin(2 * Math.PI * freq * t) * env;
+      }
+      const src = this.audioCtx.createBufferSource();
+      const gain = this.audioCtx.createGain();
+      src.buffer = buf;
+      gain.gain.value = vol;
+      src.connect(gain).connect(this.audioCtx.destination);
+      src.start();
+    } catch (e) {}
+  },
+
+  /* ✅ PTT في الراديو = بث حي عبر LiveKit */
+  async startBroadcastWave() {
+    if (!currentUser.waveCode) {
+      toast('⚠️ لا توجد موجة بعد', 'error');
+      return false;
+    }
+    await this.init();
+
+    try {
+      // احصل على token من السيرفر
+      const res = await fetch(SERVER_URL + "/api/livekit/token", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          roomId: "wave_" + currentUser.waveCode,
+          deviceId: currentUser.id,
+          userName: currentUser.name
+        })
+      });
+
+      const data = await res.json();
+      if (!data.success) {
+        toast('❌ فشل الحصول على تصريح البث', 'error');
+        return false;
+      }
+
+      // الاتصال بـ LiveKit
+      if (typeof LivekitClient === 'undefined') {
+        toast('❌ LiveKit غير محمّل', 'error');
+        return false;
+      }
+
+      const { Room, RoomEvent, Track } = LivekitClient;
+      this.livekitRoom = new Room({
+        adaptiveStream: true,
+        dynacast: true
+      });
+
+      await this.livekitRoom.connect(data.url, data.token);
+
+      // فعّل الميكروفون وانشر الصوت
+      await this.livekitRoom.localParticipant.setMicrophoneEnabled(true);
+
+      // beep البدء
+      this.playBeep(1200, 0.15, 0.9);
+      setTimeout(() => this.playBeep(1400, 0.15, 0.9), 130);
+
+      // أبلغ السيرفر ببدء البث
+      socket.emit("wave_broadcast_start", {
+        waveId: currentUser.waveCode,
+        deviceId: currentUser.id,
+        userName: currentUser.name
+      });
+
+      this.isRecording = true;
+      return true;
+    } catch (e) {
+      console.error('فشل البث:', e);
+      toast('❌ فشل بدء البث الحي', 'error');
+      return false;
+    }
+  },
+
+  async stopBroadcastWave() {
+    if (!this.isRecording) return;
+    this.isRecording = false;
+
+    try {
+      if (this.livekitRoom) {
+        await this.livekitRoom.disconnect();
+        this.livekitRoom = null;
+      }
+    } catch (e) {}
+
+    // beep الإيقاف
+    this.playBeep(700, 0.25, 0.85);
+
+    // أبلغ السيرفر
+    socket.emit("wave_broadcast_stop", {
+      waveId: currentUser.waveCode,
+      deviceId: currentUser.id
+    });
+  },
+
+  /* ✅ PTT في الغرفة = رسالة صوتية */
+  async startVoiceMessage() {
+    if (!currentUser.roomCode) {
+      toast('⚠️ لا توجد غرفة بعد', 'error');
+      return false;
+    }
+    if (this.isRecording) return false;
+    await this.init();
+
+    try {
+      this.micStream = await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
+      });
+      this.recordedChunks = [];
+      this.mediaRecorder = new MediaRecorder(this.micStream);
+      this.mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) this.recordedChunks.push(e.data);
+      };
+      this.mediaRecorder.start(100);
+      this.isRecording = true;
+      return true;
+    } catch (e) {
+      console.error('فشل الميكروفون:', e);
+      toast('❌ تعذّر الوصول للميكروفون', 'error');
+      return false;
+    }
+  },
+
+  async stopVoiceMessage() {
+    if (!this.isRecording) return;
+    this.isRecording = false;
+
+    if (this.mediaRecorder && this.mediaRecorder.state === 'recording') {
+      this.mediaRecorder.stop();
+    }
+    if (this.micStream) {
+      this.micStream.getTracks().forEach(t => t.stop());
+      this.micStream = null;
+    }
+
+    setTimeout(() => {
+      if (this.recordedChunks.length > 0) {
+        const blob = new Blob(this.recordedChunks, { type: 'audio/webm' });
+        const url = URL.createObjectURL(blob);
+        const duration = this.recordedChunks.length * 0.1;
+        addVoiceMessage(url, duration);
+      }
+      this.recordedChunks = [];
+    }, 200);
+  }
+};
+
+/* ==========================================
+   دوال مساعدة
+   ========================================== */
+function nowId() {
+  return 'msg_' + Date.now() + '_' + Math.floor(Math.random() * 9999);
+}
+
+function fmtTime(d) {
+  return d.getHours().toString().padStart(2, '0') + ':' +
+         d.getMinutes().toString().padStart(2, '0');
+}
+
+function escapeHtml(s) {
+  const div = document.createElement('div');
+  div.textContent = s == null ? '' : s;
+  return div.innerHTML;
+}
+
+function checkEmptyRoom() {
+  if (document.getElementById('roomMessages').children.length === 0) {
+    document.getElementById('emptyRoom').style.display = 'flex';
+    document.getElementById('roomBadge').style.display = 'none';
+  }
+}
+
+let toastTimer;
+function toast(msg, type = '') {
+  let el = document.getElementById('toast');
+  if (!el) {
+    el = document.createElement('div');
+    el.className = 'toast';
+    el.id = 'toast';
+    document.body.appendChild(el);
+  }
+  el.textContent = msg;
+  el.className = 'toast ' + type;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2400);
+}
+
+function openModal(id) { document.getElementById(id).classList.add('show'); closeSideMenu(); }
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) overlay.classList.remove('show');
+  });
+});
+
+/* ==========================================
+   القوائم الجانبية
+   ========================================== */
+const sideMenu = document.getElementById('sideMenu');
+const menuBackdrop = document.getElementById('menuBackdrop');
+const menuToggle = document.getElementById('menuToggle');
+
+function openSideMenu() {
+  sideMenu.classList.add('open');
+  menuBackdrop.classList.add('show');
+}
+
+function closeSideMenu() {
+  sideMenu.classList.remove('open');
+  menuBackdrop.classList.remove('show');
+}
+
+menuToggle.addEventListener('click', (e) => {
+  e.stopPropagation();
+  if (menuBusy) return;
+  menuBusy = true;
+  setTimeout(() => menuBusy = false, 300);
+  if (sideMenu.classList.contains('open')) closeSideMenu();
+  else openSideMenu();
+});
+menuBackdrop.addEventListener('click', closeSideMenu);
+
+/* ==========================================
+   التبويبات
+   ========================================== */
+function switchTab(tabName) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('screen-' + tabName).classList.add('active');
+  document.querySelector(`.tab[data-tab="${tabName}"]`).classList.add('active');
+
+  const chatBar = document.getElementById('chatInputBar');
+  const bottomInfo = document.getElementById('bottomInfo');
+
+  if (tabName === 'log') {
+    chatBar.classList.add('active');
+    bottomInfo.style.display = 'none';
+  } else {
+    chatBar.classList.remove('active');
+    bottomInfo.style.display = 'block';
+  }
+
+  if (sideMenu && sideMenu.classList.contains('open')) closeSideMenu();
+}
+
+/* ==========================================
+   البطارية
+   ========================================== */
+async function initBattery() {
+  if (!navigator.getBattery) {
+    document.getElementById('batteryValue').textContent = '—';
+    document.getElementById('bottomBattery').textContent = '—';
+    return;
+  }
+  try {
+    const battery = await navigator.getBattery();
+    const update = () => {
+      batteryPercent = Math.round(battery.level * 100);
+      document.getElementById('batteryValue').textContent = batteryPercent + '%';
+      document.getElementById('bottomBattery').textContent = batteryPercent + '%';
+    };
+    update();
+    battery.addEventListener('levelchange', update);
+  } catch (e) {}
+}
+
+/* ==========================================
+   الغرف
+   ========================================== */
+function openCreateRoom() { openModal('modalCreate'); }
+
+async function createRoom() {
+  const name = document.getElementById('roomName').value.trim();
+  const ch = document.getElementById('roomChannel').value.trim();
+  if (!name) { toast('⚠️ أدخل اسم الغرفة', 'error'); return; }
+  if (!/^\d{1,2}$/.test(ch)) { toast('⚠️ رقم قناة غير صالح', 'error'); return; }
+
+  try {
+    const res = await fetch(SERVER_URL + "/api/rooms/create", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: name,
+        channel: ch.padStart(2, '0'),
+        deviceId: currentUser.id
+      })
+    });
+    const data = await res.json();
+    if (!data.success) { toast("⚠️ فشل إنشاء الغرفة", "error"); return; }
+
+    currentUser.roomName = name;
+    currentUser.roomCode = data.roomId;
+
+    await PTTEngine.init();
+    PTTEngine.playBeep(1200, 0.2);
+
+    document.getElementById('createdRoomCode').textContent = data.roomId;
+    document.getElementById('roomName').value = '';
+    document.getElementById('roomChannel').value = '07';
+    closeModal('modalCreate');
+    openModal('modalRoomCreated');
+
+    document.getElementById('roomNameLabel').textContent = name;
+    document.getElementById('roomIcon').textContent = '💬';
+    document.getElementById('roomBadge').style.display = 'block';
+    document.getElementById('roomUsers').style.display = 'flex';
+    document.getElementById('emptyRoom').style.display = 'none';
+    document.getElementById('roomSubLabel').textContent = `📻 ${data.roomId}`;
+    document.getElementById('lcdLine1').textContent = data.roomId;
+
+    socket.emit("join_room", {
+      roomId: data.roomId,
+      deviceId: currentUser.id,
+      userName: currentUser.name
+    });
+
+    saveCurrentUser();
+    toast(`✅ تم إنشاء الغرفة "${name}"`, 'success');
+  } catch (e) {
+    console.error(e);
+    toast("❌ خطأ في الاتصال بالسيرفر", "error");
+  }
+}
+
+function copyRoomCode() {
+  if (!currentUser.roomCode) return;
+  navigator.clipboard.writeText(currentUser.roomCode).then(() => {
+    toast('📋 تم نسخ رقم الغرفة', 'success');
+  }).catch(() => {
+    toast('رقم الغرفة: ' + currentUser.roomCode, 'success');
+  });
+}
+
+function openEditRoomName() {
+  closeModal('modalRoomMenu');
+  document.getElementById('newRoomName').value = currentUser.roomName || '';
+  openModal('modalEditName');
+}
+
+function saveRoomName() {
+  const name = document.getElementById('newRoomName').value.trim();
+  if (!name) { toast('⚠️ أدخل اسماً', 'error'); return; }
+  currentUser.roomName = name;
+  document.getElementById('roomNameLabel').textContent = name;
+  saveCurrentUser();
+  toast(`✅ تم تحديث اسم الغرفة`, 'success');
+  closeModal('modalEditName');
+}
+
+function openEditRoomIcon() {
+  closeModal('modalRoomMenu');
+  const current = document.getElementById('roomIcon').textContent;
+  document.querySelectorAll('#iconGrid .icon-option').forEach(el => {
+    el.classList.toggle('selected', el.dataset.icon === current);
+  });
+  openModal('modalEditIcon');
+}
+
+document.querySelectorAll('#iconGrid .icon-option').forEach(el => {
+  el.addEventListener('click', () => {
+    const icon = el.dataset.icon;
+    document.getElementById('roomIcon').textContent = icon;
+    currentUser.roomIcon = icon;
+    saveCurrentUser();
+    toast(`✅ تم تغيير الأيقونة`, 'success');
+    closeModal('modalEditIcon');
+  });
+});
+
+function confirmClearChat() {
+  closeModal('modalRoomMenu');
+  openModal('modalClearChat');
+}
+
+function doClearChat() {
+  document.getElementById('roomMessages').innerHTML = '';
+  document.getElementById('emptyRoom').style.display = 'flex';
+  document.getElementById('roomBadge').style.display = 'none';
+  document.getElementById('roomUsers').style.display = 'none';
+  toast('🗑️ تم مسح الدردشة', 'success');
+  closeModal('modalClearChat');
+}
+
+document.getElementById('roomMenuBtn').addEventListener('click', () => {
+  openModal('modalRoomMenu');
+});
+
+/* ==========================================
+   البحث عن غرفة
+   ========================================== */
+function openSearchFromRoom() {
+  closeModal('modalRoomMenu');
+  document.getElementById('searchQuery').value = '';
+  document.getElementById('searchResults').innerHTML = `
+    <div class="no-results">
+      <span class="no-results-icon">🔎</span>
+      اكتب رقم الغرفة (مثل RAD-0B16DD) واضغط بحث
+    </div>
+  `;
+  openModal('modalSearch');
+}
+
+async function doSearch() {
+  const q = document.getElementById('searchQuery').value.trim().toUpperCase();
+  const results = document.getElementById('searchResults');
+  if (!q) {
+    results.innerHTML = `<div class="no-results"><span class="no-results-icon">⚠️</span>اكتب رقم الغرفة أولاً</div>`;
+    return;
+  }
+  results.innerHTML = `<div class="no-results"><span class="no-results-icon">⏳</span>جاري البحث...</div>`;
+
+  try {
+    const res = await fetch(SERVER_URL + "/api/search/" + encodeURIComponent(q));
+    if (!res.ok) {
+      results.innerHTML = `<div class="no-results"><span class="no-results-icon">❌</span>لا توجد غرفة بهذا الرقم</div>`;
+      return;
+    }
+    const data = await res.json();
+    searchResultUser = { code: data.roomId, name: data.roomName };
+    results.innerHTML = `
+      <div class="search-result-card" onclick="openJoinConfirm()">
+        <div class="search-result-icon">💬</div>
+        <div class="search-result-info">
+          <div class="search-result-name">${escapeHtml(data.roomName)}</div>
+          <div class="search-result-code">${data.roomId} • ${data.membersCount} عضو</div>
+        </div>
+        <span style="color:var(--cyan);font-size:18px;">→</span>
+      </div>
+    `;
+  } catch (e) {
+    results.innerHTML = `<div class="no-results"><span class="no-results-icon">❌</span>خطأ في الاتصال بالسيرفر</div>`;
+  }
+}
+
+function openJoinConfirm() {
+  if (!searchResultUser) return;
+  document.getElementById('joinTargetName').textContent = searchResultUser.name;
+  document.getElementById('joinTargetCode').textContent = searchResultUser.code;
+  closeModal('modalSearch');
+  openModal('modalJoinConfirm');
+}
+
+function cancelJoin() {
+  closeModal('modalJoinConfirm');
+  toast('❌ تم الإلغاء');
+  searchResultUser = null;
+}
+
+async function confirmJoin() {
+  if (!searchResultUser) return;
+  try {
+    const res = await fetch(SERVER_URL + "/api/rooms/join", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        roomId: searchResultUser.code,
+        deviceId: currentUser.id,
+        userName: currentUser.name
+      })
+    });
+    const data = await res.json();
+    if (!data.success) { toast("⚠️ فشل الانضمام", "error"); return; }
+
+    currentUser.roomCode = data.roomId;
+    currentUser.roomName = data.roomName;
+
+    await PTTEngine.init();
+    PTTEngine.playBeep(1200, 0.2);
+
+    document.getElementById('roomNameLabel').textContent = data.roomName;
+    document.getElementById('roomBadge').style.display = 'block';
+    document.getElementById('roomUsers').style.display = 'flex';
+    document.getElementById('emptyRoom').style.display = 'none';
+    document.getElementById('roomSubLabel').textContent = `📻 ${data.roomId}`;
+
+    socket.emit("join_room", {
+      roomId: data.roomId,
+      deviceId: currentUser.id,
+      userName: currentUser.name
+    });
+
+    saveCurrentUser();
+    closeModal('modalJoinConfirm');
+    toast(`✅ انضممت إلى "${data.roomName}"`, 'success');
+    switchTab('log');
+  } catch (e) {
+    console.error(e);
+    toast("❌ خطأ في الانضمام", 'error');
+  }
+  searchResultUser = null;
+}
+
+/* ==========================================
+   المرفقات
+   ========================================== */
+document.getElementById('chatClip').addEventListener('click', () => {
+  openModal('modalAttach');
+});
+
+function pickFile(type) {
+  const input = document.getElementById('hiddenFileInput');
+  if (type === 'image')    input.accept = 'image/*';
+  if (type === 'video')    input.accept = 'video/*';
+  if (type === 'document') input.accept = '.pdf,.doc,.docx,.txt,.xls,.xlsx,.ppt,.pptx,.zip';
+  input.value = '';
+  input.onchange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      closeModal('modalAttach');
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        addAttachmentMessage(type, file.name, ev.target.result, file.size);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+  input.click();
+}
+
+/* ✅ جهة الاتصال من دفتر الجوال */
+async function pickContact() {
+  closeModal('modalAttach');
+
+  // محاولة استخدام Contacts API (أندرويد كروم)
+  if ('contacts' in navigator && 'select' in navigator.contacts) {
+    try {
+      const props = ['name', 'tel'];
+      const opts = { multiple: false };
+      const contacts = await navigator.contacts.select(props, opts);
+
+      if (contacts && contacts.length > 0) {
+        const c = contacts[0];
+        const name = (c.name && c.name[0]) || 'بدون اسم';
+        const phone = (c.tel && c.tel[0]) || '';
+        if (phone) {
+          addContactMessage({ name, phone });
+          return;
+        }
+      }
+      return;
+    } catch (e) {
+      console.warn('فشل فتح دفتر الجهات:', e);
+    }
+  }
+
+  // احتياطي: إدخال يدوي
+  document.getElementById('contactName').value = '';
+  document.getElementById('contactPhone').value = '';
+  openModal('modalContact');
+  toast('📱 اكتب البيانات يدوياً (المتصفح لا يدعم جهات الاتصال)', 'success');
+}
+
+function sendContact() {
+  const name = document.getElementById('contactName').value.trim();
+  const phone = document.getElementById('contactPhone').value.trim();
+  if (!name || !phone) { toast('⚠️ املأ الحقلين', 'error'); return; }
+  closeModal('modalContact');
+  addContactMessage({ name, phone });
+}
+
+/* ==========================================
+   الكاميرا
+   ========================================== */
+function openCamera() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.capture = 'environment';
+  input.onchange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        addAttachmentMessage('image', 'صورة_' + Date.now() + '.jpg', ev.target.result, file.size);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+  input.click();
+}
+
+function showFullImage(dataUrl) {
+  const overlay = document.createElement('div');
+  overlay.style.cssText = `
+    position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:9999;
+    display:flex;align-items:center;justify-content:center;padding:20px;
+    cursor:zoom-out;
+  `;
+  overlay.innerHTML = `<img src="${dataUrl}" style="max-width:100%;max-height:100%;border-radius:8px;">`;
+  overlay.addEventListener('click', () => overlay.remove());
+  document.body.appendChild(overlay);
+}
+
+/* ==========================================
+   الموجات الصوتية
+   ========================================== */
+function generateWaveform(container) {
+  if (!container) return;
+  container.innerHTML = '';
+  for (let i = 0; i < 40; i++) {
+    const span = document.createElement('span');
+    const amp = Math.random() * 26 + 4;
+    span.style.height = Math.max(4, amp) + 'px';
+    container.appendChild(span);
+  }
+}
+
+function playRealVoice(btn, url) {
+  if (btn.dataset.playing === '1') {
+    btn.textContent = '▶';
+    btn.dataset.playing = '0';
+    if (window._curAudio) {
+      window._curAudio.pause();
+      window._curAudio = null;
+    }
+    return;
+  }
+  document.querySelectorAll('.play-btn').forEach(b => {
+    b.textContent = '▶';
+    b.dataset.playing = '0';
+  });
+  const audio = new Audio(url);
+  window._curAudio = audio;
+  audio.volume = 1.0;
+  audio.play();
+  btn.textContent = '⏸';
+  btn.dataset.playing = '1';
+  audio.onended = () => {
+    btn.textContent = '▶';
+    btn.dataset.playing = '0';
+    window._curAudio = null;
+  };
+}
+
+/* ==========================================
+   عرض الرسائل
+   ========================================== */
+function renderOutgoingMessage(msg) {
+  const empty = document.getElementById('emptyRoom');
+  if (empty) empty.style.display = 'none';
+  const logScreen = document.getElementById('roomMessages');
+  const time = fmtTime(new Date(msg.time || Date.now()));
+  let bodyHtml = '';
+
+  if (msg.type === 'voice') {
+    bodyHtml = `
+      <div class="voice-msg">
+        <button class="play-btn" data-url="${msg.audioUrl}">▶</button>
+        <div class="waveform"></div>
+        <span style="font-size:18px;opacity:.7;">🎤</span>
+      </div>
+      <div class="voice-meta"><span>${msg.duration || '?'}ث</span><span>${time}</span></div>
+    `;
+  } else if (msg.type === 'image' || msg.type === 'video') {
+    const preview = msg.type === 'image'
+      ? `<img src="${msg.dataUrl}" style="max-width:100%;max-height:240px;border-radius:8px;display:block;margin-bottom:6px;cursor:pointer;" onclick="showFullImage('${msg.dataUrl}')" alt="">`
+      : `<video src="${msg.dataUrl}" style="max-width:100%;max-height:240px;border-radius:8px;display:block;margin-bottom:6px;" controls></video>`;
+    bodyHtml = `${preview}<div class="voice-meta"><span>${time}</span></div>`;
+  } else if (msg.type === 'contact') {
+    bodyHtml = `
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 4px;">
+        <span style="font-size:32px;">👤</span>
+        <div style="display:flex;flex-direction:column;gap:2px;">
+          <span style="font-size:13px;font-weight:700;color:#fff;">${escapeHtml(msg.contactName)}</span>
+          <span style="font-size:10px;color:rgba(255,255,255,.65);">${escapeHtml(msg.contactPhone)}</span>
+        </div>
+      </div>
+      <div class="voice-meta"><span>${time}</span></div>
+    `;
+  } else {
+    bodyHtml = `<div class="text-msg">${escapeHtml(msg.text)}</div><div class="voice-meta"><span>${time}</span></div>`;
+  }
+
+  const el = document.createElement('div');
+  el.className = 'msg msg-out';
+  el.dataset.msgId = msg.id;
+  el.innerHTML = `
+    <div class="msg-header"><span>📻 ${escapeHtml(msg.senderName || currentUser.name)} • الآن</span></div>
+    <div class="msg-body">${bodyHtml}</div>
+  `;
+  logScreen.appendChild(el);
+  attachLongPressHandler(el);
+  const wf = el.querySelector('.waveform');
+  if (wf) generateWaveform(wf);
+  const playBtn = el.querySelector('.play-btn');
+  if (playBtn && msg.audioUrl) playBtn.addEventListener('click', () => playRealVoice(playBtn, msg.audioUrl));
+  logScreen.scrollTop = logScreen.scrollHeight;
+  return el;
+}
+
+function renderIncomingMessage(msg) {
+  const empty = document.getElementById('emptyRoom');
+  if (empty) empty.style.display = 'none';
+  const logScreen = document.getElementById('roomMessages');
+  const time = fmtTime(new Date(msg.time || Date.now()));
+  let bodyHtml = '';
+
+  if (msg.type === 'voice') {
+    bodyHtml = `
+      <div class="voice-msg">
+        <button class="play-btn" data-url="${msg.audioUrl}">▶</button>
+        <div class="waveform"></div>
+        <span style="font-size:18px;opacity:.7;">🎤</span>
+      </div>
+      <div class="voice-meta"><span>${msg.duration || '?'}ث</span><span>${time}</span></div>
+    `;
+  } else if (msg.type === 'image' || msg.type === 'video') {
+    const preview = msg.type === 'image'
+      ? `<img src="${msg.dataUrl}" style="max-width:100%;max-height:240px;border-radius:8px;display:block;margin-bottom:6px;cursor:pointer;" onclick="showFullImage('${msg.dataUrl}')" alt="">`
+      : `<video src="${msg.dataUrl}" style="max-width:100%;max-height:240px;border-radius:8px;display:block;margin-bottom:6px;" controls></video>`;
+    bodyHtml = `${preview}<div class="voice-meta"><span>${time}</span></div>`;
+  } else if (msg.type === 'contact') {
+    bodyHtml = `
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 4px;">
+        <span style="font-size:32px;">👤</span>
+        <div style="display:flex;flex-direction:column;gap:2px;">
+          <span style="font-size:13px;font-weight:700;color:#fff;">${escapeHtml(msg.contactName)}</span>
+          <span style="font-size:10px;color:rgba(255,255,255,.65);">${escapeHtml(msg.contactPhone)}</span>
+        </div>
+      </div>
+      <div class="voice-meta"><span>${time}</span></div>
+    `;
+  } else {
+    bodyHtml = `<div class="text-msg">${escapeHtml(msg.text)}</div><div class="voice-meta"><span>${time}</span></div>`;
+  }
+
+  const el = document.createElement('div');
+  el.className = 'msg msg-in';
+  el.dataset.msgId = msg.id;
+  el.innerHTML = `
+    <div class="msg-header"><span>📻 ${escapeHtml(msg.senderName || 'مستخدم')} • الآن</span></div>
+    <div class="msg-body">${bodyHtml}</div>
+  `;
+  logScreen.appendChild(el);
+  const wf = el.querySelector('.waveform');
+  if (wf) generateWaveform(wf);
+  const playBtn = el.querySelector('.play-btn');
+  if (playBtn && msg.audioUrl) playBtn.addEventListener('click', () => playRealVoice(playBtn, msg.audioUrl));
+  logScreen.scrollTop = logScreen.scrollHeight;
+}
+
+/* ==========================================
+   إرسال الرسائل
+   ========================================== */
+function sendTextMessage(text) {
+  if (!currentUser.roomCode) { toast('⚠️ لا توجد غرفة بعد', 'error'); return; }
+  const msg = {
+    id: nowId(), type: 'text', text: text,
+    sender: currentUser.id, senderName: currentUser.name,
+    time: Date.now(), roomId: currentUser.roomCode
+  };
+  socket.emit("send_message", { roomId: currentUser.roomCode, message: msg });
+  renderOutgoingMessage(msg);
+}
+
+function addVoiceMessage(url, duration) {
+  if (!currentUser.roomCode) { toast('⚠️ لا توجد غرفة بعد', 'error'); return; }
+  const msg = {
+    id: nowId(), type: 'voice', audioUrl: url,
+    duration: parseFloat(duration).toFixed(1),
+    sender: currentUser.id, senderName: currentUser.name,
+    time: Date.now(), roomId: currentUser.roomCode
+  };
+  socket.emit("send_message", { roomId: currentUser.roomCode, message: msg });
+  renderOutgoingMessage(msg);
+  toast('✅ تم إرسال الرسالة الصوتية', 'success');
+}
+
+function addAttachmentMessage(type, name, dataUrl, size) {
+  if (!currentUser.roomCode) { toast('⚠️ لا توجد غرفة بعد', 'error'); return; }
+  const msg = {
+    id: nowId(), type: type, fileName: name, dataUrl: dataUrl, fileSize: size,
+    sender: currentUser.id, senderName: currentUser.name,
+    time: Date.now(), roomId: currentUser.roomCode
+  };
+  socket.emit("send_message", { roomId: currentUser.roomCode, message: msg });
+  renderOutgoingMessage(msg);
+  toast(`✅ تم إرسال الملف`, 'success');
+}
+
+function addContactMessage(contact) {
+  if (!currentUser.roomCode) { toast('⚠️ لا توجد غرفة بعد', 'error'); return; }
+  const msg = {
+    id: nowId(), type: 'contact',
+    contactName: contact.name, contactPhone: contact.phone,
+    sender: currentUser.id, senderName: currentUser.name,
+    time: Date.now(), roomId: currentUser.roomCode
+  };
+  socket.emit("send_message", { roomId: currentUser.roomCode, message: msg });
+  renderOutgoingMessage(msg);
+  toast('✅ تم إرسال جهة الاتصال', 'success');
+}
+
+/* ==========================================
+   الإدخال والإرسال
+   ========================================== */
+const chatInput = document.getElementById('chatInput');
+const chatSend  = document.getElementById('chatSend');
+
+chatInput.addEventListener('input', () => {
+  const isEmpty = chatInput.value.trim().length === 0;
+  chatSend.disabled = isEmpty;
+  const bar = document.getElementById('chatInputBar');
+  if (isEmpty) {
+    bar.classList.remove('typing');
+  } else {
+    bar.classList.add('typing');
+  }
+});
+
+chatInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && chatInput.value.trim()) {
+    handleSend();
+  }
+});
+
+function handleSend() {
+  const text = chatInput.value.trim();
+  if (!text) return;
+  sendTextMessage(text);
+  chatInput.value = '';
+  chatSend.disabled = true;
+  document.getElementById('chatInputBar').classList.remove('typing');
+  chatInput.focus();
+}
+
+/* ==========================================
+   PTT
+   ========================================== */
+const pttMain = document.getElementById('pttMain');
+const chatPTT = document.getElementById('chatPTT');
+const lcdStatus = document.getElementById('lcdStatus');
+
+/* ✅ PTT في الراديو = بث حي */
+function onPTTStartWave(btn) {
+  btn.classList.add('holding');
+  const antenna = document.querySelector('.antenna');
+  if (antenna) antenna.classList.add('transmitting');
+  if (lcdStatus) lcdStatus.textContent = 'TX';
+  const statusEl = document.getElementById('connStatus');
+  if (statusEl) {
+    statusEl.style.color = '#ff2a4d';
+    statusEl.textContent = '🔴 يبث';
+  }
+  const bi = document.getElementById('bottomInfo');
+  if (bi) bi.innerHTML = '<span style="color:#ff2a4d;font-weight:800;">🔴 جاري البث الحي... تحدّث الآن</span>';
+
+  PTTEngine.startBroadcastWave().then(ok => {
+    if (!ok) onPTTStopWave(btn);
+  });
+}
+
+function onPTTStopWave(btn) {
+  btn.classList.remove('holding');
+  const antenna = document.querySelector('.antenna');
+  if (antenna) antenna.classList.remove('transmitting');
+  if (lcdStatus) lcdStatus.textContent = '•';
+  const statusEl = document.getElementById('connStatus');
+  if (statusEl) {
+    statusEl.style.color = '';
+    statusEl.textContent = 'متصل';
+  }
+  const bi = document.getElementById('bottomInfo');
+  if (bi) {
+    const b = batteryPercent !== null ? batteryPercent + '%' : '—';
+    bi.innerHTML = `إشارة: <span class="hl">قوي</span> • البطارية: <span class="hl">${b}</span>`;
+  }
+  PTTEngine.stopBroadcastWave();
+}
+
+/* ✅ PTT في الغرفة = رسالة صوتية */
+function onPTTStartRoom(btn) {
+  btn.classList.add('holding');
+  PTTEngine.startVoiceMessage().then(ok => { if (!ok) onPTTStopRoom(btn); });
+}
+
+function onPTTStopRoom(btn) {
+  btn.classList.remove('holding');
+  PTTEngine.stopVoiceMessage();
+}
+
+pttMain.addEventListener('mousedown', (e) => { e.preventDefault(); onPTTStartWave(pttMain); });
+pttMain.addEventListener('mouseup',   (e) => { e.preventDefault(); onPTTStopWave(pttMain); });
+pttMain.addEventListener('mouseleave',(e) => { if (pttMain.classList.contains('holding')) onPTTStopWave(pttMain); });
+pttMain.addEventListener('touchstart', (e) => { e.preventDefault(); onPTTStartWave(pttMain); }, { passive: false });
+pttMain.addEventListener('touchend',   (e) => { e.preventDefault(); onPTTStopWave(pttMain);  }, { passive: false });
+pttMain.addEventListener('touchcancel',(e) => { e.preventDefault(); onPTTStopWave(pttMain);  }, { passive: false });
+
+chatPTT.addEventListener('mousedown', (e) => { e.preventDefault(); onPTTStartRoom(chatPTT); });
+chatPTT.addEventListener('mouseup',   (e) => { e.preventDefault(); onPTTStopRoom(chatPTT); });
+chatPTT.addEventListener('mouseleave',(e) => { if (chatPTT.classList.contains('holding')) onPTTStopRoom(chatPTT); });
+chatPTT.addEventListener('touchstart', (e) => { e.preventDefault(); onPTTStartRoom(chatPTT); }, { passive: false });
+chatPTT.addEventListener('touchend',   (e) => { e.preventDefault(); onPTTStopRoom(chatPTT);  }, { passive: false });
+chatPTT.addEventListener('touchcancel',(e) => { e.preventDefault(); onPTTStopRoom(chatPTT);  }, { passive: false });
+
+/* ==========================================
+   حذف الرسالة
+   ========================================== */
+let selectedMessageForDelete = null;
+
+function openDeleteConfirm(msgElement) {
+  selectedMessageForDelete = msgElement;
+  document.getElementById('deleteConfirmOverlay').classList.add('show');
+}
+
+function cancelDeleteMessage() {
+  selectedMessageForDelete = null;
+  document.getElementById('deleteConfirmOverlay').classList.remove('show');
+}
+
+function confirmDeleteMessage() {
+  if (selectedMessageForDelete) {
+    selectedMessageForDelete.style.transition = 'all 0.3s ease';
+    selectedMessageForDelete.style.opacity = '0';
+    selectedMessageForDelete.style.transform = 'translateX(50px)';
+    setTimeout(() => {
+      selectedMessageForDelete.remove();
+      checkEmptyRoom();
+    }, 300);
+    toast('🗑️ تم حذف الرسالة', 'success');
+  }
+  selectedMessageForDelete = null;
+  document.getElementById('deleteConfirmOverlay').classList.remove('show');
+}
+
+function attachLongPressHandler(msgElement) {
+  let pressTimer = null;
+  const startPress = () => {
+    pressTimer = setTimeout(() => {
+      openDeleteConfirm(msgElement);
+      if (navigator.vibrate) navigator.vibrate(30);
+    }, 600);
+  };
+  const cancelPress = () => {
+    if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; }
+  };
+  msgElement.addEventListener('mousedown', startPress);
+  msgElement.addEventListener('mouseup', cancelPress);
+  msgElement.addEventListener('mouseleave', cancelPress);
+  msgElement.addEventListener('touchstart', startPress, { passive: true });
+  msgElement.addEventListener('touchend', cancelPress);
+  msgElement.addEventListener('touchmove', cancelPress, { passive: true });
+  msgElement.addEventListener('touchcancel', cancelPress);
+  msgElement.addEventListener('contextmenu', (e) => e.preventDefault());
+}
+
+/* ==========================================
+   اختبار الصوت
+   ========================================== */
+async function testCall() {
+  const ok = await PTTEngine.init();
+  if (!ok) { toast('❌ تعذّر تشغيل الصوت', 'error'); return; }
+  toast('🔔 اختبار صوت النداء...', 'success');
+  PTTEngine.playBeep(1200, 0.15, 0.9);
+  setTimeout(() => PTTEngine.playBeep(700, 0.25, 0.85), 700);
+  closeSideMenu();
+}
+
+/* ==========================================
+   الإيموجي
+   ========================================== */
+const EMOJI_LIST = [
+  '😀','😃','😄','😁','😆','😅','😂','🤣','🥲','🥹',
+  '😊','😇','🙂','😉','😌','😍','🥰','😘','😗','😙',
+  '😚','🤗','🤔','🤭','🤫','🤐','🥺','😢','😭','😤',
+  '😠','😡','🤬','😳','🥵','🥶','😱','😨','😰','😥',
+  '😓','🤤','😴','🤢','🤮','🤧','😷','🤒','🤕','🤑',
+  '🤠','😎','🥳','😏','😒','😞','😔','😟','😕','🙁',
+  '☹️','😣','😖','😫','😩','🥱','❤️','🧡','💛','💚',
+  '💙','💜','🖤','🤍','🤎','💔','💯','✨','🔥','💥',
+  '💫','⭐','🌟','👍','👎','👏','🙏','💪','🤝','👌',
+  '✌️','🤞','🤟','🤘','👊','✊','📻','📡','🎙️','🔊',
+  '📞','⚡','🚀','🎯','🎉','✅','❌','⚠️','💡','🎵'
+];
+
+function openEmojiPicker() {
+  let picker = document.getElementById('emojiPickerModal');
+  if (picker) {
+    picker.remove();
+    return;
+  }
+
+  picker = document.createElement('div');
+  picker.id = 'emojiPickerModal';
+  picker.style.cssText = `
+    position: fixed;
+    bottom: 140px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 95%;
+    max-width: 480px;
+    max-height: 50vh;
+    background: linear-gradient(180deg, #142028, #05080c);
+    border: 1px solid #00e5ff;
+    border-radius: 16px;
+    padding: 12px;
+    overflow-y: auto;
+    z-index: 200;
+    box-shadow: 0 10px 40px rgba(0,229,255,.4);
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 6px;
+  `;
+
+  EMOJI_LIST.forEach(emoji => {
+    const btn = document.createElement('button');
+    btn.textContent = emoji;
+    btn.style.cssText = `
+      background: none;
+      border: none;
+      font-size: 24px;
+      padding: 6px;
+      cursor: pointer;
+      border-radius: 8px;
+      font-family: inherit;
+    `;
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      chatInput.value += emoji;
+      chatInput.dispatchEvent(new Event('input'));
+      chatInput.focus();
+    });
+    picker.appendChild(btn);
+  });
+
+  document.body.appendChild(picker);
+}
+
+document.getElementById('chatEmoji').addEventListener('click', (e) => {
+  e.stopPropagation();
+  openEmojiPicker();
+});
+
+document.addEventListener('click', (e) => {
+  const picker = document.getElementById('emojiPickerModal');
+  if (picker && !picker.contains(e.target) && e.target.id !== 'chatEmoji') {
+    picker.remove();
+  }
+});
+
+/* ==========================================
+   التهيئة النهائية
+   ========================================== */
+window.addEventListener('load', async () => {
+  await PTTEngine.init();
+
+  /* ✅ تهيئة الموجة أولاً */
+  await initWave();
+
+  /* ✅ استرجاع الغرفة إذا كانت محفوظة */
+  if (currentUser.roomCode) {
+    document.getElementById('roomNameLabel').textContent = currentUser.roomName || 'الغرفة';
+    document.getElementById('roomIcon').textContent = currentUser.roomIcon || '💬';
+    document.getElementById('roomBadge').style.display = 'block';
+    document.getElementById('roomUsers').style.display = 'flex';
+    document.getElementById('emptyRoom').style.display = 'none';
+    document.getElementById('roomSubLabel').textContent = `📻 ${currentUser.roomCode}`;
+    document.getElementById('lcdLine1').textContent = currentUser.roomCode;
+
+    socket.emit("join_room", {
+      roomId: currentUser.roomCode,
+      deviceId: currentUser.id,
+      userName: currentUser.name
+    });
+
+    toast(`✅ تم استرجاع الغرفة "${currentUser.roomName || currentUser.roomCode}"`, "success");
+    switchTab('log');
+  }
+
+  document.getElementById('chatInputBar').classList.remove('active');
+  initBattery();
+});
+
+document.addEventListener('contextmenu', e => e.preventDefault());
+</script>
+</body>
+</html>
