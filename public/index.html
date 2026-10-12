@@ -1494,47 +1494,6 @@ body::before {
   box-shadow: 0 0 18px rgba(255,42,77,.4);
 }
 .delete-confirm-btn:active { transform: scale(.97); }
-
-.camera-modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,.95);
-  z-index: 900;
-  display: none;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-}
-.camera-modal-overlay.show { display: flex; }
-.camera-preview {
-  width: 100%;
-  max-width: 400px;
-  border-radius: 12px;
-  border: 2px solid var(--cyan);
-  background: #000;
-}
-.camera-actions {
-  display: flex;
-  gap: 12px;
-  margin-top: 16px;
-}
-.camera-btn {
-  padding: 12px 24px;
-  border-radius: 10px;
-  border: 1px solid var(--cyan);
-  background: linear-gradient(180deg, #00e5ff, #008fa8);
-  color: #001418;
-  font-family: inherit;
-  font-size: 14px;
-  font-weight: 800;
-  cursor: pointer;
-}
-.camera-btn.cancel {
-  background: transparent;
-  color: var(--text-dim);
-  border-color: var(--border);
-}
 </style>
 </head>
 <body>
@@ -1561,8 +1520,8 @@ body::before {
         <div class="chip-value online" id="connStatus">متصل</div>
       </div>
       <div class="chip">
-        <div class="chip-value">📻 07</div>
-        <div class="chip-label">القناة</div>
+        <div class="chip-value" id="waveNameChipLabel" style="font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:90px;">—</div>
+        <div class="chip-label">اسم الموجة</div>
       </div>
       <div class="chip">
         <div class="chip-value code" id="waveCodeChip">Q30712</div>
@@ -1925,11 +1884,13 @@ body::before {
         <span class="attach-icon">📄</span>
         <span>مستند</span>
       </button>
+      <!-- ✅ فتح جهات اتصال الجوال الشخصية مباشرة -->
       <button class="attach-item" onclick="pickNativeContact()">
         <span class="attach-icon">👥</span>
         <span>جهة اتصال</span>
       </button>
-      <button class="attach-item" onclick="closeModal('modalAttach'); openCamera();">
+      <!-- ✅ التقاط بالكاميرا الأصلية -->
+      <button class="attach-item" onclick="closeModal('modalAttach'); triggerNativeCamera();">
         <span class="attach-icon">📷</span>
         <span>كاميرا</span>
       </button>
@@ -2024,12 +1985,12 @@ body::before {
 
 <div class="modal-overlay" id="modalSearch">
   <div class="modal">
-    <div class="modal-title" id="searchModalTitle">🔍 البحث</div>
-    <div class="modal-sub" id="searchModalSub">ابحث عن غرفة برقمها للانضمام</div>
+    <div class="modal-title" id="searchModalTitle">🔍 البحث عن موجة</div>
+    <div class="modal-sub" id="searchModalSub">ابحث برقم الموجة (QXXXXX) للانضمام</div>
 
     <div class="modal-field">
-      <label id="searchModalLabel">رقم الغرفة</label>
-      <input type="text" id="searchQuery" class="code-input" placeholder="RAD-1234" maxlength="15">
+      <label id="searchModalLabel">رقم الموجة (QXXXXX)</label>
+      <input type="text" id="searchQuery" class="code-input" placeholder="Q30712" maxlength="15">
     </div>
 
     <div class="modal-actions" style="grid-template-columns:1fr;margin-bottom:14px;">
@@ -2039,7 +2000,7 @@ body::before {
     <div id="searchResults">
       <div class="no-results">
         <span class="no-results-icon">🔎</span>
-        اكتب رقم الغرفة واضغط بحث للعثور عليها
+        اكتب رقم الموجة واضغط بحث للعثور عليها
       </div>
     </div>
 
@@ -2052,12 +2013,12 @@ body::before {
 <div class="modal-overlay" id="modalJoinConfirm">
   <div class="modal">
     <div class="modal-title">📩 طلب انضمام</div>
-    <div class="modal-sub">هل تريد الانضمام إلى هذه الغرفة؟</div>
+    <div class="modal-sub">هل تريد الانضمام إلى هذه الموجة؟</div>
 
     <div class="join-request-info">
       <div class="join-request-icon">📡</div>
       <div class="join-request-name" id="joinTargetName">—</div>
-      <div class="join-request-code" id="joinTargetCode">RAD-0000</div>
+      <div class="join-request-code" id="joinTargetCode">Q00000</div>
     </div>
 
     <div class="modal-actions">
@@ -2079,15 +2040,9 @@ body::before {
   </div>
 </div>
 
-<div class="camera-modal-overlay" id="cameraOverlay">
-  <video id="cameraPreview" class="camera-preview" autoplay playsinline></video>
-  <div class="camera-actions">
-    <button class="camera-btn cancel" onclick="closeCamera()">❌ إلغاء</button>
-    <button class="camera-btn" onclick="capturePhoto()">📸 التقاط</button>
-  </div>
-</div>
-
+<!-- عناصر إضافية مخفية لالتقاط الملفات والكاميرا الأصلية وجهات الاتصال -->
 <input type="file" id="hiddenFileInput" style="display:none;">
+<input type="file" id="nativeCameraInput" accept="image/*" capture="environment" style="display:none;">
 
 <script>
   /* ==========================================
@@ -2494,7 +2449,21 @@ function generateWaveCode() {
 
 function openCreateWave() { openModal('modalWave'); }
 function openCreateRoom() { openModal('modalCreate'); }
-function openSearch()     { openModal('modalSearch'); }
+
+function openSearch() {
+  document.getElementById('searchModalTitle').textContent = '🔍 البحث عن موجة';
+  document.getElementById('searchModalSub').textContent = 'ابحث برقم الموجة (QXXXXX) للانضمام';
+  document.getElementById('searchModalLabel').textContent = 'رقم الموجة (QXXXXX)';
+  document.getElementById('searchQuery').placeholder = 'Q30712';
+  document.getElementById('searchQuery').value = '';
+  document.getElementById('searchResults').innerHTML = `
+    <div class="no-results">
+      <span class="no-results-icon">🔎</span>
+      اكتب رقم الموجة واضغط بحث للعثور عليها
+    </div>
+  `;
+  openModal('modalSearch');
+}
 
 function openEditWaveName() {
   document.getElementById('newWaveName').value = currentUser.waveName || '';
@@ -2503,18 +2472,7 @@ function openEditWaveName() {
 
 function openSearchFromRoom() {
   closeModal('modalRoomMenu');
-  document.getElementById('searchModalTitle').textContent = '🔍 البحث عن غرفة';
-  document.getElementById('searchModalSub').textContent = 'ابحث عن غرفة برقمها (RAD-XXXX)';
-  document.getElementById('searchModalLabel').textContent = 'رقم الغرفة (RAD-XXXX)';
-  document.getElementById('searchQuery').placeholder = 'RAD-0B16DD';
-  document.getElementById('searchQuery').value = '';
-  document.getElementById('searchResults').innerHTML = `
-    <div class="no-results">
-      <span class="no-results-icon">🔎</span>
-      اكتب رقم الغرفة (مثل RAD-0B16DD) واضغط بحث
-    </div>
-  `;
-  openModal('modalSearch');
+  openSearch();
 }
 
 async function createWave() {
@@ -2529,7 +2487,9 @@ async function createWave() {
   document.getElementById('waveName').value = '';
   closeModal('modalWave');
   openModal('modalWaveCreated');
+  
   document.getElementById('waveCodeChip').textContent = code;
+  document.getElementById('waveNameChipLabel').textContent = name;
   document.getElementById('waveNameValue').textContent = name;
   document.getElementById('waveCodeValue').textContent = code;
   document.getElementById('lcdLine1').textContent = code;
@@ -2550,6 +2510,7 @@ function saveWaveName() {
   const name = document.getElementById('newWaveName').value.trim();
   if (!name) { toast('⚠️ أدخل اسماً', 'error'); return; }
   currentUser.waveName = name;
+  document.getElementById('waveNameChipLabel').textContent = name;
   document.getElementById('waveNameValue').textContent = name;
   saveCurrentUser();
   toast(`✅ تم تحديث اسم الموجة`, 'success');
@@ -2674,48 +2635,38 @@ document.getElementById('roomMenuBtn').addEventListener('click', () => {
 });
 
 /* ==========================================
-   البحث والانضمام
+   البحث عن موجة
    ========================================== */
 async function doSearch() {
   const q = document.getElementById('searchQuery').value.trim().toUpperCase();
   const results = document.getElementById('searchResults');
   
   if (!q) {
-    results.innerHTML = `<div class="no-results"><span class="no-results-icon">⚠️</span>اكتب الرقم أولاً</div>`;
+    results.innerHTML = `<div class="no-results"><span class="no-results-icon">⚠️</span>اكتب رقم الموجة أولاً</div>`;
     return;
   }
   
   results.innerHTML = `<div class="no-results"><span class="no-results-icon">⏳</span>جاري البحث...</div>`;
   
   try {
-    let endpoint = "";
-    let isWave = false;
-    
-    if (q.startsWith("Q")) {
-      endpoint = SERVER_URL + "/api/search-wave/" + encodeURIComponent(q);
-      isWave = true;
-    } else {
-      endpoint = SERVER_URL + "/api/search/" + encodeURIComponent(q);
-      isWave = false;
-    }
-    
+    const endpoint = SERVER_URL + "/api/search-wave/" + encodeURIComponent(q);
     const res = await fetch(endpoint);
     if (!res.ok) {
-      results.innerHTML = `<div class="no-results"><span class="no-results-icon">❌</span>لا يوجد ${isWave ? 'موجة' : 'غرفة'} بهذا الرقم</div>`;
+      results.innerHTML = `<div class="no-results"><span class="no-results-icon">❌</span>لا توجد موجة بهذا الرقم</div>`;
       return;
     }
     
     const data = await res.json();
-    const resultCode = data.roomId || data.waveCode;
-    const resultName = data.roomName || data.waveName;
+    const resultCode = data.waveCode || q;
+    const resultName = data.waveName || 'موجة لاسلكية';
     searchResultUser = { code: resultCode, name: resultName };
     
     results.innerHTML = `
       <div class="search-result-card" onclick="openJoinConfirm()">
-        <div class="search-result-icon">${isWave ? '📡' : '💬'}</div>
+        <div class="search-result-icon">📡</div>
         <div class="search-result-info">
           <div class="search-result-name">${escapeHtml(resultName)}</div>
-          <div class="search-result-code">${resultCode} • ${data.membersCount} عضو</div>
+          <div class="search-result-code">${resultCode}</div>
         </div>
         <span style="color:var(--cyan);font-size:18px;">→</span>
       </div>
@@ -2741,50 +2692,23 @@ function cancelJoin() {
 
 async function confirmJoin() {
   if (!searchResultUser) return;
-  try {
-    const res = await fetch(SERVER_URL + "/api/rooms/join", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        roomId: searchResultUser.code,
-        deviceId: currentUser.id,
-        userName: currentUser.name
-      })
-    });
-    const data = await res.json();
-    if (!data.success) { toast("⚠️ فشل الانضمام", "error"); return; }
-
-    currentUser.roomCode = data.roomId;
-    currentUser.roomName = data.roomName;
-
-    await PTTEngine.init();
-    PTTEngine.playBeep(1200, 0.2);
-
-    document.getElementById('roomNameLabel').textContent = data.roomName;
-    document.getElementById('roomBadge').style.display = 'block';
-    document.getElementById('roomUsers').style.display = 'flex';
-    document.getElementById('emptyRoom').style.display = 'none';
-    document.getElementById('roomSubLabel').textContent = `📻 ${data.roomId} • CH ${data.channel}`;
-
-    socket.emit("join_room", {
-      roomId: data.roomId,
-      deviceId: currentUser.id,
-      userName: currentUser.name
-    });
-
-    saveCurrentUser();
-    closeModal('modalJoinConfirm');
-    toast(`✅ انضممت إلى "${data.roomName}"`, 'success');
-    switchTab('log');
-  } catch (e) {
-    console.error(e);
-    toast("❌ خطأ في الانضمام", "error");
-  }
+  currentUser.waveCode = searchResultUser.code;
+  currentUser.waveName = searchResultUser.name;
+  
+  document.getElementById('waveCodeChip').textContent = searchResultUser.code;
+  document.getElementById('waveNameChipLabel').textContent = searchResultUser.name;
+  document.getElementById('waveNameValue').textContent = searchResultUser.name;
+  document.getElementById('waveCodeValue').textContent = searchResultUser.code;
+  document.getElementById('lcdLine1').textContent = searchResultUser.code;
+  
+  saveCurrentUser();
+  closeModal('modalJoinConfirm');
+  toast(`✅ انضممت إلى الموجة "${searchResultUser.name}"`, 'success');
   searchResultUser = null;
 }
 
 /* ==========================================
-   المرفقات
+   المرفقات وجهات الاتصال والكاميرا الأصلية
    ========================================== */
 document.getElementById('chatClip').addEventListener('click', () => {
   openModal('modalAttach');
@@ -2810,7 +2734,7 @@ function pickFile(type) {
   input.click();
 }
 
-/* ✅ فتح واجهة جهات اتصال الهاتف الأصلية مباشرة */
+/* ✅ فتح دليل جهات الاتصال في الجوال مباشرة بدون إدخال يدوي */
 async function pickNativeContact() {
   closeModal('modalAttach');
   
@@ -2831,63 +2755,33 @@ async function pickNativeContact() {
         }
       }
     } catch (e) {
-      console.warn('تم إلغاء اختيار جهة الاتصال أو حدوث خطأ:', e);
+      console.warn('تم إلغاء اختيار جهة الاتصال:', e);
     }
   } else {
-    document.getElementById('contactName').value = '';
-    document.getElementById('contactPhone').value = '';
-    openModal('modalContact');
-    toast('📱 اكتب بيانات جهة الاتصال يدوياً', 'success');
+    // بديل في حال لم يدعم المتصفح واجهة جهات الاتصال المباشرة
+    const name = prompt('أدخل اسم جهة الاتصال:');
+    if (!name) return;
+    const phone = prompt('أدخل رقم الجوال:');
+    if (!phone) return;
+    addContactMessage({ name, phone });
   }
 }
 
-function sendContact() {
-  const name = document.getElementById('contactName').value.trim();
-  const phone = document.getElementById('contactPhone').value.trim();
-  if (!name || !phone) { toast('⚠️ املأ الحقلين', 'error'); return; }
-  closeModal('modalContact');
-  addContactMessage({ name, phone });
-}
-
-/* ==========================================
-   الكاميرا
-   ========================================== */
-let cameraStream = null;
-
-async function openCamera() {
-  try {
-    cameraStream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: 'environment' }
-    });
-    const video = document.getElementById('cameraPreview');
-    video.srcObject = cameraStream;
-    document.getElementById('cameraOverlay').classList.add('show');
-  } catch (e) {
-    console.error(e);
-    toast('❌ تعذّر فتح الكاميرا', 'error');
-  }
-}
-
-function closeCamera() {
-  if (cameraStream) {
-    cameraStream.getTracks().forEach(t => t.stop());
-    cameraStream = null;
-  }
-  document.getElementById('cameraOverlay').classList.remove('show');
-}
-
-function capturePhoto() {
-  const video = document.getElementById('cameraPreview');
-  if (!video.videoWidth) return;
-  const canvas = document.createElement('canvas');
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
-  const ctx = canvas.getContext('2d');
-  ctx.drawImage(video, 0, 0);
-  const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
-  closeCamera();
-  const size = Math.round(dataUrl.length * 0.75);
-  addAttachmentMessage('image', 'صورة_' + Date.now() + '.jpg', dataUrl, size);
+/* ✅ فتح كاميرا الجوال الأصلية مباشرة لالتقاط الصورة */
+function triggerNativeCamera() {
+  const camInput = document.getElementById('nativeCameraInput');
+  camInput.value = '';
+  camInput.onchange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        addAttachmentMessage('image', 'صورة_كاميرا_' + Date.now() + '.jpg', ev.target.result, file.size);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+  camInput.click();
 }
 
 function showFullImage(dataUrl) {
@@ -3100,7 +2994,7 @@ function addContactMessage(contact) {
 }
 
 /* ==========================================
-   ✅ التحكم في الإدخال وإظهار زر الإرسال بنجاح
+   التحكم في الإدخال وإظهار زر الإرسال مع تثبيت الكيبورد
    ========================================== */
 const chatInput = document.getElementById('chatInput');
 const chatInputBar = document.getElementById('chatInputBar');
@@ -3262,12 +3156,10 @@ async function testCall() {
 
 function changeChannel() {
   const cur = prompt('أدخل رقم القناة الجديد (01-99):',
-    document.querySelectorAll('.chip-value')[1].textContent.replace(/\D/g, ''));
+    document.getElementById('channelValue').textContent.replace(/\D/g, ''));
   if (cur && /^\d{1,2}$/.test(cur)) {
     const padded = cur.padStart(2, '0');
-    document.querySelectorAll('.chip-value')[1].innerHTML = `📻 ${padded}`;
     document.getElementById('channelValue').textContent = `CH ${padded}`;
-    document.querySelector('.lcd-row .lcd-label').textContent = `CH ${padded}`;
     toast(`✅ تم تغيير القناة إلى ${padded}`, 'success');
   }
 }
@@ -3362,6 +3254,16 @@ window.addEventListener('load', () => {
   const initOnce = async () => {
     await PTTEngine.init();
 
+    if (currentUser.waveCode) {
+      document.getElementById('waveCodeChip').textContent = currentUser.waveCode;
+      document.getElementById('waveCodeValue').textContent = currentUser.waveCode;
+      document.getElementById('lcdLine1').textContent = currentUser.waveCode;
+    }
+    if (currentUser.waveName) {
+      document.getElementById('waveNameChipLabel').textContent = currentUser.waveName;
+      document.getElementById('waveNameValue').textContent = currentUser.waveName;
+    }
+
     if (currentUser.roomCode) {
       document.getElementById('roomNameLabel').textContent = currentUser.roomName || 'الغرفة';
       document.getElementById('roomIcon').textContent = currentUser.roomIcon || '💬';
@@ -3369,15 +3271,6 @@ window.addEventListener('load', () => {
       document.getElementById('roomUsers').style.display = 'flex';
       document.getElementById('emptyRoom').style.display = 'none';
       document.getElementById('roomSubLabel').textContent = `📻 ${currentUser.roomCode}`;
-      document.getElementById('lcdLine1').textContent = currentUser.roomCode;
-
-      if (currentUser.waveCode) {
-        document.getElementById('waveCodeChip').textContent = currentUser.waveCode;
-        document.getElementById('waveCodeValue').textContent = currentUser.waveCode;
-      }
-      if (currentUser.waveName) {
-        document.getElementById('waveNameValue').textContent = currentUser.waveName;
-      }
 
       if (typeof socket !== 'undefined' && socket.connected) {
         socket.emit("join_room", {
@@ -3387,7 +3280,6 @@ window.addEventListener('load', () => {
         });
       }
 
-      toast(`✅ تم استرجاع الغرفة "${currentUser.roomName || currentUser.roomCode}"`, "success");
       switchTab('log');
     }
 
@@ -3402,10 +3294,6 @@ window.addEventListener('load', () => {
 });
 
 document.addEventListener('contextmenu', e => e.preventDefault());
-
-window.addEventListener('beforeunload', () => {
-  if (cameraStream) cameraStream.getTracks().forEach(t => t.stop());
-});
 </script>
 </body>
 </html>
