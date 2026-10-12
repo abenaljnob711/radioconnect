@@ -42,7 +42,7 @@ jobs:
       - name: Install Capacitor
         run: |
           npm install -g @capacitor/cli
-          npm install @capacitor/core @capacitor/android @capacitor/assets
+          npm install @capacitor/core @capacitor/android
 
       - name: Create www folder
         run: |
@@ -50,20 +50,23 @@ jobs:
           cp -r public/* www/
           rm -f www/package.json www/gitignore www/manifest.json
 
-      - name: Prepare resources folder
-        run: |
-          mkdir -p resources || true
-          cp public/icon.png resources/icon.png || true
-          ls -la resources/ || true
-
       - name: Add Android platform
         run: |
           npx cap add android
           npx cap sync android
 
-      - name: Generate App Icons
+      - name: Replace App Icons
         run: |
-          npx @capacitor/assets generate --android || echo "Icon generation skipped"
+          cd android/app/src/main/res
+          for dir in mipmap-*; do
+            if [ -d "$dir" ]; then
+              cp $GITHUB_WORKSPACE/public/icon.png "$dir/ic_launcher.png"
+              cp $GITHUB_WORKSPACE/public/icon.png "$dir/ic_launcher_round.png"
+              cp $GITHUB_WORKSPACE/public/icon.png "$dir/ic_launcher_foreground.png"
+            fi
+          done
+          echo "===== Icons replaced ====="
+          ls -la mipmap-*/
 
       - name: Add Permissions to AndroidManifest
         run: |
