@@ -58,15 +58,21 @@ jobs:
       - name: Replace App Icons
         run: |
           cd android/app/src/main/res
+          echo "===== Before ====="
+          ls -la mipmap-anydpi-v26/ || true
+          # حذف ملفات XML الأصلية
+          rm -f mipmap-anydpi-v26/ic_launcher.xml
+          rm -f mipmap-anydpi-v26/ic_launcher_round.xml
+          # نسخ الأيقونة إلى كل مجلدات mipmap
           for dir in mipmap-*; do
             if [ -d "$dir" ]; then
               cp $GITHUB_WORKSPACE/public/icon.png "$dir/ic_launcher.png"
               cp $GITHUB_WORKSPACE/public/icon.png "$dir/ic_launcher_round.png"
-              cp $GITHUB_WORKSPACE/public/icon.png "$dir/ic_launcher_foreground.png"
             fi
           done
-          echo "===== Icons replaced ====="
-          ls -la mipmap-*/
+          echo "===== After ====="
+          ls -la mipmap-anydpi-v26/ || true
+          ls -la mipmap-hdpi/ || true
 
       - name: Add Permissions to AndroidManifest
         run: |
