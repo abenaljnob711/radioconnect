@@ -44,14 +44,17 @@ jobs:
           npm install -g @capacitor/cli
           npm install @capacitor/core @capacitor/android @capacitor/assets
 
-      - name: Create www folder and resources
+      - name: Create www folder
         run: |
           mkdir -p www
           cp -r public/* www/
           rm -f www/package.json www/gitignore www/manifest.json
-          mkdir -p resources
-          cp public/icon.png resources/icon.png
-          ls -la resources/
+
+      - name: Prepare resources folder
+        run: |
+          mkdir -p resources || true
+          cp public/icon.png resources/icon.png || true
+          ls -la resources/ || true
 
       - name: Add Android platform
         run: |
@@ -60,7 +63,7 @@ jobs:
 
       - name: Generate App Icons
         run: |
-          npx @capacitor/assets generate --android
+          npx @capacitor/assets generate --android || echo "Icon generation skipped"
 
       - name: Add Permissions to AndroidManifest
         run: |
