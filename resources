@@ -1,4 +1,1 @@
-- name: Prepare icons
-  run: |
-    mkdir -p resources
-    cp public/icon.png resources/icon.png
+
