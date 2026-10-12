@@ -1537,41 +1537,6 @@ body::before {
   color: var(--text-dim);
   border-color: var(--border);
 }
-
-/* ✅ قائمة الإيموجي */
-.emoji-picker-modal {
-  position: fixed;
-  bottom: 140px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 95%;
-  max-width: 480px;
-  max-height: 50vh;
-  background: linear-gradient(180deg, #142028, #05080c);
-  border: 1px solid var(--cyan);
-  border-radius: 16px;
-  padding: 12px;
-  overflow-y: auto;
-  z-index: 200;
-  box-shadow: 0 10px 40px rgba(0,229,255,.4);
-  display: grid;
-  grid-template-columns: repeat(8, 1fr);
-  gap: 6px;
-}
-.emoji-picker-modal .emoji-item {
-  background: none;
-  border: none;
-  font-size: 24px;
-  padding: 6px;
-  cursor: pointer;
-  border-radius: 8px;
-  transition: background 0.15s;
-  font-family: inherit;
-  text-align: center;
-}
-.emoji-picker-modal .emoji-item:active {
-  background: rgba(0,229,255,.2);
-}
 </style>
 </head>
 <body>
@@ -2164,8 +2129,9 @@ socket.on("connect", () => {
   if (statusEl) {
     statusEl.textContent = "متصل";
     statusEl.classList.add("online");
+    statusEl.style.color = ""; // إعادة اللون الأصلي
   }
-  // ✅ استرجاع الغرفة المحفوظة
+  // ✅ إعادة الانضمام للغرفة المحفوظة عند إعادة الاتصال
   if (currentUser.roomCode) {
     socket.emit("join_room", {
       roomId: currentUser.roomCode,
@@ -2204,8 +2170,13 @@ let currentUser = {
   roomIcon: savedUser.roomIcon || '💬'
 };
 
+// ✅ دالة لحفظ البيانات في localStorage
 function saveCurrentUser() {
-  localStorage.setItem('currentUser', JSON.stringify(currentUser));
+  try {
+    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+  } catch (e) {
+    console.warn('فشل حفظ البيانات:', e);
+  }
 }
 
 document.getElementById('userIdValue').textContent = currentUser.id;
@@ -2567,7 +2538,7 @@ async function createWave() {
   document.getElementById('waveNameValue').textContent = name;
   document.getElementById('waveCodeValue').textContent = code;
   document.getElementById('lcdLine1').textContent = code;
-  saveCurrentUser();
+  saveCurrentUser(); // ✅ حفظ
   toast(`✅ تم إنشاء الموجة "${name}"`, 'success');
 }
 
@@ -2585,7 +2556,7 @@ function saveWaveName() {
   if (!name) { toast('⚠️ أدخل اسماً', 'error'); return; }
   currentUser.waveName = name;
   document.getElementById('waveNameValue').textContent = name;
-  saveCurrentUser();
+  saveCurrentUser(); // ✅ حفظ
   toast(`✅ تم تحديث اسم الموجة`, 'success');
   closeModal('modalEditWave');
 }
@@ -2636,7 +2607,7 @@ async function createRoom() {
       userName: currentUser.name
     });
 
-    saveCurrentUser();
+    saveCurrentUser(); // ✅ حفظ
     toast(`✅ تم إنشاء الغرفة "${name}"`, 'success');
   } catch (e) {
     console.error(e);
@@ -2664,7 +2635,7 @@ function saveRoomName() {
   if (!name) { toast('⚠️ أدخل اسماً', 'error'); return; }
   currentUser.roomName = name;
   document.getElementById('roomNameLabel').textContent = name;
-  saveCurrentUser();
+  saveCurrentUser(); // ✅ حفظ
   toast(`✅ تم تحديث اسم الغرفة`, 'success');
   closeModal('modalEditName');
 }
@@ -2683,7 +2654,7 @@ document.querySelectorAll('#iconGrid .icon-option').forEach(el => {
     const icon = el.dataset.icon;
     document.getElementById('roomIcon').textContent = icon;
     currentUser.roomIcon = icon;
-    saveCurrentUser();
+    saveCurrentUser(); // ✅ حفظ
     toast(`✅ تم تغيير الأيقونة`, 'success');
     closeModal('modalEditIcon');
   });
@@ -2788,7 +2759,7 @@ async function confirmJoin() {
       userName: currentUser.name
     });
 
-    saveCurrentUser();
+    saveCurrentUser(); // ✅ حفظ
     closeModal('modalJoinConfirm');
     toast(`✅ انضممت إلى "${data.roomName}"`, 'success');
     switchTab('log');
@@ -2797,9 +2768,8 @@ async function confirmJoin() {
     toast("❌ خطأ في الانضمام", "error");
   }
   searchResultUser = null;
-}
-
-/* ==========================================
+  }
+  /* ==========================================
    المرفقات
    ========================================== */
 document.getElementById('chatClip').addEventListener('click', () => {
@@ -3137,11 +3107,11 @@ chatInput.addEventListener('keydown', (e) => {
   }
 });
 
-// ✅ إبقاء الكيبورد مفتوحاً
+// ✅ إبقاء الكيبورد مفتوحاً عند مسح النص
 chatInput.addEventListener('blur', () => {
   setTimeout(() => {
     if (document.activeElement && document.activeElement.tagName === 'BODY') {
-      chatInput.focus();
+      // لا نعيد التركيز إلا إذا كان المستخدم قد ضغط على مكان فارغ
     }
   }, 10);
 });
@@ -3155,8 +3125,7 @@ function handleSend() {
   document.getElementById('chatInputBar').classList.remove('typing');
   chatInput.focus();
 }
-
-/* ==========================================
+ /* ==========================================
    PTT
    ========================================== */
 const pttMain = document.getElementById('pttMain');
@@ -3169,7 +3138,7 @@ function onPTTStartWave(btn) {
   if (antenna) antenna.classList.add('transmitting');
   if (lcdStatus) lcdStatus.textContent = 'TX';
   
-  // ✅ تغيير "متصل" إلى أحمر
+  // ✅ تغيير "متصل" إلى أحمر عند التحدث
   const statusEl = document.getElementById('connStatus');
   if (statusEl) {
     statusEl.style.color = '#ff2a4d';
@@ -3190,7 +3159,7 @@ function onPTTStopWave(btn) {
   // ✅ إعادة "متصل" إلى أخضر
   const statusEl = document.getElementById('connStatus');
   if (statusEl) {
-    statusEl.style.color = '#00ff88';
+    statusEl.style.color = '';
     statusEl.textContent = 'متصل';
   }
   
@@ -3302,7 +3271,7 @@ function changeChannel() {
 }
 
 /* ==========================================
-   ✅ قائمة الإيموجي الاختيارية
+   ✅ قائمة الإيموجي الاختيارية (جديد)
    ========================================== */
 const EMOJI_LIST = [
   '😀','😃','😄','😁','😆','😅','😂','🤣','🥲','🥹',
@@ -3324,11 +3293,11 @@ function openEmojiPicker() {
     picker.remove();
     return;
   }
-  
+
   picker = document.createElement('div');
   picker.id = 'emojiPickerModal';
   picker.className = 'emoji-picker-modal';
-  
+
   EMOJI_LIST.forEach(emoji => {
     const btn = document.createElement('button');
     btn.className = 'emoji-item';
@@ -3341,7 +3310,7 @@ function openEmojiPicker() {
     });
     picker.appendChild(btn);
   });
-  
+
   document.body.appendChild(picker);
 }
 
@@ -3356,38 +3325,54 @@ document.addEventListener('click', (e) => {
     picker.remove();
   }
 });
-
-/* ==========================================
-   التهيئة
+ /* ==========================================
+   ✅ التهيئة (مع استرجاع الغرفة المحفوظة)
    ========================================== */
 window.addEventListener('load', () => {
   const initOnce = async () => {
     await PTTEngine.init();
-    
-    // ✅ استرجاع الغرفة المحفوظة
+
+    // ✅ استرجاع الغرفة المحفوظة إذا كانت موجودة
     if (currentUser.roomCode) {
       console.log("🔄 استرجاع الغرفة:", currentUser.roomCode);
+
+      // استرجاع المعلومات
       document.getElementById('roomNameLabel').textContent = currentUser.roomName || 'الغرفة';
+      document.getElementById('roomIcon').textContent = currentUser.roomIcon || '💬';
       document.getElementById('roomBadge').style.display = 'block';
       document.getElementById('roomUsers').style.display = 'flex';
       document.getElementById('emptyRoom').style.display = 'none';
       document.getElementById('roomSubLabel').textContent = `📻 ${currentUser.roomCode}`;
       document.getElementById('lcdLine1').textContent = currentUser.roomCode;
-      
-      if (socket && socket.connected) {
+
+      // استرجاع الموجة
+      if (currentUser.waveCode) {
+        document.getElementById('waveCodeChip').textContent = currentUser.waveCode;
+        document.getElementById('waveCodeValue').textContent = currentUser.waveCode;
+      }
+      if (currentUser.waveName) {
+        document.getElementById('waveNameValue').textContent = currentUser.waveName;
+      }
+
+      // إعادة الانضمام للغرفة عبر Socket.io
+      if (typeof socket !== 'undefined' && socket.connected) {
         socket.emit("join_room", {
           roomId: currentUser.roomCode,
           deviceId: currentUser.id,
           userName: currentUser.name
         });
       }
-      
+
       toast(`✅ تم استرجاع الغرفة "${currentUser.roomName || currentUser.roomCode}"`, "success");
+
+      // الانتقال لتبويب الغرفة
+      switchTab('log');
     }
-    
+
     document.removeEventListener('click', initOnce);
     document.removeEventListener('touchstart', initOnce);
   };
+
   document.addEventListener('click', initOnce);
   document.addEventListener('touchstart', initOnce);
   document.getElementById('chatInputBar').classList.remove('active');
@@ -3401,4 +3386,4 @@ window.addEventListener('beforeunload', () => {
 });
 </script>
 </body>
-</html>
+</html> 
