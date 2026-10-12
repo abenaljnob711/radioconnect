@@ -1,9 +1,8 @@
 "use strict";
 
 /* ==========================================
-   Radio Connect Server - v3.0 FINAL
-   Node.js + Express + LiveKit + Socket.io
-   + Waves System (طلب انضمام + موافقة + بث حي)
+   Radio Connect Server - v3.1
+   + إرسال طلبات الانضمام لصاحب الموجة فقط
    ========================================== */
 
 const express = require("express");
@@ -37,6 +36,9 @@ const LIVEKIT_API_SECRET = process.env.LIVEKIT_API_SECRET || "";
 const DATA_FILE = path.join(__dirname, "rooms.json");
 const MAX_MEMBERS = 60;
 
+/* ✅ خريطة ربط deviceId → socket.id */
+const deviceSockets = {};
+
 app.use(cors());
 app.use(express.json({ limit: "10mb" }));
 app.use(express.static(path.join(__dirname, "public")));
@@ -64,10 +66,6 @@ function generateWaveId() {
     code += chars[Math.floor(Math.random() * chars.length)];
   }
   return code;
-}
-
-function generateDeviceId() {
-  return "dev_" + crypto.randomBytes(8).toString("hex");
 }
 
 function now() {
@@ -102,23 +100,21 @@ function saveDb() {
 loadDb();
 
 /* ==========================================
-   APIs العامة
+   APIs عامة
    ========================================== */
 app.get("/", (req, res) => {
   res.json({
     status: "ok",
     name: "Radio Connect Server",
-    version: "3.0",
+    version: "3.1",
     livekit: LIVEKIT_URL ? "configured" : "not configured",
     uptime: process.uptime()
   });
 });
 
 /* ==========================================
-   ✅ APIs الموجات
+   APIs الموجات
    ========================================== */
-
-// ✅ إنشاء / استرجاع موجة للمستخدم
 app.post("/api/waves/create", (req, res) => {
   try {
     const { deviceId, waveName } = req.body;
@@ -170,7 +166,6 @@ app.post("/api/waves/create", (req, res) => {
   }
 });
 
-// ✅ معلومات موجة
 app.get("/api/waves/:waveId", (req, res) => {
   const wave = db.waves[req.params.waveId];
   if (!wave) return res.status(404).json({ error: "الموجة غير موجودة" });
@@ -182,7 +177,6 @@ app.get("/api/waves/:waveId", (req, res) => {
   });
 });
 
-// ✅ البحث عن موجة
 app.get("/api/waves/search/:code", (req, res) => {
   const code = req.params.code.toUpperCase();
   const wave = db.waves[code];
@@ -197,7 +191,6 @@ app.get("/api/waves/search/:code", (req, res) => {
   });
 });
 
-// ✅ تعديل اسم الموجة
 app.post("/api/waves/rename", (req, res) => {
   try {
     const { waveId, newName, deviceId } = req.body;
@@ -215,7 +208,7 @@ app.post("/api/waves/rename", (req, res) => {
 });
 
 /* ==========================================
-   ✅ APIs الغرف
+   APIs الغرف
    ========================================== */
 app.post("/api/rooms/create", (req, res) => {
   try {
@@ -303,7 +296,7 @@ app.get("/api/search/:code", (req, res) => {
 });
 
 /* ==========================================
-   ✅ LiveKit Token
+   LiveKit Token
    ========================================== */
 app.post("/api/livekit/token", async (req, res) => {
   try {
@@ -353,8 +346,17 @@ app.post("/api/livekit/token", async (req, res) => {
 io.on("connection", (socket) => {
   console.log("🔌 مستخدم متصل:", socket.id);
 
+  /* ✅ تسجيل deviceId ← socket.id */
+  socket.on("register_device", ({ deviceId }) => {
+    if (deviceId) {
+      socket.data.deviceId = deviceId;
+      deviceSockets[deviceId] = socket.id;
+      console.log(`✅ ربط deviceId ${deviceId} ← ${socket.id}`);
+    }
+  });
+
   /* ==========================================
-     ✅ أحداث الغرف
+     أحداث الغرف
      ========================================== */
   socket.on("join_room", ({ roomId, deviceId, userName }) => {
     socket.join(roomId);
@@ -398,20 +400,12 @@ io.on("connection", (socket) => {
     socket.emit("message_delivered", { messageId: message.id });
   });
 
-  socket.on("send_voice", ({ roomId, voiceMessage }) => {
-    if (!db.messages[roomId]) db.messages[roomId] = [];
-    db.messages[roomId].push(voiceMessage);
-    saveDb();
-    io.to(roomId).emit("new_message", voiceMessage);
-    socket.emit("message_delivered", { messageId: voiceMessage.id });
-  });
-
   socket.on("typing", ({ roomId, userName }) => {
     socket.to(roomId).emit("user_typing", { userName });
   });
 
   /* ==========================================
-     ✅ أحداث الموجات
+     أحداث الموجات
      ========================================== */
 
   // ✅ الانضمام لموجة
@@ -468,6 +462,11 @@ io.on("connection", (socket) => {
       return;
     }
 
+    if (!wave.ownerDevice) {
+      socket.emit("wave_join_error", { error: "لا يوجد صاحب للموجة" });
+      return;
+    }
+
     const requestId = "req_" + crypto.randomBytes(6).toString("hex");
     db.waveRequests[requestId] = {
       id: requestId,
@@ -480,14 +479,22 @@ io.on("connection", (socket) => {
     };
     saveDb();
 
-    // أرسل الطلب لصاحب الموجة فقط
-    io.emit("wave_join_request_received", {
-      requestId: requestId,
-      waveId: waveId,
-      fromDeviceId: fromDeviceId,
-      fromUserName: fromUserName,
-      toDeviceId: wave.ownerDevice
-    });
+    // ✅ أرسل الطلب لصاحب الموجة فقط
+    const ownerSocketId = deviceSockets[wave.ownerDevice];
+    if (ownerSocketId) {
+      io.to(ownerSocketId).emit("wave_join_request_received", {
+        requestId: requestId,
+        waveId: waveId,
+        fromDeviceId: fromDeviceId,
+        fromUserName: fromUserName,
+        toDeviceId: wave.ownerDevice
+      });
+      console.log(`📩 طلب انضمام من ${fromUserName} أُرسل لصاحب الموجة ${wave.ownerDevice}`);
+    } else {
+      console.log(`⚠️ صاحب الموجة ${wave.ownerDevice} غير متصل الآن`);
+      socket.emit("wave_join_error", { error: "صاحب الموجة غير متصل الآن، حاول لاحقاً" });
+      return;
+    }
 
     socket.emit("wave_join_request_sent", {
       requestId: requestId,
@@ -506,14 +513,19 @@ io.on("connection", (socket) => {
     request.status = accepted ? "accepted" : "rejected";
     saveDb();
 
-    io.emit("wave_join_response_received", {
-      requestId: requestId,
-      waveId: request.waveId,
-      accepted: accepted,
-      fromDeviceId: request.fromDeviceId,
-      fromUserName: request.fromUserName
-    });
+    // ✅ أرسل النتيجة للشخص الذي طلب الانضمام فقط
+    const requesterSocketId = deviceSockets[request.fromDeviceId];
+    if (requesterSocketId) {
+      io.to(requesterSocketId).emit("wave_join_response_received", {
+        requestId: requestId,
+        waveId: request.waveId,
+        accepted: accepted,
+        fromDeviceId: request.fromDeviceId,
+        fromUserName: request.fromUserName
+      });
+    }
 
+    // إذا تم القبول → أضف العضو للموجة
     if (accepted) {
       if (!db.waves[request.waveId]) {
         db.waves[request.waveId] = {
@@ -540,7 +552,7 @@ io.on("connection", (socket) => {
   });
 
   /* ==========================================
-     ✅ البث الصوتي الحي (LiveKit Signaling)
+     البث الحي (إشارات)
      ========================================== */
   socket.on("wave_broadcast_start", ({ waveId, deviceId, userName }) => {
     socket.to("wave_" + waveId).emit("wave_broadcast_start", {
@@ -556,10 +568,16 @@ io.on("connection", (socket) => {
   });
 
   /* ==========================================
-     ✅ قطع الاتصال
+     قطع الاتصال
      ========================================== */
   socket.on("disconnect", () => {
     const { roomId, deviceId, userName, waveId } = socket.data;
+
+    // ✅ احذف من خريطة deviceSockets
+    if (deviceId && deviceSockets[deviceId] === socket.id) {
+      delete deviceSockets[deviceId];
+      console.log(`🗑️ حذف ربط ${deviceId}`);
+    }
 
     if (roomId && db.rooms[roomId] && deviceId) {
       delete db.rooms[roomId].members[deviceId];
@@ -588,6 +606,6 @@ io.on("connection", (socket) => {
    تشغيل السيرفر
    ========================================== */
 server.listen(PORT, () => {
-  console.log(`🚀 Radio Connect Server v3.0 يعمل على المنفذ ${PORT}`);
+  console.log(`🚀 Radio Connect Server v3.1 يعمل على المنفذ ${PORT}`);
   console.log(`📡 LiveKit: ${LIVEKIT_URL ? "✅ مهيّأ" : "❌ غير مهيّأ"}`);
 });
