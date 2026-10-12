@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
 <meta name="theme-color" content="#05080c">
 <title>Radio Connect — راديو كونكت</title>
 <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
@@ -933,13 +933,12 @@ body::before {
 }
 
 .chat-input-bar {
-  position: fixed;
-  bottom: 68px;
-  left: 50%;
-  transform: translateX(-50%);
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
   width: 100%;
-  max-width: 500px;
-  background: linear-gradient(180deg, rgba(11,18,24,.9), rgba(5,8,12,1));
+  background: linear-gradient(180deg, rgba(11,18,24,.95), rgba(5,8,12,1));
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border-top: 1px solid var(--border);
@@ -1004,7 +1003,6 @@ body::before {
   transform: scale(.9);
   box-shadow: 0 0 28px rgba(0,229,255,.95);
 }
-.chat-send:disabled { opacity: .5; }
 
 .chat-icon-btn {
   background: none;
@@ -1022,8 +1020,8 @@ body::before {
 }
 .chat-icon-btn:active { color: var(--cyan); }
 
-.chat-input-bar.typing .chat-ptt { display: none; }
-.chat-input-bar.typing .chat-send { display: flex; }
+.chat-input-bar.typing .chat-ptt { display: none !important; }
+.chat-input-bar.typing .chat-send { display: flex !important; }
 
 .chat-input-wrap {
   flex: 1;
@@ -1756,11 +1754,11 @@ body::before {
       <span class="chat-ptt-label">PTT</span>
     </button>
 
-    <button class="chat-send" id="chatSend" onclick="handleSend()" title="إرسال" disabled>➤</button>
+    <button class="chat-send" id="chatSend" onclick="handleSend()" title="إرسال">➤</button>
 
     <div class="chat-input-wrap">
       <button class="chat-icon-btn" id="chatClip" title="إرفاق">📎</button>
-      <input type="text" class="chat-input" id="chatInput" placeholder="اكتب رسالة...">
+      <input type="text" class="chat-input" id="chatInput" placeholder="اكتب رسالة..." autocomplete="off">
       <button class="chat-icon-btn" id="chatEmoji" title="إيموجي">😊</button>
     </div>
   </div>
@@ -1825,7 +1823,6 @@ body::before {
       <span>تغيير أيقونة الغرفة</span>
     </button>
 
-    <!-- ✅ زر البحث الجديد (البحث عن غرفة) -->
     <button class="modal-menu-item" onclick="openSearchFromRoom()">
       <span class="modal-menu-icon">🔍</span>
       <span>البحث عن غرفة</span>
@@ -1928,7 +1925,7 @@ body::before {
         <span class="attach-icon">📄</span>
         <span>مستند</span>
       </button>
-      <button class="attach-item" onclick="pickContact()">
+      <button class="attach-item" onclick="pickNativeContact()">
         <span class="attach-icon">👥</span>
         <span>جهة اتصال</span>
       </button>
@@ -1939,29 +1936,7 @@ body::before {
     </div>
 
     <div class="modal-actions" style="grid-template-columns:1fr;margin-top:14px;">
-      <button class="modal-btn cancel" onclick="closeModal('modalAttach')">إغلاق</button>
-    </div>
-  </div>
-</div>
-
-<div class="modal-overlay" id="modalContact">
-  <div class="modal">
-    <div class="modal-title">👥 جهة اتصال</div>
-    <div class="modal-sub">أدخل بيانات جهة الاتصال</div>
-
-    <div class="modal-field">
-      <label>الاسم</label>
-      <input type="text" id="contactName" placeholder="اسم الشخص..." maxlength="40">
-    </div>
-
-    <div class="modal-field">
-      <label>رقم الهاتف</label>
-      <input type="tel" id="contactPhone" placeholder="+967..." maxlength="20">
-    </div>
-
-    <div class="modal-actions">
-      <button class="modal-btn cancel" onclick="closeModal('modalContact')">إلغاء</button>
-      <button class="modal-btn confirm" onclick="sendContact()">إرسال</button>
+      <button class="modal-btn cancel" onclick="closeModal('modalAttach')">إلغاء</button>
     </div>
   </div>
 </div>
@@ -2137,7 +2112,6 @@ socket.on("connect", () => {
     statusEl.classList.add("online");
     statusEl.style.color = "";
   }
-  // ✅ إعادة الانضمام للغرفة المحفوظة عند إعادة الاتصال
   if (currentUser.roomCode) {
     socket.emit("join_room", {
       roomId: currentUser.roomCode,
@@ -2527,25 +2501,19 @@ function openEditWaveName() {
   openModal('modalEditWave');
 }
 
-// ✅ فتح نافذة البحث من قائمة الغرفة (البحث عن غرفة)
 function openSearchFromRoom() {
   closeModal('modalRoomMenu');
-  
-  // تغيير نصوص النافذة
   document.getElementById('searchModalTitle').textContent = '🔍 البحث عن غرفة';
   document.getElementById('searchModalSub').textContent = 'ابحث عن غرفة برقمها (RAD-XXXX)';
   document.getElementById('searchModalLabel').textContent = 'رقم الغرفة (RAD-XXXX)';
   document.getElementById('searchQuery').placeholder = 'RAD-0B16DD';
   document.getElementById('searchQuery').value = '';
-  
-  // تفريغ النتائج
   document.getElementById('searchResults').innerHTML = `
     <div class="no-results">
       <span class="no-results-icon">🔎</span>
       اكتب رقم الغرفة (مثل RAD-0B16DD) واضغط بحث
     </div>
   `;
-  
   openModal('modalSearch');
 }
 
@@ -2720,16 +2688,13 @@ async function doSearch() {
   results.innerHTML = `<div class="no-results"><span class="no-results-icon">⏳</span>جاري البحث...</div>`;
   
   try {
-    // ✅ تحديد نوع البحث
     let endpoint = "";
     let isWave = false;
     
     if (q.startsWith("Q")) {
-      // بحث عن موجة
       endpoint = SERVER_URL + "/api/search-wave/" + encodeURIComponent(q);
       isWave = true;
     } else {
-      // بحث عن غرفة
       endpoint = SERVER_URL + "/api/search/" + encodeURIComponent(q);
       isWave = false;
     }
@@ -2741,8 +2706,6 @@ async function doSearch() {
     }
     
     const data = await res.json();
-    
-    // ✅ معالجة النتيجة (غرفة أو موجة)
     const resultCode = data.roomId || data.waveCode;
     const resultName = data.roomName || data.waveName;
     searchResultUser = { code: resultCode, name: resultName };
@@ -2818,8 +2781,9 @@ async function confirmJoin() {
     toast("❌ خطأ في الانضمام", "error");
   }
   searchResultUser = null;
-  }
-  /* ==========================================
+}
+
+/* ==========================================
    المرفقات
    ========================================== */
 document.getElementById('chatClip').addEventListener('click', () => {
@@ -2846,9 +2810,10 @@ function pickFile(type) {
   input.click();
 }
 
-async function pickContact() {
+/* ✅ فتح واجهة جهات اتصال الهاتف الأصلية مباشرة */
+async function pickNativeContact() {
   closeModal('modalAttach');
-
+  
   if ('contacts' in navigator && 'select' in navigator.contacts) {
     try {
       const props = ['name', 'tel'];
@@ -2861,19 +2826,19 @@ async function pickContact() {
         const phone = (c.tel && c.tel[0]) || '';
         if (phone) {
           addContactMessage({ name, phone });
+          toast(`✅ تم اختيار: ${name}`, 'success');
           return;
         }
       }
-      return;
     } catch (e) {
-      console.warn('لم يستطع فتح جهات الاتصال:', e);
+      console.warn('تم إلغاء اختيار جهة الاتصال أو حدوث خطأ:', e);
     }
+  } else {
+    document.getElementById('contactName').value = '';
+    document.getElementById('contactPhone').value = '';
+    openModal('modalContact');
+    toast('📱 اكتب بيانات جهة الاتصال يدوياً', 'success');
   }
-
-  document.getElementById('contactName').value = '';
-  document.getElementById('contactPhone').value = '';
-  openModal('modalContact');
-  toast('📱 اكتب بيانات جهة الاتصال يدوياً', 'success');
 }
 
 function sendContact() {
@@ -3135,19 +3100,17 @@ function addContactMessage(contact) {
 }
 
 /* ==========================================
-   الإدخال والإرسال
+   ✅ التحكم في الإدخال وإظهار زر الإرسال بنجاح
    ========================================== */
 const chatInput = document.getElementById('chatInput');
-const chatSend  = document.getElementById('chatSend');
+const chatInputBar = document.getElementById('chatInputBar');
 
 chatInput.addEventListener('input', () => {
-  const isEmpty = chatInput.value.trim().length === 0;
-  chatSend.disabled = isEmpty;
-  const bar = document.getElementById('chatInputBar');
-  if (isEmpty) {
-    bar.classList.remove('typing');
+  const val = chatInput.value;
+  if (val.trim().length > 0) {
+    chatInputBar.classList.add('typing');
   } else {
-    bar.classList.add('typing');
+    chatInputBar.classList.remove('typing');
   }
 });
 
@@ -3162,11 +3125,11 @@ function handleSend() {
   if (!text) return;
   sendTextMessage(text);
   chatInput.value = '';
-  chatSend.disabled = true;
-  document.getElementById('chatInputBar').classList.remove('typing');
+  chatInputBar.classList.remove('typing');
   chatInput.focus();
 }
-  /* ==========================================
+
+/* ==========================================
    PTT
    ========================================== */
 const pttMain = document.getElementById('pttMain');
@@ -3310,7 +3273,7 @@ function changeChannel() {
 }
 
 /* ==========================================
-   ✅ قائمة الإيموجي الاختيارية (جديد - تم إصلاحها)
+   قائمة الإيموجي
    ========================================== */
 const EMOJI_LIST = [
   '😀','😃','😄','😁','😆','😅','😂','🤣','🥲','🥹',
@@ -3327,14 +3290,12 @@ const EMOJI_LIST = [
 ];
 
 function openEmojiPicker() {
-  // إذا كانت القائمة مفتوحة، أغلقها
   let picker = document.getElementById('emojiPickerModal');
   if (picker) {
     picker.remove();
     return;
   }
 
-  // إنشاء القائمة
   picker = document.createElement('div');
   picker.id = 'emojiPickerModal';
   picker.style.cssText = `
@@ -3382,30 +3343,26 @@ function openEmojiPicker() {
   document.body.appendChild(picker);
 }
 
-// ✅ زر الإيموجي - يفتح القائمة
 document.getElementById('chatEmoji').addEventListener('click', (e) => {
   e.stopPropagation();
   openEmojiPicker();
 });
 
-// ✅ إغلاق القائمة عند النقر في مكان فارغ
 document.addEventListener('click', (e) => {
   const picker = document.getElementById('emojiPickerModal');
   if (picker && !picker.contains(e.target) && e.target.id !== 'chatEmoji') {
     picker.remove();
   }
 });
-  /* ==========================================
-   ✅ التهيئة (مع استرجاع الغرفة المحفوظة)
+
+/* ==========================================
+   التهيئة
    ========================================== */
 window.addEventListener('load', () => {
   const initOnce = async () => {
     await PTTEngine.init();
 
-    // ✅ استرجاع الغرفة المحفوظة إذا كانت موجودة
     if (currentUser.roomCode) {
-      console.log("🔄 استرجاع الغرفة:", currentUser.roomCode);
-
       document.getElementById('roomNameLabel').textContent = currentUser.roomName || 'الغرفة';
       document.getElementById('roomIcon').textContent = currentUser.roomIcon || '💬';
       document.getElementById('roomBadge').style.display = 'block';
