@@ -1939,7 +1939,7 @@ body::before {
     </div>
 
     <div class="modal-actions" style="grid-template-columns:1fr;margin-top:14px;">
-      <button class="modal-btn cancel" onclick="closeModal('modalAttach')">إلغاء</button>
+      <button class="modal-btn cancel" onclick="closeModal('modalAttach')">إغلاق</button>
     </div>
   </div>
 </div>
@@ -2711,25 +2711,48 @@ document.getElementById('roomMenuBtn').addEventListener('click', () => {
 async function doSearch() {
   const q = document.getElementById('searchQuery').value.trim().toUpperCase();
   const results = document.getElementById('searchResults');
+  
   if (!q) {
-    results.innerHTML = `<div class="no-results"><span class="no-results-icon">⚠️</span>اكتب رقم الغرفة أولاً</div>`;
+    results.innerHTML = `<div class="no-results"><span class="no-results-icon">⚠️</span>اكتب الرقم أولاً</div>`;
     return;
   }
+  
   results.innerHTML = `<div class="no-results"><span class="no-results-icon">⏳</span>جاري البحث...</div>`;
+  
   try {
-    const res = await fetch(SERVER_URL + "/api/search/" + encodeURIComponent(q));
+    // ✅ تحديد نوع البحث
+    let endpoint = "";
+    let isWave = false;
+    
+    if (q.startsWith("Q")) {
+      // بحث عن موجة
+      endpoint = SERVER_URL + "/api/search-wave/" + encodeURIComponent(q);
+      isWave = true;
+    } else {
+      // بحث عن غرفة
+      endpoint = SERVER_URL + "/api/search/" + encodeURIComponent(q);
+      isWave = false;
+    }
+    
+    const res = await fetch(endpoint);
     if (!res.ok) {
-      results.innerHTML = `<div class="no-results"><span class="no-results-icon">❌</span>لا توجد غرفة بهذا الرقم</div>`;
+      results.innerHTML = `<div class="no-results"><span class="no-results-icon">❌</span>لا يوجد ${isWave ? 'موجة' : 'غرفة'} بهذا الرقم</div>`;
       return;
     }
+    
     const data = await res.json();
-    searchResultUser = { code: data.roomId, name: data.roomName };
+    
+    // ✅ معالجة النتيجة (غرفة أو موجة)
+    const resultCode = data.roomId || data.waveCode;
+    const resultName = data.roomName || data.waveName;
+    searchResultUser = { code: resultCode, name: resultName };
+    
     results.innerHTML = `
       <div class="search-result-card" onclick="openJoinConfirm()">
-        <div class="search-result-icon">💬</div>
+        <div class="search-result-icon">${isWave ? '📡' : '💬'}</div>
         <div class="search-result-info">
-          <div class="search-result-name">${escapeHtml(data.roomName)}</div>
-          <div class="search-result-code">${data.roomId} • ${data.membersCount} عضو</div>
+          <div class="search-result-name">${escapeHtml(resultName)}</div>
+          <div class="search-result-code">${resultCode} • ${data.membersCount} عضو</div>
         </div>
         <span style="color:var(--cyan);font-size:18px;">→</span>
       </div>
