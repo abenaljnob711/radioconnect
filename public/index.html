@@ -1825,6 +1825,12 @@ body::before {
       <span>تغيير أيقونة الغرفة</span>
     </button>
 
+    <!-- ✅ زر البحث الجديد (البحث عن غرفة) -->
+    <button class="modal-menu-item" onclick="openSearchFromRoom()">
+      <span class="modal-menu-icon">🔍</span>
+      <span>البحث عن غرفة</span>
+    </button>
+
     <button class="modal-menu-item danger" onclick="confirmClearChat()">
       <span class="modal-menu-icon">🗑️</span>
       <span>مسح الدردشة كاملة</span>
@@ -2043,11 +2049,11 @@ body::before {
 
 <div class="modal-overlay" id="modalSearch">
   <div class="modal">
-    <div class="modal-title">🔍 البحث</div>
-    <div class="modal-sub">ابحث عن غرفة برقمها للانضمام</div>
+    <div class="modal-title" id="searchModalTitle">🔍 البحث</div>
+    <div class="modal-sub" id="searchModalSub">ابحث عن غرفة برقمها للانضمام</div>
 
     <div class="modal-field">
-      <label>رقم الغرفة</label>
+      <label id="searchModalLabel">رقم الغرفة</label>
       <input type="text" id="searchQuery" class="code-input" placeholder="RAD-1234" maxlength="15">
     </div>
 
@@ -2109,7 +2115,7 @@ body::before {
 <input type="file" id="hiddenFileInput" style="display:none;">
 
 <script>
-/* ==========================================
+  /* ==========================================
    ✅ الاتصال بالسيرفر (Socket.io)
    ========================================== */
 const SERVER_URL = "https://radio-connect-server.onrender.com";
@@ -2129,7 +2135,7 @@ socket.on("connect", () => {
   if (statusEl) {
     statusEl.textContent = "متصل";
     statusEl.classList.add("online");
-    statusEl.style.color = ""; // إعادة اللون الأصلي
+    statusEl.style.color = "";
   }
   // ✅ إعادة الانضمام للغرفة المحفوظة عند إعادة الاتصال
   if (currentUser.roomCode) {
@@ -2170,7 +2176,6 @@ let currentUser = {
   roomIcon: savedUser.roomIcon || '💬'
 };
 
-// ✅ دالة لحفظ البيانات في localStorage
 function saveCurrentUser() {
   try {
     localStorage.setItem('currentUser', JSON.stringify(currentUser));
@@ -2522,6 +2527,28 @@ function openEditWaveName() {
   openModal('modalEditWave');
 }
 
+// ✅ فتح نافذة البحث من قائمة الغرفة (البحث عن غرفة)
+function openSearchFromRoom() {
+  closeModal('modalRoomMenu');
+  
+  // تغيير نصوص النافذة
+  document.getElementById('searchModalTitle').textContent = '🔍 البحث عن غرفة';
+  document.getElementById('searchModalSub').textContent = 'ابحث عن غرفة برقمها (RAD-XXXX)';
+  document.getElementById('searchModalLabel').textContent = 'رقم الغرفة (RAD-XXXX)';
+  document.getElementById('searchQuery').placeholder = 'RAD-0B16DD';
+  document.getElementById('searchQuery').value = '';
+  
+  // تفريغ النتائج
+  document.getElementById('searchResults').innerHTML = `
+    <div class="no-results">
+      <span class="no-results-icon">🔎</span>
+      اكتب رقم الغرفة (مثل RAD-0B16DD) واضغط بحث
+    </div>
+  `;
+  
+  openModal('modalSearch');
+}
+
 async function createWave() {
   const name = document.getElementById('waveName').value.trim();
   if (!name) { toast('⚠️ أدخل اسم الموجة', 'error'); return; }
@@ -2538,7 +2565,7 @@ async function createWave() {
   document.getElementById('waveNameValue').textContent = name;
   document.getElementById('waveCodeValue').textContent = code;
   document.getElementById('lcdLine1').textContent = code;
-  saveCurrentUser(); // ✅ حفظ
+  saveCurrentUser();
   toast(`✅ تم إنشاء الموجة "${name}"`, 'success');
 }
 
@@ -2556,7 +2583,7 @@ function saveWaveName() {
   if (!name) { toast('⚠️ أدخل اسماً', 'error'); return; }
   currentUser.waveName = name;
   document.getElementById('waveNameValue').textContent = name;
-  saveCurrentUser(); // ✅ حفظ
+  saveCurrentUser();
   toast(`✅ تم تحديث اسم الموجة`, 'success');
   closeModal('modalEditWave');
 }
@@ -2607,7 +2634,7 @@ async function createRoom() {
       userName: currentUser.name
     });
 
-    saveCurrentUser(); // ✅ حفظ
+    saveCurrentUser();
     toast(`✅ تم إنشاء الغرفة "${name}"`, 'success');
   } catch (e) {
     console.error(e);
@@ -2635,7 +2662,7 @@ function saveRoomName() {
   if (!name) { toast('⚠️ أدخل اسماً', 'error'); return; }
   currentUser.roomName = name;
   document.getElementById('roomNameLabel').textContent = name;
-  saveCurrentUser(); // ✅ حفظ
+  saveCurrentUser();
   toast(`✅ تم تحديث اسم الغرفة`, 'success');
   closeModal('modalEditName');
 }
@@ -2654,7 +2681,7 @@ document.querySelectorAll('#iconGrid .icon-option').forEach(el => {
     const icon = el.dataset.icon;
     document.getElementById('roomIcon').textContent = icon;
     currentUser.roomIcon = icon;
-    saveCurrentUser(); // ✅ حفظ
+    saveCurrentUser();
     toast(`✅ تم تغيير الأيقونة`, 'success');
     closeModal('modalEditIcon');
   });
@@ -2759,7 +2786,7 @@ async function confirmJoin() {
       userName: currentUser.name
     });
 
-    saveCurrentUser(); // ✅ حفظ
+    saveCurrentUser();
     closeModal('modalJoinConfirm');
     toast(`✅ انضممت إلى "${data.roomName}"`, 'success');
     switchTab('log');
@@ -3107,15 +3134,6 @@ chatInput.addEventListener('keydown', (e) => {
   }
 });
 
-// ✅ إبقاء الكيبورد مفتوحاً عند مسح النص
-chatInput.addEventListener('blur', () => {
-  setTimeout(() => {
-    if (document.activeElement && document.activeElement.tagName === 'BODY') {
-      // لا نعيد التركيز إلا إذا كان المستخدم قد ضغط على مكان فارغ
-    }
-  }, 10);
-});
-
 function handleSend() {
   const text = chatInput.value.trim();
   if (!text) return;
@@ -3125,7 +3143,7 @@ function handleSend() {
   document.getElementById('chatInputBar').classList.remove('typing');
   chatInput.focus();
 }
- /* ==========================================
+  /* ==========================================
    PTT
    ========================================== */
 const pttMain = document.getElementById('pttMain');
@@ -3138,7 +3156,6 @@ function onPTTStartWave(btn) {
   if (antenna) antenna.classList.add('transmitting');
   if (lcdStatus) lcdStatus.textContent = 'TX';
   
-  // ✅ تغيير "متصل" إلى أحمر عند التحدث
   const statusEl = document.getElementById('connStatus');
   if (statusEl) {
     statusEl.style.color = '#ff2a4d';
@@ -3156,7 +3173,6 @@ function onPTTStopWave(btn) {
   if (antenna) antenna.classList.remove('transmitting');
   if (lcdStatus) lcdStatus.textContent = '•';
   
-  // ✅ إعادة "متصل" إلى أخضر
   const statusEl = document.getElementById('connStatus');
   if (statusEl) {
     statusEl.style.color = '';
@@ -3271,7 +3287,7 @@ function changeChannel() {
 }
 
 /* ==========================================
-   ✅ قائمة الإيموجي الاختيارية (جديد)
+   ✅ قائمة الإيموجي الاختيارية (جديد - تم إصلاحها)
    ========================================== */
 const EMOJI_LIST = [
   '😀','😃','😄','😁','😆','😅','😂','🤣','🥲','🥹',
@@ -3288,20 +3304,49 @@ const EMOJI_LIST = [
 ];
 
 function openEmojiPicker() {
+  // إذا كانت القائمة مفتوحة، أغلقها
   let picker = document.getElementById('emojiPickerModal');
   if (picker) {
     picker.remove();
     return;
   }
 
+  // إنشاء القائمة
   picker = document.createElement('div');
   picker.id = 'emojiPickerModal';
-  picker.className = 'emoji-picker-modal';
+  picker.style.cssText = `
+    position: fixed;
+    bottom: 140px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 95%;
+    max-width: 480px;
+    max-height: 50vh;
+    background: linear-gradient(180deg, #142028, #05080c);
+    border: 1px solid #00e5ff;
+    border-radius: 16px;
+    padding: 12px;
+    overflow-y: auto;
+    z-index: 200;
+    box-shadow: 0 10px 40px rgba(0,229,255,.4);
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 6px;
+  `;
 
   EMOJI_LIST.forEach(emoji => {
     const btn = document.createElement('button');
-    btn.className = 'emoji-item';
     btn.textContent = emoji;
+    btn.style.cssText = `
+      background: none;
+      border: none;
+      font-size: 24px;
+      padding: 6px;
+      cursor: pointer;
+      border-radius: 8px;
+      font-family: inherit;
+      text-align: center;
+    `;
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
       chatInput.value += emoji;
@@ -3314,18 +3359,20 @@ function openEmojiPicker() {
   document.body.appendChild(picker);
 }
 
+// ✅ زر الإيموجي - يفتح القائمة
 document.getElementById('chatEmoji').addEventListener('click', (e) => {
   e.stopPropagation();
   openEmojiPicker();
 });
 
+// ✅ إغلاق القائمة عند النقر في مكان فارغ
 document.addEventListener('click', (e) => {
   const picker = document.getElementById('emojiPickerModal');
   if (picker && !picker.contains(e.target) && e.target.id !== 'chatEmoji') {
     picker.remove();
   }
 });
- /* ==========================================
+  /* ==========================================
    ✅ التهيئة (مع استرجاع الغرفة المحفوظة)
    ========================================== */
 window.addEventListener('load', () => {
@@ -3336,7 +3383,6 @@ window.addEventListener('load', () => {
     if (currentUser.roomCode) {
       console.log("🔄 استرجاع الغرفة:", currentUser.roomCode);
 
-      // استرجاع المعلومات
       document.getElementById('roomNameLabel').textContent = currentUser.roomName || 'الغرفة';
       document.getElementById('roomIcon').textContent = currentUser.roomIcon || '💬';
       document.getElementById('roomBadge').style.display = 'block';
@@ -3345,7 +3391,6 @@ window.addEventListener('load', () => {
       document.getElementById('roomSubLabel').textContent = `📻 ${currentUser.roomCode}`;
       document.getElementById('lcdLine1').textContent = currentUser.roomCode;
 
-      // استرجاع الموجة
       if (currentUser.waveCode) {
         document.getElementById('waveCodeChip').textContent = currentUser.waveCode;
         document.getElementById('waveCodeValue').textContent = currentUser.waveCode;
@@ -3354,7 +3399,6 @@ window.addEventListener('load', () => {
         document.getElementById('waveNameValue').textContent = currentUser.waveName;
       }
 
-      // إعادة الانضمام للغرفة عبر Socket.io
       if (typeof socket !== 'undefined' && socket.connected) {
         socket.emit("join_room", {
           roomId: currentUser.roomCode,
@@ -3364,8 +3408,6 @@ window.addEventListener('load', () => {
       }
 
       toast(`✅ تم استرجاع الغرفة "${currentUser.roomName || currentUser.roomCode}"`, "success");
-
-      // الانتقال لتبويب الغرفة
       switchTab('log');
     }
 
@@ -3386,4 +3428,4 @@ window.addEventListener('beforeunload', () => {
 });
 </script>
 </body>
-</html> 
+</html>
