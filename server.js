@@ -236,6 +236,19 @@ app.get("/api/search/:code", (req, res) => {
   });
 });
 
+// ✅ البحث برقم الموجة (جديد)
+app.get("/api/search-wave/:code", (req, res) => {
+  const code = req.params.code.toUpperCase();
+  const room = Object.values(db.rooms).find(r => r.id === code);
+  if (!room) return res.status(404).json({ error: "لا توجد موجة بهذا الرقم" });
+  res.json({
+    waveCode: room.id,
+    waveName: room.name,
+    channel: room.channel,
+    membersCount: Object.keys(room.members).length
+  });
+});
+
 /* ==========================================
    Socket.io - الرسائل الفورية
    ========================================== */
@@ -284,7 +297,7 @@ io.on("connection", (socket) => {
   socket.on("send_message", ({ roomId, message }) => {
     if (!db.messages[roomId]) db.messages[roomId] = [];
     db.messages[roomId].push(message);
-    if (db.messages[roomId].length > 500) db.messages[roomId].shift();
+    if (db.messages[roomId].length > 1000) db.messages[roomId].shift();
     saveDb();
 
     // إرسال الرسالة لكل من في الغرفة
