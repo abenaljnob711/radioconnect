@@ -42,20 +42,25 @@ jobs:
       - name: Install Capacitor
         run: |
           npm install -g @capacitor/cli
-          npm install @capacitor/core@^6.2.0
-          npm install @capacitor/android@^6.2.0
-          npm install @capacitor/assets@^3.0.0
+          npm install @capacitor/core @capacitor/android @capacitor/assets
 
-      - name: Create www folder
+      - name: Create www folder and resources
         run: |
           mkdir -p www
           cp -r public/* www/
           rm -f www/package.json www/gitignore www/manifest.json
+          mkdir -p resources
+          cp public/icon.png resources/icon.png
+          ls -la resources/
 
       - name: Add Android platform
         run: |
           npx cap add android
           npx cap sync android
+
+      - name: Generate App Icons
+        run: |
+          npx @capacitor/assets generate --android
 
       - name: Add Permissions to AndroidManifest
         run: |
