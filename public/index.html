@@ -346,6 +346,7 @@ body::before {
   text-shadow: 0 0 8px rgba(0,229,255,.6);
 }
 
+/* ✅ تم تصغير الراديو */
 .radio-stage {
   position: relative;
   height: 280px;
@@ -951,6 +952,7 @@ body::before {
 }
 .chat-input-bar.active { display: flex; }
 
+/* ✅ تم تصغير زر PTT في الدردشة */
 .chat-ptt {
   width: 46px; height: 46px;
   border-radius: 50%;
@@ -983,6 +985,7 @@ body::before {
   letter-spacing: .5px;
 }
 
+/* ✅ تم تصغير زر الإرسال */
 .chat-send {
   width: 46px; height: 46px;
   border-radius: 50%;
@@ -1048,34 +1051,6 @@ body::before {
   text-align: right;
 }
 .chat-input::placeholder { color: var(--text-dim); }
-
-/* نافذة اختيار الإيموجي الاختيارية */
-.emoji-picker-modal {
-  position: absolute;
-  bottom: 75px;
-  left: 12px;
-  background: linear-gradient(180deg, var(--card-2), var(--bg));
-  border: 1px solid var(--cyan);
-  border-radius: 14px;
-  padding: 10px;
-  box-shadow: 0 10px 30px rgba(0,229,255,.3);
-  display: none;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 6px;
-  z-index: 105;
-}
-.emoji-picker-modal.show { display: grid; animation: fadeIn .2s ease; }
-.emoji-option {
-  font-size: 22px;
-  padding: 8px;
-  cursor: pointer;
-  text-align: center;
-  border-radius: 8px;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  transition: transform .1s;
-}
-.emoji-option:active { transform: scale(.85); border-color: var(--cyan); }
 
 .settings-list {
   display: flex;
@@ -1786,34 +1761,10 @@ body::before {
 
     <button class="chat-send" id="chatSend" onclick="handleSend()" title="إرسال" disabled>➤</button>
 
-    <div class="chat-input-wrap" style="position: relative;">
+    <div class="chat-input-wrap">
       <button class="chat-icon-btn" id="chatClip" title="إرفاق">📎</button>
       <input type="text" class="chat-input" id="chatInput" placeholder="اكتب رسالة...">
       <button class="chat-icon-btn" id="chatEmoji" title="إيموجي">😊</button>
-
-      <!-- قائمة الإيموجي الاختيارية -->
-      <div class="emoji-picker-modal" id="emojiPicker">
-        <span class="emoji-option" onclick="insertEmoji('😀')">😀</span>
-        <span class="emoji-option" onclick="insertEmoji('😂')">😂</span>
-        <span class="emoji-option" onclick="insertEmoji('🥰')">🥰</span>
-        <span class="emoji-option" onclick="insertEmoji('😎')">😎</span>
-        <span class="emoji-option" onclick="insertEmoji('🤔')">🤔</span>
-        <span class="emoji-option" onclick="insertEmoji('😢')">😢</span>
-        <span class="emoji-option" onclick="insertEmoji('🔥')">🔥</span>
-        <span class="emoji-option" onclick="insertEmoji('❤️')">❤️</span>
-        <span class="emoji-option" onclick="insertEmoji('👍')">👍</span>
-        <span class="emoji-option" onclick="insertEmoji('👏')">👏</span>
-        <span class="emoji-option" onclick="insertEmoji('🙏')">🙏</span>
-        <span class="emoji-option" onclick="insertEmoji('✨')">✨</span>
-        <span class="emoji-option" onclick="insertEmoji('📻')">📻</span>
-        <span class="emoji-option" onclick="insertEmoji('📡')">📡</span>
-        <span class="emoji-option" onclick="insertEmoji('🎉')">🎉</span>
-        <span class="emoji-option" onclick="insertEmoji('💯')">💯</span>
-        <span class="emoji-option" onclick="insertEmoji('⚡')">⚡</span>
-        <span class="emoji-option" onclick="insertEmoji('🚀')">🚀</span>
-        <span class="emoji-option" onclick="insertEmoji('🎯')">🎯</span>
-        <span class="emoji-option" onclick="insertEmoji('💪')">💪</span>
-      </div>
     </div>
   </div>
 
@@ -2830,42 +2781,10 @@ function pickFile(type) {
   input.click();
 }
 
+/* ✅ جهات الاتصال الحقيقية (Android) */
 async function pickContact() {
   closeModal('modalAttach');
 
-  // ✅ أولاً: محاولة استخدام Capacitor Contacts (للـ APK)
-  try {
-    if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Contacts) {
-      const Contacts = window.Capacitor.Plugins.Contacts;
-      
-      const permStatus = await Contacts.requestPermissions();
-      if (permStatus.contacts !== 'granted') {
-        toast('⚠️ يجب السماح بالوصول لجهات الاتصال', 'error');
-        return;
-      }
-
-      const result = await Contacts.pickContact({
-        projection: {
-          name: true,
-          phones: true
-        }
-      });
-
-      if (result && result.name) {
-        const name = result.name.display || result.name.given || 'بدون اسم';
-        const phone = (result.phones && result.phones[0] && result.phones[0].number) || '';
-        if (phone) {
-          addContactMessage({ name, phone });
-          return;
-        }
-      }
-      return;
-    }
-  } catch (e) {
-    console.warn('Capacitor Contacts غير متاح:', e);
-  }
-
-  // ✅ ثانياً: Contacts API (للمتصفح)
   if ('contacts' in navigator && 'select' in navigator.contacts) {
     try {
       const props = ['name', 'tel'];
@@ -2883,16 +2802,9 @@ async function pickContact() {
       }
       return;
     } catch (e) {
-      console.warn('Contacts API غير متاح:', e);
+      console.warn('لم يستطع فتح جهات الاتصال:', e);
     }
   }
-
-  // ✅ ثالثاً: الإدخال اليدوي (الحل الأخير)
-  document.getElementById('contactName').value = '';
-  document.getElementById('contactPhone').value = '';
-  openModal('modalContact');
-  toast('📱 اكتب بيانات جهة الاتصال يدوياً', 'success');
-}
 
   document.getElementById('contactName').value = '';
   document.getElementById('contactPhone').value = '';
@@ -3321,28 +3233,13 @@ function changeChannel() {
 }
 
 /* ==========================================
-   ✅ زر واختيار الإيموجي (اختياري)
+   ✅ زر الإيموجي
    ========================================== */
-const emojiBtn = document.getElementById('chatEmoji');
-const emojiPicker = document.getElementById('emojiPicker');
-
-emojiBtn.addEventListener('click', (e) => {
-  e.stopPropagation();
-  emojiPicker.classList.toggle('show');
-});
-
-function insertEmoji(emoji) {
-  chatInput.value += emoji;
+document.getElementById('chatEmoji').addEventListener('click', () => {
+  const emojis = ['😀','😂','🥰','😎','🤔','😢','🔥','❤️','👍','👏','🙏','✨','📻','📡','🎉','💯','⚡','🚀','🎯','💪'];
+  chatInput.value += emojis[Math.floor(Math.random() * emojis.length)];
   chatInput.dispatchEvent(new Event('input'));
-  emojiPicker.classList.remove('show');
   chatInput.focus();
-}
-
-// إغلاق نافذة الإيموجي عند النقر خارجها
-document.addEventListener('click', (e) => {
-  if (!emojiPicker.contains(e.target) && e.target !== emojiBtn) {
-    emojiPicker.classList.remove('show');
-  }
 });
 
 /* ==========================================
