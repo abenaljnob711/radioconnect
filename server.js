@@ -1,8 +1,9 @@
 "use strict";
 
 /* ==========================================
-   Radio Connect Server - v2.0
+   Radio Connect Server - v3.0 FINAL
    Node.js + Express + LiveKit + Socket.io
+   + Waves System (طلب انضمام + موافقة + بث حي)
    ========================================== */
 
 const express = require("express");
@@ -25,7 +26,8 @@ try {
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
-  cors: { origin: "*", methods: ["GET", "POST"] }
+  cors: { origin: "*", methods: ["GET", "POST"] },
+  maxHttpBufferSize: 1e8
 });
 
 const PORT = process.env.PORT || 3000;
@@ -40,12 +42,14 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.static(path.join(__dirname, "public")));
 
 /* ==========================================
-   قاعدة البيانات (JSON)
+   قاعدة البيانات
    ========================================== */
 let db = {
   devices: {},
   rooms: {},
   messages: {},
+  waves: {},
+  waveRequests: {},
   roomCounter: 0
 };
 
@@ -53,12 +57,17 @@ function generateRoomId() {
   return "RAD-" + crypto.randomBytes(3).toString("hex").toUpperCase();
 }
 
-function generateDeviceId() {
-  return "dev_" + crypto.randomBytes(8).toString("hex");
+function generateWaveId() {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let code = "Q";
+  for (let i = 0; i < 5; i++) {
+    code += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return code;
 }
 
-function generatePersonalCode() {
-  return crypto.randomBytes(3).toString("hex").toUpperCase();
+function generateDeviceId() {
+  return "dev_" + crypto.randomBytes(8).toString("hex");
 }
 
 function now() {
@@ -73,6 +82,8 @@ function loadDb() {
       db.devices = parsed.devices || {};
       db.rooms = parsed.rooms || {};
       db.messages = parsed.messages || {};
+      db.waves = parsed.waves || {};
+      db.waveRequests = parsed.waveRequests || {};
       db.roomCounter = parsed.roomCounter || 0;
     }
   } catch (e) {
@@ -97,13 +108,115 @@ app.get("/", (req, res) => {
   res.json({
     status: "ok",
     name: "Radio Connect Server",
-    version: "2.0",
+    version: "3.0",
     livekit: LIVEKIT_URL ? "configured" : "not configured",
     uptime: process.uptime()
   });
 });
 
-// ✅ إنشاء غرفة جديدة
+/* ==========================================
+   ✅ APIs الموجات
+   ========================================== */
+
+// ✅ إنشاء / استرجاع موجة للمستخدم
+app.post("/api/waves/create", (req, res) => {
+  try {
+    const { deviceId, waveName } = req.body;
+    if (!deviceId) {
+      return res.status(400).json({ error: "deviceId مطلوب" });
+    }
+
+    // إذا كان له موجة سابقة → أرجعها
+    if (db.devices[deviceId] && db.devices[deviceId].waveId) {
+      const existingWaveId = db.devices[deviceId].waveId;
+      const existingWave = db.waves[existingWaveId];
+      if (existingWave) {
+        return res.json({
+          success: true,
+          waveId: existingWaveId,
+          waveName: existingWave.name,
+          isNew: false
+        });
+      }
+    }
+
+    // توليد موجة جديدة
+    let waveId;
+    do {
+      waveId = generateWaveId();
+    } while (db.waves[waveId]);
+
+    db.waves[waveId] = {
+      id: waveId,
+      name: waveName || "موجتي",
+      ownerDevice: deviceId,
+      createdAt: now(),
+      listeners: {}
+    };
+
+    if (!db.devices[deviceId]) db.devices[deviceId] = {};
+    db.devices[deviceId].waveId = waveId;
+
+    saveDb();
+
+    res.json({
+      success: true,
+      waveId: waveId,
+      waveName: db.waves[waveId].name,
+      isNew: true
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ✅ معلومات موجة
+app.get("/api/waves/:waveId", (req, res) => {
+  const wave = db.waves[req.params.waveId];
+  if (!wave) return res.status(404).json({ error: "الموجة غير موجودة" });
+  res.json({
+    waveId: wave.id,
+    waveName: wave.name,
+    listenersCount: Object.keys(wave.listeners).length,
+    ownerDevice: wave.ownerDevice
+  });
+});
+
+// ✅ البحث عن موجة
+app.get("/api/waves/search/:code", (req, res) => {
+  const code = req.params.code.toUpperCase();
+  const wave = db.waves[code];
+  if (!wave) {
+    return res.status(404).json({ error: "لا توجد موجة بهذا الرقم" });
+  }
+  res.json({
+    waveId: wave.id,
+    waveName: wave.name,
+    listenersCount: Object.keys(wave.listeners).length,
+    ownerDevice: wave.ownerDevice
+  });
+});
+
+// ✅ تعديل اسم الموجة
+app.post("/api/waves/rename", (req, res) => {
+  try {
+    const { waveId, newName, deviceId } = req.body;
+    const wave = db.waves[waveId];
+    if (!wave) return res.status(404).json({ error: "الموجة غير موجودة" });
+    if (wave.ownerDevice !== deviceId) {
+      return res.status(403).json({ error: "غير مصرح" });
+    }
+    wave.name = newName || wave.name;
+    saveDb();
+    res.json({ success: true, waveName: wave.name });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+/* ==========================================
+   ✅ APIs الغرف
+   ========================================== */
 app.post("/api/rooms/create", (req, res) => {
   try {
     const { name, channel, deviceId } = req.body;
@@ -136,7 +249,6 @@ app.post("/api/rooms/create", (req, res) => {
   }
 });
 
-// ✅ الانضمام إلى غرفة
 app.post("/api/rooms/join", (req, res) => {
   try {
     const { roomId, deviceId, userName } = req.body;
@@ -172,14 +284,27 @@ app.post("/api/rooms/join", (req, res) => {
   }
 });
 
-// ✅ معلومات غرفة
 app.get("/api/rooms/:roomId", (req, res) => {
   const room = db.rooms[req.params.roomId];
   if (!room) return res.status(404).json({ error: "الغرفة غير موجودة" });
   res.json(room);
 });
 
-// ✅ توليد Token لـ LiveKit (للصوت)
+app.get("/api/search/:code", (req, res) => {
+  const code = req.params.code.toUpperCase();
+  const room = Object.values(db.rooms).find(r => r.id === code);
+  if (!room) return res.status(404).json({ error: "لا توجد غرفة بهذا الرقم" });
+  res.json({
+    roomId: room.id,
+    roomName: room.name,
+    channel: room.channel,
+    membersCount: Object.keys(room.members).length
+  });
+});
+
+/* ==========================================
+   ✅ LiveKit Token
+   ========================================== */
 app.post("/api/livekit/token", async (req, res) => {
   try {
     const { roomId, deviceId, userName } = req.body;
@@ -190,7 +315,6 @@ app.post("/api/livekit/token", async (req, res) => {
     if (!roomId || !deviceId) {
       return res.status(400).json({ error: "بيانات ناقصة" });
     }
-
     if (!AccessToken) {
       return res.status(500).json({ error: "مكتبة LiveKit غير مثبتة" });
     }
@@ -223,39 +347,15 @@ app.post("/api/livekit/token", async (req, res) => {
   }
 });
 
-// ✅ البحث برقم الغرفة
-app.get("/api/search/:code", (req, res) => {
-  const code = req.params.code.toUpperCase();
-  const room = Object.values(db.rooms).find(r => r.id === code);
-  if (!room) return res.status(404).json({ error: "لا توجد غرفة بهذا الرقم" });
-  res.json({
-    roomId: room.id,
-    roomName: room.name,
-    channel: room.channel,
-    membersCount: Object.keys(room.members).length
-  });
-});
-
-// ✅ البحث برقم الموجة (جديد)
-app.get("/api/search-wave/:code", (req, res) => {
-  const code = req.params.code.toUpperCase();
-  const room = Object.values(db.rooms).find(r => r.id === code);
-  if (!room) return res.status(404).json({ error: "لا توجد موجة بهذا الرقم" });
-  res.json({
-    waveCode: room.id,
-    waveName: room.name,
-    channel: room.channel,
-    membersCount: Object.keys(room.members).length
-  });
-});
-
 /* ==========================================
-   Socket.io - الرسائل الفورية
+   Socket.io
    ========================================== */
 io.on("connection", (socket) => {
   console.log("🔌 مستخدم متصل:", socket.id);
 
-  // ✅ الانضمام لغرفة Socket.io
+  /* ==========================================
+     ✅ أحداث الغرف
+     ========================================== */
   socket.on("join_room", ({ roomId, deviceId, userName }) => {
     socket.join(roomId);
     socket.data.roomId = roomId;
@@ -280,52 +380,188 @@ io.on("connection", (socket) => {
     };
     saveDb();
 
-    // إشعار الجميع بانضمام عضو جديد
     io.to(roomId).emit("member_joined", {
       deviceId,
       userName,
       members: Object.values(db.rooms[roomId].members)
     });
 
-    // إرسال الرسائل السابقة
     socket.emit("previous_messages", db.messages[roomId] || []);
-
-    console.log(`👤 ${userName} انضم لغرفة ${roomId}`);
   });
 
-  // ✅ استقبال رسالة نصية
   socket.on("send_message", ({ roomId, message }) => {
     if (!db.messages[roomId]) db.messages[roomId] = [];
     db.messages[roomId].push(message);
     if (db.messages[roomId].length > 1000) db.messages[roomId].shift();
     saveDb();
-
-    // إرسال الرسالة لكل من في الغرفة
     io.to(roomId).emit("new_message", message);
-
-    // إشعار المرسل بأن الرسالة تم تسليمها
     socket.emit("message_delivered", { messageId: message.id });
   });
 
-  // ✅ استقبال رسالة صوتية
   socket.on("send_voice", ({ roomId, voiceMessage }) => {
     if (!db.messages[roomId]) db.messages[roomId] = [];
     db.messages[roomId].push(voiceMessage);
     saveDb();
-
     io.to(roomId).emit("new_message", voiceMessage);
     socket.emit("message_delivered", { messageId: voiceMessage.id });
   });
 
-  // ✅ مؤشر "يكتب الآن"
   socket.on("typing", ({ roomId, userName }) => {
     socket.to(roomId).emit("user_typing", { userName });
   });
 
-  // ✅ مغادرة
+  /* ==========================================
+     ✅ أحداث الموجات
+     ========================================== */
+
+  // ✅ الانضمام لموجة
+  socket.on("wave_join", ({ waveId, deviceId, userName }) => {
+    socket.join("wave_" + waveId);
+    socket.data.waveId = waveId;
+    socket.data.deviceId = deviceId;
+    socket.data.userName = userName;
+
+    if (!db.waves[waveId]) {
+      db.waves[waveId] = {
+        id: waveId,
+        name: waveId,
+        ownerDevice: null,
+        createdAt: now(),
+        listeners: {}
+      };
+    }
+
+    db.waves[waveId].listeners[deviceId] = {
+      id: deviceId,
+      name: userName || "مستخدم",
+      joinedAt: now()
+    };
+    saveDb();
+
+    io.to("wave_" + waveId).emit("wave_listener_joined", {
+      deviceId,
+      userName,
+      listeners: Object.values(db.waves[waveId].listeners)
+    });
+
+    console.log(`📻 ${userName} انضم للموجة ${waveId}`);
+  });
+
+  // ✅ خروج من موجة
+  socket.on("wave_leave", ({ waveId, deviceId }) => {
+    if (db.waves[waveId] && db.waves[waveId].listeners[deviceId]) {
+      delete db.waves[waveId].listeners[deviceId];
+      saveDb();
+      io.to("wave_" + waveId).emit("wave_listener_left", {
+        deviceId,
+        listeners: Object.values(db.waves[waveId].listeners)
+      });
+    }
+    socket.leave("wave_" + waveId);
+  });
+
+  // ✅ إرسال طلب انضمام لموجة
+  socket.on("wave_join_request", ({ waveId, fromDeviceId, fromUserName }) => {
+    const wave = db.waves[waveId];
+    if (!wave) {
+      socket.emit("wave_join_error", { error: "الموجة غير موجودة" });
+      return;
+    }
+
+    const requestId = "req_" + crypto.randomBytes(6).toString("hex");
+    db.waveRequests[requestId] = {
+      id: requestId,
+      waveId: waveId,
+      fromDeviceId: fromDeviceId,
+      fromUserName: fromUserName,
+      toDeviceId: wave.ownerDevice,
+      createdAt: now(),
+      status: "pending"
+    };
+    saveDb();
+
+    // أرسل الطلب لصاحب الموجة فقط
+    io.emit("wave_join_request_received", {
+      requestId: requestId,
+      waveId: waveId,
+      fromDeviceId: fromDeviceId,
+      fromUserName: fromUserName,
+      toDeviceId: wave.ownerDevice
+    });
+
+    socket.emit("wave_join_request_sent", {
+      requestId: requestId,
+      waveId: waveId
+    });
+  });
+
+  // ✅ الرد على طلب انضمام
+  socket.on("wave_join_response", ({ requestId, accepted }) => {
+    const request = db.waveRequests[requestId];
+    if (!request) {
+      socket.emit("wave_join_error", { error: "الطلب غير موجود" });
+      return;
+    }
+
+    request.status = accepted ? "accepted" : "rejected";
+    saveDb();
+
+    io.emit("wave_join_response_received", {
+      requestId: requestId,
+      waveId: request.waveId,
+      accepted: accepted,
+      fromDeviceId: request.fromDeviceId,
+      fromUserName: request.fromUserName
+    });
+
+    if (accepted) {
+      if (!db.waves[request.waveId]) {
+        db.waves[request.waveId] = {
+          id: request.waveId,
+          name: request.waveId,
+          ownerDevice: null,
+          createdAt: now(),
+          listeners: {}
+        };
+      }
+      db.waves[request.waveId].listeners[request.fromDeviceId] = {
+        id: request.fromDeviceId,
+        name: request.fromUserName,
+        joinedAt: now()
+      };
+      saveDb();
+
+      io.to("wave_" + request.waveId).emit("wave_listener_joined", {
+        deviceId: request.fromDeviceId,
+        userName: request.fromUserName,
+        listeners: Object.values(db.waves[request.waveId].listeners)
+      });
+    }
+  });
+
+  /* ==========================================
+     ✅ البث الصوتي الحي (LiveKit Signaling)
+     ========================================== */
+  socket.on("wave_broadcast_start", ({ waveId, deviceId, userName }) => {
+    socket.to("wave_" + waveId).emit("wave_broadcast_start", {
+      deviceId: deviceId,
+      userName: userName
+    });
+  });
+
+  socket.on("wave_broadcast_stop", ({ waveId, deviceId }) => {
+    socket.to("wave_" + waveId).emit("wave_broadcast_stop", {
+      deviceId: deviceId
+    });
+  });
+
+  /* ==========================================
+     ✅ قطع الاتصال
+     ========================================== */
   socket.on("disconnect", () => {
-    const { roomId, deviceId, userName } = socket.data;
-    if (roomId && db.rooms[roomId]) {
+    const { roomId, deviceId, userName, waveId } = socket.data;
+
+    if (roomId && db.rooms[roomId] && deviceId) {
       delete db.rooms[roomId].members[deviceId];
       saveDb();
       io.to(roomId).emit("member_left", {
@@ -334,6 +570,16 @@ io.on("connection", (socket) => {
         members: Object.values(db.rooms[roomId].members)
       });
     }
+
+    if (waveId && db.waves[waveId] && deviceId) {
+      delete db.waves[waveId].listeners[deviceId];
+      saveDb();
+      io.to("wave_" + waveId).emit("wave_listener_left", {
+        deviceId,
+        listeners: Object.values(db.waves[waveId].listeners)
+      });
+    }
+
     console.log("❌ مستخدم غادر:", socket.id);
   });
 });
@@ -342,6 +588,6 @@ io.on("connection", (socket) => {
    تشغيل السيرفر
    ========================================== */
 server.listen(PORT, () => {
-  console.log(`🚀 Radio Connect Server يعمل على المنفذ ${PORT}`);
+  console.log(`🚀 Radio Connect Server v3.0 يعمل على المنفذ ${PORT}`);
   console.log(`📡 LiveKit: ${LIVEKIT_URL ? "✅ مهيّأ" : "❌ غير مهيّأ"}`);
 });
