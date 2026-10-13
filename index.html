@@ -1,45 +1,1123 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>اتصال لاسلكي</title>
-<link rel="manifest" href="manifest.json">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
+<meta name="theme-color" content="#05080c">
+<title>Radio Connect — راديو كونكت</title>
 <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-<style>body{background:#111;color:#fff;font-family:sans-serif;text-align:center;padding:20px}input,button{padding:12px;margin:5px;border-radius:10px;border:none;width:80%}button{background:#00e676;color:#000;font-weight:bold}.card{background:#222;padding:15px;border-radius:15px;margin:10px}</style>
+
+<style>
+*, *::before, *::after {
+  margin: 0; padding: 0; box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+:root {
+  --bg: #05080c;
+  --card: #0f1921;
+  --card-2: #142028;
+  --border: #1c2a36;
+  --text: #e6f0f5;
+  --text-dim: #6b8899;
+  --cyan: #00e5ff;
+  --cyan-dark: #008fa8;
+  --green: #00ff88;
+  --red: #ff2a4d;
+  --red-dark: #b01530;
+  --blue-msg: #1a4d6b;
+  --red-msg: #6b1220;
+  --red-msg-2: #45080f;
+  --radius: 14px;
+}
+
+html, body { height: 100%; overflow: hidden; background: var(--bg); }
+
+body {
+  font-family: 'Segoe UI', 'Tahoma', system-ui, -apple-system, sans-serif;
+  color: var(--text);
+  user-select: none;
+  -webkit-user-select: none;
+  position: relative;
+}
+
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(0,229,255,.06), transparent 45%),
+    radial-gradient(circle at 80% 80%, rgba(0,255,136,.05), transparent 45%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.app {
+  position: relative;
+  z-index: 1;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.screen {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: none;
+  padding: 14px 14px 160px;
+  animation: fadeIn .3s ease;
+  scrollbar-width: none;
+}
+.screen::-webkit-scrollbar { display: none; }
+.screen.active { display: block; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.top-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 4px 14px;
+}
+
+.brand { display: flex; align-items: center; gap: 8px; }
+
+.brand-icon {
+  font-size: 26px;
+  line-height: 1;
+  filter: drop-shadow(0 0 8px rgba(0,229,255,.7));
+  animation: iconPulse 2s ease-in-out infinite;
+}
+
+@keyframes iconPulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: .65; }
+}
+
+.brand-text { display: flex; flex-direction: column; line-height: 1.15; }
+.brand-title {
+  font-size: 19px;
+  font-weight: 800;
+  color: var(--cyan);
+  letter-spacing: .3px;
+  text-shadow: 0 0 14px rgba(0,229,255,.5);
+}
+.brand-sub {
+  font-size: 11px;
+  color: var(--text-dim);
+  font-weight: 500;
+}
+
+.header-right {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12px;
+  color: var(--cyan);
+  font-weight: 700;
+}
+
+.menu-toggle {
+  width: 42px; height: 42px;
+  border-radius: 11px;
+  background: linear-gradient(180deg, var(--card-2), var(--card));
+  border: 1px solid var(--border);
+  color: var(--cyan);
+  font-size: 22px;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all .2s;
+  font-family: inherit;
+  flex-shrink: 0;
+  line-height: 1;
+}
+.menu-toggle:active {
+  transform: scale(.94);
+  border-color: var(--cyan);
+}
+.menu-toggle.open {
+  background: linear-gradient(180deg, #00e5ff, #008fa8);
+  color: #001418;
+  border-color: var(--cyan);
+  box-shadow: 0 0 18px rgba(0,229,255,.6);
+}
+
+.side-menu {
+  position: fixed;
+  top: 0; right: 0;
+  height: 100vh;
+  width: 280px;
+  background: linear-gradient(180deg, var(--card-2), var(--bg));
+  border-left: 1px solid var(--cyan);
+  box-shadow: -12px 0 40px rgba(0,229,255,.25);
+  z-index: 300;
+  transform: translateX(110%);
+  transition: transform .32s cubic-bezier(.4,0,.2,1);
+  display: flex;
+  flex-direction: column;
+  padding: 20px 16px;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+.side-menu::-webkit-scrollbar { display: none; }
+.side-menu.open { transform: translateX(0); }
+
+.side-menu-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.7);
+  backdrop-filter: blur(3px);
+  z-index: 299;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .3s;
+}
+.side-menu-backdrop.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.side-menu-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 16px;
+}
+
+.side-menu-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--cyan);
+}
+
+.side-menu-close {
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 12px;
+  background: linear-gradient(180deg, rgba(255,255,255,.02), transparent);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin-bottom: 10px;
+  color: var(--text);
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all .2s;
+  text-align: right;
+  width: 100%;
+}
+.menu-item:active {
+  transform: scale(.97);
+  border-color: var(--cyan);
+}
+
+.menu-item .menu-icon {
+  width: 40px; height: 40px;
+  border-radius: 11px;
+  background: rgba(0,229,255,.1);
+  border: 1px solid rgba(0,229,255,.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 19px;
+  flex-shrink: 0;
+}
+.menu-item .menu-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+.menu-item .menu-label {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: var(--text);
+}
+.menu-item .menu-desc {
+  font-size: 10.5px;
+  color: var(--text-dim);
+  font-weight: 500;
+}
+
+.status-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 7px;
+  margin-bottom: 14px;
+}
+
+.chip {
+  background: linear-gradient(180deg, var(--card-2), var(--card));
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 9px 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  font-size: 10.5px;
+  color: var(--text-dim);
+  min-height: 54px;
+  text-align: center;
+}
+
+.chip-value {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.chip-value.online { color: var(--green); }
+
+.chip-value.online::before {
+  content: '';
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 8px var(--green);
+  animation: dotPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes dotPulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: .35; }
+}
+
+.chip-label { font-size: 10px; color: var(--text-dim); }
+
+.chip-value.code {
+  color: var(--cyan);
+  font-family: 'Courier New', monospace;
+  letter-spacing: 1px;
+  font-size: 13px;
+  font-weight: 900;
+  text-shadow: 0 0 8px rgba(0,229,255,.6);
+}
+
+.radio-stage {
+  position: relative;
+  height: 280px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 8px 0 16px;
+}
+
+.radio-device {
+  position: relative;
+  width: 170px;
+  height: 260px;
+  filter: drop-shadow(0 20px 40px rgba(0,0,0,.8))
+          drop-shadow(0 0 30px rgba(0,229,255,.15));
+}
+
+.antenna {
+  position: absolute;
+  top: 0; right: 46px;
+  width: 16px; height: 76px;
+  background: linear-gradient(90deg, #0a0a0a, #2b2b2b 40%, #0a0a0a);
+  border-radius: 8px 8px 2px 2px;
+}
+.antenna::before {
+  content: '';
+  position: absolute;
+  top: -6px; left: 50%;
+  transform: translateX(-50%);
+  width: 10px; height: 10px;
+  background: #0a0a0a;
+  border-radius: 50%;
+  box-shadow: 0 0 5px rgba(0,229,255,.4);
+  transition: all .15s ease;
+}
+
+.antenna.transmitting::before {
+  background: #00ff00 !important;
+  box-shadow: 0 0 10px #00ff00, 0 0 20px #00ff00 !important;
+}
+
+.knobs {
+  position: absolute;
+  top: 70px; right: 14px;
+  display: flex; gap: 16px;
+}
+
+.knob {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #4a4a4a, #0d0d0d);
+  border: 2px solid #1c1c1c;
+  position: relative;
+}
+
+.body-main {
+  position: absolute;
+  top: 88px; left: 0; right: 0;
+  height: 172px;
+  background: linear-gradient(180deg, #1e1e1e, #0a0a0a);
+  border-radius: 14px;
+  border: 2px solid #0a0a0a;
+  overflow: hidden;
+}
+
+.lcd {
+  position: absolute;
+  top: 12px; left: 16px; right: 16px;
+  height: 52px;
+  background: #0a1a0f;
+  border: 2px solid #050505;
+  border-radius: 5px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 5px 8px;
+  font-family: 'Courier New', monospace;
+  color: var(--green);
+  text-shadow: 0 0 7px rgba(0,255,136,.9);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.lcd-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 9.5px;
+}
+
+.lcd-row .lcd-label { color: #00cc70; }
+
+.side-btns {
+  position: absolute;
+  top: 74px; left: 10px; right: 10px;
+  display: flex;
+  justify-content: space-between;
+  font-size: 7px;
+  color: #666;
+  font-weight: 700;
+}
+
+.side-btn {
+  padding: 2px 6px;
+  background: #1a1a1a;
+  border-radius: 3px;
+  border: 1px solid #2a2a2a;
+}
+
+.speaker-grill {
+  position: absolute;
+  bottom: 10px; left: 20px; right: 20px;
+  height: 38px;
+  border-radius: 5px;
+  background: repeating-linear-gradient(90deg, #050505 0, #050505 3px, #1a1a1a 3px, #1a1a1a 6px);
+}
+
+.ptt-btn {
+  position: absolute;
+  top: 112px; left: 50%;
+  transform: translateX(-50%);
+  width: 85px; height: 50px;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #0a2a3a, #041520);
+  border: 2px solid var(--cyan);
+  box-shadow: 0 0 22px rgba(0,229,255,.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--cyan);
+  font-weight: 900;
+  font-size: 19px;
+  letter-spacing: 2px;
+  cursor: pointer;
+  transition: all .15s;
+  z-index: 5;
+}
+
+.ptt-btn.holding {
+  transform: translateX(-50%) scale(.95);
+  background: linear-gradient(180deg, #00e5ff, #008fa8);
+  color: #001418;
+  box-shadow: 0 0 45px rgba(0,229,255,1);
+}
+
+.ptt-sub {
+  position: absolute;
+  top: 168px; left: 50%;
+  transform: translateX(-50%);
+  font-size: 7px;
+  color: var(--cyan-dark);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.tab-bar {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 500px;
+  background: linear-gradient(180deg, rgba(11,18,24,.85), rgba(5,8,12,1));
+  backdrop-filter: blur(12px);
+  border-top: 1px solid var(--border);
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  padding: 8px 0 10px;
+  z-index: 100;
+}
+
+.tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 6px 0;
+  color: var(--text-dim);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  background: none;
+  border: none;
+}
+.tab.active { color: var(--cyan); }
+.tab.active::after {
+  content: '';
+  position: absolute;
+  top: -8px; left: 50%;
+  transform: translateX(-50%);
+  width: 28px; height: 3px;
+  background: var(--cyan);
+  border-radius: 0 0 3px 3px;
+}
+.tab-icon { font-size: 22px; line-height: 1; }
+
+.bottom-info {
+  position: fixed;
+  bottom: 68px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 500px;
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-dim);
+  padding: 8px 0;
+  pointer-events: none;
+  z-index: 99;
+}
+.bottom-info .hl { color: var(--cyan); font-weight: 700; }
+
+.log-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 4px 14px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 14px;
+  gap: 8px;
+}
+
+.log-title {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  text-align: right;
+  flex: 1;
+}
+.log-title h2 {
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--cyan);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.log-title .sub {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.log-actions {
+  display: flex;
+  gap: 12px;
+  color: var(--cyan);
+  font-size: 20px;
+}
+.log-actions span { cursor: pointer; }
+
+.encrypted-badge { text-align: center; margin-bottom: 16px; }
+
+.encrypted-badge-inner {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(0,255,136,.06);
+  border: 1px solid rgba(0,255,136,.2);
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 11px;
+  color: var(--green);
+}
+
+.room-users {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 4px 0 10px;
+  margin-bottom: 10px;
+  scrollbar-width: none;
+}
+
+.user-pill {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  background: var(--card-2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  font-size: 11px;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+.user-pill.active {
+  border-color: var(--green);
+  color: var(--green);
+}
+
+.user-avatar {
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--cyan), var(--cyan-dark));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #001418;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.empty-room {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  gap: 14px;
+  color: var(--text-dim);
+}
+.empty-room-icon {
+  font-size: 60px;
+  opacity: .35;
+}
+.empty-room-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--cyan);
+}
+
+.empty-room-btn {
+  margin-top: 14px;
+  padding: 14px 28px;
+  background: linear-gradient(180deg, #00e5ff, #008fa8);
+  border: 1px solid var(--cyan);
+  border-radius: 12px;
+  color: #001418;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.msg {
+  margin-bottom: 12px;
+  position: relative;
+}
+
+.msg-in  { margin-right: 0; margin-left: auto; }
+.msg-out { margin-left: 0; margin-right: auto; }
+
+.msg-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  font-weight: 700;
+  margin-bottom: 5px;
+  padding: 0 8px;
+}
+.msg-in  .msg-header { color: var(--cyan); justify-content: flex-end; }
+.msg-out .msg-header { color: #ff5577; }
+
+.msg-body {
+  border-radius: 10px;
+  padding: 8px 12px 6px 12px;
+  display: inline-block;
+  max-width: 85%;
+  word-wrap: break-word;
+  text-align: right;
+}
+
+.msg-in .msg-body { background: #202c33; color: #e9edef; }
+.msg-out .msg-body { background: linear-gradient(135deg, var(--red-msg), #45080f); color: #e9edef; }
+
+.voice-msg {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.play-btn {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  background: rgba(0,229,255,.15);
+  border: 1.5px solid var(--cyan);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--cyan);
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.voice-meta {
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
+  font-size: 10px;
+  color: rgba(255,255,255,.6);
+  margin-top: 4px;
+}
+
+.text-msg {
+  font-size: 14px;
+  line-height: 1.5;
+  color: #e9edef;
+}
+
+.chat-input-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0; right: 0;
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+  background: rgba(5,8,12,.95);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid var(--border);
+  padding: 10px 12px 14px;
+  display: none;
+  align-items: center;
+  gap: 8px;
+  z-index: 105;
+}
+.chat-input-bar.active { display: flex; }
+
+.chat-ptt {
+  width: 46px; height: 46px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #ff2a4d, #b01530);
+  border: 1.5px solid #ff5577;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 22px;
+  cursor: pointer;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.chat-send {
+  width: 46px; height: 46px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #00e5ff, #008fa8);
+  border: 1.5px solid var(--cyan);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  color: #001418;
+  font-size: 20px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.chat-icon-btn {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  padding: 4px;
+  font-size: 20px;
+}
+
+.chat-input-bar.typing .chat-ptt { display: none !important; }
+.chat-input-bar.typing .chat-send { display: flex !important; }
+
+.chat-input-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--card-2);
+  border: 1px solid var(--border);
+  border-radius: 26px;
+  padding: 6px 12px;
+  min-height: 46px;
+}
+
+.chat-input {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-size: 14px;
+  text-align: right;
+}
+
+.toast {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-100px);
+  background: var(--card-2);
+  border: 1px solid var(--cyan);
+  color: var(--text);
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-size: 13px;
+  z-index: 999;
+  transition: transform .35s ease;
+  text-align: center;
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.8);
+  backdrop-filter: blur(4px);
+  z-index: 500;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.modal-overlay.show { display: flex; }
+
+.modal {
+  width: 100%;
+  max-width: 400px;
+  background: linear-gradient(180deg, var(--card-2), var(--bg));
+  border: 1px solid var(--cyan);
+  border-radius: 18px;
+  padding: 22px 18px;
+}
+
+.modal-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--cyan);
+  text-align: center;
+  margin-bottom: 6px;
+}
+
+.modal-field { margin-bottom: 14px; }
+.modal-field label { display: block; font-size: 12px; color: var(--text-dim); margin-bottom: 6px; }
+.modal-field input {
+  width: 100%;
+  padding: 12px 14px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  outline: none;
+  text-align: right;
+}
+
+.modal-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 18px; }
+.modal-btn {
+  padding: 13px;
+  border-radius: 10px;
+  border: 1px solid;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.modal-btn.cancel { background: transparent; border-color: var(--border); color: var(--text-dim); }
+.modal-btn.confirm { background: linear-gradient(180deg, #00e5ff, #008fa8); border-color: var(--cyan); color: #001418; }
+</style>
 </head>
 <body>
-<h1>📡 اتصال لاسلكي</h1>
-<div id="reg" class="card"><input id="userName" placeholder="اسمك"><br><button onclick="register()">تسجيل دخول</button><p id="myCode"></p></div>
-<div id="main" style="display:none" class="card"><input id="waveName" placeholder="اسم الموجة"><button onclick="createWave()">إنشاء موجة جديدة</button><hr><input id="waveIdInput" placeholder="ادخل رقم الموجة Q..."><button onclick="joinWave()">انضمام لموجة</button><div id="status"></div><div id="members"></div></div>
+  <div class="app">
+
+  <section class="screen active" id="screen-radio">
+    <header class="top-header">
+      <button class="menu-toggle" id="menuToggle">☰</button>
+      <div class="header-right"><span>S458 • Q307</span></div>
+      <div class="brand">
+        <div class="brand-text">
+          <span class="brand-title">Radio Connect</span>
+          <span class="brand-sub">راديو كونكت</span>
+        </div>
+        <span class="brand-icon">📻</span>
+      </div>
+    </header>
+
+    <div class="status-row">
+      <div class="chip"><div class="chip-value online" id="connStatus">متصل</div></div>
+      <div class="chip">
+        <div class="chip-value" id="waveNameChipLabel" style="font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:90px;">—</div>
+        <div class="chip-label">اسم الموجة</div>
+      </div>
+      <div class="chip">
+        <div class="chip-value code" id="waveCodeChip">Q30712</div>
+        <div class="chip-label">رقم الموجة</div>
+      </div>
+    </div>
+
+    <div class="radio-stage">
+      <div class="radio-device">
+        <div class="antenna"></div>
+        <div class="knobs"><div class="knob"></div><div class="knob"></div></div>
+
+        <div class="body-main">
+          <div class="lcd">
+            <div class="lcd-row">
+              <span class="lcd-label" id="lcdLine1">Q30712</span>
+              <span id="lcdLine2">S458</span>
+            </div>
+            <div class="lcd-row">
+              <span class="lcd-label" id="lcdLine3">LIVE PTT</span>
+              <span id="lcdStatus">•</span>
+            </div>
+          </div>
+          <div class="side-btns"><span class="side-btn">MENU</span><span class="side-btn">A/B</span></div>
+          <div class="speaker-grill"></div>
+        </div>
+
+        <button class="ptt-btn" id="pttMain">PTT</button>
+        <div class="ptt-sub">LIVE DIRECT TALK</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="screen-log">
+    <div class="log-header">
+      <div class="log-actions">
+        <span id="roomMenuBtn">☰</span>
+        <span onclick="toast('معلومات القناة')">ⓘ</span>
+      </div>
+      <div class="log-title">
+        <h2><span id="roomIcon">💬</span> <span id="roomNameLabel">الغرفة</span></h2>
+        <span class="sub" id="roomSubLabel">📻 غرفة المحادثة والتراسل</span>
+      </div>
+    </div>
+
+    <div class="encrypted-badge" id="roomBadge" style="display:none;">
+      <span class="encrypted-badge-inner">متصل الآن: <span id="membersCount">1</span> | قناة آمنة</span>
+    </div>
+
+    <div class="room-users" id="roomUsers" style="display:none;"></div>
+    <div id="roomMessages"></div>
+
+    <div class="empty-room" id="emptyRoom">
+      <div class="empty-room-icon">💬</div>
+      <div class="empty-room-title">لا توجد غرفة بعد</div>
+      <button class="empty-room-btn" onclick="openCreateRoom()">➕ إنشاء غرفة جديدة</button>
+    </div>
+  </section>
+
+  <nav class="tab-bar">
+    <button class="tab" data-tab="log" onclick="switchTab('log')">
+      <span class="tab-icon">💬</span><span>الغرفة</span>
+    </button>
+    <button class="tab active" data-tab="radio" onclick="switchTab('radio')">
+      <span class="tab-icon">📡</span><span>النداء المباشر</span>
+    </button>
+  </nav>
+
+  <div class="bottom-info" id="bottomInfo">إشارة: <span class="hl">قوي</span></div>
+
+  <!-- مربع إدخال الرسائل والمرفقات للغرفة -->
+  <div class="chat-input-bar" id="chatInputBar">
+    <button class="chat-ptt" id="chatPTT" title="تسجيل صوتي للغرفة">🎤</button>
+    <button class="chat-send" id="chatSend" onclick="handleSend()">➤</button>
+    <div class="chat-input-wrap">
+      <button class="chat-icon-btn" id="chatClip">📎</button>
+      <input type="text" class="chat-input" id="chatInput" placeholder="اكتب رسالة للغرفة..." autocomplete="off">
+    </div>
+  </div>
+
+</div>
+
+<div class="side-menu-backdrop" id="menuBackdrop"></div>
+<aside class="side-menu" id="sideMenu">
+  <div class="side-menu-header">
+    <div class="side-menu-title">⚙️ الإعدادات السريعة</div>
+    <button class="side-menu-close" onclick="closeSideMenu()">✕</button>
+  </div>
+  <button class="menu-item" onclick="openCreateWave()"><span class="menu-icon">📡</span><span>إنشاء موجة جديدة</span></button>
+  <button class="menu-item" onclick="openSearch('wave')"><span class="menu-icon">🔍</span><span>البحث عن موجة</span></button>
+</aside>
+
+<div class="modal-overlay" id="modalSearch">
+  <div class="modal">
+    <div class="modal-title" id="searchModalTitle">🔍 البحث</div>
+    <div class="modal-field">
+      <label id="searchModalLabel">الرقم المعرف</label>
+      <input type="text" id="searchQuery" style="text-align:center;" placeholder="أدخل الرقم...">
+    </div>
+    <div class="modal-actions" style="grid-template-columns:1fr;">
+      <button class="modal-btn confirm" onclick="doSearch()">بحث</button>
+    </div>
+    <div id="searchResults" style="margin-top:10px;"></div>
+    <div class="modal-actions" style="grid-template-columns:1fr;margin-top:10px;">
+      <button class="modal-btn cancel" onclick="closeModal('modalSearch')">إغلاق</button>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="hiddenFileInput" style="display:none;">
+<input type="file" id="nativeCameraInput" accept="image/*" capture="environment" style="display:none;">
+
 <script>
 const SERVER_URL = "https://radio-connect-server.onrender.com";
-let socket, deviceId = localStorage.getItem('deviceId') || 'DEV-' + Math.random().toString(36).substring(2,9);
-localStorage.setItem('deviceId', deviceId);
+const socket = io(SERVER_URL, { transports: ["websocket", "polling"] });
 
-async function register(){
-  const userName = document.getElementById('userName').value; if(!userName) return alert('اكتب اسمك');
-  const res = await fetch(SERVER_URL + '/api/users/register', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ deviceId, userName }) });
-  const data = await res.json();
-  document.getElementById('myCode').innerText = 'كودك: ' + data.radCode + ' | جهازك: ' + deviceId;
-  document.getElementById('reg').style.display='none'; document.getElementById('main').style.display='block';
-  socket = io(SERVER_URL);
-  socket.emit('register_device', { deviceId, userName });
-  socket.on('wave_join_request_received', (d)=>{ if(confirm(d.fromUserName + ' يريد الانضمام للموجة ' + d.waveId + ' موافق؟')) socket.emit('wave_join_response', { requestId: d.requestId, accepted: true }); else socket.emit('wave_join_response', { requestId: d.requestId, accepted: false }); });
-  socket.on('wave_members_updated', (d)=>{ document.getElementById('members').innerHTML = '<h3>الأعضاء:</h3>' + d.members.map(m=>'<p>'+m.name+' '+(m.isOwner?'👑':'')+'</p>').join(''); });
-  socket.on('wave_join_response_received', (d)=>{ if(d.accepted){ alert('تم قبولك في الموجة ' + d.waveId); socket.emit('wave_join', { waveId: d.waveId, deviceId, userName }); document.getElementById('status').innerText='متصل بالموجة '+d.waveId; } else alert('تم رفض طلبك'); });
+let currentSearchType = 'wave';
+let currentUser = { id: 'Q' + Math.floor(100 + Math.random() * 900), name: 'أنا', waveCode: 'Q30712', waveName: 'الموجة الرئيسية', roomCode: null };
+
+/* ==========================================
+   الصوت الحي المباشر للموجة (Direct Web Audio Live Streaming)
+   ========================================== */
+let liveMediaStream = null;
+let liveAudioContext = null;
+
+async function startLiveWaveBroadcasting() {
+  try {
+    liveMediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    liveAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+    document.getElementById('connStatus').textContent = '🔴 بث حي مباشر';
+    document.getElementById('connStatus').style.color = '#00ff88';
+    socket.emit("wave_live_start", { waveCode: currentUser.waveCode, sender: currentUser.id });
+    toast("🎙️ جاري البث الحي المباشر للموجة...", "success");
+  } catch(e) {
+    toast("❌ تعذر الوصول للميكروفون للبث الحي", "error");
+  }
 }
-async function createWave(){
-  const waveName = document.getElementById('waveName').value || 'موجتي';
-  const res = await fetch(SERVER_URL + '/api/waves/create', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ deviceId, waveName }) });
-  const data = await res.json();
-  document.getElementById('status').innerText = 'تم إنشاء الموجة رقم: ' + data.waveId + ' شاركه مع اصدقائك';
-  socket.emit('wave_join', { waveId: data.waveId, deviceId, userName: document.getElementById('userName').value });
+
+function stopLiveWaveBroadcasting() {
+  if (liveMediaStream) {
+    liveMediaStream.getTracks().forEach(t => t.stop());
+    liveMediaStream = null;
+  }
+  document.getElementById('connStatus').textContent = 'متصل';
+  document.getElementById('connStatus').style.color = '';
+  socket.emit("wave_live_stop", { waveCode: currentUser.waveCode, sender: currentUser.id });
 }
-function joinWave(){
-  const waveId = document.getElementById('waveIdInput').value.toUpperCase().trim(); if(!waveId) return;
-  socket.emit('wave_join_request', { waveId, fromDeviceId: deviceId, fromUserName: document.getElementById('userName').value });
-  document.getElementById('status').innerText = 'تم إرسال طلب انضمام لـ ' + waveId + ' بانتظار موافقة المالك...';
+
+/* أحداث زر الموجة المباشر */
+const pttMain = document.getElementById('pttMain');
+pttMain.addEventListener('mousedown', () => startLiveWaveBroadcasting());
+pttMain.addEventListener('mouseup', () => stopLiveWaveBroadcasting());
+pttMain.addEventListener('touchstart', (e) => { e.preventDefault(); startLiveWaveBroadcasting(); });
+pttMain.addEventListener('touchend', (e) => { e.preventDefault(); stopLiveWaveBroadcasting(); });
+
+/* ==========================================
+   التنقل والتراسل داخل الغرفة
+   ========================================== */
+function switchTab(tabName) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('screen-' + tabName).classList.add('active');
+  document.querySelector(`.tab[data-tab="${tabName}"]`).classList.add('active');
+
+  const chatBar = document.getElementById('chatInputBar');
+  if (tabName === 'log') {
+    chatBar.classList.add('active');
+  } else {
+    chatBar.classList.remove('active');
+  }
 }
+
+const chatInput = document.getElementById('chatInput');
+const chatInputBar = document.getElementById('chatInputBar');
+
+chatInput.addEventListener('input', () => {
+  if (chatInput.value.trim().length > 0) chatInputBar.classList.add('typing');
+  else chatInputBar.classList.remove('typing');
+});
+
+function handleSend() {
+  const text = chatInput.value.trim();
+  if (!text) return;
+  
+  const msg = { text, sender: currentUser.id, time: Date.now() };
+  renderOutgoingMessage(msg);
+  socket.emit("send_message", { roomId: currentUser.roomCode, message: msg });
+  
+  chatInput.value = '';
+  chatInputBar.classList.remove('typing');
+}
+
+function renderOutgoingMessage(msg) {
+  document.getElementById('emptyRoom').style.display = 'none';
+  const box = document.getElementById('roomMessages');
+  const div = document.createElement('div');
+  div.className = 'msg msg-out';
+  div.innerHTML = `<div class="msg-header">أنا</div><div class="msg-body"><div class="text-msg">${msg.text}</div></div>`;
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+}
+
+function toast(msg, type = '') {
+  let el = document.getElementById('toast') || document.createElement('div');
+  el.className = 'toast show ' + type;
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => el.classList.remove('show'), 2000);
+}
+
+function openSearch(type) {
+  currentSearchType = type;
+  document.getElementById('searchModalTitle').textContent = type === 'wave' ? '🔍 البحث عن موجة' : '🔍 البحث عن غرفة';
+  document.getElementById('searchModalLabel').textContent = type === 'wave' ? 'رقم الموجة (QXXXXX)' : 'رقم الغرفة (GXXXX)';
+  document.getElementById('modalSearch').classList.add('show');
+}
+
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+function closeSideMenu() { document.getElementById('sideMenu').classList.remove('open'); document.getElementById('menuBackdrop').classList.remove('show'); }
+document.getElementById('menuToggle').addEventListener('click', () => { document.getElementById('sideMenu').classList.add('open'); document.getElementById('menuBackdrop').classList.add('show'); });
 </script>
 </body>
 </html>
