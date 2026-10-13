@@ -1,26 +1,45 @@
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width">
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>اتصال لاسلكي</title>
 <link rel="manifest" href="manifest.json">
-<link rel="icon" href="icon.png">
-<style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{background:#0f172a;color:#fff;font-family:system-ui;display:flex;flex-direction:column;align-items:center;padding:20px}
-h1{color:#38bdf8;margin:15px}
-.card{background:#1e293b;border-radius:20px;padding:24px;width:100%;max-width:400px;text-align:center}
-.btn{width:100%;padding:16px;background:#38bdf8;color:#0f172a;border:none;border-radius:12px;font-size:18px;font-weight:bold;margin-top:15px}
-</style>
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<style>body{background:#111;color:#fff;font-family:sans-serif;text-align:center;padding:20px}input,button{padding:12px;margin:5px;border-radius:10px;border:none;width:80%}button{background:#00e676;color:#000;font-weight:bold}.card{background:#222;padding:15px;border-radius:15px;margin:10px}</style>
 </head>
 <body>
-<div style="font-size:60px">📡</div>
-<h1>اتصال لاسلكي</h1>
-<div class="card">
-<div id="status">جاهز للاتصال</div>
-<button class="btn" onclick="document.getElementById('status').innerHTML='جاري البحث... 📡<br>تم العثور على جهاز ✅'">🔍 البحث عن أجهزة</button>
-</div>
+<h1>📡 اتصال لاسلكي</h1>
+<div id="reg" class="card"><input id="userName" placeholder="اسمك"><br><button onclick="register()">تسجيل دخول</button><p id="myCode"></p></div>
+<div id="main" style="display:none" class="card"><input id="waveName" placeholder="اسم الموجة"><button onclick="createWave()">إنشاء موجة جديدة</button><hr><input id="waveIdInput" placeholder="ادخل رقم الموجة Q..."><button onclick="joinWave()">انضمام لموجة</button><div id="status"></div><div id="members"></div></div>
+<script>
+const SERVER_URL = "https://radio-connect-server.onrender.com";
+let socket, deviceId = localStorage.getItem('deviceId') || 'DEV-' + Math.random().toString(36).substring(2,9);
+localStorage.setItem('deviceId', deviceId);
+
+async function register(){
+  const userName = document.getElementById('userName').value; if(!userName) return alert('اكتب اسمك');
+  const res = await fetch(SERVER_URL + '/api/users/register', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ deviceId, userName }) });
+  const data = await res.json();
+  document.getElementById('myCode').innerText = 'كودك: ' + data.radCode + ' | جهازك: ' + deviceId;
+  document.getElementById('reg').style.display='none'; document.getElementById('main').style.display='block';
+  socket = io(SERVER_URL);
+  socket.emit('register_device', { deviceId, userName });
+  socket.on('wave_join_request_received', (d)=>{ if(confirm(d.fromUserName + ' يريد الانضمام للموجة ' + d.waveId + ' موافق؟')) socket.emit('wave_join_response', { requestId: d.requestId, accepted: true }); else socket.emit('wave_join_response', { requestId: d.requestId, accepted: false }); });
+  socket.on('wave_members_updated', (d)=>{ document.getElementById('members').innerHTML = '<h3>الأعضاء:</h3>' + d.members.map(m=>'<p>'+m.name+' '+(m.isOwner?'👑':'')+'</p>').join(''); });
+  socket.on('wave_join_response_received', (d)=>{ if(d.accepted){ alert('تم قبولك في الموجة ' + d.waveId); socket.emit('wave_join', { waveId: d.waveId, deviceId, userName }); document.getElementById('status').innerText='متصل بالموجة '+d.waveId; } else alert('تم رفض طلبك'); });
+}
+async function createWave(){
+  const waveName = document.getElementById('waveName').value || 'موجتي';
+  const res = await fetch(SERVER_URL + '/api/waves/create', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ deviceId, waveName }) });
+  const data = await res.json();
+  document.getElementById('status').innerText = 'تم إنشاء الموجة رقم: ' + data.waveId + ' شاركه مع اصدقائك';
+  socket.emit('wave_join', { waveId: data.waveId, deviceId, userName: document.getElementById('userName').value });
+}
+function joinWave(){
+  const waveId = document.getElementById('waveIdInput').value.toUpperCase().trim(); if(!waveId) return;
+  socket.emit('wave_join_request', { waveId, fromDeviceId: deviceId, fromUserName: document.getElementById('userName').value });
+  document.getElementById('status').innerText = 'تم إرسال طلب انضمام لـ ' + waveId + ' بانتظار موافقة المالك...';
+}
+</script>
 </body>
 </html>
