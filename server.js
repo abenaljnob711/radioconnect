@@ -113,4 +113,30 @@ app.post("/api/waves/rename", (req, res) => {
   res.json({ success: true });
 });
 
-app.post("/api/waves/remove-member", (req, res
+app.post("/api/waves/remove-member", (req, res) => {
+  const { waveId, memberId } = req.body;
+  if (waves[waveId]) {
+    waves[waveId].members = waves[waveId].members.filter(m=>m.id!==memberId);
+    io.to(waveId).emit("wave_members_updated", { members: waves[waveId].members });
+    const s = deviceSocket[memberId];
+    if (s) io.to(s).emit("wave_removed", { waveId });
+  }
+  res.json({ success: true });
+});
+
+app.post("/api/users/register", (req, res) => {
+  const { deviceId, userName } = req.body;
+  if (!users[deviceId]) users[deviceId] = { deviceId, userName, radCode: genRadCode() };
+  res.json({ success: true, radCode: users[deviceId].radCode, deviceId });
+});
+
+app.get("/api/users/search/:radCode", (req, res) => {
+  const u = Object.values(users).find(x=>x.radCode===req.params.radCode.toUpperCase());
+  if (!u) return res.status(404).json({ error: "not found" });
+  res.json(u);
+});
+
+app.get("/", (req,res)=> res.send("Radio Connect Server Live ✅"));
+
+const PORT = process.env.PORT || 10000;
+server.listen(PORT, ()=> console.log("Live on " + PORT));
