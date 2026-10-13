@@ -1,1 +1,26 @@
 
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<title>اتصال لاسلكي</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.png">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0f172a;color:#fff;font-family:system-ui;display:flex;flex-direction:column;align-items:center;padding:20px}
+h1{color:#38bdf8;margin:15px}
+.card{background:#1e293b;border-radius:20px;padding:24px;width:100%;max-width:400px;text-align:center}
+.btn{width:100%;padding:16px;background:#38bdf8;color:#0f172a;border:none;border-radius:12px;font-size:18px;font-weight:bold;margin-top:15px}
+</style>
+</head>
+<body>
+<div style="font-size:60px">📡</div>
+<h1>اتصال لاسلكي</h1>
+<div class="card">
+<div id="status">جاهز للاتصال</div>
+<button class="btn" onclick="document.getElementById('status').innerHTML='جاري البحث... 📡<br>تم العثور على جهاز ✅'">🔍 البحث عن أجهزة</button>
+</div>
+</body>
+</html>
