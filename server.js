@@ -4,7 +4,7 @@ const cors = require("cors");
 const { Server } = require("socket.io");
 
 const app = express();
-app.use(cors());
+app.use(cors({ origin: "*" }));
 app.use(express.json());
 
 const server = http.createServer(app);
@@ -15,23 +15,14 @@ let users = {};
 let deviceSocket = {};
 let pendingRequests = {};
 
-function genWaveId() {
-  return 'Q' + Math.floor(100000 + Math.random()*900000);
-}
-function genRadCode() {
-  return 'RAD-' + Math.random().toString(36).substring(2,7).toUpperCase();
-}
-function genReqId() {
-  return 'REQ' + Date.now();
-}
+function genWaveId() { return 'Q' + Math.floor(100000 + Math.random()*900000); }
+function genRadCode() { return 'RAD-' + Math.random().toString(36).substring(2,7).toUpperCase(); }
+function genReqId() { return 'REQ' + Date.now(); }
 
 io.on("connection", (socket) => {
-
   socket.on("register_device", ({ deviceId, userName }) => {
     deviceSocket[deviceId] = socket.id;
-    if (!users[deviceId]) {
-      users[deviceId] = { deviceId, userName, radCode: genRadCode() };
-    }
+    if (!users[deviceId]) users[deviceId] = { deviceId, userName, radCode: genRadCode() };
     users[deviceId].userName = userName;
     socket.join(deviceId);
   });
@@ -56,12 +47,9 @@ io.on("connection", (socket) => {
     }
     const requestId = genReqId();
     pendingRequests[requestId] = { waveId, fromDeviceId, fromUserName, toDeviceId: wave.ownerId };
-
     const ownerSocketId = deviceSocket[wave.ownerId];
     if (ownerSocketId) {
-      io.to(ownerSocketId).emit("wave_join_request_received", {
-        requestId, waveId, fromDeviceId, fromUserName, toDeviceId: wave.ownerId
-      });
+      io.to(ownerSocketId).emit("wave_join_request_received", { requestId, waveId, fromDeviceId, fromUserName });
     }
     socket.emit("wave_join_request_sent", { requestId, waveId });
   });
@@ -71,16 +59,13 @@ io.on("connection", (socket) => {
     if (!req) return;
     const { waveId, fromDeviceId, fromUserName } = req;
     const requesterSocket = deviceSocket[fromDeviceId];
-
     if (requesterSocket) {
-      io.to(requesterSocket).emit("wave_join_response_received", {
-        waveId, accepted, fromUserName: "", direct: false
-      });
+      io.to(requesterSocket).emit("wave_join_response_received", { waveId, accepted });
     }
     if (accepted && waves[waveId]) {
       const u = users[fromDeviceId];
       if (!waves[waveId].members.find(m=>m.id===fromDeviceId)) {
-        waves[waveId].members.push({ id: fromDeviceId, name: u?.userName || fromUserName || "مستخدم", online: true, isOwner: false });
+        waves[waveId].members.push({ id: fromDeviceId, name: u?.userName || fromUserName, online: true, isOwner: false });
         io.to(waveId).emit("wave_members_updated", { members: waves[waveId].members });
       }
     }
@@ -88,9 +73,7 @@ io.on("connection", (socket) => {
   });
 
   socket.on("disconnect", () => {
-    for (let did in deviceSocket) {
-      if (deviceSocket[did] === socket.id) delete deviceSocket[did];
-    }
+    for (let did in deviceSocket) if (deviceSocket[did] === socket.id) delete deviceSocket[did];
   });
 });
 
@@ -126,7 +109,9 @@ app.post("/api/waves/remove-member", (req, res) => {
 
 app.post("/api/users/register", (req, res) => {
   const { deviceId, userName } = req.body;
+  if (!deviceId) return res.status(400).json({ error: "deviceId required" });
   if (!users[deviceId]) users[deviceId] = { deviceId, userName, radCode: genRadCode() };
+  users[deviceId].userName = userName;
   res.json({ success: true, radCode: users[deviceId].radCode, deviceId });
 });
 
@@ -137,6 +122,7 @@ app.get("/api/users/search/:radCode", (req, res) => {
 });
 
 app.get("/", (req,res)=> res.send("Radio Connect Server Live ✅"));
+app.get("/health", (req,res)=> res.json({ status: "ok", users: Object.keys(users).length, waves: Object.keys(waves).length }));
 
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, ()=> console.log("Live on " + PORT));
