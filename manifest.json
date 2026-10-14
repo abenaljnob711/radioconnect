@@ -1,1 +1,15 @@
-{"name":"اتصال لاسلكي","short_name":"لاسلكي","start_url":"./","display":"standalone","background_color":"#111","theme_color":"#00e676","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/726/726488.png","sizes":"512x512","type":"image/png"}]}
+{
+  "name": "اتصال لاسلكي",
+  "short_name": "لاسلكي",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#111",
+  "theme_color": "#00e676",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/726/726488.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
