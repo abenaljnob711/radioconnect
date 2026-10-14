@@ -43,9 +43,7 @@ const deviceSockets = {};
 app.use(cors());
 app.use(express.json({ limit: "10mb" }));
 
-// ✅ تقديم ملفات public (الواجهة + الأيقونات)
 app.use(express.static(path.join(__dirname, "public")));
-// ✅ تقديم الملفات في الجذر أيضاً (مثل icon.png)
 app.use(express.static(__dirname));
 
 /* ==========================================
@@ -111,7 +109,6 @@ loadDb();
    APIs
    ========================================== */
 
-// ✅ الصفحة الرئيسية — تقديم الواجهة
 app.get("/", (req, res) => {
   const indexPath = path.join(__dirname, "public", "index.html");
   if (fs.existsSync(indexPath)) {
@@ -128,7 +125,6 @@ app.get("/", (req, res) => {
   }
 });
 
-// ✅ معلومات السيرفر
 app.get("/status", (req, res) => {
   res.json({
     status: "ok",
@@ -141,9 +137,6 @@ app.get("/status", (req, res) => {
   });
 });
 
-/* ==========================================
-   ✅ تسجيل المستخدم
-   ========================================== */
 app.post("/api/users/register", (req, res) => {
   try {
     const { deviceId, userName } = req.body;
@@ -179,9 +172,6 @@ app.post("/api/users/register", (req, res) => {
   }
 });
 
-/* ==========================================
-   ✅ البحث عن مستخدم بـ RAD
-   ========================================== */
 app.get("/api/users/search/:radCode", (req, res) => {
   const code = req.params.radCode.toUpperCase();
   const user = Object.values(db.devices).find(u => u.radCode === code);
@@ -195,9 +185,6 @@ app.get("/api/users/search/:radCode", (req, res) => {
   });
 });
 
-/* ==========================================
-   ✅ المحادثات الفردية
-   ========================================== */
 app.post("/api/conversations/start", (req, res) => {
   try {
     const { myDeviceId, otherDeviceId } = req.body;
@@ -294,9 +281,6 @@ app.get("/api/conversations/:convId/messages", (req, res) => {
   }
 });
 
-/* ==========================================
-   ✅ الموجات
-   ========================================== */
 app.post("/api/waves/create", (req, res) => {
   try {
     const { deviceId, waveName } = req.body;
@@ -421,9 +405,6 @@ app.post("/api/waves/remove-member", (req, res) => {
   }
 });
 
-/* ==========================================
-   LiveKit Token
-   ========================================== */
 app.post("/api/livekit/token", async (req, res) => {
   try {
     const { roomId, deviceId, userName } = req.body;
@@ -457,9 +438,6 @@ app.post("/api/livekit/token", async (req, res) => {
   }
 });
 
-/* ==========================================
-   Socket.io
-   ========================================== */
 io.on("connection", (socket) => {
   console.log("🔌 متصل:", socket.id);
 
