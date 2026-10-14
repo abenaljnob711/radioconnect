@@ -2,10 +2,6 @@
 
 /* ==========================================
    Radio Connect Server - v4.2 FIXED
-   + LiveKit للبث الحي
-   + موجات بقائمة دائمة
-   + محادثات فردية (RAD)
-   + حل مشكلة index.html
    ========================================== */
 
 const express = require("express");
@@ -42,13 +38,9 @@ const deviceSockets = {};
 
 app.use(cors());
 app.use(express.json({ limit: "10mb" }));
-
 app.use(express.static(path.join(__dirname, "public")));
 app.use(express.static(__dirname));
 
-/* ==========================================
-   قاعدة البيانات
-   ========================================== */
 let db = {
   devices: {},
   waves: {},
@@ -105,10 +97,6 @@ function saveDb() {
 
 loadDb();
 
-/* ==========================================
-   APIs
-   ========================================== */
-
 app.get("/", (req, res) => {
   const indexPath = path.join(__dirname, "public", "index.html");
   if (fs.existsSync(indexPath)) {
@@ -119,7 +107,6 @@ app.get("/", (req, res) => {
       name: "Radio Connect Server",
       version: "4.2",
       livekit: LIVEKIT_URL ? "configured" : "not configured",
-      note: "public/index.html غير موجود",
       uptime: process.uptime()
     });
   }
