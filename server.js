@@ -1,7 +1,8 @@
 "use strict";
 
 /* ==========================================
-   Radio Connect Server - v4.2 FIXED
+   Radio Connect Server - v4.3
+   RadCode format: Q#####
    ========================================== */
 
 const express = require("express");
@@ -49,7 +50,10 @@ let db = {
   messages: {}
 };
 
-function generateWaveId() {
+/* ==========================================
+   ✅ توليد كود RadCode بصيغة Q#####
+   ========================================== */
+function generateRadCode() {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   let code = "Q";
   for (let i = 0; i < 5; i++) {
@@ -58,8 +62,19 @@ function generateWaveId() {
   return code;
 }
 
-function generateRadCode() {
-  return "RAD-" + crypto.randomBytes(3).toString("hex").toUpperCase();
+/* توليد كود موجة (نفس الصيغة) */
+function generateWaveId() {
+  return generateRadCode();
+}
+
+/* توليد كود غرفة (يبدأ بـ G) */
+function generateRoomCode() {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let code = "G";
+  for (let i = 0; i < 5; i++) {
+    code += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return code;
 }
 
 function generateConversationId(devA, devB) {
@@ -97,6 +112,10 @@ function saveDb() {
 
 loadDb();
 
+/* ==========================================
+   المسارات (Routes)
+   ========================================== */
+
 app.get("/", (req, res) => {
   const indexPath = path.join(__dirname, "public", "index.html");
   if (fs.existsSync(indexPath)) {
@@ -105,7 +124,7 @@ app.get("/", (req, res) => {
     res.json({
       status: "ok",
       name: "Radio Connect Server",
-      version: "4.2",
+      version: "4.3",
       livekit: LIVEKIT_URL ? "configured" : "not configured",
       uptime: process.uptime()
     });
@@ -116,7 +135,7 @@ app.get("/status", (req, res) => {
   res.json({
     status: "ok",
     name: "Radio Connect Server",
-    version: "4.2",
+    version: "4.3",
     livekit: LIVEKIT_URL ? "configured" : "not configured",
     uptime: process.uptime(),
     waves: Object.keys(db.waves).length,
@@ -124,6 +143,7 @@ app.get("/status", (req, res) => {
   });
 });
 
+/* تسجيل مستخدم جديد */
 app.post("/api/users/register", (req, res) => {
   try {
     const { deviceId, userName } = req.body;
@@ -141,7 +161,7 @@ app.post("/api/users/register", (req, res) => {
       saveDb();
     } else {
       if (userName) db.devices[deviceId].name = userName;
-      if (!db.devices[deviceId].radCode) {
+      if (!db.devices[deviceId].radCode || db.devices[deviceId].radCode.startsWith("RAD-")) {
         db.devices[deviceId].radCode = generateRadCode();
         saveDb();
       }
@@ -159,6 +179,7 @@ app.post("/api/users/register", (req, res) => {
   }
 });
 
+/* البحث عن مستخدم */
 app.get("/api/users/search/:radCode", (req, res) => {
   const code = req.params.radCode.toUpperCase();
   const user = Object.values(db.devices).find(u => u.radCode === code);
@@ -171,6 +192,10 @@ app.get("/api/users/search/:radCode", (req, res) => {
     waveId: user.waveId
   });
 });
+
+/* ==========================================
+   المحادثات (Conversations)
+   ========================================== */
 
 app.post("/api/conversations/start", (req, res) => {
   try {
@@ -216,6 +241,7 @@ app.post("/api/conversations/start", (req, res) => {
   }
 });
 
+/* قائمة محادثات المستخدم */
 app.get("/api/conversations/list/:deviceId", (req, res) => {
   try {
     const deviceId = req.params.deviceId;
@@ -258,6 +284,7 @@ app.get("/api/conversations/list/:deviceId", (req, res) => {
   }
 });
 
+/* رسائل محادثة معينة */
 app.get("/api/conversations/:convId/messages", (req, res) => {
   try {
     const convId = req.params.convId;
@@ -267,6 +294,10 @@ app.get("/api/conversations/:convId/messages", (req, res) => {
     res.status(500).json({ error: e.message });
   }
 });
+
+/* ==========================================
+   الموجات (Waves / الفرق)
+   ========================================== */
 
 app.post("/api/waves/create", (req, res) => {
   try {
@@ -293,7 +324,7 @@ app.post("/api/waves/create", (req, res) => {
 
     db.waves[waveId] = {
       id: waveId,
-      name: waveName || "موجتي",
+      name: waveName || "فرقتي",
       ownerDevice: deviceId,
       createdAt: now(),
       members: {},
@@ -392,6 +423,10 @@ app.post("/api/waves/remove-member", (req, res) => {
   }
 });
 
+/* ==========================================
+   LiveKit Token
+   ========================================== */
+
 app.post("/api/livekit/token", async (req, res) => {
   try {
     const { roomId, deviceId, userName } = req.body;
@@ -424,6 +459,10 @@ app.post("/api/livekit/token", async (req, res) => {
     res.status(500).json({ error: e.message });
   }
 });
+
+/* ==========================================
+   Socket.IO — الأحداث الحية
+   ========================================== */
 
 io.on("connection", (socket) => {
   console.log("🔌 متصل:", socket.id);
@@ -709,6 +748,6 @@ io.on("connection", (socket) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`🚀 Radio Connect Server v4.2 على المنفذ ${PORT}`);
+  console.log(`🚀 Radio Connect Server v4.3 على المنفذ ${PORT}`);
   console.log(`📡 LiveKit: ${LIVEKIT_URL ? "✅ مهيّأ" : "❌ غير مهيّأ"}`);
 });
