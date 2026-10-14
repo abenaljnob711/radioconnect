@@ -1310,150 +1310,156 @@ body::before {
 }
 
 /* =========================================================
-   ✅ إضافات جديدة (بدون لمس التصميم الأصلي)
+   ✅ أنماط إضافية
    ========================================================= */
 
-.wave-status {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 12px;
-  padding: 10px 14px;
-  background: linear-gradient(180deg, var(--card-2), var(--card));
-  border: 1px solid var(--border);
-  border-radius: 12px;
+/* شريحة حالة الموجة */
+#waveStatusChip {
+  min-height: 54px;
+  justify-content: center;
+  gap: 2px;
 }
-.wave-status-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--text-dim);
-}
-.wave-dot {
-  width: 10px; height: 10px;
-  border-radius: 50%;
-  background: var(--red);
-  box-shadow: 0 0 8px var(--red);
-  transition: all.2s;
-}
-.wave-dot.live {
-  background: var(--green);
-  box-shadow: 0 0 12px var(--green);
-  animation: dotPulse 1s ease-in-out infinite;
-}
-.wave-timer {
-  font-family: 'Courier New', monospace;
-  color: var(--cyan);
-  font-weight: 900;
-  font-size: 13px;
-}
-.wave-members-btn {
-  cursor: pointer;
-  padding: 4px 10px;
-  background: rgba(0,229,255,.1);
-  border: 1px solid rgba(0,229,255,.3);
-  border-radius: 8px;
-  color: var(--cyan);
+#waveStatusChip .chip-value {
+  font-size: 11px;
   font-weight: 800;
-  font-size: 12px;
 }
-.wave-code-btn {
-  cursor: pointer;
-  padding: 4px 10px;
-  background: rgba(0,255,136,.08);
-  border: 1px solid rgba(0,255,136,.3);
-  border-radius: 8px;
+#waveStatusChip.live .chip-value:first-child {
   color: var(--green);
-  font-weight: 800;
-  font-family: 'Courier New', monospace;
-  font-size: 12px;
-  letter-spacing: 1px;
 }
-.members-panel {
+#waveStatusChip:not(.live) .chip-value:first-child {
+  color: var(--red);
+}
+
+/* شريحة اسم الفرقة (قابلة للضغط) */
+#waveNameChip {
+  cursor: pointer;
+  transition: all .2s;
+}
+#waveNameChip:active {
+  border-color: var(--cyan);
+  box-shadow: 0 0 12px rgba(0,229,255,.3);
+}
+
+/* مؤشر قوة الشبكة */
+#headerConnectionIcon {
+  font-size: 18px;
+  transition: color .3s;
+}
+#headerConnectionIcon.good { color: var(--green); text-shadow: 0 0 8px var(--green); }
+#headerConnectionIcon.mid  { color: #ffcc00; text-shadow: 0 0 8px #ffcc00; }
+#headerConnectionIcon.bad  { color: var(--red);  text-shadow: 0 0 8px var(--red); }
+#headerConnectionIcon.offline { color: #555; }
+
+/* زر العمليات */
+#operationsBtn {
+  transition: color .2s;
+}
+#operationsBtn:active {
+  color: var(--green);
+}
+
+/* قائمة المشتركين المنسدلة */
+.members-dropdown {
   position: fixed;
-  top: 0; right: 0;
-  width: 280px;
-  height: 100vh;
+  top: 100px;
+  right: 12px;
+  width: 240px;
+  max-height: 60vh;
   background: linear-gradient(180deg, var(--card-2), var(--bg));
-  border-left: 1px solid var(--cyan);
-  box-shadow: -12px 0 40px rgba(0,229,255,.25);
-  z-index: 350;
-  transform: translateX(110%);
-  transition: transform.32s cubic-bezier(.4,0,.2,1);
-  display: flex;
-  flex-direction: column;
-  padding: 20px 16px;
+  border: 1px solid var(--cyan);
+  border-radius: 14px;
+  box-shadow: 0 12px 40px rgba(0,229,255,.3);
+  padding: 12px;
+  z-index: 400;
+  display: none;
   overflow-y: auto;
   scrollbar-width: none;
 }
-.members-panel::-webkit-scrollbar { display: none; }
-.members-panel.open { transform: translateX(0); }
-.members-panel-header {
+.members-dropdown::-webkit-scrollbar { display: none; }
+.members-dropdown.show { display: block; }
+.members-dropdown-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--cyan);
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 8px;
+  text-align: center;
+}
+.members-dropdown-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-bottom: 16px;
-  border-bottom: 1px solid var(--border);
-  margin-bottom: 16px;
-}
-.members-panel-title {
-  font-size: 16px;
-  font-weight: 800;
-  color: var(--cyan);
-}
-.member-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 10px;
+  padding: 10px 8px;
   background: rgba(0,229,255,.04);
   border: 1px solid var(--border);
-  border-radius: 12px;
-  margin-bottom: 8px;
+  border-radius: 10px;
+  margin-bottom: 6px;
+  font-size: 12.5px;
+  font-weight: 700;
 }
-.member-avatar {
-  width: 36px; height: 36px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--cyan), var(--cyan-dark));
+.members-dropdown-item .status-active { color: var(--green); font-size: 10px; }
+.members-dropdown-item .status-inactive { color: var(--red); font-size: 10px; }
+
+/* قائمة العمليات (كل الفرق) */
+.operations-dropdown {
+  position: fixed;
+  top: 100px;
+  left: 12px;
+  width: 240px;
+  max-height: 60vh;
+  background: linear-gradient(180deg, var(--card-2), var(--bg));
+  border: 1px solid var(--cyan);
+  border-radius: 14px;
+  box-shadow: 0 12px 40px rgba(0,229,255,.3);
+  padding: 12px;
+  z-index: 400;
+  display: none;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+.operations-dropdown::-webkit-scrollbar { display: none; }
+.operations-dropdown.show { display: block; }
+.operations-dropdown-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--green);
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 8px;
+  text-align: center;
+}
+.operations-item {
   display: flex;
   align-items: center;
-  justify-content: center;
-  color: #001418;
-  font-weight: 900;
-  font-size: 15px;
-}
-.member-info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-.member-name {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--text);
-}
-.member-status {
-  font-size: 10px;
-  color: var(--text-dim);
-}
-.member-status.online { color: var(--green); }
-.member-remove {
-  padding: 5px 8px;
-  background: rgba(255,42,77,.15);
-  border: 1px solid rgba(255,42,77,.4);
-  border-radius: 8px;
-  color: #ff5577;
-  font-size: 11px;
+  justify-content: space-between;
+  padding: 10px 8px;
+  background: rgba(0,255,136,.04);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  margin-bottom: 6px;
+  font-size: 12.5px;
   font-weight: 700;
   cursor: pointer;
-  font-family: inherit;
+  transition: all .2s;
 }
-.member-remove:active { transform: scale(.94); }
+.operations-item:active {
+  border-color: var(--green);
+  transform: scale(.98);
+}
+.operations-item .ops-count {
+  color: var(--green);
+  font-size: 11px;
+  font-weight: 800;
+}
+.operations-empty {
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 11.5px;
+  padding: 20px 8px;
+}
 
+/* قائمة المحادثات (واتساب) */
 .chat-list-item {
   display: flex;
   align-items: center;
@@ -1507,6 +1513,7 @@ body::before {
   flex-shrink: 0;
 }
 
+/* زر الرجوع في المحادثة */
 .chat-back {
   width: 32px; height: 32px;
   border-radius: 8px;
@@ -1526,6 +1533,7 @@ body::before {
   background: rgba(0,229,255,.1);
 }
 
+/* زر المايك أثناء التسجيل */
 .chat-mic.recording {
   background: linear-gradient(180deg, #ff2a4d, #b01530) !important;
   color: #fff !important;
@@ -1541,13 +1549,14 @@ body::before {
   <div class="app">
 
     <!-- ============================================
-         شاشة الموجة (الراديو) — كما هي + إضافات
+         شاشة الموجة (الراديو)
          ============================================ -->
     <section class="screen active" id="screen-radio">
       <header class="top-header">
         <button class="menu-toggle" id="menuToggle" title="الإعدادات">☰</button>
         <div class="header-right">
-          <span id="headerWaveCode">—</span>
+          <span id="headerConnectionIcon" style="font-size:18px; cursor:pointer;">📶</span>
+          <span id="operationsBtn" style="cursor:pointer; font-size:13px; font-weight:800;">📋 العمليات</span>
         </div>
         <div class="brand">
           <div class="brand-text">
@@ -1558,28 +1567,14 @@ body::before {
         </div>
       </header>
 
-      <!-- ✅ مؤشرات الموجة -->
-      <div class="wave-status">
-        <div class="wave-status-item">
-          <span class="wave-dot" id="waveDot"></span>
-          <span id="waveStatusText">غير متصل</span>
-          <span class="wave-timer" id="waveTimer">00:00</span>
-        </div>
-        <div class="wave-status-item">
-          <span class="wave-members-btn" id="waveMembersBtn">👥 <span id="waveMembersCount">0</span></span>
-        </div>
-        <div class="wave-status-item">
-          <span class="wave-code-btn" id="waveCodeBtn">🔑 <span id="waveCodeText">—</span></span>
-        </div>
-      </div>
-
       <div class="status-row">
-        <div class="chip">
-          <div class="chip-value online" id="connectionChip">متصل</div>
+        <div class="chip" id="waveStatusChip">
+          <div class="chip-value" id="waveStatusText" style="font-size:11px;">🔴 غير متصل</div>
+          <div class="chip-value wave-timer" id="waveTimer" style="font-size:11px;">00:00</div>
         </div>
-        <div class="chip">
-          <div class="chip-value" id="channelChip">📻 07</div>
-          <div class="chip-label">القناة</div>
+        <div class="chip" id="waveNameChip">
+          <div class="chip-value" id="waveNameLabel" style="font-size:11px;">لا توجد فرقة</div>
+          <div class="chip-label">الفرقة النشطة</div>
         </div>
         <div class="chip">
           <div class="chip-value code" id="waveCodeChip">Q00000</div>
@@ -1619,7 +1614,7 @@ body::before {
     </section>
 
     <!-- ============================================
-         شاشة الغرفة — قائمة محادثات (شكل واتساب)
+         شاشة الغرفة — قائمة محادثات
          ============================================ -->
     <section class="screen" id="screen-log">
       <div class="log-header">
@@ -1639,7 +1634,6 @@ body::before {
         </span>
       </div>
 
-      <!-- ✅ قائمة المحادثات -->
       <div id="chatListContainer"></div>
 
       <div class="empty-room" id="emptyRoom">
@@ -1766,9 +1760,7 @@ body::before {
       إشارة: <span class="hl">قوي</span> • بطارية الراديو: <span class="hl" id="bottomBattery">--%</span>
     </div>
 
-    <!-- ============================================
-         مربع حوار الغرفة — [مايك/إرسال] [📎] [نص] [😗]
-         ============================================ -->
+    <!-- مربع حوار الغرفة — [مايك/إرسال] [📎] [نص] [😗] -->
     <div class="chat-input-bar" id="chatInputBar">
       <button class="chat-send" id="chatPrimaryBtn" title="التسجيل أو الإرسال">🎙️</button>
       <button class="chat-clip" id="chatClip" title="إرفاق">📎</button>
@@ -1794,7 +1786,7 @@ body::before {
   </aside>
 
   <!-- ============================================
-       قائمة المشتركين (للموجة)
+       قائمة المشتركين الجانبية
        ============================================ -->
   <div class="side-menu-backdrop" id="membersBackdrop"></div>
   <aside class="members-panel" id="membersPanel">
@@ -1806,309 +1798,310 @@ body::before {
   </aside>
 
   <!-- ============================================
-       النوافذ المنبثقة (Modals)
+       قوائم منسدلة جديدة
        ============================================ -->
+  <div class="members-dropdown" id="membersDropdown"></div>
+  <div class="operations-dropdown" id="operationsDropdown"></div>
+  <!-- ============================================
+     النوافذ المنبثقة (Modals)
+     ============================================ -->
 
-  <!-- قائمة الغرفة -->
-  <div class="modal-overlay" id="modalRoomMenu">
-    <div class="modal">
-      <div class="modal-title">☰ خيارات الغرفة</div>
-      <div class="modal-sub">إدارة الغرفة والدردشة</div>
-      <button class="modal-menu-item" onclick="openEditRoomName()">
-        <span class="modal-menu-icon">✏️</span>
-        <span>تعديل اسم الغرفة</span>
+<!-- قائمة الغرفة -->
+<div class="modal-overlay" id="modalRoomMenu">
+  <div class="modal">
+    <div class="modal-title">☰ خيارات الغرفة</div>
+    <div class="modal-sub">إدارة الغرفة والدردشة</div>
+    <button class="modal-menu-item" onclick="openEditRoomName()">
+      <span class="modal-menu-icon">✏️</span>
+      <span>تعديل اسم الغرفة</span>
+    </button>
+    <button class="modal-menu-item" onclick="openEditRoomIcon()">
+      <span class="modal-menu-icon">🎨</span>
+      <span>تغيير أيقونة الغرفة</span>
+    </button>
+    <button class="modal-menu-item danger" onclick="confirmClearChat()">
+      <span class="modal-menu-icon">🗑️</span>
+      <span>مسح الدردشة كاملة</span>
+    </button>
+    <div class="modal-actions" style="grid-template-columns:1fr;margin-top:14px;">
+      <button class="modal-btn cancel" onclick="closeModal('modalRoomMenu')">إغلاق</button>
+    </div>
+  </div>
+</div>
+
+<!-- تعديل اسم الموجة -->
+<div class="modal-overlay" id="modalEditWave">
+  <div class="modal">
+    <div class="modal-title">✏️ تعديل اسم الموجة</div>
+    <div class="modal-sub">اكتب الاسم الجديد للموجة</div>
+    <div class="modal-field">
+      <label>اسم الموجة</label>
+      <input type="text" id="newWaveName" placeholder="اسم الموجة..." maxlength="30">
+    </div>
+    <div class="modal-actions">
+      <button class="modal-btn cancel" onclick="closeModal('modalEditWave')">إلغاء</button>
+      <button class="modal-btn confirm" onclick="saveWaveName()">حفظ</button>
+    </div>
+  </div>
+</div>
+
+<!-- تعديل اسم الغرفة -->
+<div class="modal-overlay" id="modalEditName">
+  <div class="modal">
+    <div class="modal-title">✏️ تعديل اسم الغرفة</div>
+    <div class="modal-sub">اكتب الاسم الجديد</div>
+    <div class="modal-field">
+      <label>اسم الغرفة</label>
+      <input type="text" id="newRoomName" placeholder="اسم جديد..." maxlength="30">
+    </div>
+    <div class="modal-actions">
+      <button class="modal-btn cancel" onclick="closeModal('modalEditName')">إلغاء</button>
+      <button class="modal-btn confirm" onclick="saveRoomName()">حفظ</button>
+    </div>
+  </div>
+</div>
+
+<!-- تغيير أيقونة الغرفة -->
+<div class="modal-overlay" id="modalEditIcon">
+  <div class="modal">
+    <div class="modal-title">🎨 تغيير أيقونة الغرفة</div>
+    <div class="modal-sub">اختر أيقونة جديدة</div>
+    <div class="icon-grid" id="iconGrid">
+      <div class="icon-option" data-icon="💬">💬</div>
+      <div class="icon-option" data-icon="📻">📻</div>
+      <div class="icon-option" data-icon="📡">📡</div>
+      <div class="icon-option" data-icon="🎙️">🎙️</div>
+      <div class="icon-option" data-icon="🔊">🔊</div>
+      <div class="icon-option" data-icon="📞">📞</div>
+      <div class="icon-option" data-icon="🛡️">🛡️</div>
+      <div class="icon-option" data-icon="⚡">⚡</div>
+    </div>
+    <div class="modal-actions" style="grid-template-columns:1fr;margin-top:14px;">
+      <button class="modal-btn cancel" onclick="closeModal('modalEditIcon')">إغلاق</button>
+    </div>
+  </div>
+</div>
+
+<!-- مسح الدردشة -->
+<div class="modal-overlay" id="modalClearChat">
+  <div class="modal">
+    <div class="modal-title">🗑️ مسح الدردشة</div>
+    <div class="modal-sub">هل أنت متأكد من مسح كل الرسائل؟<br>لا يمكن التراجع.</div>
+    <div class="modal-actions">
+      <button class="modal-btn cancel" onclick="closeModal('modalClearChat')">إلغاء</button>
+      <button class="modal-btn danger" onclick="doClearChat()">مسح</button>
+    </div>
+  </div>
+</div>
+
+<!-- قائمة الإرفاق — 6 خيارات -->
+<div class="modal-overlay" id="modalAttach">
+  <div class="modal">
+    <div class="modal-title">📎 إرفاق</div>
+    <div class="modal-sub">اختر نوع المحتوى</div>
+    <div class="attach-grid">
+      <button class="attach-item" onclick="pickCamera()">
+        <span class="attach-icon">📷</span>
+        <span>كاميرا</span>
       </button>
-      <button class="modal-menu-item" onclick="openEditRoomIcon()">
-        <span class="modal-menu-icon">🎨</span>
-        <span>تغيير أيقونة الغرفة</span>
+      <button class="attach-item" onclick="pickFile('image')">
+        <span class="attach-icon">🖼️</span>
+        <span>صورة</span>
       </button>
-      <button class="modal-menu-item danger" onclick="confirmClearChat()">
-        <span class="modal-menu-icon">🗑️</span>
-        <span>مسح الدردشة كاملة</span>
+      <button class="attach-item" onclick="pickFile('video')">
+        <span class="attach-icon">🎬</span>
+        <span>فيديو</span>
       </button>
-      <div class="modal-actions" style="grid-template-columns:1fr;margin-top:14px;">
-        <button class="modal-btn cancel" onclick="closeModal('modalRoomMenu')">إغلاق</button>
-      </div>
+      <button class="attach-item" onclick="pickFile('document')">
+        <span class="attach-icon">📄</span>
+        <span>مستند</span>
+      </button>
+      <button class="attach-item" onclick="pickContact()">
+        <span class="attach-icon">👥</span>
+        <span>جهة اتصال</span>
+      </button>
+      <button class="attach-item" onclick="pickFile('audio')">
+        <span class="attach-icon">🎵</span>
+        <span>موسيقى</span>
+      </button>
+    </div>
+    <div class="modal-actions" style="grid-template-columns:1fr;margin-top:14px;">
+      <button class="modal-btn cancel" onclick="closeModal('modalAttach')">إلغاء</button>
     </div>
   </div>
+</div>
 
-  <!-- تعديل اسم الموجة -->
-  <div class="modal-overlay" id="modalEditWave">
-    <div class="modal">
-      <div class="modal-title">✏️ تعديل اسم الموجة</div>
-      <div class="modal-sub">اكتب الاسم الجديد للموجة</div>
-      <div class="modal-field">
-        <label>اسم الموجة</label>
-        <input type="text" id="newWaveName" placeholder="اسم الموجة..." maxlength="30">
-      </div>
-      <div class="modal-actions">
-        <button class="modal-btn cancel" onclick="closeModal('modalEditWave')">إلغاء</button>
-        <button class="modal-btn confirm" onclick="saveWaveName()">حفظ</button>
-      </div>
+<!-- إنشاء غرفة -->
+<div class="modal-overlay" id="modalCreate">
+  <div class="modal">
+    <div class="modal-title">➕ إنشاء غرفة جديدة</div>
+    <div class="modal-sub">سيُولَّد رقم غرفة خاص بك تلقائياً</div>
+    <div class="modal-field">
+      <label>اسم الغرفة</label>
+      <input type="text" id="roomName" placeholder="مثال: فريق المراقبة" maxlength="30">
+    </div>
+    <div class="modal-actions">
+      <button class="modal-btn cancel" onclick="closeModal('modalCreate')">إلغاء</button>
+      <button class="modal-btn confirm" onclick="createRoom()">إنشاء</button>
     </div>
   </div>
+</div>
 
-  <!-- تعديل اسم الغرفة -->
-  <div class="modal-overlay" id="modalEditName">
-    <div class="modal">
-      <div class="modal-title">✏️ تعديل اسم الغرفة</div>
-      <div class="modal-sub">اكتب الاسم الجديد</div>
-      <div class="modal-field">
-        <label>اسم الغرفة</label>
-        <input type="text" id="newRoomName" placeholder="اسم جديد..." maxlength="30">
-      </div>
-      <div class="modal-actions">
-        <button class="modal-btn cancel" onclick="closeModal('modalEditName')">إلغاء</button>
-        <button class="modal-btn confirm" onclick="saveRoomName()">حفظ</button>
-      </div>
+<!-- إنشاء موجة (فرقة) -->
+<div class="modal-overlay" id="modalWave">
+  <div class="modal">
+    <div class="modal-title">📡 إنشاء فرقة</div>
+    <div class="modal-sub">سيُولَّد رقم موجتك الخاص Q#####</div>
+    <div class="modal-field">
+      <label>اسم الفرقة</label>
+      <input type="text" id="waveName" placeholder="مثال: نداء استغاثة" maxlength="30">
+    </div>
+    <div class="modal-actions">
+      <button class="modal-btn cancel" onclick="closeModal('modalWave')">إلغاء</button>
+      <button class="modal-btn confirm" onclick="createWave()">إنشاء</button>
     </div>
   </div>
+</div>
 
-  <!-- تغيير أيقونة الغرفة -->
-  <div class="modal-overlay" id="modalEditIcon">
-    <div class="modal">
-      <div class="modal-title">🎨 تغيير أيقونة الغرفة</div>
-      <div class="modal-sub">اختر أيقونة جديدة</div>
-      <div class="icon-grid" id="iconGrid">
-        <div class="icon-option" data-icon="💬">💬</div>
-        <div class="icon-option" data-icon="📻">📻</div>
-        <div class="icon-option" data-icon="📡">📡</div>
-        <div class="icon-option" data-icon="🎙️">🎙️</div>
-        <div class="icon-option" data-icon="🔊">🔊</div>
-        <div class="icon-option" data-icon="📞">📞</div>
-        <div class="icon-option" data-icon="🛡️">🛡️</div>
-        <div class="icon-option" data-icon="⚡">⚡</div>
-      </div>
-      <div class="modal-actions" style="grid-template-columns:1fr;margin-top:14px;">
-        <button class="modal-btn cancel" onclick="closeModal('modalEditIcon')">إغلاق</button>
+<!-- تم إنشاء الموجة -->
+<div class="modal-overlay" id="modalWaveCreated">
+  <div class="modal">
+    <div class="modal-title">✅ تم إنشاء الفرقة</div>
+    <div class="modal-sub">شارك هذا الرقم للانضمام إلى فرقتك</div>
+    <div class="code-display">
+      <div class="code-display-label">رقم الموجة</div>
+      <div class="code-display-value" id="createdWaveCode">Q00000</div>
+      <div class="code-display-hint">
+        📤 شارك هذا الرقم مع من تريد التواصل معه<br>
+        🔍 سيبحث عنه من خانة "البحث"
       </div>
     </div>
-  </div>
-
-  <!-- مسح الدردشة -->
-  <div class="modal-overlay" id="modalClearChat">
-    <div class="modal">
-      <div class="modal-title">🗑️ مسح الدردشة</div>
-      <div class="modal-sub">هل أنت متأكد من مسح كل الرسائل؟<br>لا يمكن التراجع.</div>
-      <div class="modal-actions">
-        <button class="modal-btn cancel" onclick="closeModal('modalClearChat')">إلغاء</button>
-        <button class="modal-btn danger" onclick="doClearChat()">مسح</button>
-      </div>
+    <div class="modal-actions">
+      <button class="modal-btn cancel" onclick="copyWaveCode()">📋 نسخ</button>
+      <button class="modal-btn confirm" onclick="closeModal('modalWaveCreated')">تمام</button>
     </div>
   </div>
+</div>
 
-  <!-- قائمة الإرفاق — 6 خيارات -->
-  <div class="modal-overlay" id="modalAttach">
-    <div class="modal">
-      <div class="modal-title">📎 إرفاق</div>
-      <div class="modal-sub">اختر نوع المحتوى</div>
-      <div class="attach-grid">
-        <button class="attach-item" onclick="pickCamera()">
-          <span class="attach-icon">📷</span>
-          <span>كاميرا</span>
-        </button>
-        <button class="attach-item" onclick="pickFile('image')">
-          <span class="attach-icon">🖼️</span>
-          <span>صورة</span>
-        </button>
-        <button class="attach-item" onclick="pickFile('video')">
-          <span class="attach-icon">🎬</span>
-          <span>فيديو</span>
-        </button>
-        <button class="attach-item" onclick="pickFile('document')">
-          <span class="attach-icon">📄</span>
-          <span>مستند</span>
-        </button>
-        <button class="attach-item" onclick="pickContact()">
-          <span class="attach-icon">👥</span>
-          <span>جهة اتصال</span>
-        </button>
-        <button class="attach-item" onclick="pickFile('audio')">
-          <span class="attach-icon">🎵</span>
-          <span>موسيقى</span>
-        </button>
-      </div>
-      <div class="modal-actions" style="grid-template-columns:1fr;margin-top:14px;">
-        <button class="modal-btn cancel" onclick="closeModal('modalAttach')">إلغاء</button>
+<!-- تم إنشاء الغرفة -->
+<div class="modal-overlay" id="modalRoomCreated">
+  <div class="modal">
+    <div class="modal-title">✅ تم إنشاء الغرفة</div>
+    <div class="modal-sub">شارك هذا الرقم للانضمام إلى غرفتك</div>
+    <div class="code-display">
+      <div class="code-display-label">رقم الغرفة</div>
+      <div class="code-display-value" id="createdRoomCode">G00000</div>
+      <div class="code-display-hint">
+        📤 شارك هذا الرقم مع فريقك<br>
+        🔍 سيبحث عنه من خانة "البحث"
       </div>
     </div>
-  </div>
-
-  <!-- إنشاء غرفة -->
-  <div class="modal-overlay" id="modalCreate">
-    <div class="modal">
-      <div class="modal-title">➕ إنشاء غرفة جديدة</div>
-      <div class="modal-sub">سيُولَّد رقم غرفة خاص بك تلقائياً</div>
-      <div class="modal-field">
-        <label>اسم الغرفة</label>
-        <input type="text" id="roomName" placeholder="مثال: فريق المراقبة" maxlength="30">
-      </div>
-      <div class="modal-field">
-        <label>رقم القناة</label>
-        <input type="text" id="roomChannel" value="07" maxlength="2">
-      </div>
-      <div class="modal-actions">
-        <button class="modal-btn cancel" onclick="closeModal('modalCreate')">إلغاء</button>
-        <button class="modal-btn confirm" onclick="createRoom()">إنشاء</button>
-      </div>
+    <div class="modal-actions">
+      <button class="modal-btn cancel" onclick="copyRoomCode()">📋 نسخ</button>
+      <button class="modal-btn confirm" onclick="closeModal('modalRoomCreated')">تمام</button>
     </div>
   </div>
+</div>
 
-  <!-- إنشاء موجة (فرقة) -->
-  <div class="modal-overlay" id="modalWave">
-    <div class="modal">
-      <div class="modal-title">📡 إنشاء فرقة</div>
-      <div class="modal-sub">سيُولَّد رقم موجتك الخاص Q#####</div>
-      <div class="modal-field">
-        <label>اسم الفرقة</label>
-        <input type="text" id="waveName" placeholder="مثال: نداء استغاثة" maxlength="30">
-      </div>
-      <div class="modal-actions">
-        <button class="modal-btn cancel" onclick="closeModal('modalWave')">إلغاء</button>
-        <button class="modal-btn confirm" onclick="createWave()">إنشاء</button>
+<!-- البحث -->
+<div class="modal-overlay" id="modalSearch">
+  <div class="modal">
+    <div class="modal-title">🔍 البحث</div>
+    <div class="modal-sub" id="searchSubTitle">ابحث عن مستخدم أو موجة</div>
+    <div class="modal-field">
+      <label id="searchFieldLabel">رقم المستخدم / الموجة</label>
+      <input type="text" id="searchQuery" class="code-input" placeholder="Q00000" maxlength="10">
+    </div>
+    <div class="modal-actions" style="grid-template-columns:1fr;margin-bottom:14px;">
+      <button class="modal-btn confirm" onclick="doSearch()">🔍 بحث</button>
+    </div>
+    <div id="searchResults">
+      <div class="no-results">
+        <span class="no-results-icon">🔎</span>
+        اكتب الرقم واضغط بحث
       </div>
     </div>
-  </div>
-
-  <!-- تم إنشاء الموجة -->
-  <div class="modal-overlay" id="modalWaveCreated">
-    <div class="modal">
-      <div class="modal-title">✅ تم إنشاء الفرقة</div>
-      <div class="modal-sub">شارك هذا الرقم للانضمام إلى فرقتك</div>
-      <div class="code-display">
-        <div class="code-display-label">رقم الموجة</div>
-        <div class="code-display-value" id="createdWaveCode">Q00000</div>
-        <div class="code-display-hint">
-          📤 شارك هذا الرقم مع من تريد التواصل معه<br>
-          🔍 سيبحث عنه من خانة "البحث"
-        </div>
-      </div>
-      <div class="modal-actions">
-        <button class="modal-btn cancel" onclick="copyWaveCode()">📋 نسخ</button>
-        <button class="modal-btn confirm" onclick="closeModal('modalWaveCreated')">تمام</button>
-      </div>
+    <div class="modal-actions" style="grid-template-columns:1fr;margin-top:14px;">
+      <button class="modal-btn cancel" onclick="closeModal('modalSearch')">إغلاق</button>
     </div>
   </div>
+</div>
 
-  <!-- تم إنشاء الغرفة -->
-  <div class="modal-overlay" id="modalRoomCreated">
-    <div class="modal">
-      <div class="modal-title">✅ تم إنشاء الغرفة</div>
-      <div class="modal-sub">شارك هذا الرقم للانضمام إلى غرفتك</div>
-      <div class="code-display">
-        <div class="code-display-label">رقم الغرفة</div>
-        <div class="code-display-value" id="createdRoomCode">G00000</div>
-        <div class="code-display-hint">
-          📤 شارك هذا الرقم مع فريقك<br>
-          🔍 سيبحث عنه من خانة "البحث"
-        </div>
-      </div>
-      <div class="modal-actions">
-        <button class="modal-btn cancel" onclick="copyRoomCode()">📋 نسخ</button>
-        <button class="modal-btn confirm" onclick="closeModal('modalRoomCreated')">تمام</button>
-      </div>
+<!-- طلب انضمام صادر -->
+<div class="modal-overlay" id="modalJoinConfirm">
+  <div class="modal">
+    <div class="modal-title">📩 طلب انضمام</div>
+    <div class="modal-sub">هل تريد إرسال طلب انضمام لهذه الموجة؟</div>
+    <div class="join-request-info">
+      <div class="join-request-icon">📡</div>
+      <div class="join-request-name" id="joinTargetName">—</div>
+      <div class="join-request-code" id="joinTargetCode">Q00000</div>
+    </div>
+    <div class="modal-sub" style="margin-bottom:0;">
+      ⚠️ سيحتاج صاحب الموجة للموافقة على طلبك
+    </div>
+    <div class="modal-actions">
+      <button class="modal-btn cancel" onclick="cancelJoin()">❌ إلغاء</button>
+      <button class="modal-btn confirm" onclick="confirmJoin()">✅ موافق</button>
     </div>
   </div>
+</div>
 
-  <!-- البحث -->
-  <div class="modal-overlay" id="modalSearch">
-    <div class="modal">
-      <div class="modal-title">🔍 البحث</div>
-      <div class="modal-sub" id="searchSubTitle">ابحث عن مستخدم أو موجة</div>
-      <div class="modal-field">
-        <label>رقم المستخدم / الموجة</label>
-        <input type="text" id="searchQuery" class="code-input" placeholder="Q00000" maxlength="10">
-      </div>
-      <div class="modal-actions" style="grid-template-columns:1fr;margin-bottom:14px;">
-        <button class="modal-btn confirm" onclick="doSearch()">🔍 بحث</button>
-      </div>
-      <div id="searchResults">
-        <div class="no-results">
-          <span class="no-results-icon">🔎</span>
-          اكتب الرقم واضغط بحث
-        </div>
-      </div>
-      <div class="modal-actions" style="grid-template-columns:1fr;margin-top:14px;">
-        <button class="modal-btn cancel" onclick="closeModal('modalSearch')">إغلاق</button>
-      </div>
+<!-- طلب انضمام وارد -->
+<div class="modal-overlay" id="modalIncomingRequest">
+  <div class="modal">
+    <div class="modal-title">🔔 طلب انضمام وارد</div>
+    <div class="modal-sub">شخص يريد الانضمام إلى موجتك</div>
+    <div class="join-request-info">
+      <div class="join-request-icon">👤</div>
+      <div class="join-request-name" id="incomingName">—</div>
+      <div class="join-request-code" id="incomingCode">—</div>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-btn danger" onclick="rejectIncoming()">❌ رفض</button>
+      <button class="modal-btn confirm" onclick="acceptIncoming()">✅ قبول</button>
     </div>
   </div>
+</div>
 
-  <!-- طلب انضمام صادر -->
-  <div class="modal-overlay" id="modalJoinConfirm">
-    <div class="modal">
-      <div class="modal-title">📩 طلب انضمام</div>
-      <div class="modal-sub">هل تريد إرسال طلب انضمام لهذه الموجة؟</div>
-      <div class="join-request-info">
-        <div class="join-request-icon">📡</div>
-        <div class="join-request-name" id="joinTargetName">—</div>
-        <div class="join-request-code" id="joinTargetCode">Q00000</div>
-      </div>
-      <div class="modal-sub" style="margin-bottom:0;">
-        ⚠️ سيحتاج صاحب الموجة للموافقة على طلبك
-      </div>
-      <div class="modal-actions">
-        <button class="modal-btn cancel" onclick="cancelJoin()">❌ إلغاء</button>
-        <button class="modal-btn confirm" onclick="confirmJoin()">✅ موافق</button>
-      </div>
+<!-- إدخال اسم المستخدم أول مرة -->
+<div class="modal-overlay" id="modalUserName">
+  <div class="modal">
+    <div class="modal-title">👤 ما اسمك؟</div>
+    <div class="modal-sub">سيظهر اسمك للمشتركين الآخرين</div>
+    <div class="modal-field">
+      <label>الاسم</label>
+      <input type="text" id="userNameInput" placeholder="مثال: أحمد" maxlength="20">
+    </div>
+    <div class="modal-actions" style="grid-template-columns:1fr;">
+      <button class="modal-btn confirm" onclick="saveUserName()">حفظ</button>
     </div>
   </div>
+</div>
 
-  <!-- طلب انضمام وارد -->
-  <div class="modal-overlay" id="modalIncomingRequest">
-    <div class="modal">
-      <div class="modal-title">🔔 طلب انضمام وارد</div>
-      <div class="modal-sub">شخص يريد الانضمام إلى موجتك</div>
-      <div class="join-request-info">
-        <div class="join-request-icon">👤</div>
-        <div class="join-request-name" id="incomingName">—</div>
-        <div class="join-request-code" id="incomingCode">—</div>
-      </div>
-      <div class="modal-actions">
-        <button class="modal-btn danger" onclick="rejectIncoming()">❌ رفض</button>
-        <button class="modal-btn confirm" onclick="acceptIncoming()">✅ قبول</button>
-      </div>
+<!-- إدخال جهة اتصال يدوياً -->
+<div class="modal-overlay" id="modalContactPick">
+  <div class="modal">
+    <div class="modal-title">👥 جهة الاتصال</div>
+    <div class="modal-sub">أدخل بيانات جهة الاتصال يدوياً</div>
+    <div class="modal-field">
+      <label>الاسم</label>
+      <input type="text" id="contactName" placeholder="اسم الشخص">
+    </div>
+    <div class="modal-field">
+      <label>رقم الهاتف</label>
+      <input type="tel" id="contactPhone" placeholder="+967...">
+    </div>
+    <div class="modal-actions">
+      <button class="modal-btn cancel" onclick="closeModal('modalContactPick')">إلغاء</button>
+      <button class="modal-btn confirm" onclick="sendContact()">إرسال</button>
     </div>
   </div>
+</div>
 
-  <!-- إدخال اسم المستخدم أول مرة -->
-  <div class="modal-overlay" id="modalUserName">
-    <div class="modal">
-      <div class="modal-title">👤 ما اسمك؟</div>
-      <div class="modal-sub">سيظهر اسمك للمشتركين الآخرين</div>
-      <div class="modal-field">
-        <label>الاسم</label>
-        <input type="text" id="userNameInput" placeholder="مثال: أحمد" maxlength="20">
-      </div>
-      <div class="modal-actions" style="grid-template-columns:1fr;">
-        <button class="modal-btn confirm" onclick="saveUserName()">حفظ</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- إدخال جهة اتصال يدوياً -->
-  <div class="modal-overlay" id="modalContactPick">
-    <div class="modal">
-      <div class="modal-title">👥 جهة الاتصال</div>
-      <div class="modal-sub">أدخل بيانات جهة الاتصال يدوياً</div>
-      <div class="modal-field">
-        <label>الاسم</label>
-        <input type="text" id="contactName" placeholder="اسم الشخص">
-      </div>
-      <div class="modal-field">
-        <label>رقم الهاتف</label>
-        <input type="tel" id="contactPhone" placeholder="+967...">
-      </div>
-      <div class="modal-actions">
-        <button class="modal-btn cancel" onclick="closeModal('modalContactPick')">إلغاء</button>
-        <button class="modal-btn confirm" onclick="sendContact()">إرسال</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Input مخفي للملفات -->
-  <input type="file" id="hiddenFileInput" style="display:none;">
-    <!-- ============================================
+<!-- Input مخفي للملفات -->
+<input type="file" id="hiddenFileInput" style="display:none;">
+  <!-- ============================================
        JavaScript — Radio Connect v4.3
        ============================================ -->
   <script>
@@ -2147,8 +2140,9 @@ let batteryPercent = null;
 let menuBusy = false;
 let searchResultUser = null;
 let socket = null;
+let myWaves = [];
 
-/* ============ محرك البيب (كما هو) ============ */
+/* ============ محرك البيب ============ */
 const PTTEngine = {
   audioCtx: null,
   beepReady: false,
@@ -2182,7 +2176,7 @@ const PTTEngine = {
 };
 
 /* =========================================================
-   محرك الصوت الحي LiveKit — بث مباشر
+   محرك الصوت الحي LiveKit
    ========================================================= */
 const LiveVoice = {
   room: null,
@@ -2373,8 +2367,10 @@ function initSocket() {
     toast('⚠️ تم إخراجك من الفرقة', 'error');
     currentUser.waveId = null;
     LiveVoice.disconnect();
-    document.getElementById('waveStatusText').textContent = 'غير متصل';
-    document.getElementById('waveDot').classList.remove('live');
+    const statusEl = document.getElementById('waveStatusText');
+    if (statusEl) statusEl.innerHTML = '🔴 غير متصل';
+    const chipEl = document.getElementById('waveStatusChip');
+    if (chipEl) chipEl.classList.remove('live');
   });
 
   socket.on('wave_join_request_received', (data) => {
@@ -2441,12 +2437,14 @@ async function registerUser() {
     const data = await res.json();
     if (data.radCode) {
       currentUser.radCode = data.radCode;
-      document.getElementById('myRadCode').textContent = data.radCode;
-      document.getElementById('waveCodeText').textContent = data.radCode;
-      document.getElementById('waveCodeChip').textContent = data.radCode;
-      document.getElementById('waveCodeValue').textContent = data.radCode;
-      document.getElementById('headerWaveCode').textContent = data.radCode;
-      document.getElementById('lcdLine3').textContent = data.radCode + ' • RX';
+      const el1 = document.getElementById('myRadCode');
+      if (el1) el1.textContent = data.radCode;
+      const el2 = document.getElementById('waveCodeChip');
+      if (el2) el2.textContent = data.radCode;
+      const el3 = document.getElementById('waveCodeValue');
+      if (el3) el3.textContent = data.radCode;
+      const el4 = document.getElementById('lcdLine3');
+      if (el4) el4.textContent = data.radCode + ' • RX';
     }
     if (data.waveId) {
       currentUser.waveId = data.waveId;
@@ -2499,16 +2497,25 @@ async function createWave() {
     currentUser.waveName = data.waveName;
     currentUser.isWaveOwner = true;
 
+    /* احفظ في القائمة */
+    myWaves.push({ id: data.waveId, name: data.waveName });
+    localStorage.setItem('rc_my_waves', JSON.stringify(myWaves));
+
     document.getElementById('createdWaveCode').textContent = data.waveId;
     document.getElementById('waveName').value = '';
     closeModal('modalWave');
     openModal('modalWaveCreated');
 
-    document.getElementById('waveCodeChip').textContent = data.waveId;
-    document.getElementById('waveCodeText').textContent = data.waveId;
-    document.getElementById('waveCodeValue').textContent = data.waveId;
-    document.getElementById('waveNameValue').textContent = name;
-    document.getElementById('lcdLine3').textContent = data.waveId + ' • TX';
+    const el1 = document.getElementById('waveCodeChip');
+    if (el1) el1.textContent = data.waveId;
+    const el2 = document.getElementById('waveCodeValue');
+    if (el2) el2.textContent = data.waveId;
+    const el3 = document.getElementById('waveNameValue');
+    if (el3) el3.textContent = name;
+    const el4 = document.getElementById('waveNameLabel');
+    if (el4) el4.textContent = name;
+    const el5 = document.getElementById('lcdLine3');
+    if (el5) el5.textContent = data.waveId + ' • TX';
 
     await PTTEngine.init();
     PTTEngine.playStartBeep();
@@ -2537,15 +2544,26 @@ async function joinWaveAsMember(waveId) {
     const data = await res.json();
     if (data.waveName) {
       currentUser.waveName = data.waveName;
-      document.getElementById('waveNameValue').textContent = data.waveName;
+      const el1 = document.getElementById('waveNameValue');
+      if (el1) el1.textContent = data.waveName;
+      const el2 = document.getElementById('waveNameLabel');
+      if (el2) el2.textContent = data.waveName;
+
+      /* احفظ في القائمة */
+      if (!myWaves.find(w => w.id === waveId)) {
+        myWaves.push({ id: waveId, name: data.waveName });
+        localStorage.setItem('rc_my_waves', JSON.stringify(myWaves));
+      }
     }
     if (data.members) renderWaveMembers(data.members);
   } catch (e) {}
 
-  document.getElementById('waveCodeChip').textContent = waveId;
-  document.getElementById('waveCodeText').textContent = waveId;
-  document.getElementById('waveCodeValue').textContent = waveId;
-  document.getElementById('lcdLine3').textContent = waveId + ' • RX';
+  const el1 = document.getElementById('waveCodeChip');
+  if (el1) el1.textContent = waveId;
+  const el2 = document.getElementById('waveCodeValue');
+  if (el2) el2.textContent = waveId;
+  const el3 = document.getElementById('lcdLine3');
+  if (el3) el3.textContent = waveId + ' • RX';
 
   await LiveVoice.connect(waveId);
   if (socket) {
@@ -2673,24 +2691,39 @@ function acceptIncoming() {
    ========================================================= */
 function renderWaveMembers(members) {
   if (!members) return;
-  const count = members.length;
-  document.getElementById('waveMembersCount').textContent = count;
 
+  /* القائمة الجانبية */
   const list = document.getElementById('membersList');
-  list.innerHTML = members.map(m => {
-    const initial = (m.name || '?').charAt(0);
-    const isMe = m.id === currentUser.id;
-    const canRemove = currentUser.isWaveOwner && !isMe;
-    return `
-      <div class="member-item">
-        <div class="member-avatar">${initial}</div>
-        <div class="member-info">
-          <div class="member-name">${m.name} ${isMe ? '(أنت)' : ''} ${m.isOwner ? '👑' : ''}</div>
-          <div class="member-status ${m.online ? 'online' : ''}">${m.online ? '🟢 متصل' : '⚪ غير متصل'}</div>
+  if (list) {
+    list.innerHTML = members.map(m => {
+      const initial = (m.name || '?').charAt(0);
+      const isMe = m.id === currentUser.id;
+      const canRemove = currentUser.isWaveOwner && !isMe;
+      return `
+        <div class="member-item">
+          <div class="member-avatar">${initial}</div>
+          <div class="member-info">
+            <div class="member-name">${m.name} ${isMe ? '(أنت)' : ''} ${m.isOwner ? '👑' : ''}</div>
+            <div class="member-status ${m.online ? 'online' : ''}">${m.online ? '🟢 نشط' : '🔴 غير نشط'}</div>
+          </div>
+          ${canRemove ? `<button class="member-remove" onclick="removeMember('${m.id}')">إخراج</button>` : ''}
+        </div>`;
+    }).join('');
+  }
+
+  /* القائمة المنسدلة */
+  const dd = document.getElementById('membersDropdown');
+  if (dd && dd.classList.contains('show')) {
+    dd.innerHTML = `
+      <div class="members-dropdown-title">👥 المشتركون (${members.length})</div>
+      ${members.map(m => `
+        <div class="members-dropdown-item">
+          <span>${m.name} ${m.id === currentUser.id ? '(أنت)' : ''} ${m.isOwner ? '👑' : ''}</span>
+          <span class="${m.online ? 'status-active' : 'status-inactive'}">${m.online ? '🟢 نشط' : '🔴 غير نشط'}</span>
         </div>
-        ${canRemove ? `<button class="member-remove" onclick="removeMember('${m.id}')">إخراج</button>` : ''}
-      </div>`;
-  }).join('');
+      `).join('')}
+    `;
+  }
 }
 
 async function removeMember(memberId) {
@@ -2914,14 +2947,15 @@ function startWaveTimer() {
     const s = Math.floor((Date.now() - waveStartTime) / 1000);
     const m = Math.floor(s / 60);
     const ss = s % 60;
-    el.textContent = String(m).padStart(2, '0') + ':' + String(ss).padStart(2, '0');
+    if (el) el.textContent = String(m).padStart(2, '0') + ':' + String(ss).padStart(2, '0');
   }, 250);
 }
 
 function stopWaveTimer() {
   clearInterval(waveTimerInterval);
   waveTimerInterval = null;
-  document.getElementById('waveTimer').textContent = '00:00';
+  const el = document.getElementById('waveTimer');
+  if (el) el.textContent = '00:00';
 }
 
 async function onPTTStart() {
@@ -2929,10 +2963,14 @@ async function onPTTStart() {
   pttHolding = true;
   pttMain.classList.add('holding');
 
-  document.getElementById('waveDot').classList.add('live');
-  document.getElementById('waveStatusText').textContent = 'يتحدث الآن';
-  document.getElementById('lcdLine3').textContent = (currentUser.radCode || '—') + ' • TX';
-  document.getElementById('lcdStatus').textContent = '●';
+  const chipEl = document.getElementById('waveStatusChip');
+  if (chipEl) chipEl.classList.add('live');
+  const statusEl = document.getElementById('waveStatusText');
+  if (statusEl) statusEl.innerHTML = '🟢 يتحدث';
+  const lcd3 = document.getElementById('lcdLine3');
+  if (lcd3) lcd3.textContent = (currentUser.radCode || '—') + ' • TX';
+  const lcdSt = document.getElementById('lcdStatus');
+  if (lcdSt) lcdSt.textContent = '●';
   startWaveTimer();
 
   await PTTEngine.init();
@@ -2957,10 +2995,14 @@ async function onPTTEnd() {
   pttHolding = false;
   pttMain.classList.remove('holding');
 
-  document.getElementById('waveDot').classList.remove('live');
-  document.getElementById('waveStatusText').textContent = 'غير متصل';
-  document.getElementById('lcdLine3').textContent = (currentUser.radCode || '—') + ' • RX';
-  document.getElementById('lcdStatus').textContent = '•';
+  const chipEl = document.getElementById('waveStatusChip');
+  if (chipEl) chipEl.classList.remove('live');
+  const statusEl = document.getElementById('waveStatusText');
+  if (statusEl) statusEl.innerHTML = '🔴 غير متصل';
+  const lcd3 = document.getElementById('lcdLine3');
+  if (lcd3) lcd3.textContent = (currentUser.radCode || '—') + ' • RX';
+  const lcdSt = document.getElementById('lcdStatus');
+  if (lcdSt) lcdSt.textContent = '•';
   stopWaveTimer();
 
   PTTEngine.playEndBeep();
@@ -2989,6 +3031,7 @@ function openEditWaveName() {
 }
 function openSearchWave() {
   document.getElementById('searchSubTitle').textContent = 'ابحث برقم الموجة (Q#####)';
+  document.getElementById('searchFieldLabel').textContent = 'رقم الموجة';
   document.getElementById('searchQuery').placeholder = 'Q#####';
   document.getElementById('searchQuery').value = '';
   document.getElementById('searchResults').innerHTML = `
@@ -3000,6 +3043,7 @@ function openSearchWave() {
 }
 function openSearchUser() {
   document.getElementById('searchSubTitle').textContent = 'ابحث برقم المستخدم أو الغرفة';
+  document.getElementById('searchFieldLabel').textContent = 'رقم المستخدم / الغرفة';
   document.getElementById('searchQuery').placeholder = 'Q##### / G#####';
   document.getElementById('searchQuery').value = '';
   document.getElementById('searchResults').innerHTML = `
@@ -3039,7 +3083,10 @@ async function saveWaveName() {
       })
     });
     currentUser.waveName = name;
-    document.getElementById('waveNameValue').textContent = name;
+    const el1 = document.getElementById('waveNameValue');
+    if (el1) el1.textContent = name;
+    const el2 = document.getElementById('waveNameLabel');
+    if (el2) el2.textContent = name;
     toast('✅ تم تحديث اسم الفرقة', 'success');
     closeModal('modalEditWave');
   } catch (e) {
@@ -3058,11 +3105,14 @@ async function leaveWave() {
   currentUser.waveCode = null;
   currentUser.isWaveOwner = false;
 
-  document.getElementById('waveCodeChip').textContent = currentUser.radCode || 'Q00000';
-  document.getElementById('waveCodeText').textContent = currentUser.radCode || '—';
-  document.getElementById('waveStatusText').textContent = 'غير متصل';
-  document.getElementById('waveMembersCount').textContent = '0';
-  document.getElementById('waveNameValue').textContent = '—';
+  const el1 = document.getElementById('waveCodeChip');
+  if (el1) el1.textContent = currentUser.radCode || 'Q00000';
+  const el2 = document.getElementById('waveStatusText');
+  if (el2) el2.innerHTML = '🔴 غير متصل';
+  const el3 = document.getElementById('waveNameLabel');
+  if (el3) el3.textContent = 'لا توجد فرقة';
+  const el4 = document.getElementById('waveNameValue');
+  if (el4) el4.textContent = '—';
   toast('✅ غادرت الفرقة', 'success');
 }
 
@@ -3526,9 +3576,7 @@ function openEditRoomIcon() {
 
 async function createRoom() {
   const name = document.getElementById('roomName').value.trim();
-  const ch = document.getElementById('roomChannel').value.trim();
   if (!name) { toast('⚠️ أدخل اسم الغرفة', 'error'); return; }
-  if (!/^\d{1,2}$/.test(ch)) { toast('⚠️ رقم قناة غير صالح', 'error'); return; }
 
   currentUser.roomName = name;
   document.getElementById('roomNameLabel').textContent = name;
@@ -3568,20 +3616,131 @@ function doClearChat() {
 document.getElementById('roomMenuBtn').addEventListener('click', openSideMenu);
 
 /* =========================================================
+   مؤشر قوة الشبكة
+   ========================================================= */
+function updateConnectionIcon() {
+  const el = document.getElementById('headerConnectionIcon');
+  if (!el) return;
+
+  if (!navigator.onLine) {
+    el.textContent = '📵';
+    el.className = 'offline';
+    el.title = 'غير متصل';
+    return;
+  }
+
+  el.textContent = '📶';
+  if (navigator.connection) {
+    const c = navigator.connection;
+    const speed = c.downlink || 10;
+    if (speed >= 5) { el.className = 'good'; el.title = 'شبكة قوية'; }
+    else if (speed >= 1.5) { el.className = 'mid'; el.title = 'شبكة متوسطة'; }
+    else { el.className = 'bad'; el.title = 'شبكة ضعيفة'; }
+  } else {
+    el.className = 'good';
+  }
+}
+
+/* =========================================================
+   قائمة المشتركين المنسدلة (عند الضغط على اسم الفرقة)
+   ========================================================= */
+document.getElementById('waveNameChip').addEventListener('click', () => {
+  const dd = document.getElementById('membersDropdown');
+  if (!dd) return;
+  if (dd.classList.contains('show')) {
+    dd.classList.remove('show');
+  } else {
+    /* اجلب الأعضاء من السيرفر */
+    if (currentUser.waveId) {
+      fetch(SERVER_URL + '/api/waves/' + currentUser.waveId)
+        .then(r => r.json())
+        .then(data => {
+          if (data.members) {
+            dd.innerHTML = `
+              <div class="members-dropdown-title">👥 المشتركون (${data.members.length})</div>
+              ${data.members.map(m => `
+                <div class="members-dropdown-item">
+                  <span>${m.name} ${m.id === currentUser.id ? '(أنت)' : ''} ${m.isOwner ? '👑' : ''}</span>
+                  <span class="${m.online ? 'status-active' : 'status-inactive'}">${m.online ? '🟢 نشط' : '🔴 غير نشط'}</span>
+                </div>
+              `).join('')}
+            `;
+          } else {
+            dd.innerHTML = '<div class="operations-empty">لا يوجد مشتركون</div>';
+          }
+        });
+    } else {
+      dd.innerHTML = '<div class="operations-empty">لا توجد فرقة نشطة</div>';
+    }
+    dd.classList.add('show');
+  }
+});
+
+/* =========================================================
+   قائمة العمليات (كل الفرق)
+   ========================================================= */
+document.getElementById('operationsBtn').addEventListener('click', () => {
+  const dd = document.getElementById('operationsDropdown');
+  if (!dd) return;
+  if (dd.classList.contains('show')) {
+    dd.classList.remove('show');
+    return;
+  }
+
+  if (myWaves.length === 0) {
+    dd.innerHTML = '<div class="operations-empty">لا توجد فرق محفوظة</div>';
+    dd.classList.add('show');
+    return;
+  }
+
+  /* اعرض الفرق + عدد النشطين */
+  dd.innerHTML = `<div class="operations-dropdown-title">📋 العمليات</div>`;
+
+  let pending = myWaves.length;
+  myWaves.forEach(w => {
+    fetch(SERVER_URL + '/api/waves/' + w.id)
+      .then(r => r.json())
+      .then(data => {
+        const onlineCount = data.members ? data.members.filter(m => m.online).length : 0;
+        const el = document.createElement('div');
+        el.className = 'operations-item';
+        el.innerHTML = `
+          <span>📡 ${w.name}</span>
+          <span class="ops-count">${onlineCount} نشط</span>
+        `;
+        el.onclick = () => {
+          joinWaveAsMember(w.id);
+          dd.classList.remove('show');
+        };
+        dd.appendChild(el);
+      })
+      .catch(() => {})
+      .finally(() => {
+        pending--;
+        if (pending === 0) dd.classList.add('show');
+      });
+  });
+});
+
+/* =========================================================
    متفرقات
    ========================================================= */
 async function initBattery() {
   if (!navigator.getBattery) {
-    document.getElementById('batteryValue').textContent = '—';
-    document.getElementById('bottomBattery').textContent = '—';
+    const el1 = document.getElementById('batteryValue');
+    if (el1) el1.textContent = '—';
+    const el2 = document.getElementById('bottomBattery');
+    if (el2) el2.textContent = '—';
     return;
   }
   try {
     const battery = await navigator.getBattery();
     const update = () => {
       batteryPercent = Math.round(battery.level * 100);
-      document.getElementById('batteryValue').textContent = batteryPercent + '%';
-      document.getElementById('bottomBattery').textContent = batteryPercent + '%';
+      const el1 = document.getElementById('batteryValue');
+      if (el1) el1.textContent = batteryPercent + '%';
+      const el2 = document.getElementById('bottomBattery');
+      if (el2) el2.textContent = batteryPercent + '%';
     };
     update();
     battery.addEventListener('levelchange', update);
@@ -3597,20 +3756,30 @@ function changeChannel() {
   toast('تغيير القناة قريباً');
 }
 
-document.getElementById('waveMembersBtn').addEventListener('click', () => {
-  document.getElementById('membersPanel').classList.add('open');
-  document.getElementById('membersBackdrop').classList.add('show');
-});
-document.getElementById('membersBackdrop').addEventListener('click', closeMembersPanel);
-
-document.getElementById('waveCodeBtn').addEventListener('click', copyMyWaveCode);
+/* قائمة المشتركين الجانبية */
+const membersBackdropEl = document.getElementById('membersBackdrop');
+if (membersBackdropEl) membersBackdropEl.addEventListener('click', closeMembersPanel);
 
 /* =========================================================
    التهيئة الأولى
    ========================================================= */
 window.addEventListener('DOMContentLoaded', async () => {
+  /* استرجع الفرق المحفوظة */
+  try {
+    const saved = localStorage.getItem('rc_my_waves');
+    if (saved) myWaves = JSON.parse(saved);
+  } catch (e) { myWaves = []; }
+
   await initBattery();
   await PTTEngine.init();
+  updateConnectionIcon();
+
+  /* راقب حالة الاتصال */
+  window.addEventListener('online', updateConnectionIcon);
+  window.addEventListener('offline', updateConnectionIcon);
+  if (navigator.connection) {
+    navigator.connection.addEventListener('change', updateConnectionIcon);
+  }
 
   askUserNameIfNeeded();
   await registerUser();
@@ -3629,6 +3798,21 @@ document.addEventListener('keyup', (e) => {
   if (e.code === 'Space') {
     e.preventDefault();
     onPTTEnd();
+  }
+});
+
+/* إغلاق القوائم المنسدلة عند الضغط خارجها */
+document.addEventListener('click', (e) => {
+  const md = document.getElementById('membersDropdown');
+  const od = document.getElementById('operationsDropdown');
+  const wnc = document.getElementById('waveNameChip');
+  const ob = document.getElementById('operationsBtn');
+
+  if (md && md.classList.contains('show') && !md.contains(e.target) && e.target !== wnc && !wnc.contains(e.target)) {
+    md.classList.remove('show');
+  }
+  if (od && od.classList.contains('show') && !od.contains(e.target) && e.target !== ob) {
+    od.classList.remove('show');
   }
 });
   </script>
