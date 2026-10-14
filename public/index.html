@@ -1,0 +1,2032 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#05080c">
+<title>Radio Connect — راديو كونكت</title>
+<audio id="walkieBeep" src="./walkie_beep.mp3" preload="auto"></audio>
+<style>
+/* =========================================================
+   إعادة ضبط + متغيرات
+   ========================================================= */
+*, *::before, *::after {
+  margin: 0; padding: 0; box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+:root {
+  --bg: #05080c;
+  --card: #0f1921;
+  --card-2: #142028;
+  --border: #1c2a36;
+  --text: #e6f0f5;
+  --text-dim: #6b8899;
+  --cyan: #00e5ff;
+  --cyan-dark: #008fa8;
+  --green: #00ff88;
+  --red: #ff2a4d;
+  --red-dark: #b01530;
+  --blue-msg: #1a4d6b;
+  --blue-msg-2: #0f3550;
+  --red-msg: #6b1220;
+  --red-msg-2: #45080f;
+  --purple: #8b5cf6;
+  --radius: 14px;
+}
+html, body { height: 100%; overflow: hidden; background: var(--bg); }
+body {
+  font-family: 'Segoe UI', 'Tahoma', system-ui, -apple-system, sans-serif;
+  color: var(--text);
+  user-select: none;
+  -webkit-user-select: none;
+  position: relative;
+}
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(0,229,255,.06), transparent 45%),
+    radial-gradient(circle at 80% 80%, rgba(0,255,136,.05), transparent 45%);
+  pointer-events: none;
+  z-index: 0;
+}
+.app {
+  position: relative;
+  z-index: 1;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  max-width: 500px;
+  margin: 0 auto;
+}
+.screen {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: none;
+  padding: 14px 14px 160px;
+  animation: fadeIn.3s ease;
+  scrollbar-width: none;
+}
+.screen::-webkit-scrollbar { display: none; }
+.screen.active { display: block; }
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.top-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 4px 14px;
+}
+.brand { display: flex; align-items: center; gap: 8px; }
+.brand-icon {
+  font-size: 26px;
+  line-height: 1;
+  filter: drop-shadow(0 0 8px rgba(0,229,255,.7));
+  animation: iconPulse 2s ease-in-out infinite;
+}
+@keyframes iconPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity:.65; }
+}
+.brand-text { display: flex; flex-direction: column; line-height: 1.15; }
+.brand-title {
+  font-size: 19px;
+  font-weight: 800;
+  color: var(--cyan);
+  letter-spacing:.3px;
+  text-shadow: 0 0 14px rgba(0,229,255,.5);
+}
+.brand-sub {
+  font-size: 11px;
+  color: var(--text-dim);
+  font-weight: 500;
+}
+.header-right {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12px;
+  color: var(--cyan);
+  font-weight: 700;
+}
+.menu-toggle {
+  width: 42px; height: 42px;
+  border-radius: 11px;
+  background: linear-gradient(180deg, var(--card-2), var(--card));
+  border: 1px solid var(--border);
+  color: var(--cyan);
+  font-size: 22px;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all.2s;
+  font-family: inherit;
+  flex-shrink: 0;
+  line-height: 1;
+}
+.menu-toggle:active {
+  transform: scale(.94);
+  border-color: var(--cyan);
+  box-shadow: 0 0 14px rgba(0,229,255,.4);
+}
+.menu-toggle.open {
+  background: linear-gradient(180deg, #00e5ff, #008fa8);
+  color: #001418;
+  border-color: var(--cyan);
+  box-shadow: 0 0 18px rgba(0,229,255,.6);
+}
+.side-menu {
+  position: fixed;
+  top: 0; right: 0;
+  height: 100vh;
+  width: 280px;
+  background: linear-gradient(180deg, var(--card-2), var(--bg));
+  border-left: 1px solid var(--cyan);
+  box-shadow: -12px 0 40px rgba(0,229,255,.25);
+  z-index: 300;
+  transform: translateX(110%);
+  transition: transform.32s cubic-bezier(.4,0,.2,1);
+  display: flex;
+  flex-direction: column;
+  padding: 20px 16px;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+.side-menu::-webkit-scrollbar { display: none; }
+.side-menu.open { transform: translateX(0); }
+.side-menu-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.7);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  z-index: 299;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity.3s;
+}
+.side-menu-backdrop.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+.side-menu-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 16px;
+}
+.side-menu-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--cyan);
+  text-shadow: 0 0 10px rgba(0,229,255,.5);
+}
+.side-menu-title.icon { font-size: 20px; }
+.side-menu-close {
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+}
+.side-menu-close:active {
+  border-color: var(--red);
+  color: var(--red);
+}
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 12px;
+  background: linear-gradient(180deg, rgba(255,255,255,.02), transparent);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin-bottom: 10px;
+  color: var(--text);
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all.2s;
+  font-family: inherit;
+  text-align: right;
+  width: 100%;
+}
+.menu-item:active {
+  transform: scale(.97);
+  border-color: var(--cyan);
+  box-shadow: 0 0 16px rgba(0,229,255,.3);
+}
+.menu-item.menu-icon {
+  width: 40px; height: 40px;
+  border-radius: 11px;
+  background: rgba(0,229,255,.1);
+  border: 1px solid rgba(0,229,255,.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 19px;
+  flex-shrink: 0;
+}
+.menu-item.menu-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+.menu-item.menu-label {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: var(--text);
+}
+.menu-item.menu-desc {
+  font-size: 10.5px;
+  color: var(--text-dim);
+  font-weight: 500;
+}
+.menu-item.primary {
+  background: linear-gradient(180deg, rgba(0,229,255,.08), rgba(0,229,255,.02));
+  border-color: rgba(0,229,255,.4);
+}
+.menu-item.primary.menu-icon {
+  background: rgba(0,229,255,.2);
+}
+.status-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 7px;
+  margin-bottom: 14px;
+}
+.chip {
+  background: linear-gradient(180deg, var(--card-2), var(--card));
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 9px 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  font-size: 10.5px;
+  color: var(--text-dim);
+  min-height: 54px;
+  text-align: center;
+}
+.chip-value {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.chip-value.online { color: var(--green); }
+.chip-value.online::before {
+  content: '';
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 8px var(--green);
+  animation: dotPulse 1.5s ease-in-out infinite;
+}
+@keyframes dotPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity:.35; }
+}
+.chip-label { font-size: 10px; color: var(--text-dim); }
+.chip-value.code {
+  color: var(--cyan);
+  font-family: 'Courier New', monospace;
+  letter-spacing: 1px;
+  font-size: 13px;
+  font-weight: 900;
+  text-shadow: 0 0 8px rgba(0,229,255,.6);
+}
+.radio-stage {
+  position: relative;
+  height: 360px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 8px 0 16px;
+}
+.radio-device {
+  position: relative;
+  width: 210px;
+  height: 320px;
+  filter: drop-shadow(0 20px 40px rgba(0,0,0,.8))
+          drop-shadow(0 0 30px rgba(0,229,255,.15));
+}
+.antenna {
+  position: absolute;
+  top: 0; right: 58px;
+  width: 20px; height: 95px;
+  background: linear-gradient(90deg, #0a0a0a, #2b2b2b 40%, #0a0a0a);
+  border-radius: 10px 10px 3px 3px;
+  box-shadow: inset -2px 0 3px rgba(0,0,0,.8);
+}
+.antenna::before {
+  content: '';
+  position: absolute;
+  top: -8px; left: 50%;
+  transform: translateX(-50%);
+  width: 12px; height: 12px;
+  background: #0a0a0a;
+  border-radius: 50%;
+  box-shadow: 0 0 6px rgba(0,229,255,.4);
+}
+.knobs {
+  position: absolute;
+  top: 88px; right: 18px;
+  display: flex; gap: 20px;
+}
+.knob {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #4a4a4a, #0d0d0d);
+  border: 2px solid #1c1c1c;
+  box-shadow: 0 3px 6px rgba(0,0,0,.8), inset -2px -2px 4px rgba(0,0,0,.5);
+  position: relative;
+}
+.knob::after {
+  content: '';
+  position: absolute;
+  top: 3px; left: 50%;
+  transform: translateX(-50%);
+  width: 3px; height: 9px;
+  background: #888;
+  border-radius: 2px;
+}
+.body-main {
+  position: absolute;
+  top: 110px; left: 0; right: 0;
+  height: 210px;
+  background: linear-gradient(180deg, #1e1e1e, #0a0a0a);
+  border-radius: 18px;
+  border: 2px solid #0a0a0a;
+  box-shadow:
+    inset 0 2px 4px rgba(255,255,255,.06),
+    inset 0 -4px 8px rgba(0,0,0,.7),
+    0 10px 25px rgba(0,0,0,.7);
+  overflow: hidden;
+}
+.body-main::before {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  border-radius: 13px;
+  border: 1px solid rgba(0,229,255,.08);
+  pointer-events: none;
+}
+.lcd {
+  position: absolute;
+  top: 16px; left: 20px; right: 20px;
+  height: 65px;
+  background: #0a1a0f;
+  border: 2px solid #050505;
+  border-radius: 6px;
+  box-shadow:
+    inset 0 0 14px rgba(0,255,136,.18),
+    inset 0 2px 4px rgba(0,0,0,.9),
+    0 0 14px rgba(0,255,136,.15);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 6px 10px;
+  font-family: 'Courier New', monospace;
+  color: var(--green);
+  text-shadow: 0 0 7px rgba(0,255,136,.9);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing:.5px;
+  line-height: 1.6;
+}
+.lcd-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11.5px;
+}
+.lcd-row.lcd-label { color: #00cc70; }
+.side-btns {
+  position: absolute;
+  top: 92px; left: 12px; right: 12px;
+  display: flex;
+  justify-content: space-between;
+  font-size: 8px;
+  color: #666;
+  letter-spacing:.5px;
+  font-weight: 700;
+}
+.side-btn {
+  padding: 2px 7px;
+  background: #1a1a1a;
+  border-radius: 4px;
+  border: 1px solid #2a2a2a;
+}
+.speaker-grill {
+  position: absolute;
+  bottom: 14px; left: 24px; right: 24px;
+  height: 46px;
+  border-radius: 6px;
+  background: repeating-linear-gradient(90deg,
+    #050505 0, #050505 3px,
+    #1a1a1a 3px, #1a1a1a 6px);
+  box-shadow: inset 0 3px 6px rgba(0,0,0,.95);
+}
+.ptt-btn {
+  position: absolute;
+  top: 140px; left: 50%;
+  transform: translateX(-50%);
+  width: 105px; height: 62px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #0a2a3a, #041520);
+  border: 2px solid var(--cyan);
+  box-shadow:
+    0 0 22px rgba(0,229,255,.55),
+    inset 0 0 18px rgba(0,229,255,.25),
+    inset 0 2px 4px rgba(0,0,0,.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--cyan);
+  font-weight: 900;
+  font-size: 23px;
+  letter-spacing: 2px;
+  text-shadow: 0 0 12px rgba(0,229,255,.95);
+  cursor: pointer;
+  transition: all.15s;
+  z-index: 5;
+  font-family: inherit;
+}
+.ptt-btn.holding {
+  transform: translateX(-50%) scale(.95);
+  background: linear-gradient(180deg, #00e5ff, #008fa8);
+  color: #001418;
+  text-shadow: none;
+  box-shadow:
+    0 0 45px rgba(0,229,255,1),
+    0 0 90px rgba(0,229,255,.6),
+    inset 0 0 22px rgba(255,255,255,.35);
+}
+.ptt-sub {
+  position: absolute;
+  top: 212px; left: 50%;
+  transform: translateX(-50%);
+  font-size: 8px;
+  color: var(--cyan-dark);
+  letter-spacing: 1.5px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.ab-indicator {
+  position: absolute;
+  top: 175px; right: 14px;
+  font-size: 9px;
+  color: #555;
+  font-weight: 700;
+}
+.tab-bar {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 500px;
+  background: linear-gradient(180deg, rgba(11,18,24,.85), rgba(5,8,12,1));
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid var(--border);
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  padding: 8px 0 10px;
+  z-index: 100;
+}
+.tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 6px 0;
+  color: var(--text-dim);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color.25s;
+  position: relative;
+  background: none;
+  border: none;
+  font-family: inherit;
+}
+.tab.active { color: var(--cyan); }
+.tab.active::after {
+  content: '';
+  position: absolute;
+  top: -8px; left: 50%;
+  transform: translateX(-50%);
+  width: 28px; height: 3px;
+  background: var(--cyan);
+  border-radius: 0 0 3px 3px;
+  box-shadow: 0 0 12px var(--cyan);
+}
+.tab-icon { font-size: 22px; line-height: 1; }
+.bottom-info {
+  position: fixed;
+  bottom: 68px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 500px;
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-dim);
+  padding: 8px 0;
+  pointer-events: none;
+  z-index: 99;
+}
+.bottom-info.hl { color: var(--cyan); font-weight: 700; }
+.log-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 4px 14px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 14px;
+  gap: 8px;
+}
+.log-title {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  text-align: right;
+  flex: 1;
+}
+.log-title h2 {
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--cyan);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.log-title.sub {
+  font-size: 11px;
+  color: var(--text-dim);
+  font-weight: 500;
+}
+.log-actions {
+  display: flex;
+  gap: 12px;
+  color: var(--cyan);
+  font-size: 20px;
+}
+.log-actions span { cursor: pointer; }
+.encrypted-badge { text-align: center; margin-bottom: 16px; }
+.encrypted-badge-inner {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(0,255,136,.06);
+  border: 1px solid rgba(0,255,136,.2);
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 11px;
+  color: var(--green);
+  font-weight: 600;
+}
+.encrypted-badge-inner::before {
+  content: '';
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 8px var(--green);
+  animation: dotPulse 1.5s ease-in-out infinite;
+}
+.room-users {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 4px 0 10px;
+  margin-bottom: 10px;
+  scrollbar-width: none;
+}
+.room-users::-webkit-scrollbar { display: none; }
+.user-pill {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  background: var(--card-2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-dim);
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.user-pill.active {
+  border-color: var(--green);
+  color: var(--green);
+  box-shadow: 0 0 8px rgba(0,255,136,.3);
+}
+.user-avatar {
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--cyan), var(--cyan-dark));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #001418;
+  font-size: 10px;
+  font-weight: 800;
+}
+.empty-room {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  gap: 14px;
+  color: var(--text-dim);
+}
+.empty-room-icon {
+  font-size: 60px;
+  opacity:.35;
+  filter: drop-shadow(0 0 20px rgba(0,229,255,.3));
+}
+.empty-room-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--cyan);
+}
+.empty-room-text {
+  font-size: 12.5px;
+  line-height: 1.7;
+  max-width: 260px;
+}
+.empty-room-btn {
+  margin-top: 14px;
+  padding: 14px 28px;
+  background: linear-gradient(180deg, #00e5ff, #008fa8);
+  border: 1px solid var(--cyan);
+  border-radius: 12px;
+  color: #001418;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 0 20px rgba(0,229,255,.5);
+  transition: all.2s;
+}
+.empty-room-btn:active {
+  transform: scale(.95);
+  box-shadow: 0 0 32px rgba(0,229,255,.8);
+}
+.msg {
+  margin-bottom: 12px;
+  position: relative;
+  max-width: 92%;
+  animation: msgSlide.35s ease;
+}
+@keyframes msgSlide {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.msg-in { margin-right: 0; margin-left: auto; }
+.msg-out { margin-left: 0; margin-right: auto; }
+.msg-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  font-weight: 700;
+  margin-bottom: 5px;
+  padding: 0 8px;
+}
+.msg-in.msg-header { color: var(--cyan); justify-content: flex-end; }
+.msg-out.msg-header { color: #ff5577; }
+.msg-body {
+  border-radius: 14px;
+  padding: 12px 14px;
+  position: relative;
+  border: 1px solid;
+}
+.msg-in.msg-body {
+  background: linear-gradient(135deg, var(--blue-msg), var(--blue-msg-2));
+  border-color: rgba(0,229,255,.3);
+  border-top-right-radius: 4px;
+}
+.msg-out.msg-body {
+  background: linear-gradient(135deg, var(--red-msg), var(--red-msg-2));
+  border-color: rgba(255,42,77,.35);
+  border-top-left-radius: 4px;
+}
+.voice-msg {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.play-btn {
+  width: 42px; height: 42px;
+  border-radius: 50%;
+  background: rgba(0,229,255,.2);
+  border: 1.5px solid var(--cyan);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--cyan);
+  font-size: 16px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all.2s;
+  font-family: inherit;
+  font-weight: 700;
+}
+.play-btn:active {
+  background: var(--cyan);
+  color: #001418;
+  transform: scale(.94);
+}
+.msg-out.play-btn {
+  background: rgba(255,42,77,.2);
+  border-color: #ff5577;
+  color: #ff5577;
+}
+.waveform {
+  flex: 1;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  overflow: hidden;
+}
+.waveform span {
+  display: block;
+  width: 2.5px;
+  background: var(--cyan);
+  border-radius: 2px;
+  opacity:.9;
+}
+.waveform span.hot { background: #ff5577; }
+.msg-out.waveform span { background: #ff5577; }
+.voice-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: rgba(255,255,255,.65);
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255,255,255,.08);
+}
+.text-msg {
+  font-size: 13.5px;
+  line-height: 1.75;
+  color: #fff;
+  font-weight: 500;
+}
+.attach-msg {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 4px;
+}
+.attach-msg-icon {
+  font-size: 32px;
+}
+.attach-msg-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.attach-msg-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+}
+.attach-msg-type {
+  font-size: 10px;
+  color: rgba(255,255,255,.65);
+}
+.attachment-preview-img {
+  max-width: 100%;
+  max-height: 240px;
+  border-radius: 10px;
+  display: block;
+  margin-bottom: 6px;
+  cursor: pointer;
+}
+.attachment-preview-video {
+  max-width: 100%;
+  max-height: 240px;
+  border-radius: 10px;
+  display: block;
+  margin-bottom: 6px;
+}
+.chat-input-bar {
+  position: fixed;
+  bottom: 68px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 500px;
+  background: linear-gradient(180deg, rgba(11,18,24,.9), rgba(5,8,12,1));
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-top: 1px solid var(--border);
+  padding: 10px 12px 14px;
+  display: none;
+  align-items: center;
+  gap: 8px;
+  z-index: 98;
+}
+.chat-input-bar.active { display: flex; }
+.chat-ptt {
+  width: 46px; height: 46px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #ff2a4d, #b01530);
+  border: 1.5px solid #ff5577;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 20px;
+  cursor: pointer;
+  flex-shrink: 0;
+  box-shadow: 0 0 16px rgba(255,42,77,.55);
+  transition: all.15s;
+  position: relative;
+  font-family: inherit;
+}
+.chat-ptt.holding {
+  transform: scale(.94);
+  box-shadow: 0 0 30px rgba(255,42,77,.95);
+}
+.chat-ptt-label {
+  position: absolute;
+  bottom: -15px; left: 50%;
+  transform: translateX(-50%);
+  font-size: 9px;
+  color: #ff5577;
+  font-weight: 800;
+  letter-spacing:.5px;
+}
+.chat-send {
+  width: 42px; height: 42px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #00e5ff, #008fa8);
+  border: 1.5px solid var(--cyan);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #001418;
+  font-size: 18px;
+  cursor: pointer;
+  flex-shrink: 0;
+  box-shadow: 0 0 16px rgba(0,229,255,.55);
+  transition: all.15s;
+  font-family: inherit;
+  font-weight: 900;
+}
+.chat-send:active {
+  transform: scale(.9);
+  box-shadow: 0 0 28px rgba(0,229,255,.95);
+}
+.chat-send:disabled {
+  background: #2a2f38;
+  border-color: #3a4048;
+  color: #666;
+  cursor: not-allowed;
+  box-shadow: none;
+  opacity:.5;
+}
+.chat-input-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--card-2);
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  padding: 8px 14px;
+  min-height: 44px;
+}
+.chat-clip {
+  color: var(--text-dim);
+  font-size: 18px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  font-family: inherit;
+  padding: 0;
+  transition: color.2s;
+}
+.chat-clip:active { color: var(--cyan); }
+.chat-input {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13.5px;
+  text-align: right;
+}
+.chat-input::placeholder { color: var(--text-dim); }
+.settings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.setting-item {
+  background: linear-gradient(180deg, var(--card-2), var(--card));
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  cursor: pointer;
+  transition: border-color.2s;
+}
+.setting-item:active { border-color: var(--cyan); }
+.setting-info { display: flex; flex-direction: column; gap: 3px; flex: 1; }
+.setting-title { font-size: 14px; font-weight: 700; color: var(--text); }
+.setting-desc { font-size: 11px; color: var(--text-dim); }
+.setting-value { font-size: 12px; color: var(--cyan); font-weight: 700; }
+.toast {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-100px);
+  background: linear-gradient(180deg, var(--card-2), var(--card));
+  border: 1px solid var(--cyan);
+  color: var(--text);
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  z-index: 999;
+  transition: transform.35s ease;
+  box-shadow: 0 8px 24px rgba(0,229,255,.3);
+  max-width: 90vw;
+  text-align: center;
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+.toast.success { border-color: var(--green); box-shadow: 0 8px 24px rgba(0,255,136,.3); }
+.toast.error { border-color: var(--red); box-shadow: 0 8px 24px rgba(255,42,77,.3); }
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.8);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 500;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.modal-overlay.show { display: flex; animation: fadeIn.25s ease; }
+.modal {
+  width: 100%;
+  max-width: 400px;
+  background: linear-gradient(180deg, var(--card-2), var(--bg));
+  border: 1px solid var(--cyan);
+  border-radius: 18px;
+  padding: 22px 18px;
+  box-shadow: 0 20px 60px rgba(0,229,255,.3);
+  animation: modalPop.3s ease;
+  max-height: 90vh;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+@keyframes modalPop {
+  from { opacity: 0; transform: scale(.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+.modal-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--cyan);
+  text-align: center;
+  margin-bottom: 6px;
+}
+.modal-sub {
+  font-size: 12px;
+  color: var(--text-dim);
+  text-align: center;
+  margin-bottom: 18px;
+  line-height: 1.6;
+}
+.modal-field { margin-bottom: 14px; }
+.modal-field label {
+  display: block;
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+.modal-field input {
+  width: 100%;
+  padding: 12px 14px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 14px;
+  outline: none;
+  transition: border-color.2s;
+  text-align: right;
+}
+.modal-field input:focus {
+  border-color: var(--cyan);
+  box-shadow: 0 0 0 3px rgba(0,229,255,.1);
+}
+.modal-field input.code-input {
+  text-align: center;
+  letter-spacing: 3px;
+  font-family: 'Courier New', monospace;
+  font-weight: 800;
+  font-size: 16px;
+  color: var(--cyan);
+}
+.modal-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 18px;
+}
+.modal-btn {
+  padding: 13px;
+  border-radius: 10px;
+  border: 1px solid;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all.2s;
+}
+.modal-btn.cancel {
+  background: transparent;
+  border-color: var(--border);
+  color: var(--text-dim);
+}
+.modal-btn.confirm {
+  background: linear-gradient(180deg, #00e5ff, #008fa8);
+  border-color: var(--cyan);
+  color: #001418;
+  box-shadow: 0 0 18px rgba(0,229,255,.4);
+}
+.modal-btn.danger {
+  background: linear-gradient(180deg, #ff2a4d, #b01530);
+  border-color: #ff5577;
+  color: #fff;
+  box-shadow: 0 0 18px rgba(255,42,77,.4);
+}
+.modal-btn:active { transform: scale(.97); }
+.modal-btn:disabled {
+  opacity:.4;
+  cursor: not-allowed;
+}
+.search-result-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: all.2s;
+}
+.search-result-card:active {
+  border-color: var(--cyan);
+  transform: scale(.98);
+}
+.search-result-icon {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--cyan), var(--cyan-dark));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+.search-result-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.search-result-name {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--text);
+}
+.search-result-code {
+  font-size: 12px;
+  color: var(--cyan);
+  font-family: 'Courier New', monospace;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+.no-results {
+  text-align: center;
+  padding: 24px 12px;
+  color: var(--text-dim);
+  font-size: 13px;
+  line-height: 1.7;
+}
+.no-results-icon {
+  font-size: 36px;
+  display: block;
+  margin-bottom: 10px;
+  opacity:.4;
+}
+.attach-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 6px;
+}
+.attach-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 18px 12px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all.2s;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 700;
+}
+.attach-item:active {
+  border-color: var(--cyan);
+  transform: scale(.96);
+  box-shadow: 0 0 16px rgba(0,229,255,.25);
+}
+.attach-icon { font-size: 28px; }
+.icon-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-top: 6px;
+}
+.icon-option {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all.2s;
+}
+.icon-option:active { transform: scale(.94); }
+.icon-option.selected {
+  border-color: var(--cyan);
+  background: rgba(0,229,255,.1);
+  box-shadow: 0 0 16px rgba(0,229,255,.4);
+}
+.modal-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 12px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin-bottom: 8px;
+  color: var(--text);
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all.2s;
+  font-family: inherit;
+  text-align: right;
+  width: 100%;
+}
+.modal-menu-item:active {
+  transform: scale(.97);
+  border-color: var(--cyan);
+}
+.modal-menu-item.modal-menu-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: rgba(0,229,255,.1);
+  border: 1px solid rgba(0,229,255,.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+.modal-menu-item.danger { color: #ff5577; }
+.modal-menu-item.danger.modal-menu-icon {
+  background: rgba(255,42,77,.1);
+  border-color: rgba(255,42,77,.3);
+}
+.code-display {
+  text-align: center;
+  padding: 18px;
+  background: rgba(0,229,255,.05);
+  border: 1px dashed var(--cyan);
+  border-radius: 12px;
+  margin: 14px 0;
+}
+.code-display-label {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+}
+.code-display-value {
+  font-size: 26px;
+  font-weight: 900;
+  color: var(--cyan);
+  font-family: 'Courier New', monospace;
+  letter-spacing: 3px;
+  text-shadow: 0 0 20px rgba(0,229,255,.7);
+}
+.code-display-hint {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-top: 8px;
+  line-height: 1.6;
+}
+.join-request-info {
+  padding: 16px;
+  background: rgba(0,229,255,.05);
+  border: 1px solid rgba(0,229,255,.3);
+  border-radius: 12px;
+  margin-bottom: 14px;
+  text-align: center;
+}
+.join-request-icon {
+  font-size: 40px;
+  margin-bottom: 8px;
+}
+.join-request-name {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--cyan);
+  margin-bottom: 4px;
+}
+.join-request-code {
+  font-size: 13px;
+  color: var(--text-dim);
+  font-family: 'Courier New', monospace;
+  letter-spacing: 1px;
+}
+</style>
+</head>
+<body>
+   <div class="app">
+  <section class="screen active" id="screen-radio">
+    <header class="top-header">
+      <button class="menu-toggle" id="menuToggle" title="الإعدادات">☰</button>
+      <div class="header-right">
+        <span>S458 • Q307</span>
+      </div>
+      <div class="brand">
+        <div class="brand-text">
+          <span class="brand-title">Radio Connect</span>
+          <span class="brand-sub">راديو كونكت</span>
+        </div>
+        <span class="brand-icon">📻</span>
+      </div>
+    </header>
+    <div class="status-row">
+      <div class="chip">
+        <div class="chip-value online">متصل</div>
+      </div>
+      <div class="chip">
+        <div class="chip-value">📻 07</div>
+        <div class="chip-label">القناة</div>
+      </div>
+      <div class="chip">
+        <div class="chip-value code" id="waveCodeChip">Q30712</div>
+        <div class="chip-label">رقم الموجة</div>
+      </div>
+    </div>
+    <div class="radio-stage">
+      <div class="radio-device">
+        <div class="antenna"></div>
+        <div class="knobs">
+          <div class="knob" title="VOL"></div>
+          <div class="knob" title="CH"></div>
+        </div>
+        <div class="body-main">
+          <div class="lcd">
+            <div class="lcd-row">
+              <span class="lcd-label" id="lcdLine1">CH 07</span>
+              <span id="lcdLine2">S458</span>
+            </div>
+            <div class="lcd-row">
+              <span class="lcd-label" id="lcdLine3">Q307 • RX</span>
+              <span id="lcdStatus">•</span>
+            </div>
+          </div>
+          <div class="side-btns">
+            <span class="side-btn">MENU</span>
+            <span class="side-btn">A/B</span>
+          </div>
+          <div class="speaker-grill"></div>
+        </div>
+        <button class="ptt-btn" id="pttMain">PTT</button>
+        <div class="ptt-sub">PRESS TO TALK</div>
+        <div class="ab-indicator">A/B</div>
+      </div>
+    </div>
+  </section>
+  <section class="screen" id="screen-log">
+    <div class="log-header">
+      <div class="log-actions">
+        <span id="roomMenuBtn">☰</span>
+        <span onclick="toast('معلومات القناة')">ⓘ</span>
+      </div>
+      <div class="log-title">
+        <h2><span id="roomIcon">💬</span> <span id="roomNameLabel">الغرفة</span> <span style="font-size:14px;">←</span></h2>
+        <span class="sub" id="roomSubLabel">📻 Q307 • CH 07 | S458 • Q307</span>
+      </div>
+    </div>
+    <div class="encrypted-badge" id="roomBadge" style="display:none;">
+      <span class="encrypted-badge-inner">
+        متصل الآن: 2 &nbsp;|&nbsp; حالة: قناة آمنة - مشفّرة
+      </span>
+    </div>
+    <div class="room-users" id="roomUsers" style="display:none;">
+      <div class="user-pill active">
+        <span class="user-avatar">Q</span> Q307 (أنت)
+      </div>
+    </div>
+    <div id="roomMessages"></div>
+    <div class="empty-room" id="emptyRoom">
+      <div class="empty-room-icon">💬</div>
+      <div class="empty-room-title">لا توجد غرفة بعد</div>
+      <div class="empty-room-text">
+        أنشئ غرفة للحصول على رقم خاص بك، ثم شاركه مع فريقك للانضمام.
+      </div>
+      <button class="empty-room-btn" onclick="openCreateRoom()">
+        ➕ إنشاء غرفة جديدة
+      </button>
+    </div>
+  </section>
+  <section class="screen" id="screen-settings">
+    <header class="top-header">
+      <div class="brand">
+        <span class="brand-icon">⚙️</span>
+        <div class="brand-text">
+          <span class="brand-title">الإعدادات</span>
+          <span class="brand-sub">Settings</span>
+        </div>
+      </div>
+    </header>
+    <div class="settings-list">
+      <div class="setting-item" onclick="changeChannel()">
+        <div class="setting-info">
+          <span class="setting-title">📻 القناة الحالية</span>
+          <span class="setting-desc">اختر قناة للتواصل</span>
+        </div>
+        <span class="setting-value" id="channelValue">CH 07</span>
+      </div>
+      <div class="setting-item" onclick="toast('اسم الموجة: ' + waveName, 'success')">
+        <div class="setting-info">
+          <span class="setting-title">📡 اسم الموجة</span>
+          <span class="setting-desc">اسم موجتك الحالية</span>
+        </div>
+        <span class="setting-value" id="waveNameValue">—</span>
+      </div>
+      <div class="setting-item" onclick="toast('رقم الموجة: ' + waveCode, 'success')">
+        <div class="setting-info">
+          <span class="setting-title">🔑 رقم الموجة</span>
+          <span class="setting-desc">شارك هذا الرقم للانضمام</span>
+        </div>
+        <span class="setting-value" id="waveCodeValue">—</span>
+      </div>
+      <div class="setting-item" onclick="toast('المستخدم: Q307')">
+        <div class="setting-info">
+          <span class="setting-title">👤 معرّف المستخدم</span>
+          <span class="setting-desc">هويتك في القناة</span>
+        </div>
+        <span class="setting-value">Q307</span>
+      </div>
+      <div class="setting-item" onclick="testCall()">
+        <div class="setting-info">
+          <span class="setting-title">🔔 اختبار صوت النداء</span>
+          <span class="setting-desc">تأكد من أن الصوت يعمل</span>
+        </div>
+        <span class="setting-value">تجربة</span>
+      </div>
+      <div class="setting-item" onclick="toast('الإشعارات مفعّلة', 'success')">
+        <div class="setting-info">
+          <span class="setting-title">🔔 الإشعارات</span>
+          <span class="setting-desc">تنبيهات عند وصول نداء</span>
+        </div>
+        <span class="setting-value">مفعّلة</span>
+      </div>
+      <div class="setting-item" onclick="toast('مستوى البطارية: ' + (batteryPercent!== null? batteryPercent : '—') + '%')">
+        <div class="setting-info">
+          <span class="setting-title">🔋 البطارية</span>
+          <span class="setting-desc">حالة الجهاز</span>
+        </div>
+        <span class="setting-value" id="batteryValue">--%</span>
+      </div>
+      <div class="setting-item" onclick="toast('الإصدار 1.0.0')">
+        <div class="setting-info">
+          <span class="setting-title">ℹ️ حول التطبيق</span>
+          <span class="setting-desc">Radio Connect</span>
+        </div>
+        <span class="setting-value">v1.0</span>
+      </div>
+    </div>
+  </section>
+  <nav class="tab-bar">
+    <button class="tab" data-tab="log" onclick="switchTab('log')">
+      <span class="tab-icon">💬</span>
+      <span>الغرفة</span>
+    </button>
+    <button class="tab active" data-tab="radio" onclick="switchTab('radio')">
+      <span class="tab-icon">📡</span>
+      <span>النداء اللاسلكي</span>
+    </button>
+    <button class="tab" data-tab="settings" onclick="switchTab('settings')">
+      <span class="tab-icon">⚙️</span>
+      <span>الإعدادات</span>
+    </button>
+  </nav>
+  <div class="bottom-info" id="bottomInfo">
+    إشارة: <span class="hl">قوي</span> • بطارية الراديو: <span class="hl" id="bottomBattery">--%</span>
+  </div>
+  <div class="chat-input-bar" id="chatInputBar">
+    <button class="chat-ptt" id="chatPTT" title="اضغط للتحدث">
+      📻
+      <span class="chat-ptt-label">PTT</span>
+    </button>
+    <button class="chat-send" id="chatSend" onclick="handleSend()" title="إرسال" disabled>➤</button>
+    <div class="chat-input-wrap">
+      <button class="chat-clip" id="chatClip" title="إرفاق">📎</button>
+      <input type="text" class="chat-input" id="chatInput" placeholder="اكتب رسالة...">
+    </div>
+  </div>
+</div>
+<div class="side-menu-backdrop" id="menuBackdrop"></div>
+<aside class="side-menu" id="sideMenu">
+  <div class="side-menu-header">
+    <div class="side-menu-title">
+      <span class="icon">⚙️</span>
+      <span>الإعدادات السريعة</span>
+    </div>
+    <button class="side-menu-close" onclick="closeSideMenu()">✕</button>
+  </div>
+  <button class="menu-item primary" onclick="openCreateWave()">
+    <span class="menu-icon">📡</span>
+    <span class="menu-text">
+      <span class="menu-label">إنشاء موجة</span>
+      <span class="menu-desc">بث نداء لاسلكي جديد</span>
+    </span>
+  </button>
+  <button class="menu-item" onclick="openEditWaveName()">
+    <span class="menu-icon">✏️</span>
+    <span class="menu-text">
+      <span class="menu-label">تعديل اسم الموجة</span>
+      <span class="menu-desc">غيّر اسم موجتك الحالية</span>
+    </span>
+  </button>
+  <button class="menu-item" onclick="openSearch()">
+    <span class="menu-icon">🔍</span>
+    <span class="menu-text">
+      <span class="menu-label">البحث</span>
+      <span class="menu-desc">ابحث عن موجة أو غرفة</span>
+    </span>
+  </button>
+  <button class="menu-item" onclick="testCall()">
+    <span class="menu-icon">🔔</span>
+    <span class="menu-text">
+      <span class="menu-label">اختبار النداء</span>
+      <span class="menu-desc">تجربة صوت النداء</span>
+    </span>
+  </button>
+</aside>
+<div class="modal-overlay" id="modalRoomMenu">
+  <div class="modal">
+    <div class="modal-title">☰ خيارات الغرفة</div>
+    <div class="modal-sub">إدارة الغرفة والدردشة</div>
+    <button class="modal-menu-item" onclick="openEditRoomName()">
+      <span class="modal-menu-icon">✏️</span>
+      <span>تعديل اسم الغرفة</span>
+    </button>
+    <button class="modal-menu-item" onclick="openEditRoomIcon()">
+      <span class="modal-menu-icon">🎨</span>
+      <span>تغيير أيقونة الغرفة</span>
+    </button>
+    <button class="modal-menu-item danger" onclick="confirmClearChat()">
+      <span class="modal-menu-icon">🗑️</span>
+      <span>مسح الدردشة كاملة</span>
+    </button>
+    <div class="modal-actions" style="grid-template-columns:1fr;margin-top:14px;">
+      <button class="modal-btn cancel" onclick="closeModal('modalRoomMenu')">إغلاق</button>
+    </div>
+  </div>
+</div>
+<div class="modal-overlay" id="modalEditWave">
+  <div class="modal">
+    <div class="modal-title">✏️ تعديل اسم الموجة</div>
+    <div class="modal-sub">اكتب الاسم الجديد للموجة</div>
+    <div class="modal-field">
+      <label>اسم الموجة</label>
+      <input type="text" id="newWaveName" placeholder="اسم الموجة..." maxlength="30">
+    </div>
+    <div class="modal-actions">
+      <button class="modal-btn cancel" onclick="closeModal('modalEditWave')">إلغاء</button>
+      <button class="modal-btn confirm" onclick="saveWaveName()">حفظ</button>
+    </div>
+  </div>
+</div>
+<div class="modal-overlay" id="modalEditName">
+  <div class="modal">
+    <div class="modal-title">✏️ تعديل اسم الغرفة</div>
+    <div class="modal-sub">اكتب الاسم الجديد</div>
+    <div class="modal-field">
+      <label>اسم الغرفة</label>
+      <input type="text" id="newRoomName" placeholder="اسم جديد..." maxlength="30">
+    </div>
+    <div class="modal-actions">
+      <button class="modal-btn cancel" onclick="closeModal('modalEditName')">إلغاء</button>
+      <button class="modal-btn confirm" onclick="saveRoomName()">حفظ</button>
+    </div>
+  </div>
+</div>
+<div class="modal-overlay" id="modalEditIcon">
+  <div class="modal">
+    <div class="modal-title">🎨 تغيير أيقونة الغرفة</div>
+    <div class="modal-sub">اختر أيقونة جديدة</div>
+    <div class="icon-grid" id="iconGrid">
+      <div class="icon-option" data-icon="💬">💬</div>
+      <div class="icon-option" data-icon="📻">📻</div>
+      <div class="icon-option" data-icon="📡">📡</div>
+      <div class="icon-option" data-icon="🎙️">🎙️</div>
+      <div class="icon-option" data-icon="🔊">🔊</div>
+      <div class="icon-option" data-icon="📞">📞</div>
+      <div class="icon-option" data-icon="🛡️">🛡️</div>
+      <div class="icon-option" data-icon="⚡">⚡</div>
+    </div>
+    <div class="modal-actions" style="grid-template-columns:1fr;margin-top:14px;">
+      <button class="modal-btn cancel" onclick="closeModal('modalEditIcon')">إغلاق</button>
+    </div>
+  </div>
+</div>
+<div class="modal-overlay" id="modalClearChat">
+  <div class="modal">
+    <div class="modal-title">🗑️ مسح الدردشة</div>
+    <div class="modal-sub">هل أنت متأكد من مسح كل الرسائل؟<br>لا يمكن التراجع.</div>
+    <div class="modal-actions">
+      <button class="modal-btn cancel" onclick="closeModal('modalClearChat')">إلغاء</button>
+      <button class="modal-btn danger" onclick="doClearChat()">مسح</button>
+    </div>
+  </div>
+</div>
+<div class="modal-overlay" id="modalAttach">
+  <div class="modal">
+    <div class="modal-title">📎 إرفاق ملف</div>
+    <div class="modal-sub">اختر نوع المحتوى</div>
+    <div class="attach-grid">
+      <button class="attach-item" onclick="pickFile('image')">
+        <span class="attach-icon">🖼️</span>
+        <span>صورة</span>
+      </button>
+      <button class="attach-item" onclick="pickFile('video')">
+        <span class="attach-icon">🎬</span>
+        <span>فيديو</span>
+      </button>
+      <button class="attach-item" onclick="pickFile('document')">
+        <span class="attach-icon">📄</span>
+        <span>مستند</span>
+      </button>
+      <button class="attach-item" onclick="pickContact()">
+        <span class="attach-icon">👥</span>
+        <span>جهة اتصال</span>
+      </button>
+    </div>
+    <div class="modal-actions" style="grid-template-columns:1fr;margin-top:14px;">
+      <button class="modal-btn cancel" onclick="closeModal('modalAttach')">إلغاء</button>
+    </div>
+  </div>
+</div>
+<div class="modal-overlay" id="modalCreate">
+  <div class="modal">
+    <div class="modal-title">➕ إنشاء غرفة جديدة</div>
+    <div class="modal-sub">سيُولَّد رقم غرفة خاص بك تلقائياً</div>
+    <div class="modal-field">
+      <label>اسم الغرفة</label>
+      <input type="text" id="roomName" placeholder="مثال: فريق المراقبة" maxlength="30">
+    </div>
+    <div class="modal-field">
+      <label>رقم القناة</label>
+      <input type="text" id="roomChannel" value="07" maxlength="2">
+    </div>
+    <div class="modal-actions">
+      <button class="modal-btn cancel" onclick="closeModal('modalCreate')">إلغاء</button>
+      <button class="modal-btn confirm" onclick="createRoom()">إنشاء</button>
+    </div>
+  </div>
+</div>
+<div class="modal-overlay" id="modalWave">
+  <div class="modal">
+    <div class="modal-title">📡 إنشاء موجة</div>
+    <div class="modal-sub">سيُولَّد رقم موجة خاص بك تلقائياً</div>
+    <div class="modal-field">
+      <label>اسم الموجة</label>
+      <input type="text" id="waveName" placeholder="مثال: نداء استغاثة" maxlength="30">
+    </div>
+    <div class="modal-actions">
+      <button class="modal-btn cancel" onclick="closeModal('modalWave')">إلغاء</button>
+      <button class="modal-btn confirm" onclick="createWave()">إنشاء</button>
+    </div>
+  </div>
+</div>
+<div class="modal-overlay" id="modalWaveCreated">
+  <div class="modal">
+    <div class="modal-title">✅ تم إنشاء الموجة</div>
+    <div class="modal-sub">شارك هذا الرقم للانضمام إلى موجتك</div>
+    <div class="code-display">
+      <div class="code-display-label">رقم الموجة</div>
+      <div class="code-display-value" id="createdWaveCode">Q00000</div>
+      <div class="code-display-hint">
+        📤 شارك هذا الرقم مع من تريد التواصل معه<br>
+        🔍 سيبحث عنه من خانة "البحث"
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-btn cancel" onclick="copyWaveCode()">📋 نسخ</button>
+      <button class="modal-btn confirm" onclick="closeModal('modalWaveCreated')">تمام</button>
+    </div>
+  </div>
+</div>
+<div class="modal-overlay" id="modalRoomCreated">
+  <div class="modal">
+    <div class="modal-title">✅ تم إنشاء الغرفة</div>
+    <div class="modal-sub">شارك هذا الرقم للانضمام إلى غرفتك</div>
+    <div class="code-display">
+      <div class="code-display-label">رقم الغرفة</div>
+      <div class="code-display-value" id="createdRoomCode">G0000</div>
+      <div class="code-display-hint">
+        📤 شارك هذا الرقم مع فريقك<br>
+        🔍 سيبحث عنه من خانة "البحث"
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-btn cancel" onclick="copyRoomCode()">📋 نسخ</button>
+      <button class="modal-btn confirm" onclick="closeModal('modalRoomCreated')">تمام</button>
+    </div>
+  </div>
+</div>
+<div class="modal-overlay" id="modalSearch">
+  <div class="modal">
+    <div class="modal-title">🔍 البحث</div>
+    <div class="modal-sub">ابحث عن موجة برقمها للانضمام</div>
+    <div class="modal-field">
+      <label>رقم الموجة</label>
+      <input type="text" id="searchQuery" class="code-input" placeholder="Q00000" maxlength="10">
+    </div>
+    <div class="modal-actions" style="grid-template-columns:1fr;margin-bottom:14px;">
+      <button class="modal-btn confirm" onclick="doSearch()">🔍 بحث</button>
+    </div>
+    <div id="searchResults">
+      <div class="no-results">
+        <span class="no-results-icon">🔎</span>
+        اكتب رقم الموجة واضغط بحث للعثور على المستخدم
+      </div>
+    </div>
+    <div class="modal-actions" style="grid-template-columns:1fr;margin-top:14px;">
+      <button class="modal-btn cancel" onclick="closeModal('modalSearch')">إغلاق</button>
+    </div>
+  </div>
+</div>
+<div class="modal-overlay" id="modalJoinConfirm">
+  <div class="modal">
+    <div class="modal-title">📩 طلب انضمام</div>
+    <div class="modal-sub">هل تريد إرسال طلب انضمام لهذه الموجة؟</div>
+    <div class="join-request-info">
+      <div class="join-request-icon">📡</div>
+      <div class="join-request-name" id="joinTargetName">—</div>
+      <div class="join-request-code" id="joinTargetCode">Q00000</div>
+    </div>
+    <div class="modal-sub" style="margin-bottom:0;">
+      ⚠️ سيحتاج صاحب الموجة للموافقة على طلبك
+    </div>
+    <div class="modal-actions">
+      <button class="modal-btn cancel" onclick="cancelJoin()">❌ إلغاء</button>
+      <button class="modal-btn confirm" onclick="confirmJoin()">✅ موافق</button>
+    </div>
+  </div>
+</div>
+<div class="modal-overlay" id="modalIncomingRequest">
+  <div class="modal">
+    <div class="modal-title">🔔 طلب انضمام وارد</div>
+    <div class="modal-sub">شخص يريد الانضمام إلى موجتك</div>
+    <div class="join-request-info">
+      <div class="join-request-icon">👤</div>
+      <div class="join-request-name" id="incomingName">—</div>
+      <div class="join-request-code" id="incomingCode">—</div>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-btn danger" onclick="rejectIncoming()">❌ رفض</button>
+      <button class="modal-btn confirm" onclick="acceptIncoming()">✅ قبول</button>
+    </div>
+  </div>
+</div>
+<input type="file" id="hiddenFileInput" style="display:none;">
+<script>
+/* الحالة العامة */
+let currentUser = {
+  id: 'Q307',
+  name: 'أنا',
+  waveCode: null,
+  waveName: null,
+  roomCode: null,
+  roomName: null,
+  roomIcon: '💬'
+};
+let batteryPercent = null;
+let menuBusy = false;
+let searchResultUser = null;
+
+/* 🎙️ PTT Engine - مع walkie_beep.mp3 الحقيقي */
+const PTTEngine = {
+  audioCtx: null,
+  micStream: null,
+  mediaRecorder: null,
+  recordedChunks: [],
+  isRecording: false,
+
+  async init() {
+    if (this.audioCtx) return true;
+    try {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      this.audioCtx = new AC();
+      if (this.audioCtx.state === 'suspended') await this.audioCtx.resume();
+      // فتح صوت walkie_beep.mp3 مرة واحدة للجوال
+      const beepEl = document.getElementById('walkieBeep');
+      if(beepEl){
+        beepEl.volume = 0;
+        beepEl.play().then(()=>{ beepEl.pause(); beepEl.currentTime=0; beepEl.volume=0.9; }).catch(()=>{ beepEl.volume=0.9; });
+      }
+      return true;
+    } catch (e) { return false; }
+  },
+
+  playRealBeep(){
+    const el = document.getElementById('walkieBeep');
+    if(!el) return;
+    el.currentTime = 0;
+    el.volume = 0.9;
+    el.play().catch(()=>{});
+    if(navigator.vibrate) navigator.vibrate([30,40,30]);
+  },
+
+  playStartBeep(){ this.playRealBeep(); },
+  playEndBeep(){
+    setTimeout(()=> this.playRealBeep(), 80);
+  },
+
+  async startTalking() {
+    if (this.isRecording) return false;
+    await this.init();
+    try {
+      this.micStream = await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false }
+      });
+      this.playStartBeep();
+      this.recordedChunks = [];
+      this.mediaRecorder = new MediaRecorder(this.micStream);
+      this.mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) this.recordedChunks.push(e.data); };
+      this.mediaRecorder.start(100);
+      this.isRecording = true;
+      return true;
+    } catch (e) {
+      toast('❌ تعذّر الوصول للميكروفون', 'error');
+      return false;
+    }
+  },
+  async stopTalking() {
+    if (!this.isRecording) return;
+    this.isRecording = false;
+    this.playEndBeep();
+    if (this.mediaRecorder && this.mediaRecorder.state === 'recording') this.mediaRecorder.stop();
+    if (this.micStream) { this.micStream.getTracks().forEach(t => t.stop()); this.micStream = null; }
+    setTimeout(() => {
+      if (this.recordedChunks.length > 0) {
+        const blob = new Blob(this.recordedChunks, { type: 'audio/webm' });
+        const url = URL.createObjectURL(blob);
+        const duration = this.recordedChunks.length * 0.1;
+        addVoiceMessage(url, duration);
+      }
+      this.recordedChunks = [];
+    }, 200);
+  }
+};
+
+/* بقية دوالك الأصلية بدون تغيير */
+async function initBattery() {
+  if (!navigator.getBattery) {
+    document.getElementById('batteryValue').textContent = '—';
+    document.getElementById('bottomBattery').textContent = '—';
+    return;
+  }
+  try {
+    const battery = await navigator.getBattery();
+    const update = () => {
+      batteryPercent = Math.round(battery.level * 100);
+      document.getElementById('batteryValue').textContent = batteryPercent + '%';
+      document.getElementById('bottomBattery').textContent = batteryPercent + '%';
+    };
+    update();
+    battery.addEventListener('levelchange', update);
+  } catch (e) {
+    document.getElementById('batteryValue').textContent = '—';
+    document.getElementById('bottomBattery').textContent = '—';
+  }
+}
+function generateWaveCode(){ const nums = Math.floor(10000 + Math.random() * 90000); return 'Q' + nums; }
+function generateRoomCode(){ const nums = Math.floor(1000 + Math.random() * 9000); return 'G' + nums; }
+function switchTab(tabName) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('screen-' + tabName).classList.add('active');
+  document.querySelector(`.tab[data-tab="${tabName}"]`).classList.add('active');
+  const chatBar = document.getElementById('chatInputBar');
+  const bottomInfo = document.getElementById('bottomInfo');
+  if (tabName === 'log') { chatBar.classList.add('active'); bottomInfo.style.display = 'none'; }
+  else { chatBar.classList.remove('active'); bottomInfo.style.display = 'block'; }
+  if (sideMenu && sideMenu.classList.contains('open')) closeSideMenu();
+  window.scrollTo(0, 0);
+}
+let toastTimer;
+function toast(msg, type = '') {
+  let el = document.getElementById('toast');
+  if (!el) { el = document.createElement('div'); el.className = 'toast'; el.id = 'toast'; document.body.appendChild(el); }
+  el.textContent = msg; el.className = 'toast ' + type; el.classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('show'), 2400);
+}
+function openModal(id) { document.getElementById(id).classList.add('show'); closeSideMenu(); }
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.classList.remove('show'); });
+});
+const sideMenu = document.getElementById('sideMenu');
+const menuBackdrop = document.getElementById('menuBackdrop');
+const menuToggle = document.getElementById('menuToggle');
+function openSideMenu() { sideMenu.classList.add('open'); menuBackdrop.classList.add('show'); menuToggle.classList.add('open'); }
+function closeSideMenu() { sideMenu.classList.remove('open'); menuBackdrop.classList.remove('show'); menuToggle.classList.remove('open'); }
+menuToggle.addEventListener('click', (e) => {
+  e.stopPropagation(); if (menuBusy) return; menuBusy = true; setTimeout(() => menuBusy = false, 300);
+  if (sideMenu.classList.contains('open')) { closeSideMenu(); } else { openSideMenu(); }
+});
+menuBackdrop.addEventListener('click', closeSideMenu);
+function openCreateWave() { openModal('modalWave'); }
+function openCreateRoom() { openModal('modalCreate'); }
+function openSearch() { openModal('modalSearch'); }
+function openEditWaveName() {
+  document.getElementById('newWaveName').value = currentUser.waveName || '';
+  openModal('modalEditWave');
+}
+async function createWave() {
+  const name = document.getElementById('waveName').value.trim();
+  if (!name) { toast('⚠️ أدخل اسم الموجة', 'error'); return; }
+  const code = generateWaveCode(); currentUser.waveName = name; currentUser.waveCode = code;
+  await PTTEngine.init(); PTTEngine.playStartBeep();
+  document.getElementById('createdWaveCode').textContent = code;
+  document.getElementById('waveName').value = ''; closeModal('modalWave'); openModal('modalWaveCreated');
+  document.getElementById('waveCodeChip').textContent = code;
+  document.getElementById('waveNameValue').textContent = name; document.getElementById('waveCodeValue').textContent = code;
+  document.getElementById('lcdLine1').textContent = code; document.getElementById('lcdLine3').textContent = currentUser.id + ' • TX';
+  toast(`✅ تم إنشاء الموجة "${name}"`, 'success');
+}
+function copyWaveCode() {
+  if (!currentUser.waveCode) return;
+  navigator.clipboard.writeText(currentUser.waveCode).then(() => { toast('📋 تم نسخ الرقم', 'success'); }).catch(() => { toast('رقم الموجة: ' + currentUser.waveCode, 'success'); });
+}
+function saveWaveName() {
+  const name = document.getElementById('newWaveName').value.trim();
+  if (!name) { toast('⚠️ أدخل اسماً', 'error'); return; }
+  currentUser.waveName = name; document.getElementById('waveNameValue').textContent = name;
+  toast(`✅ تم تحديث اسم الموجة إلى "${name}"`, 'success'); closeModal('modalEditWave');
+}
+async function createRoom() {
+  const name = document.getElementById('roomName').value.trim(); const ch = document.getElementById('roomChannel').value.trim();
+  if (!name) { toast('⚠️ أدخل اسم الغرفة', 'error'); return; }
+  if (!/^\d{1,2}$/.test(ch)) { toast('⚠️ رقم قناة غير صالح', 'error'); return; }
+  const code = generateRoomCode(); currentUser.roomName = name; currentUser.roomCode = code;
+  await PTTEngine.init(); PTTEngine.playStartBeep();
+  document.getElementById('createdRoomCode').textContent = code;
+  document.getElementById('roomName').value = ''; document.getElementById('roomChannel').value = '07';
+  closeModal('modalCreate'); openModal('modalRoomCreated');
+  document.getElementById('roomNameLabel').textContent = name; document.getElementById('roomIcon').textContent = '💬';
+  document.getElementById('roomBadge').style.display = 'block'; document.getElementById('roomUsers').style.display = 'flex';
+  document.getElementById('emptyRoom').style.display = 'none';
+  document.getElementById('roomSubLabel').textContent = `📻 ${code} • CH ${ch.padStart(2,'0')}`;
+  document.querySelectorAll('.chip-value')[1].innerHTML = `📻 ${ch.padStart(2,'0')}`;
+  document.getElementById('channelValue').textContent = `CH ${ch.padStart(2,'0')}`;
+  toast(`✅ تم إنشاء الغرفة "${name}"`, 'success');
+}
+function copyRoomCode() {
+  if (!currentUser.roomCode) return;
+  navigator.clipboard.writeText(currentUser.roomCode).then(() => { toast('📋 تم نسخ الرقم', 'success'); }).catch(() => { toast('رقم الغرفة: ' + currentUser.roomCode, 'success'); });
+}
+function openEditRoomName() {
+  closeModal('modalRoomMenu'); document.getElementById('newRoomName').value = currentUser.roomName || ''; openModal('modalEditName');
+}
+function saveRoomName() {
+  const name = document.getElementById('newRoomName').value.trim();
+  if (!name) { toast('⚠️ أدخل اسماً', 'error'); return; }
+  currentUser.roomName = name; document.getElementById('roomNameLabel').textContent = name;
+  toast(`✅ تم تحديث اسم الغرفة`, 'success'); closeModal('modalEditName');
+}
+/* بقية دوال PTT و الرسائل - نفس الأصلي */
+function testCall(){ PTTEngine.init().then(()=> PTTEngine.playRealBeep()); toast('🔔 تجربة walkie_beep.mp3','success'); }
+function changeChannel(){ toast('تغيير القناة قريباً'); }
+function handleSend(){ const inp=document.getElementById('chatInput'); const txt=inp.value.trim(); if(!txt) return; addTextMessage(txt); inp.value=''; document.getElementById('chatSend').disabled=true; }
+function addTextMessage(text){ const c=document.getElementById('roomMessages'); const div=document.createElement('div'); div.className='msg msg-in'; div.innerHTML=`<div class="msg-header">${currentUser.id}</div><div class="msg-body"><div class="text-msg">${text}</div><div class="voice-meta"><span>${new Date().toLocaleTimeString('ar')}</span><span>✓✓</span></div></div>`; c.appendChild(div); c.scrollTop=c.scrollHeight; }
+function addVoiceMessage(url, dur){ const c=document.getElementById('roomMessages'); const div=document.createElement('div'); div.className='msg msg-in'; div.innerHTML=`<div class="msg-header">${currentUser.id}</div><div class="msg-body"><div class="voice-msg"><button class="play-btn" onclick="this.nextElementSibling.querySelector('audio').play()">▶</button><div class="waveform"><audio src="${url}" preload="auto"></audio><span style="height:10px"></span><span style="height:18px"></span><span style="height:14px"></span><span style="height:22px"></span><span style="height:12px"></span></div></div><div class="voice-meta"><span>${dur.toFixed(1)}s</span><span>✓✓</span></div></div>`; c.appendChild(div); c.scrollTop=c.scrollHeight; }
+
+document.getElementById('chatInput').addEventListener('input', e=>{ document.getElementById('chatSend').disabled =!e.target.value.trim(); });
+document.getElementById('chatInput').addEventListener('keydown', e=>{ if(e.key==='Enter') handleSend(); });
+
+/* PTT الرئيسي */
+const pttMain = document.getElementById('pttMain');
+let pttHolding = false;
+pttMain.addEventListener('pointerdown', async e=>{
+  e.preventDefault(); if(pttHolding) return; pttHolding=true; pttMain.classList.add('holding');
+  document.getElementById('lcdLine3').textContent = currentUser.id+' • TX';
+  await PTTEngine.startTalking();
+});
+window.addEventListener('pointerup', async e=>{
+  if(!pttHolding) return; pttHolding=false; pttMain.classList.remove('holding');
+  document.getElementById('lcdLine3').textContent = currentUser.id+' • RX';
+  await PTTEngine.stopTalking();
+});
+pttMain.addEventListener('touchstart', async e=>{ e.preventDefault(); if(pttHolding) return; pttHolding=true; pttMain.classList.add('holding'); document.getElementById('lcdLine3').textContent = currentUser.id+' • TX'; await PTTEngine.startTalking(); }, {passive:false});
+window.addEventListener('touchend', async e=>{ if(!pttHolding) return; pttHolding=false; pttMain.classList.remove('holding'); document.getElementById('lcdLine3').textContent = currentUser.id+' • RX'; await PTTEngine.stopTalking(); });
+
+/* PTT الشات */
+const chatPTT = document.getElementById('chatPTT');
+let chatHolding=false;
+chatPTT.addEventListener('pointerdown', async e=>{ e.preventDefault(); if(chatHolding) return; chatHolding=true; chatPTT.classList.add('holding'); await PTTEngine.startTalking(); });
+window.addEventListener('pointerup', async e=>{ if(!chatHolding) return; chatHolding=false; chatPTT.classList.remove('holding'); await PTTEngine.stopTalking(); });
+
+document.getElementById('chatClip').addEventListener('click', ()=> openModal('modalAttach'));
+document.getElementById('roomMenuBtn').addEventListener('click', ()=> openModal('modalRoomMenu'));
+document.getElementById('hiddenFileInput').addEventListener('change', e=>{
+  const file=e.target.files[0]; if(!file) return; toast('📎 تم اختيار: '+file.name,'success'); closeModal('modalAttach');
+});
+function pickFile(type){ const inp=document.getElementById('hiddenFileInput'); if(type==='image') inp.accept='image/*'; else if(type==='video') inp.accept='video/*'; else inp.accept='*/*'; inp.click(); }
+function pickContact(){ toast('اختيار جهة اتصال قريباً'); closeModal('modalAttach'); }
+function openEditRoomIcon(){ closeModal('modalRoomMenu'); openModal('modalEditIcon'); document.querySelectorAll('.icon-option').forEach(o=>{ o.onclick=()=>{ currentUser.roomIcon=o.dataset.icon; document.getElementById('roomIcon').textContent=o.dataset.icon; document.querySelectorAll('.icon-option').forEach(x=>x.classList.remove('selected')); o.classList.add('selected'); toast('تم تغيير الأيقونة','success'); closeModal('modalEditIcon'); } }); }
+function confirmClearChat(){ closeModal('modalRoomMenu'); openModal('modalClearChat'); }
+function doClearChat(){ document.getElementById('roomMessages').innerHTML=''; closeModal('modalClearChat'); toast('تم مسح الدردشة','success'); }
+function doSearch(){
+  const q=document.getElementById('searchQuery').value.trim().toUpperCase();
+  const res=document.getElementById('searchResults');
+  if(!q){ res.innerHTML='<div class="no-results"><span class="no-results-icon">⚠️</span>أدخل رقم الموجة</div>'; return; }
+  if(q===currentUser.waveCode){ res.innerHTML='<div class="no-results"><span class="no-results-icon">👤</span>هذا رقم موجتك أنت</div>'; return; }
+  searchResultUser={name:'مستخدم '+q, code:q};
+  res.innerHTML=`<div class="search-result-card" onclick="askJoin()"><div class="search-result-icon">📡</div><div class="search-result-info"><div class="search-result-name">${searchResultUser.name}</div><div class="search-result-code">${searchResultUser.code}</div></div><div style="color:var(--cyan)">←</div></div>`;
+}
+function askJoin(){ if(!searchResultUser) return; document.getElementById('joinTargetName').textContent=searchResultUser.name; document.getElementById('joinTargetCode').textContent=searchResultUser.code; closeModal('modalSearch'); openModal('modalJoinConfirm'); }
+function cancelJoin(){ closeModal('modalJoinConfirm'); openModal('modalSearch'); }
+function confirmJoin(){ closeModal('modalJoinConfirm'); toast('📤 تم إرسال طلب الانضمام إلى '+searchResultUser.code,'success'); PTTEngine.playRealBeep(); }
+function rejectIncoming(){ closeModal('modalIncomingRequest'); toast('تم رفض الطلب','error'); }
+function acceptIncoming(){ closeModal('modalIncomingRequest'); toast('✅ تم قبول الطلب','success'); PTTEngine.playRealBeep(); }
+
+window.addEventListener('DOMContentLoaded', ()=>{ initBattery(); PTTEngine.init(); });
+</script>
+</body>
+</html>
