@@ -1,10 +1,11 @@
 "use strict";
 
 /* ==========================================
-   Radio Connect Server - v4.1 FINAL
+   Radio Connect Server - v4.2 FIXED
+   + LiveKit للبث الحي
    + موجات بقائمة دائمة
-   + محادثات فردية (واتساب-ستايل)
-   + إخراج الأعضاء من الموجة
+   + محادثات فردية (RAD)
+   + حل مشكلة index.html
    ========================================== */
 
 const express = require("express");
@@ -41,7 +42,11 @@ const deviceSockets = {};
 
 app.use(cors());
 app.use(express.json({ limit: "10mb" }));
+
+// ✅ تقديم ملفات public (الواجهة + الأيقونات)
 app.use(express.static(path.join(__dirname, "public")));
+// ✅ تقديم الملفات في الجذر أيضاً (مثل icon.png)
+app.use(express.static(__dirname));
 
 /* ==========================================
    قاعدة البيانات
@@ -105,18 +110,39 @@ loadDb();
 /* ==========================================
    APIs
    ========================================== */
+
+// ✅ الصفحة الرئيسية — تقديم الواجهة
 app.get("/", (req, res) => {
+  const indexPath = path.join(__dirname, "public", "index.html");
+  if (fs.existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    res.json({
+      status: "ok",
+      name: "Radio Connect Server",
+      version: "4.2",
+      livekit: LIVEKIT_URL ? "configured" : "not configured",
+      note: "public/index.html غير موجود",
+      uptime: process.uptime()
+    });
+  }
+});
+
+// ✅ معلومات السيرفر
+app.get("/status", (req, res) => {
   res.json({
     status: "ok",
     name: "Radio Connect Server",
-    version: "4.1",
+    version: "4.2",
     livekit: LIVEKIT_URL ? "configured" : "not configured",
-    uptime: process.uptime()
+    uptime: process.uptime(),
+    waves: Object.keys(db.waves).length,
+    devices: Object.keys(db.devices).length
   });
 });
 
 /* ==========================================
-   ✅ تسجيل المستخدم (يعطيه RAD + Wave)
+   ✅ تسجيل المستخدم
    ========================================== */
 app.post("/api/users/register", (req, res) => {
   try {
@@ -269,7 +295,7 @@ app.get("/api/conversations/:convId/messages", (req, res) => {
 });
 
 /* ==========================================
-   ✅ الموجات (بقائمة دائمة)
+   ✅ الموجات
    ========================================== */
 app.post("/api/waves/create", (req, res) => {
   try {
@@ -299,14 +325,13 @@ app.post("/api/waves/create", (req, res) => {
       name: waveName || "موجتي",
       ownerDevice: deviceId,
       createdAt: now(),
-      members: {},       // ✅ قائمة دائمة
-      onlineNow: {}      // من متصل الآن
+      members: {},
+      onlineNow: {}
     };
 
     if (!db.devices[deviceId]) db.devices[deviceId] = { id: deviceId, conversations: [] };
     db.devices[deviceId].waveId = waveId;
 
-    // أضف المالك كعضو
     db.waves[waveId].members[deviceId] = {
       id: deviceId,
       name: db.devices[deviceId].name || "المالك",
@@ -364,7 +389,6 @@ app.post("/api/waves/rename", (req, res) => {
   }
 });
 
-// ✅ إخراج عضو من الموجة
 app.post("/api/waves/remove-member", (req, res) => {
   try {
     const { waveId, memberId, ownerDevice } = req.body;
@@ -373,21 +397,15 @@ app.post("/api/waves/remove-member", (req, res) => {
     if (wave.ownerDevice !== ownerDevice) return res.status(403).json({ error: "غير مصرح" });
     if (memberId === ownerDevice) return res.status(400).json({ error: "لا يمكنك إخراج نفسك" });
 
-    if (wave.members[memberId]) {
-      delete wave.members[memberId];
-    }
-    if (wave.onlineNow && wave.onlineNow[memberId]) {
-      delete wave.onlineNow[memberId];
-    }
+    if (wave.members[memberId]) delete wave.members[memberId];
+    if (wave.onlineNow && wave.onlineNow[memberId]) delete wave.onlineNow[memberId];
     saveDb();
 
-    // أخبر العضو المُخرج
     const memberSocketId = deviceSockets[memberId];
     if (memberSocketId) {
       io.to(memberSocketId).emit("wave_removed", { waveId: waveId });
     }
 
-    // أخبر الجميع بالتحديث
     io.to("wave_" + waveId).emit("wave_members_updated", {
       members: Object.values(wave.members).map(m => ({
         id: m.id,
@@ -463,7 +481,6 @@ io.on("connection", (socket) => {
         saveDb();
       }
 
-      // ✅ علّم المستخدم كمتصل في موجته
       const waveId = db.devices[deviceId].waveId;
       if (waveId && db.waves[waveId]) {
         db.waves[waveId].onlineNow = db.waves[waveId].onlineNow || {};
@@ -482,7 +499,6 @@ io.on("connection", (socket) => {
     }
   });
 
-  /* ✅ المحادثات */
   socket.on("join_conversation", ({ conversationId }) => {
     socket.join("conv_" + conversationId);
     socket.data.currentConvId = conversationId;
@@ -528,7 +544,6 @@ io.on("connection", (socket) => {
     socket.emit("message_delivered", { messageId: message.id });
   });
 
-  /* ✅ الموجات */
   socket.on("wave_join", ({ waveId, deviceId, userName }) => {
     socket.join("wave_" + waveId);
     socket.data.waveId = waveId;
@@ -549,7 +564,6 @@ io.on("connection", (socket) => {
     if (!db.waves[waveId].members) db.waves[waveId].members = {};
     if (!db.waves[waveId].onlineNow) db.waves[waveId].onlineNow = {};
 
-    // ✅ أضف للقائمة الدائمة لو مش موجود
     if (!db.waves[waveId].members[deviceId]) {
       db.waves[waveId].members[deviceId] = {
         id: deviceId,
@@ -559,7 +573,6 @@ io.on("connection", (socket) => {
       };
     }
 
-    // ✅ علّمه متصل
     db.waves[waveId].onlineNow[deviceId] = true;
     saveDb();
 
@@ -606,7 +619,6 @@ io.on("connection", (socket) => {
     if (!wave) return socket.emit("wave_join_error", { error: "الموجة غير موجودة" });
     if (!wave.ownerDevice) return socket.emit("wave_join_error", { error: "لا يوجد صاحب" });
 
-    // ✅ إذا كان موجوداً مسبقاً → أدخله مباشرة
     if (wave.members && wave.members[fromDeviceId]) {
       socket.emit("wave_join_response_received", {
         waveId: waveId,
@@ -706,7 +718,6 @@ io.on("connection", (socket) => {
     socket.to("wave_" + waveId).emit("wave_broadcast_stop", { deviceId });
   });
 
-  /* ✅ قطع الاتصال */
   socket.on("disconnect", () => {
     const { deviceId, waveId } = socket.data;
 
@@ -714,7 +725,6 @@ io.on("connection", (socket) => {
       delete deviceSockets[deviceId];
     }
 
-    // ✅ علّمه غير متصل في الموجة (لكن لا تحذفه)
     if (deviceId && waveId && db.waves[waveId] && db.waves[waveId].onlineNow) {
       delete db.waves[waveId].onlineNow[deviceId];
       saveDb();
@@ -734,6 +744,6 @@ io.on("connection", (socket) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`🚀 Radio Connect Server v4.1 على المنفذ ${PORT}`);
+  console.log(`🚀 Radio Connect Server v4.2 على المنفذ ${PORT}`);
   console.log(`📡 LiveKit: ${LIVEKIT_URL ? "✅ مهيّأ" : "❌ غير مهيّأ"}`);
 });
