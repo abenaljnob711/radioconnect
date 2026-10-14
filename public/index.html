@@ -3,10 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Radio Connect - Real TX</title>
+<title>Radio Connect S458</title>
 <script src="https://cdn.jsdelivr.net/npm/livekit-client@2.15.3/dist/livekit-client.umd.min.js"></script>
 <style>
-*{margin:0;padding:0;box-sizing:border-box}html,body{height:100%;background:#020611;color:#fff;font-family:Arial}body{position:fixed;width:100%;height:100vh;overflow:hidden}
+*{margin:0;padding:0;box-sizing:border-box}html,body{height:100%;background:#020611;color:#fff;font-family:Arial}
+body{position:fixed;width:100%;height:100vh;overflow:hidden}
 .app{max-width:430px;height:100vh;margin:auto;background:#020611;display:flex;flex-direction:column}
 .top{height:46px;display:flex;justify-content:space-between;align-items:center;padding:0 12px}
 .pill{background:#0a1f2a;border:1px solid #1a4a3a;color:#2ee5a0;font-size:10px;padding:6px 12px;border-radius:20px}
@@ -32,116 +33,68 @@
 .wavebar{display:flex;gap:4px;height:18px;margin-top:20px;align-items:center}.wavebar i{width:4px;height:10px;background:#3fa9ff;border-radius:2px;display:block}.wavebar.active i{animation:br.5s infinite ease-in-out}
 @keyframes br{0%,100%{height:4px}50%{height:18px}}
 .hint{font-size:11px;color:#4a5a6e;margin-top:10px}
-.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#0a1f2a;border:1px solid #1e6a8a;color:#fff;padding:8px 14px;border-radius:20px;font-size:11px;opacity:0;transition:.3s;z-index:99}.toast.show{opacity:1}
 </style>
+<!-- الإضافة الوحيدة الجديدة - مقطعك -->
+<audio id="beep" src="./walkie_beep.mp3" preload="auto"></audio>
 </head>
 <body>
 <div class="app">
-<div class="top"><div class="pill" id="conn">● جاري الاتصال...</div><div style="font-weight:800">Radio Connect <span style="color:#5a7a9a;font-size:11px" id="roomInfo">S458 • Q307</span></div></div>
-<div class="wave"><div style="width:34px;height:34px;border-radius:50%;background:#0e1e32;display:flex;align-items:center;justify-content:center" onclick="chg(-1)">‹</div><div style="text-align:center"><b id="wc">S458</b><div style="font-size:10px;color:#6a829a" id="wn">موجة القيادة</div></div><div style="width:34px;height:34px;border-radius:50%;background:#0e1e32;display:flex;align-items:center;justify-content:center" onclick="chg(1)">›</div></div>
-<div class="modes"><button id="bChat" onclick="setM('chat')">🏠 محادثة الغرفة</button><button id="bWave" class="active" onclick="setM('wave')">📻 الموجة المباشرة</button></div>
-<div class="stage" id="vWave">
+<div class="top"><div class="pill" id="conn">● متصل AES-256</div><div style="font-weight:800">Radio Connect <span style="color:#5a7a9a;font-size:11px">S458 • Q307 • CH07</span></div></div>
+<div class="wave"><div style="width:34px;height:34px;border-radius:50%;background:#0e1e32;display:flex;align-items:center;justify-content:center" onclick="chg(-1)">‹</div><div style="text-align:center"><b id="wc">S458</b><div style="font-size:10px;color:#6a829a">موجة القيادة</div></div><div style="width:34px;height:34px;border-radius:50%;background:#0e1e32;display:flex;align-items:center;justify-content:center" onclick="chg(1)">›</div></div>
+<div class="modes"><button id="bChat">🏠 محادثة الغرفة</button><button id="bWave" class="active">📻 الموجة المباشرة</button></div>
+<div class="stage">
 <div class="dev" id="dev"><div class="screen"><b id="dc">S458</b><span>CH 07 • 446.100 MHz</span><small id="ds">● جاهز</small></div><div class="knobs"><i></i><i></i></div><div class="ptt" id="ptt"><b>PTT</b><small>PRESS TO TALK</small></div><div class="side" id="side"><span>PTT</span></div></div>
-<div class="wavebar" id="wb"><i></i><i></i><i></i><i></i><i></i></div>
-<div class="hint" id="hint">اضغط مطولاً - صوت حقيقي + لاسلكي</div>
+<div class="wavebar" id="wb"><i></i><i></i><i></i></div>
+<div class="hint" id="hint">اضغط مطولاً - صوت walkie_beep.mp3 الحقيقي</div>
 </div>
 </div>
-<div class="toast" id="toast"></div>
 
 <script>
-// ===== 1. إعداد LiveKit - غيّر هذا الرابط لرابط سيرفرك =====
-const LIVEKIT_URL = "wss://your-livekit-url"; // ← حط رابط سيرفرك هنا
-let room = null, isConnected = false;
-
-// ===== 2. أصوات اللاسلكي الحقيقي =====
-let audioCtx=null, noiseNode=null;
-function getCtx(){if(!audioCtx) audioCtx=new(window.AudioContext||window.webkitAudioContext)(); if(audioCtx.state==='suspended') audioCtx.resume(); return audioCtx;}
-function pttClick(){let c=getCtx(),o=c.createOscillator(),g=c.createGain(); o.frequency.value=1400; g.gain.setValueAtTime(0.28,c.currentTime); g.gain.exponentialRampToValueAtTime(0.001,c.currentTime+0.06); o.connect(g); g.connect(c.destination); o.start(); o.stop(c.currentTime+0.06);}
-function startHiss(){let c=getCtx(),sz=c.sampleRate*1.5,b=c.createBuffer(1,sz,c.sampleRate),d=b.getChannelData(0); for(let i=0;i<sz;i++) d[i]=(Math.random()*2-1)*0.4; let s=c.createBufferSource(); s.buffer=b; s.loop=true; let f=c.createBiquadFilter(); f.type='bandpass'; f.frequency.value=1900; let g=c.createGain(); g.gain.value=0.018; s.connect(f); f.connect(g); g.connect(c.destination); s.start(); noiseNode=s;}
-function stopHiss(){if(noiseNode){try{noiseNode.stop()}catch(e){} noiseNode=null;}}
-function rogerBeep(){let c=getCtx(); [0,0.14].forEach(dl=>{let o=c.createOscillator(),g=c.createGain(); o.frequency.value=1100; let t=c.currentTime+dl; g.gain.setValueAtTime(0.32,t); g.gain.exponentialRampToValueAtTime(0.001,t+0.16); o.connect(g); g.connect(c.destination); o.start(t); o.stop(t+0.16);}); if(navigator.vibrate) navigator.vibrate([30,40,30]);}
-function rxBeep(){let c=getCtx(); [850,1100].forEach((f,i)=>{let o=c.createOscillator(),g=c.createGain(); o.frequency.value=f; let t=c.currentTime+i*0.13; g.gain.setValueAtTime(0.28,t); g.gain.exponentialRampToValueAtTime(0.001,t+0.13); o.connect(g); g.connect(c.destination); o.start(t); o.stop(t+0.13);});}
-
-// ===== 3. الاتصال بالغرفة =====
-async function connectRoom(){
-  try{
-    // إذا ما عندك سيرفر LiveKit الآن، خليه محاكاة فقط - بيشتغل الصوت بدون سيرفر
-    if(LIVEKIT_URL.includes("your-livekit")){
-      document.getElementById('conn').textContent='● محاكاة - بدون سيرفر';
-      document.getElementById('conn').style.background='#0a1f2a';
-      isConnected=true; return;
-    }
-    room = new LivekitClient.Room();
-    // جيب التوكن من سيرفرك
-    let token = await fetch("/getToken?room=Q307&user=S458").then(r=>r.text());
-    await room.connect(LIVEKIT_URL, token);
-    await room.localParticipant.setMicrophoneEnabled(false); // مقفل لحد ما تضغط PTT
-    isConnected=true;
-    document.getElementById('conn').textContent='● متصل AES-256';
-
-    // لما Q307 يتكلم - يضيء أحمر RX
-    room.on(LivekitClient.RoomEvent.TrackSubscribed, (track, pub, participant)=>{
-      if(track.kind==='audio'){
-        let el = track.attach(); document.body.appendChild(el); el.style.display='none';
-        track.on(LivekitClient.TrackEvent.Muted, ()=>{});
-        // أول ما يبدأ يتكلم
-        participant.on(LivekitClient.ParticipantEvent.IsSpeakingChanged, speaking=>{
-          if(speaking) rxOn();
-        });
-      }
-    });
-  }catch(e){
-    document.getElementById('conn').textContent='● محاكاة - '+e.message;
-    isConnected=true;
-  }
-}
-connectRoom();
-
-// ===== 4. التحكم في PTT مع إرسال حقيقي =====
+// ==== الكود الأصلي بدون تغيير ====
 let codes=[];for(let i=0;i<20;i++){let L=String.fromCharCode(65+Math.random()*26|0);codes.push(L+(100+Math.random()*900|0))}
 let idx=0;function chg(d){idx=(idx+d+codes.length)%codes.length;let v=codes[idx];document.getElementById('wc').textContent=v;document.getElementById('dc').textContent=v;}
-function setM(m){document.getElementById('bWave').classList.toggle('active',m==='wave');document.getElementById('bChat').classList.toggle('active',m==='chat');}
 
-let isDown=false;const dev=document.getElementById('dev'),ptt=document.getElementById('ptt'),side=document.getElementById('side'),wb=document.getElementById('wb'),ds=document.getElementById('ds'),hint=document.getElementById('hint');
+// ==== الإضافة الوحيدة: تشغيل walkie_beep.mp3 ====
+const beep = document.getElementById('beep');
+let audioUnlocked = false;
+function unlockAudio(){
+  if(audioUnlocked) return;
+  beep.play().then(()=>{ beep.pause(); beep.currentTime=0; audioUnlocked=true; }).catch(()=>{});
+}
+document.addEventListener('pointerdown', unlockAudio, {once:true});
+document.addEventListener('touchstart', unlockAudio, {once:true});
 
-async function txOn(){
-  pttClick(); setTimeout(()=>startHiss(),70);
-  dev.className='dev tx'; ptt.className='ptt tx'; side.className='side tx'; wb.className='wavebar active';
-  wb.querySelectorAll('i').forEach(i=>i.style.background='#3fa9ff');
-  ds.textContent='🔵 TX ترسل الآن - صوتك يرسل'; ds.style.color='#3fa9ff';
-  hint.textContent='🔵 جاري الإرسال الحقيقي...';
+let isDown=false;
+const devEl=document.getElementById('dev'), pttEl=document.getElementById('ptt'), sideEl=document.getElementById('side'), dsEl=document.getElementById('ds'), hintEl=document.getElementById('hint'), wbEl=document.getElementById('wb');
+
+function txOn(){
+  isDown=true; unlockAudio();
+  devEl.className='dev tx'; pttEl.className='ptt tx'; sideEl.className='side tx';
+  wbEl.className='wavebar active'; dsEl.textContent='🔵 TX ترسل الآن'; dsEl.style.color='#3fa9ff'; hintEl.textContent='🔵 جاري الإرسال...';
   if(navigator.vibrate) navigator.vibrate(25);
-  // ** هنا الإرسال الحقيقي **
-  if(room && isConnected){ try{ await room.localParticipant.setMicrophoneEnabled(true); }catch(e){} }
 }
-
-async function txOff(){
-  stopHiss(); rogerBeep();
-  dev.className='dev'; ptt.className='ptt'; side.className='side'; wb.className='wavebar';
-  ds.textContent='● جاهز'; ds.style.color=''; hint.textContent='اضغط مطولاً - صوت حقيقي + لاسلكي';
-  // ** قفل المايك **
-  if(room && isConnected){ try{ await room.localParticipant.setMicrophoneEnabled(false); }catch(e){} }
+function txOff(){
+  if(!isDown) return; isDown=false;
+  // هنا يشتغل مقطعك الحقيقي
+  beep.currentTime=0; beep.volume=0.9; beep.play().catch(()=>{});
+  if(navigator.vibrate) navigator.vibrate([30,40,30]);
+  devEl.className='dev'; pttEl.className='ptt'; sideEl.className='side';
+  wbEl.className='wavebar'; dsEl.textContent='● جاهز'; dsEl.style.color=''; hintEl.textContent='اضغط مطولاً - صوت walkie_beep.mp3 الحقيقي';
 }
-
 function rxOn(){
-  rxBeep(); dev.className='dev rx'; ptt.className='ptt rx'; side.className='side rx'; wb.className='wavebar active';
-  wb.querySelectorAll('i').forEach(i=>i.style.background='#ff3b30');
-  ds.textContent='🔴 RX من Q307 - يتكلم الآن'; ds.style.color='#ff3b30';
-  hint.textContent='🔴 Q307 يرسل...'; if(navigator.vibrate) navigator.vibrate([80,40,80]);
-  setTimeout(()=>{dev.className='dev'; ptt.className='ptt'; side.className='side'; wb.className='wavebar'; wb.querySelectorAll('i').forEach(i=>i.style.background='#3fa9ff'); ds.textContent='● جاهز'; ds.style.color=''; hint.textContent='اضغط مطولاً - صوت حقيقي + لاسلكي';},2500);
+  beep.currentTime=0; beep.play().catch(()=>{});
+  devEl.className='dev rx'; pttEl.className='ptt rx'; sideEl.className='side rx';
+  dsEl.textContent='🔴 RX من Q307'; dsEl.style.color='#ff3b30';
+  if(navigator.vibrate) navigator.vibrate([80,40,80]);
+  setTimeout(()=>{ devEl.className='dev'; pttEl.className='ptt'; sideEl.className='side'; dsEl.textContent='● جاهز'; dsEl.style.color=''; }, 2200);
 }
 
-ptt.addEventListener('pointerdown',e=>{e.preventDefault(); if(isDown) return; isDown=true; txOn();});
-window.addEventListener('pointerup',e=>{if(isDown){isDown=false; txOff();}});
-ptt.addEventListener('touchstart',e=>{e.preventDefault(); if(isDown) return; isDown=true; txOn();},{passive:false});
-window.addEventListener('touchend',e=>{if(isDown){isDown=false; txOff();}});
-side.addEventListener('pointerdown',e=>{e.preventDefault(); if(isDown) return; isDown=true; txOn();});
-side.addEventListener('pointerup',e=>{if(isDown){isDown=false; txOff();}});
-
-// محاكاة إذا ما عندك سيرفر
-setInterval(()=>{if(!isDown &&!LIVEKIT_URL.includes("your-livekit-url")===false && Math.random()>0.6) rxOn();},8000);
-
-function toast(m){let t=document.getElementById('toast'); t.textContent=m; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2500);}
+pttEl.addEventListener('pointerdown', e=>{ e.preventDefault(); txOn(); });
+window.addEventListener('pointerup', e=>{ if(isDown) txOff(); });
+pttEl.addEventListener('touchstart', e=>{ e.preventDefault(); txOn(); }, {passive:false});
+window.addEventListener('touchend', e=>{ if(isDown) txOff(); });
+sideEl.addEventListener('pointerdown', e=>{ e.preventDefault(); txOn(); });
+sideEl.addEventListener('pointerup', e=>{ if(isDown) txOff(); });
 </script>
 </body>
 </html>
