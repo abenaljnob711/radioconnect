@@ -2002,6 +2002,37 @@ window.addEventListener('DOMContentLoaded', async () => {
   await registerUser();
   initSocket();
   refreshChatList();
+
+  // ================= استرجاع الموجة =================
+  const savedWaveId = localStorage.getItem('rc_saved_wave_id');
+  const savedWaveName = localStorage.getItem('rc_saved_wave_name');
+  if (savedWaveId) {
+    console.log('🔄 استرجاع الموجة:', savedWaveId);
+    currentUser.waveId = savedWaveId;
+    currentUser.waveCode = savedWaveId;
+    currentUser.waveName = savedWaveName;
+    
+    const el1 = document.getElementById('waveCodeChip');
+    if (el1) el1.innerHTML = savedWaveId + ' <span style="font-size:12px;">🔑</span>';
+    const el2 = document.getElementById('waveNameLabel');
+    if (el2) el2.textContent = savedWaveName || 'لا توجد فرقة';
+    const el3 = document.getElementById('lcdLine3');
+    if (el3) el3.textContent = savedWaveId + ' • RX';
+    
+    setTimeout(() => joinWaveAsMember(savedWaveId), 1500);
+  }
+
+  // ================= استرجاع الغرفة =================
+  const savedRoomCode = localStorage.getItem('rc_saved_room_code');
+  const savedRoomName = localStorage.getItem('rc_saved_room_name');
+  if (savedRoomCode) {
+    console.log('🔄 استرجاع الغرفة:', savedRoomCode);
+    currentUser.roomCode = savedRoomCode;
+    currentUser.roomName = savedRoomName;
+    
+    const el4 = document.getElementById('roomNameLabel');
+    if (el4 && savedRoomName) el4.textContent = savedRoomName;
+  }
 });
 
 document.addEventListener('keydown', (e) => {
