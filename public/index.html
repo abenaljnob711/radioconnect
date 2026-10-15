@@ -1863,13 +1863,17 @@ async function createRoom() {
   for (let i = 0; i < 5; i++) {
     roomCode += chars[Math.floor(Math.random() * chars.length)];
   }
-  
-  currentUser.roomName = name;
-  currentUser.roomCode = roomCode;
-  
-  document.getElementById('createdRoomCode').textContent = roomCode;
-  document.getElementById('roomNameLabel').textContent = name;
-  document.getElementById('roomName').value = '';
+
+// حفظ الغرفة تلقائياً
+localStorage.setItem('rc_saved_room_code', roomCode);
+localStorage.setItem('rc_saved_room_name', name);
+
+currentUser.roomName = name;
+currentUser.roomCode = roomCode;
+
+document.getElementById('createdRoomCode').textContent = roomCode;
+document.getElementById('roomNameLabel').textContent = name;
+document.getElementById('roomName').value = '';
   
   closeModal('modalCreate');
   openModal('modalRoomCreated');
