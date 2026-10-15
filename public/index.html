@@ -1856,10 +1856,23 @@ function openEditRoomIcon() {
 async function createRoom() {
   const name = document.getElementById('roomName').value.trim();
   if (!name) { toast('⚠️ أدخل اسم الغرفة', 'error'); return; }
+  
+  // ولّد رقم غرفة (G + 5 أحرف/أرقام)
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let roomCode = "G";
+  for (let i = 0; i < 5; i++) {
+    roomCode += chars[Math.floor(Math.random() * chars.length)];
+  }
+  
   currentUser.roomName = name;
+  currentUser.roomCode = roomCode;
+  
+  document.getElementById('createdRoomCode').textContent = roomCode;
   document.getElementById('roomNameLabel').textContent = name;
   document.getElementById('roomName').value = '';
+  
   closeModal('modalCreate');
+  openModal('modalRoomCreated');
   toast('✅ تم إنشاء الغرفة "' + name + '"', 'success');
 }
 
