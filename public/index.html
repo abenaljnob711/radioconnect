@@ -6,1556 +6,243 @@
 <meta name="theme-color" content="#05080c">
 <title>Radio Connect — راديو كونكت</title>
 <audio id="walkieBeep" src="./walkie_beep.mp3" preload="auto"></audio>
-
-<!-- ✅ مكتبات خارجية -->
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/livekit-client@2.5.7/dist/livekit-client.umd.min.js"></script>
-
 <style>
-/* =========================================================
-   إعادة ضبط + متغيرات
-   ========================================================= */
-*, *::before, *::after {
-  margin: 0; padding: 0; box-sizing: border-box;
-  -webkit-tap-highlight-color: transparent;
-}
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 :root {
-  --bg: #05080c;
-  --card: #0f1921;
-  --card-2: #142028;
-  --border: #1c2a36;
-  --text: #e6f0f5;
-  --text-dim: #6b8899;
-  --cyan: #00e5ff;
-  --cyan-dark: #008fa8;
-  --green: #00ff88;
-  --red: #ff2a4d;
-  --red-dark: #b01530;
-  --blue-msg: #1a4d6b;
-  --blue-msg-2: #0f3550;
-  --red-msg: #6b1220;
-  --red-msg-2: #45080f;
-  --purple: #8b5cf6;
+  --bg: #05080c; --card: #0f1921; --card-2: #142028; --border: #1c2a36;
+  --text: #e6f0f5; --text-dim: #6b8899; --cyan: #00e5ff; --cyan-dark: #008fa8;
+  --green: #00ff88; --red: #ff2a4d; --red-dark: #b01530; --yellow: #ffcc00;
+  --blue-msg: #1a4d6b; --blue-msg-2: #0f3550;
+  --red-msg: #6b1220; --red-msg-2: #45080f;
   --radius: 14px;
 }
 html, body { height: 100%; overflow: hidden; background: var(--bg); }
-body {
-  font-family: 'Segoe UI', 'Tahoma', system-ui, -apple-system, sans-serif;
-  color: var(--text);
-  user-select: none;
-  -webkit-user-select: none;
-  position: relative;
-}
-body::before {
-  content: '';
-  position: fixed; inset: 0;
-  background:
-    radial-gradient(circle at 20% 20%, rgba(0,229,255,.06), transparent 45%),
-    radial-gradient(circle at 80% 80%, rgba(0,255,136,.05), transparent 45%);
-  pointer-events: none;
-  z-index: 0;
-}
-.app {
-  position: relative;
-  z-index: 1;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  max-width: 500px;
-  margin: 0 auto;
-}
-.screen {
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-  display: none;
-  padding: 14px 14px 160px;
-  animation: fadeIn.3s ease;
-  scrollbar-width: none;
-}
+body { font-family: 'Segoe UI', 'Tahoma', system-ui, -apple-system, sans-serif; color: var(--text); user-select: none; -webkit-user-select: none; position: relative; }
+body::before { content: ''; position: fixed; inset: 0; background: radial-gradient(circle at 20% 20%, rgba(0,229,255,.06), transparent 45%), radial-gradient(circle at 80% 80%, rgba(0,255,136,.05), transparent 45%); pointer-events: none; z-index: 0; }
+.app { position: relative; z-index: 1; height: 100vh; display: flex; flex-direction: column; max-width: 500px; margin: 0 auto; }
+.screen { flex: 1; overflow-y: auto; overflow-x: hidden; display: none; padding: 14px 14px 160px; animation: fadeIn .3s ease; scrollbar-width: none; }
 .screen::-webkit-scrollbar { display: none; }
 .screen.active { display: block; }
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.top-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 6px 4px 14px;
-}
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.top-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 4px 14px; }
 .brand { display: flex; align-items: center; gap: 8px; }
-.brand-icon {
-  font-size: 26px;
-  line-height: 1;
-  filter: drop-shadow(0 0 8px rgba(0,229,255,.7));
-  animation: iconPulse 2s ease-in-out infinite;
-}
-@keyframes iconPulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity:.65; }
-}
+.brand-icon { font-size: 26px; line-height: 1; filter: drop-shadow(0 0 8px rgba(0,229,255,.7)); animation: iconPulse 2s ease-in-out infinite; }
+@keyframes iconPulse { 0%, 100% { opacity: 1; } 50% { opacity: .65; } }
 .brand-text { display: flex; flex-direction: column; line-height: 1.15; }
-.brand-title {
-  font-size: 19px;
-  font-weight: 800;
-  color: var(--cyan);
-  letter-spacing:.3px;
-  text-shadow: 0 0 14px rgba(0,229,255,.5);
-}
-.brand-sub {
-  font-size: 11px;
-  color: var(--text-dim);
-  font-weight: 500;
-}
-.header-right {
-  display: flex; align-items: center; gap: 8px;
-  font-size: 12px;
-  color: var(--cyan);
-  font-weight: 700;
-}
-.menu-toggle {
-  width: 42px; height: 42px;
-  border-radius: 11px;
-  background: linear-gradient(180deg, var(--card-2), var(--card));
-  border: 1px solid var(--border);
-  color: var(--cyan);
-  font-size: 22px;
-  font-weight: 900;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all.2s;
-  font-family: inherit;
-  flex-shrink: 0;
-  line-height: 1;
-}
-.menu-toggle:active {
-  transform: scale(.94);
-  border-color: var(--cyan);
-  box-shadow: 0 0 14px rgba(0,229,255,.4);
-}
-.menu-toggle.open {
-  background: linear-gradient(180deg, #00e5ff, #008fa8);
-  color: #001418;
-  border-color: var(--cyan);
-  box-shadow: 0 0 18px rgba(0,229,255,.6);
-}
-.side-menu {
-  position: fixed;
-  top: 0; right: 0;
-  height: 100vh;
-  width: 280px;
-  background: linear-gradient(180deg, var(--card-2), var(--bg));
-  border-left: 1px solid var(--cyan);
-  box-shadow: -12px 0 40px rgba(0,229,255,.25);
-  z-index: 300;
-  transform: translateX(110%);
-  transition: transform.32s cubic-bezier(.4,0,.2,1);
-  display: flex;
-  flex-direction: column;
-  padding: 20px 16px;
-  overflow-y: auto;
-  scrollbar-width: none;
-}
+.brand-title { font-size: 19px; font-weight: 800; color: var(--cyan); letter-spacing: .3px; text-shadow: 0 0 14px rgba(0,229,255,.5); }
+.brand-sub { font-size: 11px; color: var(--text-dim); font-weight: 500; }
+.header-right { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--cyan); font-weight: 700; }
+.menu-toggle { width: 42px; height: 42px; border-radius: 11px; background: linear-gradient(180deg, var(--card-2), var(--card)); border: 1px solid var(--border); color: var(--cyan); font-size: 22px; font-weight: 900; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all .2s; font-family: inherit; flex-shrink: 0; line-height: 1; }
+.menu-toggle:active { transform: scale(.94); border-color: var(--cyan); box-shadow: 0 0 14px rgba(0,229,255,.4); }
+.menu-toggle.open { background: linear-gradient(180deg, #00e5ff, #008fa8); color: #001418; border-color: var(--cyan); box-shadow: 0 0 18px rgba(0,229,255,.6); }
+.side-menu { position: fixed; top: 0; right: 0; height: 100vh; width: 280px; background: linear-gradient(180deg, var(--card-2), var(--bg)); border-left: 1px solid var(--cyan); box-shadow: -12px 0 40px rgba(0,229,255,.25); z-index: 300; transform: translateX(110%); transition: transform .32s cubic-bezier(.4,0,.2,1); display: flex; flex-direction: column; padding: 20px 16px; overflow-y: auto; scrollbar-width: none; }
 .side-menu::-webkit-scrollbar { display: none; }
 .side-menu.open { transform: translateX(0); }
-.side-menu-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,.7);
-  backdrop-filter: blur(3px);
-  -webkit-backdrop-filter: blur(3px);
-  z-index: 299;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity.3s;
-}
-.side-menu-backdrop.show {
-  opacity: 1;
-  pointer-events: auto;
-}
-.side-menu-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-bottom: 16px;
-  border-bottom: 1px solid var(--border);
-  margin-bottom: 16px;
-}
-.side-menu-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 16px;
-  font-weight: 800;
-  color: var(--cyan);
-  text-shadow: 0 0 10px rgba(0,229,255,.5);
-}
-.side-menu-title.icon { font-size: 20px; }
-.side-menu-close {
-  width: 32px; height: 32px;
-  border-radius: 8px;
-  background: transparent;
-  border: 1px solid var(--border);
-  color: var(--text-dim);
-  font-size: 16px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: inherit;
-}
-.side-menu-close:active {
-  border-color: var(--red);
-  color: var(--red);
-}
-.menu-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 14px 12px;
-  background: linear-gradient(180deg, rgba(255,255,255,.02), transparent);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  margin-bottom: 10px;
-  color: var(--text);
-  font-size: 13.5px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all.2s;
-  font-family: inherit;
-  text-align: right;
-  width: 100%;
-}
-.menu-item:active {
-  transform: scale(.97);
-  border-color: var(--cyan);
-  box-shadow: 0 0 16px rgba(0,229,255,.3);
-}
-.menu-item.menu-icon {
-  width: 40px; height: 40px;
-  border-radius: 11px;
-  background: rgba(0,229,255,.1);
-  border: 1px solid rgba(0,229,255,.25);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 19px;
-  flex-shrink: 0;
-}
-.menu-item.menu-text {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  flex: 1;
-}
-.menu-item.menu-label {
-  font-size: 13.5px;
-  font-weight: 800;
-  color: var(--text);
-}
-.menu-item.menu-desc {
-  font-size: 10.5px;
-  color: var(--text-dim);
-  font-weight: 500;
-}
-.menu-item.primary {
-  background: linear-gradient(180deg, rgba(0,229,255,.08), rgba(0,229,255,.02));
-  border-color: rgba(0,229,255,.4);
-}
-.menu-item.primary.menu-icon {
-  background: rgba(0,229,255,.2);
-}
-.status-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 7px;
-  margin-bottom: 14px;
-}
-.chip {
-  background: linear-gradient(180deg, var(--card-2), var(--card));
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 9px 6px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 3px;
-  font-size: 10.5px;
-  color: var(--text-dim);
-  min-height: 54px;
-  text-align: center;
-}
-.chip-value {
-  font-size: 13px;
-  font-weight: 800;
-  color: var(--text);
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-.chip-value.online { color: var(--green); }
-.chip-value.online::before {
-  content: '';
-  width: 7px; height: 7px;
-  border-radius: 50%;
-  background: var(--green);
-  box-shadow: 0 0 8px var(--green);
-  animation: dotPulse 1.5s ease-in-out infinite;
-}
-@keyframes dotPulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity:.35; }
-}
-.chip-label { font-size: 10px; color: var(--text-dim); }
-.chip-value.code {
-  color: var(--cyan);
-  font-family: 'Courier New', monospace;
-  letter-spacing: 1px;
-  font-size: 13px;
-  font-weight: 900;
-  text-shadow: 0 0 8px rgba(0,229,255,.6);
-}
-.radio-stage {
-  position: relative;
-  height: 360px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 8px 0 16px;
-}
-.radio-device {
-  position: relative;
-  width: 210px;
-  height: 320px;
-  filter: drop-shadow(0 20px 40px rgba(0,0,0,.8))
-          drop-shadow(0 0 30px rgba(0,229,255,.15));
-}
-.antenna {
-  position: absolute;
-  top: 0; right: 58px;
-  width: 20px; height: 95px;
-  background: linear-gradient(90deg, #0a0a0a, #2b2b2b 40%, #0a0a0a);
-  border-radius: 10px 10px 3px 3px;
-  box-shadow: inset -2px 0 3px rgba(0,0,0,.8);
-}
-.antenna::before {
-  content: '';
-  position: absolute;
-  top: -8px; left: 50%;
-  transform: translateX(-50%);
-  width: 12px; height: 12px;
-  background: #0a0a0a;
-  border-radius: 50%;
-  box-shadow: 0 0 6px rgba(0,229,255,.4);
-}
-.knobs {
-  position: absolute;
-  top: 88px; right: 18px;
-  display: flex; gap: 20px;
-}
-.knob {
-  width: 28px; height: 28px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 35% 35%, #4a4a4a, #0d0d0d);
-  border: 2px solid #1c1c1c;
-  box-shadow: 0 3px 6px rgba(0,0,0,.8), inset -2px -2px 4px rgba(0,0,0,.5);
-  position: relative;
-}
-.knob::after {
-  content: '';
-  position: absolute;
-  top: 3px; left: 50%;
-  transform: translateX(-50%);
-  width: 3px; height: 9px;
-  background: #888;
-  border-radius: 2px;
-}
-.body-main {
-  position: absolute;
-  top: 110px; left: 0; right: 0;
-  height: 210px;
-  background: linear-gradient(180deg, #1e1e1e, #0a0a0a);
-  border-radius: 18px;
-  border: 2px solid #0a0a0a;
-  box-shadow:
-    inset 0 2px 4px rgba(255,255,255,.06),
-    inset 0 -4px 8px rgba(0,0,0,.7),
-    0 10px 25px rgba(0,0,0,.7);
-  overflow: hidden;
-}
-.body-main::before {
-  content: '';
-  position: absolute;
-  inset: 6px;
-  border-radius: 13px;
-  border: 1px solid rgba(0,229,255,.08);
-  pointer-events: none;
-}
-.lcd {
-  position: absolute;
-  top: 16px; left: 20px; right: 20px;
-  height: 65px;
-  background: #0a1a0f;
-  border: 2px solid #050505;
-  border-radius: 6px;
-  box-shadow:
-    inset 0 0 14px rgba(0,255,136,.18),
-    inset 0 2px 4px rgba(0,0,0,.9),
-    0 0 14px rgba(0,255,136,.15);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding: 6px 10px;
-  font-family: 'Courier New', monospace;
-  color: var(--green);
-  text-shadow: 0 0 7px rgba(0,255,136,.9);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing:.5px;
-  line-height: 1.6;
-}
-.lcd-row {
-  display: flex;
-  justify-content: space-between;
-  font-size: 11.5px;
-}
-.lcd-row.lcd-label { color: #00cc70; }
-.side-btns {
-  position: absolute;
-  top: 92px; left: 12px; right: 12px;
-  display: flex;
-  justify-content: space-between;
-  font-size: 8px;
-  color: #666;
-  letter-spacing:.5px;
-  font-weight: 700;
-}
-.side-btn {
-  padding: 2px 7px;
-  background: #1a1a1a;
-  border-radius: 4px;
-  border: 1px solid #2a2a2a;
-}
-.speaker-grill {
-  position: absolute;
-  bottom: 14px; left: 24px; right: 24px;
-  height: 46px;
-  border-radius: 6px;
-  background: repeating-linear-gradient(90deg,
-    #050505 0, #050505 3px,
-    #1a1a1a 3px, #1a1a1a 6px);
-  box-shadow: inset 0 3px 6px rgba(0,0,0,.95);
-}
-.ptt-btn {
-  position: absolute;
-  top: 140px; left: 50%;
-  transform: translateX(-50%);
-  width: 105px; height: 62px;
-  border-radius: 14px;
-  background: linear-gradient(180deg, #0a2a3a, #041520);
-  border: 2px solid var(--cyan);
-  box-shadow:
-    0 0 22px rgba(0,229,255,.55),
-    inset 0 0 18px rgba(0,229,255,.25),
-    inset 0 2px 4px rgba(0,0,0,.7);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--cyan);
-  font-weight: 900;
-  font-size: 23px;
-  letter-spacing: 2px;
-  text-shadow: 0 0 12px rgba(0,229,255,.95);
-  cursor: pointer;
-  transition: all.15s;
-  z-index: 5;
-  font-family: inherit;
-}
-.ptt-btn.holding {
-  transform: translateX(-50%) scale(.95);
-  background: linear-gradient(180deg, #00e5ff, #008fa8);
-  color: #001418;
-  text-shadow: none;
-  box-shadow:
-    0 0 45px rgba(0,229,255,1),
-    0 0 90px rgba(0,229,255,.6),
-    inset 0 0 22px rgba(255,255,255,.35);
-}
-.ptt-sub {
-  position: absolute;
-  top: 212px; left: 50%;
-  transform: translateX(-50%);
-  font-size: 8px;
-  color: var(--cyan-dark);
-  letter-spacing: 1.5px;
-  font-weight: 700;
-  white-space: nowrap;
-}
-.ab-indicator {
-  position: absolute;
-  top: 175px; right: 14px;
-  font-size: 9px;
-  color: #555;
-  font-weight: 700;
-}
-.tab-bar {
-  position: fixed;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100%;
-  max-width: 500px;
-  background: linear-gradient(180deg, rgba(11,18,24,.85), rgba(5,8,12,1));
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-top: 1px solid var(--border);
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  padding: 8px 0 10px;
-  z-index: 100;
-}
-.tab {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-  padding: 6px 0;
-  color: var(--text-dim);
-  font-size: 11px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: color.25s;
-  position: relative;
-  background: none;
-  border: none;
-  font-family: inherit;
-}
+.side-menu-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.7); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); z-index: 299; opacity: 0; pointer-events: none; transition: opacity .3s; }
+.side-menu-backdrop.show { opacity: 1; pointer-events: auto; }
+.side-menu-header { display: flex; align-items: center; justify-content: space-between; padding-bottom: 16px; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
+.side-menu-title { display: flex; align-items: center; gap: 8px; font-size: 16px; font-weight: 800; color: var(--cyan); text-shadow: 0 0 10px rgba(0,229,255,.5); }
+.side-menu-close { width: 32px; height: 32px; border-radius: 8px; background: transparent; border: 1px solid var(--border); color: var(--text-dim); font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-family: inherit; }
+.side-menu-close:active { border-color: var(--red); color: var(--red); }
+.menu-item { display: flex; align-items: center; gap: 12px; padding: 14px 12px; background: linear-gradient(180deg, rgba(255,255,255,.02), transparent); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 10px; color: var(--text); font-size: 13.5px; font-weight: 700; cursor: pointer; transition: all .2s; font-family: inherit; text-align: right; width: 100%; }
+.menu-item:active { transform: scale(.97); border-color: var(--cyan); box-shadow: 0 0 16px rgba(0,229,255,.3); }
+.menu-item .menu-icon { width: 40px; height: 40px; border-radius: 11px; background: rgba(0,229,255,.1); border: 1px solid rgba(0,229,255,.25); display: flex; align-items: center; justify-content: center; font-size: 19px; flex-shrink: 0; }
+.menu-item .menu-text { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+.menu-item .menu-label { font-size: 13.5px; font-weight: 800; color: var(--text); }
+.menu-item .menu-desc { font-size: 10.5px; color: var(--text-dim); font-weight: 500; }
+.menu-item.primary { background: linear-gradient(180deg, rgba(0,229,255,.08), rgba(0,229,255,.02)); border-color: rgba(0,229,255,.4); }
+.menu-item.primary .menu-icon { background: rgba(0,229,255,.2); }
+.status-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 7px; margin-bottom: 8px; }
+.chip { background: linear-gradient(180deg, var(--card-2), var(--card)); border: 1px solid var(--border); border-radius: 10px; padding: 9px 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 10.5px; color: var(--text-dim); min-height: 54px; text-align: center; }
+.chip-value { font-size: 13px; font-weight: 800; color: var(--text); display: flex; align-items: center; justify-content: center; gap: 4px; line-height: 1.2; }
+.chip-label { font-size: 10px; color: var(--text-dim); line-height: 1.2; }
+.chip-value.code { color: var(--cyan); font-family: 'Courier New', monospace; letter-spacing: 1px; font-size: 13px; font-weight: 900; text-shadow: 0 0 8px rgba(0,229,255,.6); }
+#waveNameChip { cursor: pointer; transition: all .2s; }
+#waveNameChip:active { border-color: var(--cyan); box-shadow: 0 0 12px rgba(0,229,255,.3); }
+#networkChip { cursor: pointer; }
+#networkChip .bars { display: inline-flex; align-items: flex-end; gap: 2px; height: 14px; }
+#networkChip .bars span { width: 3px; border-radius: 2px; background: #3a4048; }
+#networkChip .bars span:nth-child(1) { height: 4px; }
+#networkChip .bars span:nth-child(2) { height: 7px; }
+#networkChip .bars span:nth-child(3) { height: 10px; }
+#networkChip .bars span:nth-child(4) { height: 14px; }
+#networkChip.good .bars span { background: var(--green); box-shadow: 0 0 4px var(--green); }
+#networkChip.mid .bars span:nth-child(-n+3) { background: var(--yellow); box-shadow: 0 0 4px var(--yellow); }
+#networkChip.bad .bars span:nth-child(-n+2) { background: var(--red); box-shadow: 0 0 4px var(--red); }
+#networkChip.offline .bars span { background: #3a4048; }
+#batteryChip .battery-visual { display: inline-flex; align-items: center; gap: 4px; }
+#batteryChip .battery-bars { display: inline-flex; gap: 2px; align-items: flex-end; }
+#batteryChip .battery-bars span { width: 4px; height: 12px; border-radius: 1px; background: #3a4048; }
+#batteryChip .battery-pct { font-size: 11px; font-weight: 800; color: var(--text); }
+#batteryChip.level-high .battery-bars span { background: var(--green); box-shadow: 0 0 4px var(--green); }
+#batteryChip.level-mid .battery-bars span { background: var(--yellow); box-shadow: 0 0 4px var(--yellow); }
+#batteryChip.level-low .battery-bars span { background: var(--red); box-shadow: 0 0 4px var(--red); }
+#waveStatusChip { justify-content: center; gap: 2px; }
+#waveStatusChip .status-text { font-size: 11px; font-weight: 800; }
+#waveStatusChip.disconnected .status-text { color: var(--red); }
+#waveStatusChip.live .status-text { color: var(--green); }
+#waveStatusChip .wave-timer { font-family: 'Courier New', monospace; color: var(--text-dim); font-size: 11px; font-weight: 700; }
+#waveStatusChip.live .wave-timer { color: var(--green); }
+.radio-stage { position: relative; height: 360px; display: flex; align-items: center; justify-content: center; margin: 8px 0 16px; }
+.radio-device { position: relative; width: 210px; height: 320px; filter: drop-shadow(0 20px 40px rgba(0,0,0,.8)) drop-shadow(0 0 30px rgba(0,229,255,.15)); }
+.antenna { position: absolute; top: 0; right: 58px; width: 20px; height: 95px; background: linear-gradient(90deg, #0a0a0a, #2b2b2b 40%, #0a0a0a); border-radius: 10px 10px 3px 3px; box-shadow: inset -2px 0 3px rgba(0,0,0,.8); }
+.antenna::before { content: ''; position: absolute; top: -8px; left: 50%; transform: translateX(-50%); width: 12px; height: 12px; background: var(--red); border-radius: 50%; box-shadow: 0 0 8px var(--red); transition: all .25s; }
+body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14px var(--green); }
+.knobs { position: absolute; top: 88px; right: 18px; display: flex; gap: 20px; }
+.knob { width: 28px; height: 28px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #4a4a4a, #0d0d0d); border: 2px solid #1c1c1c; box-shadow: 0 3px 6px rgba(0,0,0,.8), inset -2px -2px 4px rgba(0,0,0,.5); position: relative; }
+.knob::after { content: ''; position: absolute; top: 3px; left: 50%; transform: translateX(-50%); width: 3px; height: 9px; background: #888; border-radius: 2px; }
+.body-main { position: absolute; top: 110px; left: 0; right: 0; height: 210px; background: linear-gradient(180deg, #1e1e1e, #0a0a0a); border-radius: 18px; border: 2px solid #0a0a0a; box-shadow: inset 0 2px 4px rgba(255,255,255,.06), inset 0 -4px 8px rgba(0,0,0,.7), 0 10px 25px rgba(0,0,0,.7); overflow: hidden; }
+.body-main::before { content: ''; position: absolute; inset: 6px; border-radius: 13px; border: 1px solid rgba(0,229,255,.08); pointer-events: none; }
+.lcd { position: absolute; top: 16px; left: 20px; right: 20px; height: 65px; background: #0a1a0f; border: 2px solid #050505; border-radius: 6px; box-shadow: inset 0 0 14px rgba(0,255,136,.18), inset 0 2px 4px rgba(0,0,0,.9), 0 0 14px rgba(0,255,136,.15); display: flex; flex-direction: column; justify-content: center; padding: 6px 10px; font-family: 'Courier New', monospace; color: var(--green); text-shadow: 0 0 7px rgba(0,255,136,.9); font-size: 12px; font-weight: 700; letter-spacing: .5px; line-height: 1.6; }
+.lcd-row { display: flex; justify-content: space-between; font-size: 11.5px; }
+.lcd-row .lcd-label { color: #00cc70; }
+.side-btns { position: absolute; top: 92px; left: 12px; right: 12px; display: flex; justify-content: space-between; font-size: 8px; color: #666; letter-spacing: .5px; font-weight: 700; }
+.side-btn { padding: 2px 7px; background: #1a1a1a; border-radius: 4px; border: 1px solid #2a2a2a; }
+.speaker-grill { position: absolute; bottom: 14px; left: 24px; right: 24px; height: 46px; border-radius: 6px; background: repeating-linear-gradient(90deg, #050505 0, #050505 3px, #1a1a1a 3px, #1a1a1a 6px); box-shadow: inset 0 3px 6px rgba(0,0,0,.95); }
+.ptt-btn { position: absolute; top: 140px; left: 50%; transform: translateX(-50%); width: 105px; height: 62px; border-radius: 14px; background: linear-gradient(180deg, #0a2a3a, #041520); border: 2px solid var(--cyan); box-shadow: 0 0 22px rgba(0,229,255,.55), inset 0 0 18px rgba(0,229,255,.25), inset 0 2px 4px rgba(0,0,0,.7); display: flex; align-items: center; justify-content: center; color: var(--cyan); font-weight: 900; font-size: 23px; letter-spacing: 2px; text-shadow: 0 0 12px rgba(0,229,255,.95); cursor: pointer; transition: all .15s; z-index: 5; font-family: inherit; }
+.ptt-btn.holding { transform: translateX(-50%) scale(.95); background: linear-gradient(180deg, #00e5ff, #008fa8); color: #001418; text-shadow: none; box-shadow: 0 0 45px rgba(0,229,255,1), 0 0 90px rgba(0,229,255,.6), inset 0 0 22px rgba(255,255,255,.35); }
+.ptt-sub { position: absolute; top: 212px; left: 50%; transform: translateX(-50%); font-size: 8px; color: var(--cyan-dark); letter-spacing: 1.5px; font-weight: 700; white-space: nowrap; }
+.ab-indicator { position: absolute; top: 175px; right: 14px; font-size: 9px; color: #555; font-weight: 700; }
+.tab-bar { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 500px; background: linear-gradient(180deg, rgba(11,18,24,.85), rgba(5,8,12,1)); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-top: 1px solid var(--border); display: grid; grid-template-columns: 1fr 1fr 1fr; padding: 8px 0 10px; z-index: 100; }
+.tab { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px 0; color: var(--text-dim); font-size: 11px; font-weight: 600; cursor: pointer; transition: color .25s; position: relative; background: none; border: none; font-family: inherit; }
 .tab.active { color: var(--cyan); }
-.tab.active::after {
-  content: '';
-  position: absolute;
-  top: -8px; left: 50%;
-  transform: translateX(-50%);
-  width: 28px; height: 3px;
-  background: var(--cyan);
-  border-radius: 0 0 3px 3px;
-  box-shadow: 0 0 12px var(--cyan);
-}
+.tab.active::after { content: ''; position: absolute; top: -8px; left: 50%; transform: translateX(-50%); width: 28px; height: 3px; background: var(--cyan); border-radius: 0 0 3px 3px; box-shadow: 0 0 12px var(--cyan); }
 .tab-icon { font-size: 22px; line-height: 1; }
-.bottom-info {
-  position: fixed;
-  bottom: 68px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100%;
-  max-width: 500px;
-  text-align: center;
-  font-size: 11px;
-  color: var(--text-dim);
-  padding: 8px 0;
-  pointer-events: none;
-  z-index: 99;
-}
-.bottom-info.hl { color: var(--cyan); font-weight: 700; }
-.log-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 6px 4px 14px;
-  border-bottom: 1px solid var(--border);
-  margin-bottom: 14px;
-  gap: 8px;
-}
-.log-title {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  text-align: right;
-  flex: 1;
-}
-.log-title h2 {
-  font-size: 17px;
-  font-weight: 800;
-  color: var(--cyan);
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.log-title.sub {
-  font-size: 11px;
-  color: var(--text-dim);
-  font-weight: 500;
-}
-.log-actions {
-  display: flex;
-  gap: 12px;
-  color: var(--cyan);
-  font-size: 20px;
-}
+.bottom-info { position: fixed; bottom: 68px; left: 50%; transform: translateX(-50%); width: 100%; max-width: 500px; text-align: center; font-size: 11px; color: var(--text-dim); padding: 8px 0; pointer-events: none; z-index: 99; }
+.bottom-info .hl { color: var(--cyan); font-weight: 700; }
+.log-header { display: flex; align-items: center; justify-content: space-between; padding: 6px 4px 14px; border-bottom: 1px solid var(--border); margin-bottom: 14px; gap: 8px; }
+.log-title { display: flex; flex-direction: column; gap: 3px; text-align: right; flex: 1; }
+.log-title h2 { font-size: 17px; font-weight: 800; color: var(--cyan); display: flex; align-items: center; gap: 6px; }
+.log-title .sub { font-size: 11px; color: var(--text-dim); font-weight: 500; }
+.log-actions { display: flex; gap: 12px; color: var(--cyan); font-size: 20px; }
 .log-actions span { cursor: pointer; }
-.encrypted-badge { text-align: center; margin-bottom: 16px; }
-.encrypted-badge-inner {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: rgba(0,255,136,.06);
-  border: 1px solid rgba(0,255,136,.2);
-  padding: 6px 14px;
-  border-radius: 20px;
-  font-size: 11px;
-  color: var(--green);
-  font-weight: 600;
-}
-.encrypted-badge-inner::before {
-  content: '';
-  width: 7px; height: 7px;
-  border-radius: 50%;
-  background: var(--green);
-  box-shadow: 0 0 8px var(--green);
-  animation: dotPulse 1.5s ease-in-out infinite;
-}
-.room-users {
-  display: flex;
-  gap: 6px;
-  overflow-x: auto;
-  padding: 4px 0 10px;
-  margin-bottom: 10px;
-  scrollbar-width: none;
-}
-.room-users::-webkit-scrollbar { display: none; }
-.user-pill {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  padding: 5px 10px;
-  background: var(--card-2);
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text-dim);
-  flex-shrink: 0;
-  white-space: nowrap;
-}
-.user-pill.active {
-  border-color: var(--green);
-  color: var(--green);
-  box-shadow: 0 0 8px rgba(0,255,136,.3);
-}
-.user-avatar {
-  width: 18px; height: 18px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--cyan), var(--cyan-dark));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #001418;
-  font-size: 10px;
-  font-weight: 800;
-}
-.empty-room {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 60px 20px;
-  text-align: center;
-  gap: 14px;
-  color: var(--text-dim);
-}
-.empty-room-icon {
-  font-size: 60px;
-  opacity:.35;
-  filter: drop-shadow(0 0 20px rgba(0,229,255,.3));
-}
-.empty-room-title {
-  font-size: 16px;
-  font-weight: 800;
-  color: var(--cyan);
-}
-.empty-room-text {
-  font-size: 12.5px;
-  line-height: 1.7;
-  max-width: 260px;
-}
-.empty-room-btn {
-  margin-top: 14px;
-  padding: 14px 28px;
-  background: linear-gradient(180deg, #00e5ff, #008fa8);
-  border: 1px solid var(--cyan);
-  border-radius: 12px;
-  color: #001418;
-  font-family: inherit;
-  font-size: 14px;
-  font-weight: 800;
-  cursor: pointer;
-  box-shadow: 0 0 20px rgba(0,229,255,.5);
-  transition: all.2s;
-}
-.empty-room-btn:active {
-  transform: scale(.95);
-  box-shadow: 0 0 32px rgba(0,229,255,.8);
-}
-.msg {
-  margin-bottom: 12px;
-  position: relative;
-  max-width: 92%;
-  animation: msgSlide.35s ease;
-}
-@keyframes msgSlide {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
+.empty-room { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 20px; text-align: center; gap: 14px; color: var(--text-dim); }
+.empty-room-icon { font-size: 60px; opacity: .35; filter: drop-shadow(0 0 20px rgba(0,229,255,.3)); }
+.empty-room-title { font-size: 16px; font-weight: 800; color: var(--cyan); }
+.empty-room-text { font-size: 12.5px; line-height: 1.7; max-width: 260px; }
+.empty-room-btn { margin-top: 14px; padding: 14px 28px; background: linear-gradient(180deg, #00e5ff, #008fa8); border: 1px solid var(--cyan); border-radius: 12px; color: #001418; font-family: inherit; font-size: 14px; font-weight: 800; cursor: pointer; box-shadow: 0 0 20px rgba(0,229,255,.5); transition: all .2s; }
+.msg { margin-bottom: 12px; position: relative; max-width: 92%; animation: msgSlide .35s ease; }
+@keyframes msgSlide { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 .msg-in { margin-right: 0; margin-left: auto; }
 .msg-out { margin-left: 0; margin-right: auto; }
-.msg-header {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 11.5px;
-  font-weight: 700;
-  margin-bottom: 5px;
-  padding: 0 8px;
-}
-.msg-in.msg-header { color: var(--cyan); justify-content: flex-end; }
-.msg-out.msg-header { color: #ff5577; }
-.msg-body {
-  border-radius: 14px;
-  padding: 12px 14px;
-  position: relative;
-  border: 1px solid;
-}
-.msg-in.msg-body {
-  background: linear-gradient(135deg, var(--blue-msg), var(--blue-msg-2));
-  border-color: rgba(0,229,255,.3);
-  border-top-right-radius: 4px;
-}
-.msg-out.msg-body {
-  background: linear-gradient(135deg, var(--red-msg), var(--red-msg-2));
-  border-color: rgba(255,42,77,.35);
-  border-top-left-radius: 4px;
-}
-.voice-msg {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.play-btn {
-  width: 42px; height: 42px;
-  border-radius: 50%;
-  background: rgba(0,229,255,.2);
-  border: 1.5px solid var(--cyan);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--cyan);
-  font-size: 16px;
-  cursor: pointer;
-  flex-shrink: 0;
-  transition: all.2s;
-  font-family: inherit;
-  font-weight: 700;
-}
-.play-btn:active {
-  background: var(--cyan);
-  color: #001418;
-  transform: scale(.94);
-}
-.msg-out .play-btn {
-  background: rgba(255,42,77,.2);
-  border-color: #ff5577;
-  color: #ff5577;
-}
-.waveform {
-  flex: 1;
-  height: 38px;
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  overflow: hidden;
-}
-.waveform span {
-  display: block;
-  width: 2.5px;
-  background: var(--cyan);
-  border-radius: 2px;
-  opacity:.9;
-}
-.waveform span.hot { background: #ff5577; }
+.msg-header { display: flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 700; margin-bottom: 5px; padding: 0 8px; }
+.msg-in .msg-header { color: var(--cyan); justify-content: flex-end; }
+.msg-out .msg-header { color: #ff5577; }
+.msg-body { border-radius: 14px; padding: 12px 14px; position: relative; border: 1px solid; }
+.msg-in .msg-body { background: linear-gradient(135deg, var(--blue-msg), var(--blue-msg-2)); border-color: rgba(0,229,255,.3); border-top-right-radius: 4px; }
+.msg-out .msg-body { background: linear-gradient(135deg, var(--red-msg), var(--red-msg-2)); border-color: rgba(255,42,77,.35); border-top-left-radius: 4px; }
+.voice-msg { display: flex; align-items: center; gap: 10px; }
+.play-btn { width: 42px; height: 42px; border-radius: 50%; background: rgba(0,229,255,.2); border: 1.5px solid var(--cyan); display: flex; align-items: center; justify-content: center; color: var(--cyan); font-size: 16px; cursor: pointer; flex-shrink: 0; transition: all .2s; font-family: inherit; font-weight: 700; }
+.msg-out .play-btn { background: rgba(255,42,77,.2); border-color: #ff5577; color: #ff5577; }
+.waveform { flex: 1; height: 38px; display: flex; align-items: center; gap: 2px; overflow: hidden; }
+.waveform span { display: block; width: 2.5px; background: var(--cyan); border-radius: 2px; opacity: .9; }
 .msg-out .waveform span { background: #ff5577; }
-.voice-meta {
-  display: flex;
-  justify-content: space-between;
-  font-size: 10px;
-  color: rgba(255,255,255,.65);
-  margin-top: 8px;
-  padding-top: 8px;
-  border-top: 1px solid rgba(255,255,255,.08);
-}
-.text-msg {
-  font-size: 13.5px;
-  line-height: 1.75;
-  color: #fff;
-  font-weight: 500;
-}
-.attach-msg {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 4px;
-}
+.voice-meta { display: flex; justify-content: space-between; font-size: 10px; color: rgba(255,255,255,.65); margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,.08); }
+.text-msg { font-size: 13.5px; line-height: 1.75; color: #fff; font-weight: 500; }
+.attach-msg { display: flex; align-items: center; gap: 10px; padding: 8px 4px; }
 .attach-msg-icon { font-size: 32px; }
-.attach-msg-info {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-.attach-msg-name {
-  font-size: 13px;
-  font-weight: 700;
-  color: #fff;
-}
-.attach-msg-type {
-  font-size: 10px;
-  color: rgba(255,255,255,.65);
-}
-.attachment-preview-img {
-  max-width: 100%;
-  max-height: 240px;
-  border-radius: 10px;
-  display: block;
-  margin-bottom: 6px;
-  cursor: pointer;
-}
-.attachment-preview-video {
-  max-width: 100%;
-  max-height: 240px;
-  border-radius: 10px;
-  display: block;
-  margin-bottom: 6px;
-}
-.chat-input-bar {
-  position: fixed;
-  bottom: 68px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100%;
-  max-width: 500px;
-  background: linear-gradient(180deg, rgba(11,18,24,.9), rgba(5,8,12,1));
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border-top: 1px solid var(--border);
-  padding: 10px 12px 14px;
-  display: none;
-  align-items: center;
-  gap: 8px;
-  z-index: 98;
-}
+.attach-msg-info { display: flex; flex-direction: column; gap: 2px; }
+.attach-msg-name { font-size: 13px; font-weight: 700; color: #fff; }
+.attach-msg-type { font-size: 10px; color: rgba(255,255,255,.65); }
+.attachment-preview-img { max-width: 100%; max-height: 240px; border-radius: 10px; display: block; margin-bottom: 6px; cursor: pointer; }
+.attachment-preview-video { max-width: 100%; max-height: 240px; border-radius: 10px; display: block; margin-bottom: 6px; }
+.chat-input-bar { position: fixed; bottom: 68px; left: 50%; transform: translateX(-50%); width: 100%; max-width: 500px; background: linear-gradient(180deg, rgba(11,18,24,.9), rgba(5,8,12,1)); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-top: 1px solid var(--border); padding: 10px 12px 14px; display: none; align-items: center; gap: 8px; z-index: 98; }
 .chat-input-bar.active { display: flex; }
-.chat-ptt {
-  width: 46px; height: 46px;
-  border-radius: 50%;
-  background: linear-gradient(180deg, #ff2a4d, #b01530);
-  border: 1.5px solid #ff5577;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  font-size: 20px;
-  cursor: pointer;
-  flex-shrink: 0;
-  box-shadow: 0 0 16px rgba(255,42,77,.55);
-  transition: all.15s;
-  position: relative;
-  font-family: inherit;
-}
-.chat-ptt.holding {
-  transform: scale(.94);
-  box-shadow: 0 0 30px rgba(255,42,77,.95);
-}
-.chat-ptt-label {
-  position: absolute;
-  bottom: -15px; left: 50%;
-  transform: translateX(-50%);
-  font-size: 9px;
-  color: #ff5577;
-  font-weight: 800;
-  letter-spacing:.5px;
-}
-.chat-send {
-  width: 42px; height: 42px;
-  border-radius: 50%;
-  background: linear-gradient(180deg, #00e5ff, #008fa8);
-  border: 1.5px solid var(--cyan);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #001418;
-  font-size: 18px;
-  cursor: pointer;
-  flex-shrink: 0;
-  box-shadow: 0 0 16px rgba(0,229,255,.55);
-  transition: all.15s;
-  font-family: inherit;
-  font-weight: 900;
-}
-.chat-send:active {
-  transform: scale(.9);
-  box-shadow: 0 0 28px rgba(0,229,255,.95);
-}
-.chat-send:disabled {
-  background: #2a2f38;
-  border-color: #3a4048;
-  color: #666;
-  cursor: not-allowed;
-  box-shadow: none;
-  opacity:.5;
-}
-.chat-input-wrap {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: var(--card-2);
-  border: 1px solid var(--border);
-  border-radius: 22px;
-  padding: 8px 14px;
-  min-height: 44px;
-}
-.chat-clip {
-  color: var(--text-dim);
-  font-size: 18px;
-  cursor: pointer;
-  background: none;
-  border: none;
-  font-family: inherit;
-  padding: 0;
-  transition: color.2s;
-}
-.chat-clip:active { color: var(--cyan); }
-.chat-input {
-  flex: 1;
-  background: none;
-  border: none;
-  outline: none;
-  color: var(--text);
-  font-family: inherit;
-  font-size: 13.5px;
-  text-align: right;
-}
+.chat-primary { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(180deg, #00e5ff, #008fa8); border: 1.5px solid var(--cyan); display: flex; align-items: center; justify-content: center; color: #001418; font-size: 20px; cursor: pointer; flex-shrink: 0; box-shadow: 0 0 16px rgba(0,229,255,.55); transition: all .15s; font-family: inherit; font-weight: 900; }
+.chat-primary:active { transform: scale(.92); box-shadow: 0 0 28px rgba(0,229,255,.95); }
+.chat-primary.recording { background: linear-gradient(180deg, #ff2a4d, #b01530); color: #fff; animation: recPulse 1s ease-in-out infinite; }
+@keyframes recPulse { 0%, 100% { box-shadow: 0 0 16px rgba(255,42,77,.6); } 50% { box-shadow: 0 0 32px rgba(255,42,77,1); } }
+.chat-clip-btn { color: var(--text-dim); font-size: 22px; cursor: pointer; background: none; border: none; font-family: inherit; padding: 0; transition: color .2s; flex-shrink: 0; }
+.chat-clip-btn:active { color: var(--cyan); }
+.chat-input { flex: 1; background: var(--card-2); border: 1px solid var(--border); border-radius: 22px; padding: 10px 14px; outline: none; color: var(--text); font-family: inherit; font-size: 13.5px; text-align: right; min-height: 44px; }
 .chat-input::placeholder { color: var(--text-dim); }
-.settings-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.setting-item {
-  background: linear-gradient(180deg, var(--card-2), var(--card));
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 14px 16px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  cursor: pointer;
-  transition: border-color.2s;
-}
+.chat-emoji-btn { color: var(--text-dim); font-size: 22px; cursor: pointer; background: none; border: none; font-family: inherit; padding: 0; transition: color .2s; flex-shrink: 0; }
+.chat-emoji-btn:active { color: var(--cyan); }
+.settings-list { display: flex; flex-direction: column; gap: 8px; }
+.setting-item { background: linear-gradient(180deg, var(--card-2), var(--card)); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; gap: 10px; cursor: pointer; transition: border-color .2s; }
 .setting-item:active { border-color: var(--cyan); }
 .setting-info { display: flex; flex-direction: column; gap: 3px; flex: 1; }
 .setting-title { font-size: 14px; font-weight: 700; color: var(--text); }
 .setting-desc { font-size: 11px; color: var(--text-dim); }
 .setting-value { font-size: 12px; color: var(--cyan); font-weight: 700; }
-.toast {
-  position: fixed;
-  top: 20px;
-  left: 50%;
-  transform: translateX(-50%) translateY(-100px);
-  background: linear-gradient(180deg, var(--card-2), var(--card));
-  border: 1px solid var(--cyan);
-  color: var(--text);
-  padding: 10px 20px;
-  border-radius: 10px;
-  font-size: 13px;
-  font-weight: 600;
-  z-index: 999;
-  transition: transform.35s ease;
-  box-shadow: 0 8px 24px rgba(0,229,255,.3);
-  max-width: 90vw;
-  text-align: center;
-}
+.toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px); background: linear-gradient(180deg, var(--card-2), var(--card)); border: 1px solid var(--cyan); color: var(--text); padding: 10px 20px; border-radius: 10px; font-size: 13px; font-weight: 600; z-index: 999; transition: transform .35s ease; box-shadow: 0 8px 24px rgba(0,229,255,.3); max-width: 90vw; text-align: center; }
 .toast.show { transform: translateX(-50%) translateY(0); }
 .toast.success { border-color: var(--green); box-shadow: 0 8px 24px rgba(0,255,136,.3); }
 .toast.error { border-color: var(--red); box-shadow: 0 8px 24px rgba(255,42,77,.3); }
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,.8);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  z-index: 500;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-}
-.modal-overlay.show { display: flex; animation: fadeIn.25s ease; }
-.modal {
-  width: 100%;
-  max-width: 400px;
-  background: linear-gradient(180deg, var(--card-2), var(--bg));
-  border: 1px solid var(--cyan);
-  border-radius: 18px;
-  padding: 22px 18px;
-  box-shadow: 0 20px 60px rgba(0,229,255,.3);
-  animation: modalPop.3s ease;
-  max-height: 90vh;
-  overflow-y: auto;
-  scrollbar-width: thin;
-}
-@keyframes modalPop {
-  from { opacity: 0; transform: scale(.9); }
-  to { opacity: 1; transform: scale(1); }
-}
-.modal-title {
-  font-size: 18px;
-  font-weight: 800;
-  color: var(--cyan);
-  text-align: center;
-  margin-bottom: 6px;
-}
-.modal-sub {
-  font-size: 12px;
-  color: var(--text-dim);
-  text-align: center;
-  margin-bottom: 18px;
-  line-height: 1.6;
-}
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.8); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); z-index: 500; display: none; align-items: center; justify-content: center; padding: 20px; }
+.modal-overlay.show { display: flex; animation: fadeIn .25s ease; }
+.modal { width: 100%; max-width: 400px; background: linear-gradient(180deg, var(--card-2), var(--bg)); border: 1px solid var(--cyan); border-radius: 18px; padding: 22px 18px; box-shadow: 0 20px 60px rgba(0,229,255,.3); animation: modalPop .3s ease; max-height: 90vh; overflow-y: auto; scrollbar-width: thin; }
+@keyframes modalPop { from { opacity: 0; transform: scale(.9); } to { opacity: 1; transform: scale(1); } }
+.modal-title { font-size: 18px; font-weight: 800; color: var(--cyan); text-align: center; margin-bottom: 6px; }
+.modal-sub { font-size: 12px; color: var(--text-dim); text-align: center; margin-bottom: 18px; line-height: 1.6; }
 .modal-field { margin-bottom: 14px; }
-.modal-field label {
-  display: block;
-  font-size: 12px;
-  color: var(--text-dim);
-  margin-bottom: 6px;
-  font-weight: 600;
-}
-.modal-field input {
-  width: 100%;
-  padding: 12px 14px;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  color: var(--text);
-  font-family: inherit;
-  font-size: 14px;
-  outline: none;
-  transition: border-color.2s;
-  text-align: right;
-}
-.modal-field input:focus {
-  border-color: var(--cyan);
-  box-shadow: 0 0 0 3px rgba(0,229,255,.1);
-}
-.modal-field input.code-input {
-  text-align: center;
-  letter-spacing: 3px;
-  font-family: 'Courier New', monospace;
-  font-weight: 800;
-  font-size: 16px;
-  color: var(--cyan);
-}
-.modal-actions {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  margin-top: 18px;
-}
-.modal-btn {
-  padding: 13px;
-  border-radius: 10px;
-  border: 1px solid;
-  font-family: inherit;
-  font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all.2s;
-}
-.modal-btn.cancel {
-  background: transparent;
-  border-color: var(--border);
-  color: var(--text-dim);
-}
-.modal-btn.confirm {
-  background: linear-gradient(180deg, #00e5ff, #008fa8);
-  border-color: var(--cyan);
-  color: #001418;
-  box-shadow: 0 0 18px rgba(0,229,255,.4);
-}
-.modal-btn.danger {
-  background: linear-gradient(180deg, #ff2a4d, #b01530);
-  border-color: #ff5577;
-  color: #fff;
-  box-shadow: 0 0 18px rgba(255,42,77,.4);
-}
+.modal-field label { display: block; font-size: 12px; color: var(--text-dim); margin-bottom: 6px; font-weight: 600; }
+.modal-field input { width: 100%; padding: 12px 14px; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-family: inherit; font-size: 14px; outline: none; transition: border-color .2s; text-align: right; }
+.modal-field input:focus { border-color: var(--cyan); box-shadow: 0 0 0 3px rgba(0,229,255,.1); }
+.modal-field input.code-input { text-align: center; letter-spacing: 3px; font-family: 'Courier New', monospace; font-weight: 800; font-size: 16px; color: var(--cyan); }
+.modal-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 18px; }
+.modal-btn { padding: 13px; border-radius: 10px; border: 1px solid; font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer; transition: all .2s; }
+.modal-btn.cancel { background: transparent; border-color: var(--border); color: var(--text-dim); }
+.modal-btn.confirm { background: linear-gradient(180deg, #00e5ff, #008fa8); border-color: var(--cyan); color: #001418; box-shadow: 0 0 18px rgba(0,229,255,.4); }
+.modal-btn.danger { background: linear-gradient(180deg, #ff2a4d, #b01530); border-color: #ff5577; color: #fff; box-shadow: 0 0 18px rgba(255,42,77,.4); }
 .modal-btn:active { transform: scale(.97); }
-.modal-btn:disabled {
-  opacity:.4;
-  cursor: not-allowed;
-}
-.search-result-card {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 14px;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  margin-bottom: 8px;
-  cursor: pointer;
-  transition: all.2s;
-}
-.search-result-card:active {
-  border-color: var(--cyan);
-  transform: scale(.98);
-}
-.search-result-icon {
-  width: 44px; height: 44px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--cyan), var(--cyan-dark));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 20px;
-  flex-shrink: 0;
-}
-.search-result-info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-.search-result-name {
-  font-size: 14px;
-  font-weight: 800;
-  color: var(--text);
-}
-.search-result-code {
-  font-size: 12px;
-  color: var(--cyan);
-  font-family: 'Courier New', monospace;
-  font-weight: 700;
-  letter-spacing: 1px;
-}
-.no-results {
-  text-align: center;
-  padding: 24px 12px;
-  color: var(--text-dim);
-  font-size: 13px;
-  line-height: 1.7;
-}
-.no-results-icon {
-  font-size: 36px;
-  display: block;
-  margin-bottom: 10px;
-  opacity:.4;
-}
-.attach-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  margin-top: 6px;
-}
-.attach-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 18px 12px;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  cursor: pointer;
-  transition: all.2s;
-  color: var(--text);
-  font-family: inherit;
-  font-size: 12.5px;
-  font-weight: 700;
-}
-.attach-item:active {
-  border-color: var(--cyan);
-  transform: scale(.96);
-  box-shadow: 0 0 16px rgba(0,229,255,.25);
-}
+.search-result-card { display: flex; align-items: center; gap: 12px; padding: 14px; background: var(--bg); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 8px; cursor: pointer; transition: all .2s; }
+.search-result-card:active { border-color: var(--cyan); transform: scale(.98); }
+.search-result-icon { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, var(--cyan), var(--cyan-dark)); display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+.search-result-info { flex: 1; display: flex; flex-direction: column; gap: 3px; }
+.search-result-name { font-size: 14px; font-weight: 800; color: var(--text); }
+.search-result-code { font-size: 12px; color: var(--cyan); font-family: 'Courier New', monospace; font-weight: 700; letter-spacing: 1px; }
+.no-results { text-align: center; padding: 24px 12px; color: var(--text-dim); font-size: 13px; line-height: 1.7; }
+.no-results-icon { font-size: 36px; display: block; margin-bottom: 10px; opacity: .4; }
+.attach-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 6px; }
+.attach-item { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 18px 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 12px; cursor: pointer; transition: all .2s; color: var(--text); font-family: inherit; font-size: 12.5px; font-weight: 700; }
+.attach-item:active { border-color: var(--cyan); transform: scale(.96); box-shadow: 0 0 16px rgba(0,229,255,.25); }
 .attach-icon { font-size: 28px; }
-.icon-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
-  margin-top: 6px;
-}
-.icon-option {
-  aspect-ratio: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 26px;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  cursor: pointer;
-  transition: all.2s;
-}
-.icon-option:active { transform: scale(.94); }
-.icon-option.selected {
-  border-color: var(--cyan);
-  background: rgba(0,229,255,.1);
-  box-shadow: 0 0 16px rgba(0,229,255,.4);
-}
-.modal-menu-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 14px 12px;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  margin-bottom: 8px;
-  color: var(--text);
-  font-size: 13.5px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all.2s;
-  font-family: inherit;
-  text-align: right;
-  width: 100%;
-}
-.modal-menu-item:active {
-  transform: scale(.97);
-  border-color: var(--cyan);
-}
-.modal-menu-item.modal-menu-icon {
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
-  background: rgba(0,229,255,.1);
-  border: 1px solid rgba(0,229,255,.25);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 18px;
-  flex-shrink: 0;
-}
+.icon-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 6px; }
+.icon-option { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 26px; background: var(--bg); border: 1px solid var(--border); border-radius: 12px; cursor: pointer; transition: all .2s; }
+.icon-option.selected { border-color: var(--cyan); background: rgba(0,229,255,.1); box-shadow: 0 0 16px rgba(0,229,255,.4); }
+.modal-menu-item { display: flex; align-items: center; gap: 12px; padding: 14px 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 8px; color: var(--text); font-size: 13.5px; font-weight: 700; cursor: pointer; transition: all .2s; font-family: inherit; text-align: right; width: 100%; }
+.modal-menu-item:active { transform: scale(.97); border-color: var(--cyan); }
+.modal-menu-item .modal-menu-icon { width: 38px; height: 38px; border-radius: 10px; background: rgba(0,229,255,.1); border: 1px solid rgba(0,229,255,.25); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
 .modal-menu-item.danger { color: #ff5577; }
-.modal-menu-item.danger.modal-menu-icon {
-  background: rgba(255,42,77,.1);
-  border-color: rgba(255,42,77,.3);
-}
-.code-display {
-  text-align: center;
-  padding: 18px;
-  background: rgba(0,229,255,.05);
-  border: 1px dashed var(--cyan);
-  border-radius: 12px;
-  margin: 14px 0;
-}
-.code-display-label {
-  font-size: 11px;
-  color: var(--text-dim);
-  margin-bottom: 8px;
-}
-.code-display-value {
-  font-size: 26px;
-  font-weight: 900;
-  color: var(--cyan);
-  font-family: 'Courier New', monospace;
-  letter-spacing: 3px;
-  text-shadow: 0 0 20px rgba(0,229,255,.7);
-}
-.code-display-hint {
-  font-size: 11px;
-  color: var(--text-dim);
-  margin-top: 8px;
-  line-height: 1.6;
-}
-.join-request-info {
-  padding: 16px;
-  background: rgba(0,229,255,.05);
-  border: 1px solid rgba(0,229,255,.3);
-  border-radius: 12px;
-  margin-bottom: 14px;
-  text-align: center;
-}
-.join-request-icon {
-  font-size: 40px;
-  margin-bottom: 8px;
-}
-.join-request-name {
-  font-size: 16px;
-  font-weight: 800;
-  color: var(--cyan);
-  margin-bottom: 4px;
-}
-.join-request-code {
-  font-size: 13px;
-  color: var(--text-dim);
-  font-family: 'Courier New', monospace;
-  letter-spacing: 1px;
-}
-
-/* =========================================================
-   ✅ أنماط إضافية
-   ========================================================= */
-
-/* شريحة حالة الموجة */
-#waveStatusChip {
-  min-height: 54px;
-  justify-content: center;
-  gap: 2px;
-}
-#waveStatusChip .chip-value {
-  font-size: 11px;
-  font-weight: 800;
-}
-#waveStatusChip.live .chip-value:first-child {
-  color: var(--green);
-}
-#waveStatusChip:not(.live) .chip-value:first-child {
-  color: var(--red);
-}
-
-/* شريحة اسم الفرقة (قابلة للضغط) */
-#waveNameChip {
-  cursor: pointer;
-  transition: all .2s;
-}
-#waveNameChip:active {
-  border-color: var(--cyan);
-  box-shadow: 0 0 12px rgba(0,229,255,.3);
-}
-
-/* مؤشر قوة الشبكة */
-#headerConnectionIcon {
-  font-size: 18px;
-  transition: color .3s;
-}
-#headerConnectionIcon.good { color: var(--green); text-shadow: 0 0 8px var(--green); }
-#headerConnectionIcon.mid  { color: #ffcc00; text-shadow: 0 0 8px #ffcc00; }
-#headerConnectionIcon.bad  { color: var(--red);  text-shadow: 0 0 8px var(--red); }
-#headerConnectionIcon.offline { color: #555; }
-
-/* زر العمليات */
-#operationsBtn {
-  transition: color .2s;
-}
-#operationsBtn:active {
-  color: var(--green);
-}
-
-/* قائمة المشتركين المنسدلة */
-.members-dropdown {
-  position: fixed;
-  top: 100px;
-  right: 12px;
-  width: 240px;
-  max-height: 60vh;
-  background: linear-gradient(180deg, var(--card-2), var(--bg));
-  border: 1px solid var(--cyan);
-  border-radius: 14px;
-  box-shadow: 0 12px 40px rgba(0,229,255,.3);
-  padding: 12px;
-  z-index: 400;
-  display: none;
-  overflow-y: auto;
-  scrollbar-width: none;
-}
+.modal-menu-item.danger .modal-menu-icon { background: rgba(255,42,77,.1); border-color: rgba(255,42,77,.3); }
+.code-display { text-align: center; padding: 18px; background: rgba(0,229,255,.05); border: 1px dashed var(--cyan); border-radius: 12px; margin: 14px 0; }
+.code-display-label { font-size: 11px; color: var(--text-dim); margin-bottom: 8px; }
+.code-display-value { font-size: 26px; font-weight: 900; color: var(--cyan); font-family: 'Courier New', monospace; letter-spacing: 3px; text-shadow: 0 0 20px rgba(0,229,255,.7); }
+.code-display-hint { font-size: 11px; color: var(--text-dim); margin-top: 8px; line-height: 1.6; }
+.join-request-info { padding: 16px; background: rgba(0,229,255,.05); border: 1px solid rgba(0,229,255,.3); border-radius: 12px; margin-bottom: 14px; text-align: center; }
+.join-request-icon { font-size: 40px; margin-bottom: 8px; }
+.join-request-name { font-size: 16px; font-weight: 800; color: var(--cyan); margin-bottom: 4px; }
+.join-request-code { font-size: 13px; color: var(--text-dim); font-family: 'Courier New', monospace; letter-spacing: 1px; }
+.members-dropdown { position: fixed; top: 100px; right: 12px; width: 240px; max-height: 60vh; background: linear-gradient(180deg, var(--card-2), var(--bg)); border: 1px solid var(--cyan); border-radius: 14px; box-shadow: 0 12px 40px rgba(0,229,255,.3); padding: 12px; z-index: 400; display: none; overflow-y: auto; scrollbar-width: none; }
 .members-dropdown::-webkit-scrollbar { display: none; }
 .members-dropdown.show { display: block; }
-.members-dropdown-title {
-  font-size: 13px;
-  font-weight: 800;
-  color: var(--cyan);
-  padding-bottom: 8px;
-  border-bottom: 1px solid var(--border);
-  margin-bottom: 8px;
-  text-align: center;
-}
-.members-dropdown-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 8px;
-  background: rgba(0,229,255,.04);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  margin-bottom: 6px;
-  font-size: 12.5px;
-  font-weight: 700;
-}
+.members-dropdown-title { font-size: 13px; font-weight: 800; color: var(--cyan); padding-bottom: 8px; border-bottom: 1px solid var(--border); margin-bottom: 8px; text-align: center; }
+.members-dropdown-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 8px; background: rgba(0,229,255,.04); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 6px; font-size: 12.5px; font-weight: 700; }
 .members-dropdown-item .status-active { color: var(--green); font-size: 10px; }
 .members-dropdown-item .status-inactive { color: var(--red); font-size: 10px; }
-
-/* قائمة العمليات (كل الفرق) */
-.operations-dropdown {
-  position: fixed;
-  top: 100px;
-  left: 12px;
-  width: 240px;
-  max-height: 60vh;
-  background: linear-gradient(180deg, var(--card-2), var(--bg));
-  border: 1px solid var(--cyan);
-  border-radius: 14px;
-  box-shadow: 0 12px 40px rgba(0,229,255,.3);
-  padding: 12px;
-  z-index: 400;
-  display: none;
-  overflow-y: auto;
-  scrollbar-width: none;
-}
-.operations-dropdown::-webkit-scrollbar { display: none; }
-.operations-dropdown.show { display: block; }
-.operations-dropdown-title {
-  font-size: 13px;
-  font-weight: 800;
-  color: var(--green);
-  padding-bottom: 8px;
-  border-bottom: 1px solid var(--border);
-  margin-bottom: 8px;
-  text-align: center;
-}
-.operations-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 8px;
-  background: rgba(0,255,136,.04);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  margin-bottom: 6px;
-  font-size: 12.5px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all .2s;
-}
-.operations-item:active {
-  border-color: var(--green);
-  transform: scale(.98);
-}
-.operations-item .ops-count {
-  color: var(--green);
-  font-size: 11px;
-  font-weight: 800;
-}
-.operations-empty {
-  text-align: center;
-  color: var(--text-dim);
-  font-size: 11.5px;
-  padding: 20px 8px;
-}
-
-/* قائمة المحادثات (واتساب) */
-.chat-list-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 14px 10px;
-  background: linear-gradient(180deg, rgba(255,255,255,.02), transparent);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  margin-bottom: 8px;
-  cursor: pointer;
-  transition: all.2s;
-}
-.chat-list-item:active {
-  border-color: var(--cyan);
-  transform: scale(.98);
-}
-.chat-list-avatar {
-  width: 50px; height: 50px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--cyan), var(--cyan-dark));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #001418;
-  font-weight: 900;
-  font-size: 20px;
-  flex-shrink: 0;
-}
-.chat-list-info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 0;
-}
-.chat-list-name {
-  font-size: 14.5px;
-  font-weight: 800;
-  color: var(--text);
-}
-.chat-list-last {
-  font-size: 12px;
-  color: var(--text-dim);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.chat-list-time {
-  font-size: 10.5px;
-  color: var(--text-dim);
-  flex-shrink: 0;
-}
-
-/* زر الرجوع في المحادثة */
-.chat-back {
-  width: 32px; height: 32px;
-  border-radius: 8px;
-  background: transparent;
-  border: 1px solid var(--border);
-  color: var(--cyan);
-  font-size: 18px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: inherit;
-  flex-shrink: 0;
-}
-.chat-back:active {
-  border-color: var(--cyan);
-  background: rgba(0,229,255,.1);
-}
-
-/* زر المايك أثناء التسجيل */
-.chat-mic.recording {
-  background: linear-gradient(180deg, #ff2a4d, #b01530) !important;
-  color: #fff !important;
-  animation: recPulse 1s ease-in-out infinite;
-}
-@keyframes recPulse {
-  0%, 100% { box-shadow: 0 0 16px rgba(255,42,77,.6); }
-  50% { box-shadow: 0 0 32px rgba(255,42,77,1); }
-}
+.operations-empty { text-align: center; color: var(--text-dim); font-size: 11.5px; padding: 20px 8px; }
+.chat-list-item { display: flex; align-items: center; gap: 12px; padding: 14px 10px; background: linear-gradient(180deg, rgba(255,255,255,.02), transparent); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 8px; cursor: pointer; transition: all .2s; }
+.chat-list-item:active { border-color: var(--cyan); transform: scale(.98); }
+.chat-list-avatar { width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(135deg, var(--cyan), var(--cyan-dark)); display: flex; align-items: center; justify-content: center; color: #001418; font-weight: 900; font-size: 20px; flex-shrink: 0; }
+.chat-list-info { flex: 1; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.chat-list-name { font-size: 14.5px; font-weight: 800; color: var(--text); }
+.chat-list-last { font-size: 12px; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.chat-list-time { font-size: 10.5px; color: var(--text-dim); flex-shrink: 0; }
+.chat-back { width: 32px; height: 32px; border-radius: 8px; background: transparent; border: 1px solid var(--border); color: var(--cyan); font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-family: inherit; flex-shrink: 0; }
+.chat-back:active { border-color: var(--cyan); background: rgba(0,229,255,.1); }
 </style>
 </head>
 <body>
   <div class="app">
 
-    <!-- ============================================
-         شاشة الموجة (الراديو)
-         ============================================ -->
+    <!-- شاشة الموجة (الراديو) -->
     <section class="screen active" id="screen-radio">
       <header class="top-header">
-        <button class="menu-toggle" id="menuToggle" title="الإعدادات">☰</button>
+        <button class="menu-toggle" id="menuToggle" title="القائمة">☰</button>
         <div class="header-right">
-          <span id="headerConnectionIcon" style="font-size:18px; cursor:pointer;">📶</span>
           <span id="operationsBtn" style="cursor:pointer; font-size:13px; font-weight:800;">📋 العمليات</span>
         </div>
         <div class="brand">
@@ -1568,17 +255,41 @@ body::before {
       </header>
 
       <div class="status-row">
-        <div class="chip" id="waveStatusChip">
-          <div class="chip-value" id="waveStatusText" style="font-size:11px;">🔴 غير متصل</div>
-          <div class="chip-value wave-timer" id="waveTimer" style="font-size:11px;">00:00</div>
+        <div class="chip">
+          <div class="chip-value code" id="waveCodeChip">Q00000 <span style="font-size:12px;">🔑</span></div>
+          <div class="chip-label">رقم الموجة</div>
         </div>
         <div class="chip" id="waveNameChip">
           <div class="chip-value" id="waveNameLabel" style="font-size:11px;">لا توجد فرقة</div>
           <div class="chip-label">الفرقة النشطة</div>
         </div>
-        <div class="chip">
-          <div class="chip-value code" id="waveCodeChip">Q00000</div>
-          <div class="chip-label">رقم الموجة</div>
+        <div class="chip" id="networkChip">
+          <div class="bars">
+            <span></span><span></span><span></span><span></span>
+          </div>
+          <div class="chip-label">الشبكة</div>
+        </div>
+      </div>
+
+      <div class="status-row">
+        <div class="chip" id="batteryChip">
+          <div class="chip-value">
+            <div class="battery-visual">
+              <div class="battery-bars">
+                <span></span><span></span><span></span><span></span><span></span>
+              </div>
+              <span class="battery-pct" id="batteryValue">--%</span>
+            </div>
+          </div>
+          <div class="chip-label">البطارية</div>
+        </div>
+        <div class="chip" id="operationsChip">
+          <div class="chip-value" style="font-size:12px;">📋 العمليات</div>
+          <div class="chip-label">الفرق المتاحة</div>
+        </div>
+        <div class="chip" id="waveStatusChip" class="disconnected">
+          <div class="status-text" id="waveStatusText">🔴 غير متصل</div>
+          <div class="wave-timer" id="waveTimer">00:00</div>
         </div>
       </div>
 
@@ -1613,9 +324,7 @@ body::before {
       </div>
     </section>
 
-    <!-- ============================================
-         شاشة الغرفة — قائمة محادثات
-         ============================================ -->
+    <!-- شاشة الغرفة -->
     <section class="screen" id="screen-log">
       <div class="log-header">
         <div class="log-actions">
@@ -1626,12 +335,6 @@ body::before {
           <h2><span id="roomIcon">💬</span> <span id="roomNameLabel">الغرفة</span></h2>
           <span class="sub" id="roomSubLabel">محادثاتك الخاصة</span>
         </div>
-      </div>
-
-      <div class="encrypted-badge" id="roomBadge" style="display:none;">
-        <span class="encrypted-badge-inner">
-          متصل الآن: <span id="roomOnlineCount">0</span> &nbsp;|&nbsp; قناة مشفّرة
-        </span>
       </div>
 
       <div id="chatListContainer"></div>
@@ -1648,9 +351,7 @@ body::before {
       </div>
     </section>
 
-    <!-- ============================================
-         شاشة المحادثة الثنائية
-         ============================================ -->
+    <!-- شاشة المحادثة الثنائية -->
     <section class="screen" id="screen-chat">
       <div class="log-header">
         <div class="log-actions">
@@ -1665,9 +366,7 @@ body::before {
       <div id="chatMessages"></div>
     </section>
 
-    <!-- ============================================
-         شاشة الإعدادات
-         ============================================ -->
+    <!-- شاشة الإعدادات -->
     <section class="screen" id="screen-settings">
       <header class="top-header">
         <div class="brand">
@@ -1679,13 +378,6 @@ body::before {
         </div>
       </header>
       <div class="settings-list">
-        <div class="setting-item" onclick="changeChannel()">
-          <div class="setting-info">
-            <span class="setting-title">📻 القناة الحالية</span>
-            <span class="setting-desc">اختر قناة للتواصل</span>
-          </div>
-          <span class="setting-value" id="channelValue">CH 07</span>
-        </div>
         <div class="setting-item" onclick="toast('اسم الموجة: ' + (currentUser.waveName || '—'), 'success')">
           <div class="setting-info">
             <span class="setting-title">📡 اسم الموجة</span>
@@ -1703,7 +395,7 @@ body::before {
         <div class="setting-item" onclick="toast('معرّفك: ' + (currentUser.radCode || '—'))">
           <div class="setting-info">
             <span class="setting-title">👤 معرّف المستخدم</span>
-            <span class="setting-desc">هويتك في القناة</span>
+            <span class="setting-desc">هويتك في التطبيق</span>
           </div>
           <span class="setting-value" id="myRadCode">—</span>
         </div>
@@ -1713,20 +405,6 @@ body::before {
             <span class="setting-desc">تأكد من أن الصوت يعمل</span>
           </div>
           <span class="setting-value">تجربة</span>
-        </div>
-        <div class="setting-item" onclick="toast('الإشعارات مفعّلة', 'success')">
-          <div class="setting-info">
-            <span class="setting-title">🔔 الإشعارات</span>
-            <span class="setting-desc">تنبيهات عند وصول نداء</span>
-          </div>
-          <span class="setting-value">مفعّلة</span>
-        </div>
-        <div class="setting-item" onclick="toast('مستوى البطارية: ' + (batteryPercent!== null? batteryPercent : '—') + '%')">
-          <div class="setting-info">
-            <span class="setting-title">🔋 البطارية</span>
-            <span class="setting-desc">حالة الجهاز</span>
-          </div>
-          <span class="setting-value" id="batteryValue">--%</span>
         </div>
         <div class="setting-item" onclick="toast('الإصدار 4.3.0')">
           <div class="setting-info">
@@ -1738,9 +416,7 @@ body::before {
       </div>
     </section>
 
-    <!-- ============================================
-         شريط التبويب السفلي
-         ============================================ -->
+    <!-- شريط التبويب السفلي -->
     <nav class="tab-bar">
       <button class="tab" data-tab="log" onclick="switchTab('log')">
         <span class="tab-icon">💬</span>
@@ -1760,19 +436,17 @@ body::before {
       إشارة: <span class="hl">قوي</span> • بطارية الراديو: <span class="hl" id="bottomBattery">--%</span>
     </div>
 
-    <!-- مربع حوار الغرفة — [مايك/إرسال] [📎] [نص] [😗] -->
+    <!-- مربع حوار الغرفة -->
     <div class="chat-input-bar" id="chatInputBar">
-      <button class="chat-send" id="chatPrimaryBtn" title="التسجيل أو الإرسال">🎙️</button>
-      <button class="chat-clip" id="chatClip" title="إرفاق">📎</button>
+      <button class="chat-primary" id="chatPrimaryBtn" title="التسجيل أو الإرسال">🎙️</button>
+      <button class="chat-clip-btn" id="chatClip" title="إرفاق">📎</button>
       <input type="text" class="chat-input" id="chatInput" placeholder="اكتب رسالة...">
-      <button class="chat-clip" id="emojiBtn" title="إيموجي">😗</button>
+      <button class="chat-emoji-btn" id="emojiBtn" title="إيموجي">😗</button>
     </div>
 
   </div>
 
-  <!-- ============================================
-       القائمة الجانبية الموحدة
-       ============================================ -->
+  <!-- القائمة الجانبية الموحدة -->
   <div class="side-menu-backdrop" id="menuBackdrop"></div>
   <aside class="side-menu" id="sideMenu">
     <div class="side-menu-header">
@@ -1785,28 +459,9 @@ body::before {
     <div id="sideMenuContent"></div>
   </aside>
 
-  <!-- ============================================
-       قائمة المشتركين الجانبية
-       ============================================ -->
-  <div class="side-menu-backdrop" id="membersBackdrop"></div>
-  <aside class="members-panel" id="membersPanel">
-    <div class="members-panel-header">
-      <div class="members-panel-title">👥 المشتركون</div>
-      <button class="side-menu-close" onclick="closeMembersPanel()">✕</button>
-    </div>
-    <div id="membersList"></div>
-  </aside>
-
-  <!-- ============================================
-       قوائم منسدلة جديدة
-       ============================================ -->
+  <!-- القوائم المنسدلة -->
   <div class="members-dropdown" id="membersDropdown"></div>
-  <div class="operations-dropdown" id="operationsDropdown"></div>
-  <!-- ============================================
-     النوافذ المنبثقة (Modals)
-     ============================================ -->
-
-<!-- قائمة الغرفة -->
+  <!-- قائمة الغرفة -->
 <div class="modal-overlay" id="modalRoomMenu">
   <div class="modal">
     <div class="modal-title">☰ خيارات الغرفة</div>
@@ -1832,11 +487,11 @@ body::before {
 <!-- تعديل اسم الموجة -->
 <div class="modal-overlay" id="modalEditWave">
   <div class="modal">
-    <div class="modal-title">✏️ تعديل اسم الموجة</div>
-    <div class="modal-sub">اكتب الاسم الجديد للموجة</div>
+    <div class="modal-title">✏️ تعديل اسم الفرقة</div>
+    <div class="modal-sub">اكتب الاسم الجديد للفرقة</div>
     <div class="modal-field">
-      <label>اسم الموجة</label>
-      <input type="text" id="newWaveName" placeholder="اسم الموجة..." maxlength="30">
+      <label>اسم الفرقة</label>
+      <input type="text" id="newWaveName" placeholder="اسم الفرقة..." maxlength="30">
     </div>
     <div class="modal-actions">
       <button class="modal-btn cancel" onclick="closeModal('modalEditWave')">إلغاء</button>
@@ -1951,10 +606,10 @@ body::before {
 <div class="modal-overlay" id="modalWave">
   <div class="modal">
     <div class="modal-title">📡 إنشاء فرقة</div>
-    <div class="modal-sub">سيُولَّد رقم موجتك الخاص Q#####</div>
+    <div class="modal-sub">سيُولَّد رقم فرقتك الخاص بصيغة Q#####</div>
     <div class="modal-field">
       <label>اسم الفرقة</label>
-      <input type="text" id="waveName" placeholder="مثال: نداء استغاثة" maxlength="30">
+      <input type="text" id="waveName" placeholder="مثال: القوات الميدانية" maxlength="30">
     </div>
     <div class="modal-actions">
       <button class="modal-btn cancel" onclick="closeModal('modalWave')">إلغاء</button>
@@ -1969,7 +624,7 @@ body::before {
     <div class="modal-title">✅ تم إنشاء الفرقة</div>
     <div class="modal-sub">شارك هذا الرقم للانضمام إلى فرقتك</div>
     <div class="code-display">
-      <div class="code-display-label">رقم الموجة</div>
+      <div class="code-display-label">رقم الفرقة</div>
       <div class="code-display-value" id="createdWaveCode">Q00000</div>
       <div class="code-display-hint">
         📤 شارك هذا الرقم مع من تريد التواصل معه<br>
@@ -2007,9 +662,9 @@ body::before {
 <div class="modal-overlay" id="modalSearch">
   <div class="modal">
     <div class="modal-title">🔍 البحث</div>
-    <div class="modal-sub" id="searchSubTitle">ابحث عن مستخدم أو موجة</div>
+    <div class="modal-sub" id="searchSubTitle">ابحث عن مستخدم أو فرقة</div>
     <div class="modal-field">
-      <label id="searchFieldLabel">رقم المستخدم / الموجة</label>
+      <label id="searchFieldLabel">رقم المستخدم / الفرقة</label>
       <input type="text" id="searchQuery" class="code-input" placeholder="Q00000" maxlength="10">
     </div>
     <div class="modal-actions" style="grid-template-columns:1fr;margin-bottom:14px;">
@@ -2031,14 +686,14 @@ body::before {
 <div class="modal-overlay" id="modalJoinConfirm">
   <div class="modal">
     <div class="modal-title">📩 طلب انضمام</div>
-    <div class="modal-sub">هل تريد إرسال طلب انضمام لهذه الموجة؟</div>
+    <div class="modal-sub">هل تريد إرسال طلب انضمام لهذه الفرقة؟</div>
     <div class="join-request-info">
       <div class="join-request-icon">📡</div>
       <div class="join-request-name" id="joinTargetName">—</div>
       <div class="join-request-code" id="joinTargetCode">Q00000</div>
     </div>
     <div class="modal-sub" style="margin-bottom:0;">
-      ⚠️ سيحتاج صاحب الموجة للموافقة على طلبك
+      ⚠️ سيحتاج صاحب الفرقة للموافقة على طلبك
     </div>
     <div class="modal-actions">
       <button class="modal-btn cancel" onclick="cancelJoin()">❌ إلغاء</button>
@@ -2051,7 +706,7 @@ body::before {
 <div class="modal-overlay" id="modalIncomingRequest">
   <div class="modal">
     <div class="modal-title">🔔 طلب انضمام وارد</div>
-    <div class="modal-sub">شخص يريد الانضمام إلى موجتك</div>
+    <div class="modal-sub">شخص يريد الانضمام إلى فرقتك</div>
     <div class="join-request-info">
       <div class="join-request-icon">👤</div>
       <div class="join-request-name" id="incomingName">—</div>
@@ -2064,7 +719,7 @@ body::before {
   </div>
 </div>
 
-<!-- إدخال اسم المستخدم أول مرة -->
+<!-- إدخال اسم المستخدم -->
 <div class="modal-overlay" id="modalUserName">
   <div class="modal">
     <div class="modal-title">👤 ما اسمك؟</div>
@@ -2079,11 +734,11 @@ body::before {
   </div>
 </div>
 
-<!-- إدخال جهة اتصال يدوياً -->
+<!-- إدخال جهة اتصال -->
 <div class="modal-overlay" id="modalContactPick">
   <div class="modal">
     <div class="modal-title">👥 جهة الاتصال</div>
-    <div class="modal-sub">أدخل بيانات جهة الاتصال يدوياً</div>
+    <div class="modal-sub">أدخل بيانات جهة الاتصال</div>
     <div class="modal-field">
       <label>الاسم</label>
       <input type="text" id="contactName" placeholder="اسم الشخص">
@@ -2099,54 +754,32 @@ body::before {
   </div>
 </div>
 
-<!-- Input مخفي للملفات -->
 <input type="file" id="hiddenFileInput" style="display:none;">
-  <!-- ============================================
-       JavaScript — Radio Connect v4.3
-       ============================================ -->
   <script>
-/* =========================================================
-   Radio Connect v4.3 — Client
-   ========================================================= */
-
-/* ============ الإعدادات ============ */
 const SERVER_URL   = 'https://radio-connect-server.onrender.com';
 const LIVEKIT_URL  = 'wss://radioconnect-8uyh53qc.livekit.cloud';
 
-/* ============ معرّف الجهاز (مخفي) ============ */
 let DEVICE_ID = localStorage.getItem('rc_device_id');
 if (!DEVICE_ID) {
   DEVICE_ID = 'dev_' + (crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2) + Date.now());
   localStorage.setItem('rc_device_id', DEVICE_ID);
 }
 
-/* ============ حالة المستخدم ============ */
 let currentUser = {
   id: DEVICE_ID,
   name: localStorage.getItem('rc_user_name') || '',
-  radCode: null,
-  waveCode: null,
-  waveName: null,
-  waveId: null,
-  isWaveOwner: false,
-  roomCode: null,
-  roomName: null,
-  roomIcon: '💬',
-  currentConvId: null,
-  currentChatWith: null
+  radCode: null, waveCode: null, waveName: null, waveId: null,
+  isWaveOwner: false, roomCode: null, roomName: null, roomIcon: '💬',
+  currentConvId: null, currentChatWith: null
 };
 
 let batteryPercent = null;
 let menuBusy = false;
 let searchResultUser = null;
 let socket = null;
-let myWaves = [];
 
-/* ============ محرك البيب ============ */
 const PTTEngine = {
-  audioCtx: null,
-  beepReady: false,
-
+  audioCtx: null, beepReady: false,
   async init() {
     if (this.audioCtx) return true;
     try {
@@ -2164,7 +797,6 @@ const PTTEngine = {
       return true;
     } catch (e) { return false; }
   },
-
   playRealBeep() {
     const el = document.getElementById('walkieBeep');
     if (!el) return;
@@ -2175,27 +807,16 @@ const PTTEngine = {
   playEndBeep() { setTimeout(() => this.playRealBeep(), 80); }
 };
 
-/* =========================================================
-   محرك الصوت الحي LiveKit
-   ========================================================= */
 const LiveVoice = {
-  room: null,
-  connected: false,
-  publishing: false,
-  localTrack: null,
-  audioElements: {},
-  currentWaveId: null,
+  room: null, connected: false, publishing: false, localTrack: null,
+  audioElements: {}, currentWaveId: null,
 
   async getToken(roomId) {
     try {
       const res = await fetch(SERVER_URL + '/api/livekit/token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          roomId: roomId,
-          deviceId: currentUser.id,
-          userName: currentUser.name || currentUser.id
-        })
+        body: JSON.stringify({ roomId, deviceId: currentUser.id, userName: currentUser.name || currentUser.id })
       });
       const data = await res.json();
       if (!res.ok || !data.token) throw new Error(data.error || 'Token فشل');
@@ -2210,11 +831,7 @@ const LiveVoice = {
   async connect(waveId) {
     if (this.connected && this.currentWaveId === waveId) return true;
     if (this.connected) await this.disconnect();
-
-    if (typeof LivekitClient === 'undefined') {
-      toast('❌ مكتبة LiveKit لم تُحمّل', 'error');
-      return false;
-    }
+    if (typeof LivekitClient === 'undefined') { toast('❌ مكتبة LiveKit لم تُحمّل', 'error'); return false; }
 
     const token = await this.getToken(waveId);
     if (!token) return false;
@@ -2222,36 +839,21 @@ const LiveVoice = {
     try {
       const { Room, RoomEvent } = LivekitClient;
       this.room = new Room({
-        adaptiveStream: true,
-        dynacast: true,
-        audioCaptureDefaults: {
-          echoCancellation: false,
-          noiseSuppression: false,
-          autoGainControl: false
-        }
+        adaptiveStream: true, dynacast: true,
+        audioCaptureDefaults: { echoCancellation: false, noiseSuppression: false, autoGainControl: false }
       });
 
       this.room
         .on(RoomEvent.TrackSubscribed, (track, pub, participant) => {
-          if (track.kind === 'audio') {
-            this.attachAudio(track, participant.identity);
-          }
+          if (track.kind === 'audio') this.attachAudio(track, participant.identity);
         })
-        .on(RoomEvent.TrackUnsubscribed, (track, pub, participant) => {
-          this.detachAudio(participant.identity);
-        })
-        .on(RoomEvent.ParticipantDisconnected, (participant) => {
-          this.detachAudio(participant.identity);
-        })
-        .on(RoomEvent.Disconnected, () => {
-          this.connected = false;
-          this.currentWaveId = null;
-        });
+        .on(RoomEvent.TrackUnsubscribed, (track, pub, participant) => this.detachAudio(participant.identity))
+        .on(RoomEvent.ParticipantDisconnected, (participant) => this.detachAudio(participant.identity))
+        .on(RoomEvent.Disconnected, () => { this.connected = false; this.currentWaveId = null; });
 
       await this.room.connect(LIVEKIT_URL, token);
       this.connected = true;
       this.currentWaveId = waveId;
-      console.log('✅ LiveKit متصل بـ', waveId);
       return true;
     } catch (e) {
       console.error('LiveKit connect error:', e);
@@ -2265,16 +867,14 @@ const LiveVoice = {
     try {
       const { createLocalAudioTrack } = LivekitClient;
       this.localTrack = await createLocalAudioTrack({
-        echoCancellation: false,
-        noiseSuppression: false,
-        autoGainControl: false
+        echoCancellation: false, noiseSuppression: false, autoGainControl: false
       });
       await this.room.localParticipant.publishTrack(this.localTrack);
       this.publishing = true;
       return true;
     } catch (e) {
       console.error('Publish error:', e);
-      toast('❌ تعذّر بدء البث — تأكد من إذن المايك', 'error');
+      toast('❌ تعذّر بدء البث', 'error');
       return false;
     }
   },
@@ -2288,31 +888,21 @@ const LiveVoice = {
         this.localTrack = null;
       }
       this.publishing = false;
-    } catch (e) {
-      console.error('Unpublish error:', e);
-    }
+    } catch (e) {}
   },
 
   attachAudio(track, identity) {
     this.detachAudio(identity);
     const el = track.attach();
-    el.autoplay = true;
-    el.playsInline = true;
-    el.style.display = 'none';
+    el.autoplay = true; el.playsInline = true; el.style.display = 'none';
     document.body.appendChild(el);
     this.audioElements[identity] = el;
-
-    el.play().catch(() => {
-      document.body.addEventListener('click', () => el.play().catch(() => {}), { once: true });
-    });
+    el.play().catch(() => { document.body.addEventListener('click', () => el.play().catch(() => {}), { once: true }); });
   },
 
   detachAudio(identity) {
     const el = this.audioElements[identity];
-    if (el) {
-      try { el.pause(); el.srcObject = null; el.remove(); } catch (e) {}
-      delete this.audioElements[identity];
-    }
+    if (el) { try { el.pause(); el.srcObject = null; el.remove(); } catch (e) {} delete this.audioElements[identity]; }
   },
 
   async disconnect() {
@@ -2321,56 +911,31 @@ const LiveVoice = {
       if (this.room) await this.room.disconnect();
     } catch (e) {}
     Object.keys(this.audioElements).forEach(k => this.detachAudio(k));
-    this.room = null;
-    this.connected = false;
-    this.publishing = false;
-    this.currentWaveId = null;
+    this.room = null; this.connected = false; this.publishing = false; this.currentWaveId = null;
   }
 };
 
-/* =========================================================
-   محرك Socket.IO
-   ========================================================= */
 function initSocket() {
-  if (typeof io === 'undefined') {
-    console.warn('Socket.IO لم يُحمّل');
-    return;
-  }
-  socket = io(SERVER_URL, {
-    transports: ['websocket', 'polling'],
-    reconnection: true
-  });
+  if (typeof io === 'undefined') return;
+  socket = io(SERVER_URL, { transports: ['websocket', 'polling'], reconnection: true });
 
   socket.on('connect', () => {
-    console.log('✅ Socket.IO متصل');
-    socket.emit('register_device', {
-      deviceId: currentUser.id,
-      userName: currentUser.name
-    });
-
+    socket.emit('register_device', { deviceId: currentUser.id, userName: currentUser.name });
     if (currentUser.waveId) {
-      socket.emit('wave_join', {
-        waveId: currentUser.waveId,
-        deviceId: currentUser.id,
-        userName: currentUser.name
-      });
+      socket.emit('wave_join', { waveId: currentUser.waveId, deviceId: currentUser.id, userName: currentUser.name });
     }
   });
 
-  socket.on('disconnect', () => console.log('❌ Socket.IO انقطع'));
+  socket.on('wave_members_updated', ({ members }) => renderWaveMembers(members));
 
-  socket.on('wave_members_updated', ({ members }) => {
-    renderWaveMembers(members);
-  });
-
-  socket.on('wave_removed', ({ waveId }) => {
+  socket.on('wave_removed', () => {
     toast('⚠️ تم إخراجك من الفرقة', 'error');
     currentUser.waveId = null;
     LiveVoice.disconnect();
-    const statusEl = document.getElementById('waveStatusText');
-    if (statusEl) statusEl.innerHTML = '🔴 غير متصل';
-    const chipEl = document.getElementById('waveStatusChip');
-    if (chipEl) chipEl.classList.remove('live');
+    const statusChip = document.getElementById('waveStatusChip');
+    const statusText = document.getElementById('waveStatusText');
+    if (statusChip) { statusChip.classList.add('disconnected'); statusChip.classList.remove('live'); }
+    if (statusText) statusText.innerHTML = '🔴 غير متصل';
   });
 
   socket.on('wave_join_request_received', (data) => {
@@ -2381,90 +946,53 @@ function initSocket() {
     PTTEngine.playRealBeep();
   });
 
-  socket.on('wave_join_request_sent', ({ requestId, waveId }) => {
-    toast('📤 تم إرسال طلب الانضمام، بانتظار الموافقة...', 'success');
-  });
+  socket.on('wave_join_request_sent', () => toast('📤 تم إرسال طلب الانضمام', 'success'));
 
   socket.on('wave_join_response_received', (data) => {
-    if (data.accepted) {
-      toast('✅ تم قبول طلبك! جاري الاتصال...', 'success');
-      joinWaveAsMember(data.waveId);
-    } else {
-      toast('❌ تم رفض طلب الانضمام', 'error');
-    }
+    if (data.accepted) { toast('✅ تم قبول طلبك!', 'success'); joinWaveAsMember(data.waveId); }
+    else toast('❌ تم رفض طلب الانضمام', 'error');
   });
 
-  socket.on('wave_join_error', ({ error }) => {
-    toast('❌ ' + error, 'error');
-  });
+  socket.on('wave_join_error', ({ error }) => toast('❌ ' + error, 'error'));
 
   socket.on('new_direct_message', ({ conversationId, message }) => {
     if (currentUser.currentConvId === conversationId) {
       addChatMessage(message, message.sender === currentUser.id ? 'out' : 'in');
-    } else {
-      toast('💬 رسالة جديدة', 'success');
-    }
+    } else toast('💬 رسالة جديدة', 'success');
     refreshChatList();
   });
 
-  socket.on('conversation_history', ({ conversationId, messages }) => {
+  socket.on('conversation_history', ({ messages }) => {
     const container = document.getElementById('chatMessages');
     container.innerHTML = '';
-    messages.forEach(m => {
-      addChatMessage(m, m.sender === currentUser.id ? 'out' : 'in', false);
-    });
+    messages.forEach(m => addChatMessage(m, m.sender === currentUser.id ? 'out' : 'in', false));
     container.scrollTop = container.scrollHeight;
   });
 
-  socket.on('conversation_updated', () => {
-    refreshChatList();
-  });
+  socket.on('conversation_updated', () => refreshChatList());
 }
 
-/* =========================================================
-   تسجيل المستخدم
-   ========================================================= */
 async function registerUser() {
   try {
     const res = await fetch(SERVER_URL + '/api/users/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        deviceId: currentUser.id,
-        userName: currentUser.name || 'مستخدم'
-      })
+      body: JSON.stringify({ deviceId: currentUser.id, userName: currentUser.name || 'مستخدم' })
     });
     const data = await res.json();
     if (data.radCode) {
       currentUser.radCode = data.radCode;
-      const el1 = document.getElementById('myRadCode');
-      if (el1) el1.textContent = data.radCode;
-      const el2 = document.getElementById('waveCodeChip');
-      if (el2) el2.textContent = data.radCode;
-      const el3 = document.getElementById('waveCodeValue');
-      if (el3) el3.textContent = data.radCode;
-      const el4 = document.getElementById('lcdLine3');
-      if (el4) el4.textContent = data.radCode + ' • RX';
+      const el1 = document.getElementById('myRadCode'); if (el1) el1.textContent = data.radCode;
+      const el2 = document.getElementById('waveCodeChip'); if (el2) el2.innerHTML = data.radCode + ' <span style="font-size:12px;">🔑</span>';
+      const el3 = document.getElementById('waveCodeValue'); if (el3) el3.textContent = data.radCode;
+      const el4 = document.getElementById('lcdLine3'); if (el4) el4.textContent = data.radCode + ' • RX';
     }
-    if (data.waveId) {
-      currentUser.waveId = data.waveId;
-      currentUser.waveCode = data.waveId;
-    }
+    if (data.waveId) { currentUser.waveId = data.waveId; currentUser.waveCode = data.waveId; }
     return data;
-  } catch (e) {
-    console.error('Register error:', e);
-    return null;
-  }
+  } catch (e) { return null; }
 }
 
-/* =========================================================
-   طلب اسم المستخدم
-   ========================================================= */
-function askUserNameIfNeeded() {
-  if (!currentUser.name) {
-    openModal('modalUserName');
-  }
-}
+function askUserNameIfNeeded() { if (!currentUser.name) openModal('modalUserName'); }
 function saveUserName() {
   const v = document.getElementById('userNameInput').value.trim();
   if (!v) { toast('⚠️ أدخل اسماً', 'error'); return; }
@@ -2476,127 +1004,69 @@ function saveUserName() {
   toast('✅ مرحباً ' + v, 'success');
 }
 
-/* =========================================================
-   الموجة — إنشاء
-   ========================================================= */
 async function createWave() {
   const name = document.getElementById('waveName').value.trim();
   if (!name) { toast('⚠️ أدخل اسم الفرقة', 'error'); return; }
-
   try {
     const res = await fetch(SERVER_URL + '/api/waves/create', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ deviceId: currentUser.id, waveName: name })
     });
     const data = await res.json();
     if (!data.success) throw new Error(data.error);
 
-    currentUser.waveId = data.waveId;
-    currentUser.waveCode = data.waveId;
-    currentUser.waveName = data.waveName;
-    currentUser.isWaveOwner = true;
-
-    /* احفظ في القائمة */
-    myWaves.push({ id: data.waveId, name: data.waveName });
-    localStorage.setItem('rc_my_waves', JSON.stringify(myWaves));
+    currentUser.waveId = data.waveId; currentUser.waveCode = data.waveId;
+    currentUser.waveName = data.waveName; currentUser.isWaveOwner = true;
 
     document.getElementById('createdWaveCode').textContent = data.waveId;
     document.getElementById('waveName').value = '';
-    closeModal('modalWave');
-    openModal('modalWaveCreated');
+    closeModal('modalWave'); openModal('modalWaveCreated');
 
-    const el1 = document.getElementById('waveCodeChip');
-    if (el1) el1.textContent = data.waveId;
-    const el2 = document.getElementById('waveCodeValue');
-    if (el2) el2.textContent = data.waveId;
-    const el3 = document.getElementById('waveNameValue');
-    if (el3) el3.textContent = name;
-    const el4 = document.getElementById('waveNameLabel');
-    if (el4) el4.textContent = name;
-    const el5 = document.getElementById('lcdLine3');
-    if (el5) el5.textContent = data.waveId + ' • TX';
+    const el1 = document.getElementById('waveCodeChip'); if (el1) el1.innerHTML = data.waveId + ' <span style="font-size:12px;">🔑</span>';
+    const el2 = document.getElementById('waveCodeValue'); if (el2) el2.textContent = data.waveId;
+    const el3 = document.getElementById('waveNameValue'); if (el3) el3.textContent = name;
+    const el4 = document.getElementById('waveNameLabel'); if (el4) el4.textContent = name;
+    const el5 = document.getElementById('lcdLine3'); if (el5) el5.textContent = data.waveId + ' • TX';
 
-    await PTTEngine.init();
-    PTTEngine.playStartBeep();
-
+    await PTTEngine.init(); PTTEngine.playStartBeep();
     await LiveVoice.connect(data.waveId);
-    if (socket) {
-      socket.emit('wave_join', {
-        waveId: data.waveId,
-        deviceId: currentUser.id,
-        userName: currentUser.name
-      });
-    }
-
+    if (socket) socket.emit('wave_join', { waveId: data.waveId, deviceId: currentUser.id, userName: currentUser.name });
     toast('✅ تم إنشاء الفرقة "' + name + '"', 'success');
-  } catch (e) {
-    toast('❌ ' + e.message, 'error');
-  }
+  } catch (e) { toast('❌ ' + e.message, 'error'); }
 }
 
 async function joinWaveAsMember(waveId) {
-  currentUser.waveId = waveId;
-  currentUser.waveCode = waveId;
-
+  currentUser.waveId = waveId; currentUser.waveCode = waveId;
   try {
     const res = await fetch(SERVER_URL + '/api/waves/' + waveId);
     const data = await res.json();
     if (data.waveName) {
       currentUser.waveName = data.waveName;
-      const el1 = document.getElementById('waveNameValue');
-      if (el1) el1.textContent = data.waveName;
-      const el2 = document.getElementById('waveNameLabel');
-      if (el2) el2.textContent = data.waveName;
-
-      /* احفظ في القائمة */
-      if (!myWaves.find(w => w.id === waveId)) {
-        myWaves.push({ id: waveId, name: data.waveName });
-        localStorage.setItem('rc_my_waves', JSON.stringify(myWaves));
-      }
+      const el1 = document.getElementById('waveNameValue'); if (el1) el1.textContent = data.waveName;
+      const el2 = document.getElementById('waveNameLabel'); if (el2) el2.textContent = data.waveName;
     }
     if (data.members) renderWaveMembers(data.members);
   } catch (e) {}
 
-  const el1 = document.getElementById('waveCodeChip');
-  if (el1) el1.textContent = waveId;
-  const el2 = document.getElementById('waveCodeValue');
-  if (el2) el2.textContent = waveId;
-  const el3 = document.getElementById('lcdLine3');
-  if (el3) el3.textContent = waveId + ' • RX';
+  const el1 = document.getElementById('waveCodeChip'); if (el1) el1.innerHTML = waveId + ' <span style="font-size:12px;">🔑</span>';
+  const el2 = document.getElementById('waveCodeValue'); if (el2) el2.textContent = waveId;
+  const el3 = document.getElementById('lcdLine3'); if (el3) el3.textContent = waveId + ' • RX';
 
   await LiveVoice.connect(waveId);
-  if (socket) {
-    socket.emit('wave_join', {
-      waveId: waveId,
-      deviceId: currentUser.id,
-      userName: currentUser.name
-    });
-  }
-
+  if (socket) socket.emit('wave_join', { waveId, deviceId: currentUser.id, userName: currentUser.name });
   toast('✅ انضممت إلى الفرقة', 'success');
 }
 
-/* =========================================================
-   البحث
-   ========================================================= */
 function doSearch() {
   const q = document.getElementById('searchQuery').value.trim().toUpperCase();
   const res = document.getElementById('searchResults');
-  if (!q) {
-    res.innerHTML = '<div class="no-results"><span class="no-results-icon">⚠️</span>أدخل الرقم</div>';
-    return;
-  }
+  if (!q) { res.innerHTML = '<div class="no-results"><span class="no-results-icon">⚠️</span>أدخل الرقم</div>'; return; }
 
   fetch(SERVER_URL + '/api/waves/' + q)
     .then(r => r.json())
     .then(data => {
       if (data.waveId) {
-        searchResultUser = {
-          name: data.waveName || 'فرقة',
-          code: data.waveId,
-          type: 'wave'
-        };
+        searchResultUser = { name: data.waveName || 'فرقة', code: data.waveId, type: 'wave' };
         res.innerHTML = `
           <div class="search-result-card" onclick="askJoinWave()">
             <div class="search-result-icon">📡</div>
@@ -2608,17 +1078,11 @@ function doSearch() {
           </div>`;
         return;
       }
-
       return fetch(SERVER_URL + '/api/users/search/' + q)
         .then(r => r.json())
         .then(user => {
           if (user.deviceId) {
-            searchResultUser = {
-              name: user.userName,
-              code: user.radCode,
-              deviceId: user.deviceId,
-              type: 'user'
-            };
+            searchResultUser = { name: user.userName, code: user.radCode, deviceId: user.deviceId, type: 'user' };
             res.innerHTML = `
               <div class="search-result-card" onclick="startUserChat()">
                 <div class="search-result-icon">👤</div>
@@ -2633,85 +1097,41 @@ function doSearch() {
           }
         });
     })
-    .catch(() => {
-      res.innerHTML = '<div class="no-results"><span class="no-results-icon">❌</span>خطأ في البحث</div>';
-    });
+    .catch(() => { res.innerHTML = '<div class="no-results"><span class="no-results-icon">❌</span>خطأ في البحث</div>'; });
 }
 
 function askJoinWave() {
   if (!searchResultUser) return;
   document.getElementById('joinTargetName').textContent = searchResultUser.name;
   document.getElementById('joinTargetCode').textContent = searchResultUser.code;
-  closeModal('modalSearch');
-  openModal('modalJoinConfirm');
+  closeModal('modalSearch'); openModal('modalJoinConfirm');
 }
 
 function confirmJoin() {
   if (!searchResultUser) return;
   closeModal('modalJoinConfirm');
-  if (socket) {
-    socket.emit('wave_join_request', {
-      waveId: searchResultUser.code,
-      fromDeviceId: currentUser.id,
-      fromUserName: currentUser.name
-    });
-  }
+  if (socket) socket.emit('wave_join_request', {
+    waveId: searchResultUser.code, fromDeviceId: currentUser.id, fromUserName: currentUser.name
+  });
 }
 
-function cancelJoin() {
-  closeModal('modalJoinConfirm');
-  openModal('modalSearch');
-}
+function cancelJoin() { closeModal('modalJoinConfirm'); openModal('modalSearch'); }
 
 function rejectIncoming() {
   closeModal('modalIncomingRequest');
-  if (window._incomingRequest && socket) {
-    socket.emit('wave_join_response', {
-      requestId: window._incomingRequest.requestId,
-      accepted: false
-    });
-  }
+  if (window._incomingRequest && socket) socket.emit('wave_join_response', { requestId: window._incomingRequest.requestId, accepted: false });
   toast('تم رفض الطلب', 'error');
 }
 
 function acceptIncoming() {
   closeModal('modalIncomingRequest');
-  if (window._incomingRequest && socket) {
-    socket.emit('wave_join_response', {
-      requestId: window._incomingRequest.requestId,
-      accepted: true
-    });
-  }
+  if (window._incomingRequest && socket) socket.emit('wave_join_response', { requestId: window._incomingRequest.requestId, accepted: true });
   PTTEngine.playRealBeep();
   toast('✅ تم قبول الطلب', 'success');
 }
 
-/* =========================================================
-   عرض أعضاء الموجة
-   ========================================================= */
 function renderWaveMembers(members) {
   if (!members) return;
-
-  /* القائمة الجانبية */
-  const list = document.getElementById('membersList');
-  if (list) {
-    list.innerHTML = members.map(m => {
-      const initial = (m.name || '?').charAt(0);
-      const isMe = m.id === currentUser.id;
-      const canRemove = currentUser.isWaveOwner && !isMe;
-      return `
-        <div class="member-item">
-          <div class="member-avatar">${initial}</div>
-          <div class="member-info">
-            <div class="member-name">${m.name} ${isMe ? '(أنت)' : ''} ${m.isOwner ? '👑' : ''}</div>
-            <div class="member-status ${m.online ? 'online' : ''}">${m.online ? '🟢 نشط' : '🔴 غير نشط'}</div>
-          </div>
-          ${canRemove ? `<button class="member-remove" onclick="removeMember('${m.id}')">إخراج</button>` : ''}
-        </div>`;
-    }).join('');
-  }
-
-  /* القائمة المنسدلة */
   const dd = document.getElementById('membersDropdown');
   if (dd && dd.classList.contains('show')) {
     dd.innerHTML = `
@@ -2730,23 +1150,11 @@ async function removeMember(memberId) {
   if (!currentUser.isWaveOwner) return;
   try {
     await fetch(SERVER_URL + '/api/waves/remove-member', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        waveId: currentUser.waveId,
-        memberId: memberId,
-        ownerDevice: currentUser.id
-      })
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ waveId: currentUser.waveId, memberId, ownerDevice: currentUser.id })
     });
     toast('✅ تم إخراج العضو', 'success');
-  } catch (e) {
-    toast('❌ فشل الإخراج', 'error');
-  }
-}
-
-function closeMembersPanel() {
-  document.getElementById('membersPanel').classList.remove('open');
-  document.getElementById('membersBackdrop').classList.remove('show');
+  } catch (e) { toast('❌ فشل الإخراج', 'error'); }
 }
      
 /* =========================================================
@@ -2767,8 +1175,8 @@ function switchTab(tabName) {
     chatBar.classList.add('active');
     bottomInfo.style.display = 'none';
   } else if (tabName === 'log') {
-    chatBar.classList.remove('active');
-    bottomInfo.style.display = 'block';
+    chatBar.classList.add('active');           /* ✅ إظهار المربع في الغرفة */
+    bottomInfo.style.display = 'none';         /* ✅ إخفاء شريط المعلومات */
     refreshChatList();
   } else {
     chatBar.classList.remove('active');
@@ -2814,7 +1222,7 @@ document.querySelectorAll('.modal-overlay').forEach(overlay => {
 });
 
 /* =========================================================
-   القائمة الجانبية الموحدة
+   القائمة الجانبية
    ========================================================= */
 const sideMenu = document.getElementById('sideMenu');
 const menuBackdrop = document.getElementById('menuBackdrop');
@@ -2840,21 +1248,21 @@ function openSideMenu() {
         <span class="menu-icon">🔍</span>
         <span class="menu-text">
           <span class="menu-label">البحث عن فرقة</span>
-          <span class="menu-desc">ابحث برقم الموجة</span>
+          <span class="menu-desc">ابحث برقم الفرقة</span>
         </span>
       </button>
       <button class="menu-item" onclick="closeSideMenu();openEditWaveName()">
         <span class="menu-icon">✏️</span>
         <span class="menu-text">
           <span class="menu-label">تعديل اسم الفرقة</span>
-          <span class="menu-desc">غيّر اسم موجتك</span>
+          <span class="menu-desc">غيّر اسم فرقتك</span>
         </span>
       </button>
       <button class="menu-item" onclick="closeSideMenu();leaveWave()">
         <span class="menu-icon">🗑️</span>
         <span class="menu-text">
           <span class="menu-label">مسح الفرقة</span>
-          <span class="menu-desc">مغادرة الموجة الحالية</span>
+          <span class="menu-desc">مغادرة الفرقة الحالية</span>
         </span>
       </button>
     `;
@@ -2932,7 +1340,7 @@ menuToggle.addEventListener('click', (e) => {
 menuBackdrop.addEventListener('click', closeSideMenu);
 
 /* =========================================================
-   PTT الحقيقي — البث الحي
+   PTT — البث الحي
    ========================================================= */
 const pttMain = document.getElementById('pttMain');
 let pttHolding = false;
@@ -2962,30 +1370,28 @@ async function onPTTStart() {
   if (pttHolding) return;
   pttHolding = true;
   pttMain.classList.add('holding');
+  document.body.classList.add('ptt-active');
 
-  const chipEl = document.getElementById('waveStatusChip');
-  if (chipEl) chipEl.classList.add('live');
-  const statusEl = document.getElementById('waveStatusText');
-  if (statusEl) statusEl.innerHTML = '🟢 يتحدث';
+  const statusChip = document.getElementById('waveStatusChip');
+  const statusText = document.getElementById('waveStatusText');
+  if (statusChip) { statusChip.classList.add('live'); statusChip.classList.remove('disconnected'); }
+  if (statusText) statusText.innerHTML = '🟢 يتحدث';
+
   const lcd3 = document.getElementById('lcdLine3');
   if (lcd3) lcd3.textContent = (currentUser.radCode || '—') + ' • TX';
   const lcdSt = document.getElementById('lcdStatus');
   if (lcdSt) lcdSt.textContent = '●';
-  startWaveTimer();
 
+  startWaveTimer();
   await PTTEngine.init();
   PTTEngine.playStartBeep();
 
-  if (!LiveVoice.connected && currentUser.waveId) {
-    await LiveVoice.connect(currentUser.waveId);
-  }
+  if (!LiveVoice.connected && currentUser.waveId) await LiveVoice.connect(currentUser.waveId);
   await LiveVoice.startPublish();
 
   if (socket && currentUser.waveId) {
     socket.emit('wave_broadcast_start', {
-      waveId: currentUser.waveId,
-      deviceId: currentUser.id,
-      userName: currentUser.name
+      waveId: currentUser.waveId, deviceId: currentUser.id, userName: currentUser.name
     });
   }
 }
@@ -2994,25 +1400,24 @@ async function onPTTEnd() {
   if (!pttHolding) return;
   pttHolding = false;
   pttMain.classList.remove('holding');
+  document.body.classList.remove('ptt-active');
 
-  const chipEl = document.getElementById('waveStatusChip');
-  if (chipEl) chipEl.classList.remove('live');
-  const statusEl = document.getElementById('waveStatusText');
-  if (statusEl) statusEl.innerHTML = '🔴 غير متصل';
+  const statusChip = document.getElementById('waveStatusChip');
+  const statusText = document.getElementById('waveStatusText');
+  if (statusChip) { statusChip.classList.remove('live'); statusChip.classList.add('disconnected'); }
+  if (statusText) statusText.innerHTML = '🔴 غير متصل';
+
   const lcd3 = document.getElementById('lcdLine3');
   if (lcd3) lcd3.textContent = (currentUser.radCode || '—') + ' • RX';
   const lcdSt = document.getElementById('lcdStatus');
   if (lcdSt) lcdSt.textContent = '•';
-  stopWaveTimer();
 
+  stopWaveTimer();
   PTTEngine.playEndBeep();
   await LiveVoice.stopPublish();
 
   if (socket && currentUser.waveId) {
-    socket.emit('wave_broadcast_stop', {
-      waveId: currentUser.waveId,
-      deviceId: currentUser.id
-    });
+    socket.emit('wave_broadcast_stop', { waveId: currentUser.waveId, deviceId: currentUser.id });
   }
 }
 
@@ -3030,14 +1435,14 @@ function openEditWaveName() {
   openModal('modalEditWave');
 }
 function openSearchWave() {
-  document.getElementById('searchSubTitle').textContent = 'ابحث برقم الموجة (Q#####)';
-  document.getElementById('searchFieldLabel').textContent = 'رقم الموجة';
+  document.getElementById('searchSubTitle').textContent = 'ابحث برقم الفرقة (Q#####)';
+  document.getElementById('searchFieldLabel').textContent = 'رقم الفرقة';
   document.getElementById('searchQuery').placeholder = 'Q#####';
   document.getElementById('searchQuery').value = '';
   document.getElementById('searchResults').innerHTML = `
     <div class="no-results">
       <span class="no-results-icon">🔎</span>
-      اكتب رقم الموجة واضغط بحث
+      اكتب رقم الفرقة واضغط بحث
     </div>`;
   openModal('modalSearch');
 }
@@ -3057,8 +1462,8 @@ function openSearchUser() {
 function copyWaveCode() {
   if (!currentUser.waveCode) return;
   navigator.clipboard.writeText(currentUser.waveCode)
-    .then(() => toast('📋 تم نسخ رقم الموجة', 'success'))
-    .catch(() => toast('رقم الموجة: ' + currentUser.waveCode, 'success'));
+    .then(() => toast('📋 تم نسخ رقم الفرقة', 'success'))
+    .catch(() => toast('رقم الفرقة: ' + currentUser.waveCode, 'success'));
 }
 function copyMyWaveCode() {
   if (!currentUser.radCode) { toast('⚠️ لم يتم توليد الرقم بعد', 'error'); return; }
@@ -3070,49 +1475,32 @@ function copyMyWaveCode() {
 async function saveWaveName() {
   const name = document.getElementById('newWaveName').value.trim();
   if (!name) { toast('⚠️ أدخل اسماً', 'error'); return; }
-  if (!currentUser.waveId) { toast('⚠️ لا توجد موجة', 'error'); return; }
-
+  if (!currentUser.waveId) { toast('⚠️ لا توجد فرقة', 'error'); return; }
   try {
     await fetch(SERVER_URL + '/api/waves/rename', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        waveId: currentUser.waveId,
-        newName: name,
-        deviceId: currentUser.id
-      })
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ waveId: currentUser.waveId, newName: name, deviceId: currentUser.id })
     });
     currentUser.waveName = name;
-    const el1 = document.getElementById('waveNameValue');
-    if (el1) el1.textContent = name;
-    const el2 = document.getElementById('waveNameLabel');
-    if (el2) el2.textContent = name;
+    const el1 = document.getElementById('waveNameValue'); if (el1) el1.textContent = name;
+    const el2 = document.getElementById('waveNameLabel'); if (el2) el2.textContent = name;
     toast('✅ تم تحديث اسم الفرقة', 'success');
     closeModal('modalEditWave');
-  } catch (e) {
-    toast('❌ فشل التحديث', 'error');
-  }
+  } catch (e) { toast('❌ فشل التحديث', 'error'); }
 }
 
 async function leaveWave() {
-  if (!currentUser.waveId) { toast('⚠️ لا توجد موجة', 'error'); return; }
+  if (!currentUser.waveId) { toast('⚠️ لا توجد فرقة', 'error'); return; }
   if (!confirm('هل تريد مغادرة الفرقة؟')) return;
-
   if (socket) socket.emit('wave_leave', { waveId: currentUser.waveId, deviceId: currentUser.id });
   await LiveVoice.disconnect();
-
-  currentUser.waveId = null;
-  currentUser.waveCode = null;
-  currentUser.isWaveOwner = false;
-
+  currentUser.waveId = null; currentUser.waveCode = null; currentUser.isWaveOwner = false;
   const el1 = document.getElementById('waveCodeChip');
-  if (el1) el1.textContent = currentUser.radCode || 'Q00000';
-  const el2 = document.getElementById('waveStatusText');
-  if (el2) el2.innerHTML = '🔴 غير متصل';
-  const el3 = document.getElementById('waveNameLabel');
-  if (el3) el3.textContent = 'لا توجد فرقة';
-  const el4 = document.getElementById('waveNameValue');
-  if (el4) el4.textContent = '—';
+  if (el1) el1.innerHTML = (currentUser.radCode || 'Q00000') + ' <span style="font-size:12px;">🔑</span>';
+  const statusText = document.getElementById('waveStatusText');
+  if (statusText) statusText.innerHTML = '🔴 غير متصل';
+  const el3 = document.getElementById('waveNameLabel'); if (el3) el3.textContent = 'لا توجد فرقة';
+  const el4 = document.getElementById('waveNameValue'); if (el4) el4.textContent = '—';
   toast('✅ غادرت الفرقة', 'success');
 }
 
@@ -3147,69 +1535,53 @@ async function refreshChatList() {
           <div class="chat-list-time">${timeStr}</div>
         </div>`;
     }).join('');
-  } catch (e) {
-    console.error('Chat list error:', e);
-  }
+  } catch (e) { console.error('Chat list error:', e); }
 }
 
 async function startUserChat() {
   if (!searchResultUser || !searchResultUser.deviceId) return;
-
   try {
     const res = await fetch(SERVER_URL + '/api/conversations/start', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        myDeviceId: currentUser.id,
-        otherDeviceId: searchResultUser.deviceId
-      })
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ myDeviceId: currentUser.id, otherDeviceId: searchResultUser.deviceId })
     });
     const data = await res.json();
     if (!data.success) throw new Error(data.error);
-
     closeModal('modalSearch');
     openChatWith(searchResultUser.deviceId, searchResultUser.name, data.conversationId);
-  } catch (e) {
-    toast('❌ ' + e.message, 'error');
-  }
+  } catch (e) { toast('❌ ' + e.message, 'error'); }
 }
 
 async function openChatWith(otherDeviceId, otherName, convId) {
   currentUser.currentConvId = convId;
   currentUser.currentChatWith = otherDeviceId;
-
   document.getElementById('chatWithName').textContent = otherName;
   document.getElementById('chatWithCode').textContent = otherDeviceId;
 
   switchTab('chat');
+  const bar = document.getElementById('chatInputBar');
+  if (bar) bar.classList.add('active');
 
-  if (socket) {
-    socket.emit('join_conversation', { conversationId: convId });
-  }
-
+  if (socket) socket.emit('join_conversation', { conversationId: convId });
   document.getElementById('chatMessages').innerHTML = '';
   try {
     const res = await fetch(SERVER_URL + '/api/conversations/' + convId + '/messages');
     const data = await res.json();
-    (data.messages || []).forEach(m => {
-      addChatMessage(m, m.sender === currentUser.id ? 'out' : 'in', false);
-    });
+    (data.messages || []).forEach(m => addChatMessage(m, m.sender === currentUser.id ? 'out' : 'in', false));
     const c = document.getElementById('chatMessages');
     c.scrollTop = c.scrollHeight;
   } catch (e) {}
 }
 
 document.getElementById('chatBackBtn').addEventListener('click', () => {
-  if (socket && currentUser.currentConvId) {
-    socket.emit('leave_conversation', { conversationId: currentUser.currentConvId });
-  }
+  if (socket && currentUser.currentConvId) socket.emit('leave_conversation', { conversationId: currentUser.currentConvId });
   currentUser.currentConvId = null;
   currentUser.currentChatWith = null;
   switchTab('log');
 });
 
 /* =========================================================
-   عرض رسالة في المحادثة
+   عرض رسالة
    ========================================================= */
 function addChatMessage(msg, direction, scroll = true) {
   const container = document.getElementById('chatMessages');
@@ -3282,10 +1654,7 @@ function addChatMessage(msg, direction, scroll = true) {
   const body = div.querySelector('.msg-body');
   body.addEventListener('pointerdown', () => {
     pressTimer = setTimeout(() => {
-      if (confirm('هل تريد مسح هذه الرسالة؟')) {
-        div.remove();
-        toast('🗑️ تم مسح الرسالة', 'success');
-      }
+      if (confirm('هل تريد مسح هذه الرسالة؟')) { div.remove(); toast('🗑️ تم مسح الرسالة', 'success'); }
     }, 700);
   });
   body.addEventListener('pointerup', () => clearTimeout(pressTimer));
@@ -3295,30 +1664,22 @@ function addChatMessage(msg, direction, scroll = true) {
   if (scroll) container.scrollTop = container.scrollHeight;
 }
 
-/* =========================================================
-   إرسال رسالة نصية
-   ========================================================= */
 function sendTextMessage(text) {
-  if (!text.trim() || !currentUser.currentConvId) return;
+  if (!text.trim() || !currentUser.currentConvId) {
+    if (!currentUser.currentConvId) toast('⚠️ اختر محادثة أولاً', 'error');
+    return;
+  }
   const msg = {
     id: 'msg_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
-    sender: currentUser.id,
-    senderName: currentUser.name,
-    type: 'text',
-    text: text.trim(),
-    time: Date.now()
+    sender: currentUser.id, senderName: currentUser.name, type: 'text',
+    text: text.trim(), time: Date.now()
   };
-  if (socket) {
-    socket.emit('send_direct_message', {
-      conversationId: currentUser.currentConvId,
-      message: msg
-    });
-  }
+  if (socket) socket.emit('send_direct_message', { conversationId: currentUser.currentConvId, message: msg });
   addChatMessage(msg, 'out');
 }
 
 /* =========================================================
-   مربع الحوار — السلوك الذكي
+   مربع الحوار
    ========================================================= */
 const chatInput = document.getElementById('chatInput');
 const chatPrimaryBtn = document.getElementById('chatPrimaryBtn');
@@ -3333,13 +1694,8 @@ let voiceTimerInt = null;
 
 chatInput.addEventListener('input', () => {
   const hasText = chatInput.value.trim().length > 0;
-  if (hasText) {
-    chatPrimaryBtn.textContent = '➤';
-    chatPrimaryBtn.title = 'إرسال';
-  } else {
-    chatPrimaryBtn.textContent = '🎙️';
-    chatPrimaryBtn.title = 'تسجيل صوتي';
-  }
+  if (hasText) { chatPrimaryBtn.textContent = '➤'; chatPrimaryBtn.title = 'إرسال'; }
+  else { chatPrimaryBtn.textContent = '🎙️'; chatPrimaryBtn.title = 'تسجيل صوتي'; }
 });
 
 chatPrimaryBtn.addEventListener('click', async () => {
@@ -3349,38 +1705,30 @@ chatPrimaryBtn.addEventListener('click', async () => {
     chatInput.value = '';
     chatPrimaryBtn.textContent = '🎙️';
   } else {
-    if (!isRecordingVoice) {
-      await startVoiceRecording();
-    } else {
-      await stopVoiceRecordingAndSend();
-    }
+    if (!isRecordingVoice) await startVoiceRecording();
+    else await stopVoiceRecordingAndSend();
   }
 });
 
 async function startVoiceRecording() {
+  if (!currentUser.currentConvId) { toast('⚠️ اختر محادثة أولاً', 'error'); return; }
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     voiceChunks = [];
     voiceRecorder = new MediaRecorder(stream);
-    voiceRecorder.ondataavailable = (e) => {
-      if (e.data.size > 0) voiceChunks.push(e.data);
-    };
+    voiceRecorder.ondataavailable = (e) => { if (e.data.size > 0) voiceChunks.push(e.data); };
     voiceRecorder.start(100);
     isRecordingVoice = true;
     voiceStartTime = Date.now();
     chatPrimaryBtn.classList.add('recording');
     chatPrimaryBtn.textContent = '⏹';
-
     clearInterval(voiceTimerInt);
     voiceTimerInt = setInterval(() => {
       const s = Math.floor((Date.now() - voiceStartTime) / 1000);
       chatInput.placeholder = 'جاري التسجيل... ' + s + 's';
     }, 250);
-
     toast('🎙️ جاري التسجيل...', 'success');
-  } catch (e) {
-    toast('❌ تعذّر الوصول للمايك', 'error');
-  }
+  } catch (e) { toast('❌ تعذّر الوصول للمايك', 'error'); }
 }
 
 async function stopVoiceRecordingAndSend() {
@@ -3397,20 +1745,10 @@ async function stopVoiceRecordingAndSend() {
     reader.onload = () => {
       const base64 = reader.result;
       const msg = {
-        id: 'msg_' + Date.now(),
-        sender: currentUser.id,
-        senderName: currentUser.name,
-        type: 'voice',
-        url: base64,
-        duration: duration,
-        time: Date.now()
+        id: 'msg_' + Date.now(), sender: currentUser.id, senderName: currentUser.name,
+        type: 'voice', url: base64, duration: duration, time: Date.now()
       };
-      if (socket) {
-        socket.emit('send_direct_message', {
-          conversationId: currentUser.currentConvId,
-          message: msg
-        });
-      }
+      if (socket) socket.emit('send_direct_message', { conversationId: currentUser.currentConvId, message: msg });
       addChatMessage(msg, 'out');
       toast('✅ تم إرسال الرسالة الصوتية', 'success');
     };
@@ -3452,14 +1790,15 @@ emojiBtn.addEventListener('click', (ev) => {
 /* =========================================================
    الإرفاق — 6 خيارات
    ========================================================= */
-chatClip.addEventListener('click', () => openModal('modalAttach'));
+chatClip.addEventListener('click', () => {
+  if (!currentUser.currentConvId) { toast('⚠️ اختر محادثة أولاً', 'error'); return; }
+  openModal('modalAttach');
+});
 
 function pickCamera() {
   const inp = document.getElementById('hiddenFileInput');
-  inp.accept = 'image/*';
-  inp.setAttribute('capture', 'environment');
-  inp.click();
-  closeModal('modalAttach');
+  inp.accept = 'image/*'; inp.setAttribute('capture', 'environment');
+  inp.click(); closeModal('modalAttach');
 }
 
 function pickFile(type) {
@@ -3470,8 +1809,7 @@ function pickFile(type) {
   else if (type === 'document') inp.accept = '.pdf,.doc,.docx,.txt,.xls,.xlsx,.ppt,.pptx,application/*';
   else inp.accept = '*/*';
   inp.removeAttribute('capture');
-  inp.click();
-  closeModal('modalAttach');
+  inp.click(); closeModal('modalAttach');
 }
 
 function pickContact() {
@@ -3479,14 +1817,10 @@ function pickContact() {
   if ('contacts' in navigator && 'ContactsManager' in window) {
     navigator.contacts.select(['name', 'tel'], { multiple: false })
       .then(contacts => {
-        if (contacts.length) {
-          sendContactMessage(contacts[0].name[0], contacts[0].tel[0] || '');
-        }
+        if (contacts.length) sendContactMessage(contacts[0].name[0], contacts[0].tel[0] || '');
       })
       .catch(() => openModal('modalContactPick'));
-  } else {
-    openModal('modalContactPick');
-  }
+  } else openModal('modalContactPick');
 }
 
 function sendContact() {
@@ -3499,20 +1833,10 @@ function sendContact() {
 
 function sendContactMessage(name, phone) {
   const msg = {
-    id: 'msg_' + Date.now(),
-    sender: currentUser.id,
-    senderName: currentUser.name,
-    type: 'contact',
-    contactName: name,
-    contactPhone: phone,
-    time: Date.now()
+    id: 'msg_' + Date.now(), sender: currentUser.id, senderName: currentUser.name,
+    type: 'contact', contactName: name, contactPhone: phone, time: Date.now()
   };
-  if (socket) {
-    socket.emit('send_direct_message', {
-      conversationId: currentUser.currentConvId,
-      message: msg
-    });
-  }
+  if (socket) socket.emit('send_direct_message', { conversationId: currentUser.currentConvId, message: msg });
   addChatMessage(msg, 'out');
   toast('✅ تم إرسال جهة الاتصال', 'success');
 }
@@ -3520,7 +1844,6 @@ function sendContactMessage(name, phone) {
 document.getElementById('hiddenFileInput').addEventListener('change', (e) => {
   const file = e.target.files[0];
   if (!file) return;
-
   const reader = new FileReader();
   reader.onload = () => {
     let type = 'file';
@@ -3529,21 +1852,10 @@ document.getElementById('hiddenFileInput').addEventListener('change', (e) => {
     else if (file.type.startsWith('audio/')) type = 'voice';
 
     const msg = {
-      id: 'msg_' + Date.now(),
-      sender: currentUser.id,
-      senderName: currentUser.name,
-      type: type,
-      url: reader.result,
-      fileName: file.name,
-      duration: 0,
-      time: Date.now()
+      id: 'msg_' + Date.now(), sender: currentUser.id, senderName: currentUser.name,
+      type: type, url: reader.result, fileName: file.name, duration: 0, time: Date.now()
     };
-    if (socket) {
-      socket.emit('send_direct_message', {
-        conversationId: currentUser.currentConvId,
-        message: msg
-      });
-    }
+    if (socket) socket.emit('send_direct_message', { conversationId: currentUser.currentConvId, message: msg });
     addChatMessage(msg, 'out');
     toast('✅ تم إرسال الملف', 'success');
   };
@@ -3577,12 +1889,10 @@ function openEditRoomIcon() {
 async function createRoom() {
   const name = document.getElementById('roomName').value.trim();
   if (!name) { toast('⚠️ أدخل اسم الغرفة', 'error'); return; }
-
   currentUser.roomName = name;
   document.getElementById('roomNameLabel').textContent = name;
   document.getElementById('roomName').value = '';
   closeModal('modalCreate');
-
   toast('✅ تم إنشاء الغرفة "' + name + '"', 'success');
 }
 
@@ -3602,10 +1912,7 @@ function copyRoomCode() {
     .catch(() => toast('رقم الغرفة: ' + currentUser.roomCode, 'success'));
 }
 
-function confirmClearChat() {
-  closeModal('modalRoomMenu');
-  openModal('modalClearChat');
-}
+function confirmClearChat() { closeModal('modalRoomMenu'); openModal('modalClearChat'); }
 function doClearChat() {
   const container = document.getElementById('chatMessages');
   if (container) container.innerHTML = '';
@@ -3616,135 +1923,56 @@ function doClearChat() {
 document.getElementById('roomMenuBtn').addEventListener('click', openSideMenu);
 
 /* =========================================================
-   مؤشر قوة الشبكة
-   ========================================================= */
-function updateConnectionIcon() {
-  const el = document.getElementById('headerConnectionIcon');
-  if (!el) return;
-
-  if (!navigator.onLine) {
-    el.textContent = '📵';
-    el.className = 'offline';
-    el.title = 'غير متصل';
-    return;
-  }
-
-  el.textContent = '📶';
-  if (navigator.connection) {
-    const c = navigator.connection;
-    const speed = c.downlink || 10;
-    if (speed >= 5) { el.className = 'good'; el.title = 'شبكة قوية'; }
-    else if (speed >= 1.5) { el.className = 'mid'; el.title = 'شبكة متوسطة'; }
-    else { el.className = 'bad'; el.title = 'شبكة ضعيفة'; }
-  } else {
-    el.className = 'good';
-  }
-}
-
-/* =========================================================
-   قائمة المشتركين المنسدلة (عند الضغط على اسم الفرقة)
-   ========================================================= */
-document.getElementById('waveNameChip').addEventListener('click', () => {
-  const dd = document.getElementById('membersDropdown');
-  if (!dd) return;
-  if (dd.classList.contains('show')) {
-    dd.classList.remove('show');
-  } else {
-    /* اجلب الأعضاء من السيرفر */
-    if (currentUser.waveId) {
-      fetch(SERVER_URL + '/api/waves/' + currentUser.waveId)
-        .then(r => r.json())
-        .then(data => {
-          if (data.members) {
-            dd.innerHTML = `
-              <div class="members-dropdown-title">👥 المشتركون (${data.members.length})</div>
-              ${data.members.map(m => `
-                <div class="members-dropdown-item">
-                  <span>${m.name} ${m.id === currentUser.id ? '(أنت)' : ''} ${m.isOwner ? '👑' : ''}</span>
-                  <span class="${m.online ? 'status-active' : 'status-inactive'}">${m.online ? '🟢 نشط' : '🔴 غير نشط'}</span>
-                </div>
-              `).join('')}
-            `;
-          } else {
-            dd.innerHTML = '<div class="operations-empty">لا يوجد مشتركون</div>';
-          }
-        });
-    } else {
-      dd.innerHTML = '<div class="operations-empty">لا توجد فرقة نشطة</div>';
-    }
-    dd.classList.add('show');
-  }
-});
-
-/* =========================================================
-   قائمة العمليات (كل الفرق)
-   ========================================================= */
-document.getElementById('operationsBtn').addEventListener('click', () => {
-  const dd = document.getElementById('operationsDropdown');
-  if (!dd) return;
-  if (dd.classList.contains('show')) {
-    dd.classList.remove('show');
-    return;
-  }
-
-  if (myWaves.length === 0) {
-    dd.innerHTML = '<div class="operations-empty">لا توجد فرق محفوظة</div>';
-    dd.classList.add('show');
-    return;
-  }
-
-  /* اعرض الفرق + عدد النشطين */
-  dd.innerHTML = `<div class="operations-dropdown-title">📋 العمليات</div>`;
-
-  let pending = myWaves.length;
-  myWaves.forEach(w => {
-    fetch(SERVER_URL + '/api/waves/' + w.id)
-      .then(r => r.json())
-      .then(data => {
-        const onlineCount = data.members ? data.members.filter(m => m.online).length : 0;
-        const el = document.createElement('div');
-        el.className = 'operations-item';
-        el.innerHTML = `
-          <span>📡 ${w.name}</span>
-          <span class="ops-count">${onlineCount} نشط</span>
-        `;
-        el.onclick = () => {
-          joinWaveAsMember(w.id);
-          dd.classList.remove('show');
-        };
-        dd.appendChild(el);
-      })
-      .catch(() => {})
-      .finally(() => {
-        pending--;
-        if (pending === 0) dd.classList.add('show');
-      });
-  });
-});
-
-/* =========================================================
    متفرقات
    ========================================================= */
 async function initBattery() {
   if (!navigator.getBattery) {
-    const el1 = document.getElementById('batteryValue');
-    if (el1) el1.textContent = '—';
-    const el2 = document.getElementById('bottomBattery');
-    if (el2) el2.textContent = '—';
+    const el1 = document.getElementById('batteryValue'); if (el1) el1.textContent = '—';
+    const el2 = document.getElementById('bottomBattery'); if (el2) el2.textContent = '—';
     return;
   }
   try {
     const battery = await navigator.getBattery();
     const update = () => {
       batteryPercent = Math.round(battery.level * 100);
-      const el1 = document.getElementById('batteryValue');
-      if (el1) el1.textContent = batteryPercent + '%';
-      const el2 = document.getElementById('bottomBattery');
-      if (el2) el2.textContent = batteryPercent + '%';
+      const el1 = document.getElementById('batteryValue'); if (el1) el1.textContent = batteryPercent + '%';
+      const el2 = document.getElementById('bottomBattery'); if (el2) el2.textContent = batteryPercent + '%';
+      updateBatteryVisual();
     };
     update();
     battery.addEventListener('levelchange', update);
   } catch (e) {}
+}
+
+function updateBatteryVisual() {
+  const chip = document.getElementById('batteryChip');
+  if (!chip) return;
+  const bars = chip.querySelectorAll('.battery-bars span');
+  const pct = batteryPercent == null ? 0 : batteryPercent;
+  const filled = Math.ceil((pct / 100) * 5);
+
+  chip.classList.remove('level-high', 'level-mid', 'level-low');
+  if (pct >= 60) chip.classList.add('level-high');
+  else if (pct >= 21) chip.classList.add('level-mid');
+  else chip.classList.add('level-low');
+
+  bars.forEach((b, i) => {
+    b.style.background = i < filled ? '' : '#3a4048';
+    b.style.boxShadow = i < filled ? '' : 'none';
+  });
+}
+
+function updateConnectionIcon() {
+  const chip = document.getElementById('networkChip');
+  if (!chip) return;
+  chip.classList.remove('good', 'mid', 'bad', 'offline');
+  if (!navigator.onLine) { chip.classList.add('offline'); return; }
+  if (navigator.connection && navigator.connection.downlink) {
+    const speed = navigator.connection.downlink;
+    if (speed >= 5) chip.classList.add('good');
+    else if (speed >= 1.5) chip.classList.add('mid');
+    else chip.classList.add('bad');
+  } else chip.classList.add('good');
 }
 
 function testCall() {
@@ -3752,34 +1980,48 @@ function testCall() {
   toast('🔔 تجربة walkie_beep.mp3', 'success');
 }
 
-function changeChannel() {
-  toast('تغيير القناة قريباً');
-}
-
-/* قائمة المشتركين الجانبية */
-const membersBackdropEl = document.getElementById('membersBackdrop');
-if (membersBackdropEl) membersBackdropEl.addEventListener('click', closeMembersPanel);
+document.getElementById('waveNameChip').addEventListener('click', () => {
+  const dd = document.getElementById('membersDropdown');
+  if (!dd) return;
+  if (dd.classList.contains('show')) { dd.classList.remove('show'); return; }
+  if (currentUser.waveId) {
+    fetch(SERVER_URL + '/api/waves/' + currentUser.waveId)
+      .then(r => r.json())
+      .then(data => {
+        if (data.members) {
+          dd.innerHTML = `
+            <div class="members-dropdown-title">👥 المشتركون (${data.members.length})</div>
+            ${data.members.map(m => `
+              <div class="members-dropdown-item">
+                <span>${m.name} ${m.id === currentUser.id ? '(أنت)' : ''} ${m.isOwner ? '👑' : ''}</span>
+                <span class="${m.online ? 'status-active' : 'status-inactive'}">${m.online ? '🟢 نشط' : '🔴 غير نشط'}</span>
+              </div>
+            `).join('')}
+          `;
+        } else dd.innerHTML = '<div class="operations-empty">لا يوجد مشتركون</div>';
+        dd.classList.add('show');
+      });
+  } else {
+    dd.innerHTML = '<div class="operations-empty">لا توجد فرقة نشطة</div>';
+    dd.classList.add('show');
+  }
+});
 
 /* =========================================================
    التهيئة الأولى
    ========================================================= */
 window.addEventListener('DOMContentLoaded', async () => {
-  /* استرجع الفرق المحفوظة */
-  try {
-    const saved = localStorage.getItem('rc_my_waves');
-    if (saved) myWaves = JSON.parse(saved);
-  } catch (e) { myWaves = []; }
+  /* إخفاء مربع الحوار في البداية */
+  const bar = document.getElementById('chatInputBar');
+  if (bar) bar.classList.remove('active');
 
   await initBattery();
   await PTTEngine.init();
+  updateBatteryVisual();
   updateConnectionIcon();
 
-  /* راقب حالة الاتصال */
   window.addEventListener('online', updateConnectionIcon);
   window.addEventListener('offline', updateConnectionIcon);
-  if (navigator.connection) {
-    navigator.connection.addEventListener('change', updateConnectionIcon);
-  }
 
   askUserNameIfNeeded();
   await registerUser();
@@ -3787,32 +2029,20 @@ window.addEventListener('DOMContentLoaded', async () => {
   refreshChatList();
 });
 
-/* اختصار PTT عبر المسافة */
 document.addEventListener('keydown', (e) => {
   if (e.code === 'Space' && !e.repeat && !document.querySelector('.modal-overlay.show')) {
-    e.preventDefault();
-    onPTTStart();
+    e.preventDefault(); onPTTStart();
   }
 });
 document.addEventListener('keyup', (e) => {
-  if (e.code === 'Space') {
-    e.preventDefault();
-    onPTTEnd();
-  }
+  if (e.code === 'Space') { e.preventDefault(); onPTTEnd(); }
 });
 
-/* إغلاق القوائم المنسدلة عند الضغط خارجها */
 document.addEventListener('click', (e) => {
   const md = document.getElementById('membersDropdown');
-  const od = document.getElementById('operationsDropdown');
   const wnc = document.getElementById('waveNameChip');
-  const ob = document.getElementById('operationsBtn');
-
-  if (md && md.classList.contains('show') && !md.contains(e.target) && e.target !== wnc && !wnc.contains(e.target)) {
+  if (md && md.classList.contains('show') && !md.contains(e.target) && wnc && !wnc.contains(e.target)) {
     md.classList.remove('show');
-  }
-  if (od && od.classList.contains('show') && !od.contains(e.target) && e.target !== ob) {
-    od.classList.remove('show');
   }
 });
   </script>
