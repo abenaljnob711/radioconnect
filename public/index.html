@@ -1341,7 +1341,10 @@ async function onPTTStart() {
   pttHolding = true;
   pttMain.classList.add('holding');
   document.body.classList.add('ptt-active');
-
+// شغّل كل الأصوات المعلّقة
+Object.values(LiveVoice.audioElements).forEach(el => {
+  el.play().catch(() => {});
+});
   const statusChip = document.getElementById('waveStatusChip');
   const statusText = document.getElementById('waveStatusText');
   if (statusChip) { statusChip.classList.add('live'); statusChip.classList.remove('disconnected'); }
