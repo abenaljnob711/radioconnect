@@ -55,7 +55,7 @@ body::before { content: ''; position: fixed; inset: 0; background: radial-gradie
 #waveNameChip { cursor: pointer; transition: all .2s; }
 #waveNameChip:active { border-color: var(--cyan); box-shadow: 0 0 12px rgba(0,229,255,.3); }
 #networkChip { cursor: pointer; }
-#networkChip .bars { display: inline-flex; align-items: flex-end; gap: 2px; height: 14px; }
+#networkChip .bars { display: inline-flex; align-items: flex-end; gap: 2px; height: 14px; flex-direction: row-reverse; }
 #networkChip .bars span { width: 3px; border-radius: 2px; background: #3a4048; }
 #networkChip .bars span:nth-child(1) { height: 4px; }
 #networkChip .bars span:nth-child(2) { height: 7px; }
