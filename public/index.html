@@ -771,25 +771,35 @@ const PTTEngine = {
       const AC = window.AudioContext || window.webkitAudioContext;
       this.audioCtx = new AC();
       if (this.audioCtx.state === 'suspended') await this.audioCtx.resume();
-      const beepEl = document.getElementById('walkieBeep');
-      if (beepEl) {
-        beepEl.volume = 0;
-        beepEl.play().then(() => {
-          beepEl.pause(); beepEl.currentTime = 0; beepEl.volume = 0.9;
-          this.beepReady = true;
-        }).catch(() => { beepEl.volume = 0.9; });
-      }
+      const openEl = document.getElementById('walkieOpen');
+      const closeEl = document.getElementById('walkieClose');
+      [openEl, closeEl].forEach(el => {
+        if (el) {
+          el.volume = 0;
+          el.play().then(() => {
+            el.pause(); el.currentTime = 0; el.volume = 0.9;
+            this.beepReady = true;
+          }).catch(() => { el.volume = 0.9; });
+        }
+      });
       return true;
     } catch (e) { return false; }
   },
-  playRealBeep() {
-    const el = document.getElementById('walkieBeep');
+  playOpenBeep() {
+    const el = document.getElementById('walkieOpen');
     if (!el) return;
     try { el.currentTime = 0; el.volume = 0.9; el.play().catch(() => {}); } catch (e) {}
     if (navigator.vibrate) navigator.vibrate([30, 40, 30]);
   },
-  playStartBeep() { this.playRealBeep(); },
-  playEndBeep() { setTimeout(() => this.playRealBeep(), 80); }
+  playCloseBeep() {
+    const el = document.getElementById('walkieClose');
+    if (!el) return;
+    try { el.currentTime = 0; el.volume = 0.9; el.play().catch(() => {}); } catch (e) {}
+    if (navigator.vibrate) navigator.vibrate([30, 40, 30]);
+  },
+  playRealBeep() { this.playOpenBeep(); },
+  playStartBeep() { this.playOpenBeep(); },
+  playEndBeep() { this.playCloseBeep(); }
 };
 
 const LiveVoice = {
