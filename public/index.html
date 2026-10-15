@@ -845,24 +845,17 @@ const LiveVoice = {
   },
 
   async startPublish() {
-  if (!this.connected || this.publishing) return false;
-  try {
-    console.log('🎙️ بدء Publish...');
-    const { createLocalAudioTrack } = LivekitClient;
-    this.localTrack = await createLocalAudioTrack({
-      echoCancellation: false, noiseSuppression: false, autoGainControl: false
-    });
-    console.log('🎙️ تم الحصول على المايك');
-    await this.room.localParticipant.publishTrack(this.localTrack);
-    console.log('✅ تم نشر المسار الصوتي');
-    this.publishing = true;
-    return true;
-  } catch (e) {
-    console.error('❌ Publish error:', e);
-    toast('❌ تعذّر بدء البث: ' + e.message, 'error');
-    return false;
-  }
-},
+    if (!this.connected || this.publishing) return false;
+    try {
+      const { createLocalAudioTrack } = LivekitClient;
+      this.localTrack = await createLocalAudioTrack({
+        echoCancellation: false, noiseSuppression: false, autoGainControl: false
+      });
+      await this.room.localParticipant.publishTrack(this.localTrack);
+      this.publishing = true;
+      return true;
+    } catch (e) { toast('❌ تعذّر بدء البث', 'error'); return false; }
+  },
 
   async stopPublish() {
     if (!this.publishing) return;
@@ -876,29 +869,13 @@ const LiveVoice = {
   },
 
   attachAudio(track, identity) {
-  this.detachAudio(identity);
-  const el = track.attach();
-  el.autoplay = true;
-  el.playsInline = true;
-  el.style.display = 'none';
-  el.volume = 1.0;
-  document.body.appendChild(el);
-  this.audioElements[identity] = el;
-  
-  // حاول التشغيل فوراً
-  const tryPlay = () => {
-    el.play().then(() => {
-      console.log('✅ صوت المشترك يعمل:', identity);
-    }).catch(err => {
-      console.warn('⚠️ تشغيل صوت المشترك فشل:', err.message);
-    });
-  };
-  tryPlay();
-  
-  // أعد المحاولة عند أي لمس
-  document.body.addEventListener('click', tryPlay, { once: true });
-  document.body.addEventListener('touchstart', tryPlay, { once: true });
-},
+    this.detachAudio(identity);
+    const el = track.attach();
+    el.autoplay = true; el.playsInline = true; el.style.display = 'none';
+    document.body.appendChild(el);
+    this.audioElements[identity] = el;
+    el.play().catch(() => { document.body.addEventListener('click', () => el.play().catch(() => {}), { once: true }); });
+  },
 
   detachAudio(identity) {
     const el = this.audioElements[identity];
@@ -1240,6 +1217,13 @@ function openSideMenu() {
           <span class="menu-desc">ابحث برقم الفرقة</span>
         </span>
       </button>
+      <button class="menu-item" onclick="closeSideMenu();saveMyRoom()">
+  <span class="menu-icon">💾</span>
+  <span class="menu-text">
+    <span class="menu-label">حفظ الغرفة</span>
+    <span class="menu-desc">استرجعها تلقائياً عند الدخول</span>
+  </span>
+</button>
       <button class="menu-item" onclick="closeSideMenu();openEditWaveName()">
         <span class="menu-icon">✏️</span>
         <span class="menu-text">
@@ -1357,10 +1341,7 @@ async function onPTTStart() {
   pttHolding = true;
   pttMain.classList.add('holding');
   document.body.classList.add('ptt-active');
-// شغّل كل الأصوات المعلّقة (حل مشكلة autoplay)
-Object.values(LiveVoice.audioElements).forEach(el => {
-  el.play().catch(() => {});
-});
+
   const statusChip = document.getElementById('waveStatusChip');
   const statusText = document.getElementById('waveStatusText');
   if (statusChip) { statusChip.classList.add('live'); statusChip.classList.remove('disconnected'); }
