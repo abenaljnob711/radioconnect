@@ -1240,37 +1240,52 @@ function openSideMenu() {
       </button>
     `;
   } else if (activeId === 'screen-log' || activeId === 'screen-chat') {
-    title.textContent = '💬 قائمة الغرفة';
-    content.innerHTML = `
-      <button class="menu-item primary" onclick="closeSideMenu();openCreateRoom()">
-        <span class="menu-icon">➕</span>
-        <span class="menu-text">
-          <span class="menu-label">إضافة غرفة</span>
-          <span class="menu-desc">إنشاء غرفة دردشة جديدة</span>
-        </span>
-      </button>
-      <button class="menu-item" onclick="closeSideMenu();openSearchUser()">
-        <span class="menu-icon">🔍</span>
-        <span class="menu-text">
-          <span class="menu-label">البحث عن غرفة</span>
-          <span class="menu-desc">ابحث برقم المستخدم</span>
-        </span>
-      </button>
-      <button class="menu-item" onclick="closeSideMenu();openEditRoomName()">
-        <span class="menu-icon">✏️</span>
-        <span class="menu-text">
-          <span class="menu-label">تعديل اسم الغرفة</span>
-          <span class="menu-desc">غيّر اسم غرفتك</span>
-        </span>
-      </button>
-      <button class="menu-item" onclick="closeSideMenu();confirmClearChat()">
-        <span class="menu-icon">🗑️</span>
-        <span class="menu-text">
-          <span class="menu-label">مسح المحادثة</span>
-          <span class="menu-desc">حذف كل الرسائل</span>
-        </span>
-      </button>
-    `;
+  title.textContent = '💬 قائمة الغرفة';
+  content.innerHTML = `
+    <div style="background:rgba(0,229,255,.05); border:1px solid rgba(0,229,255,.3); border-radius:12px; padding:12px; margin-bottom:12px; text-align:center;">
+      <div style="font-size:11px; color:var(--text-dim); margin-bottom:4px;">📛 اسم الغرفة</div>
+      <div style="font-size:14px; font-weight:800; color:var(--text); margin-bottom:10px;">${currentUser.roomName || '—'}</div>
+      <div style="font-size:11px; color:var(--text-dim); margin-bottom:4px;">🔑 رقم الغرفة</div>
+      <div onclick="copyMyRoomCode()" style="font-size:16px; font-weight:900; color:var(--cyan); font-family:'Courier New',monospace; letter-spacing:2px; cursor:pointer; padding:6px; border-radius:8px; background:rgba(0,229,255,.1); border:1px solid rgba(0,229,255,.4);">
+        ${currentUser.roomCode || '—'} 📋
+      </div>
+    </div>
+    <button class="menu-item primary" onclick="closeSideMenu();openCreateRoom()">
+      <span class="menu-icon">➕</span>
+      <span class="menu-text">
+        <span class="menu-label">إضافة غرفة</span>
+        <span class="menu-desc">إنشاء غرفة دردشة جديدة</span>
+      </span>
+    </button>
+    <button class="menu-item" onclick="closeSideMenu();openSearchUser()">
+      <span class="menu-icon">🔍</span>
+      <span class="menu-text">
+        <span class="menu-label">البحث عن غرفة</span>
+        <span class="menu-desc">ابحث برقم المستخدم</span>
+      </span>
+    </button>
+    <button class="menu-item" onclick="closeSideMenu();saveMyRoom()">
+      <span class="menu-icon">💾</span>
+      <span class="menu-text">
+        <span class="menu-label">حفظ الغرفة</span>
+        <span class="menu-desc">استرجعها تلقائياً عند الدخول</span>
+      </span>
+    </button>
+    <button class="menu-item" onclick="closeSideMenu();openEditRoomName()">
+      <span class="menu-icon">✏️</span>
+      <span class="menu-text">
+        <span class="menu-label">تعديل اسم الغرفة</span>
+        <span class="menu-desc">غيّر اسم غرفتك</span>
+      </span>
+    </button>
+    <button class="menu-item" onclick="closeSideMenu();confirmClearChat()">
+      <span class="menu-icon">🗑️</span>
+      <span class="menu-text">
+        <span class="menu-label">مسح المحادثة</span>
+        <span class="menu-desc">حذف كل الرسائل</span>
+      </span>
+    </button>
+  `;
   } else {
     title.textContent = '⚙️ الإعدادات السريعة';
     content.innerHTML = `
