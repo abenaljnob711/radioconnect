@@ -797,9 +797,9 @@ const PTTEngine = {
     try { el.currentTime = 0; el.volume = 0.9; el.play().catch(() => {}); } catch (e) {}
     if (navigator.vibrate) navigator.vibrate([30, 40, 30]);
   },
-  playRealBeep() { this.playOpenBeep(); },
-  playStartBeep() { this.playOpenBeep(); },
-  playEndBeep() { this.playCloseBeep(); }
+  playRealBeep() { this.playCloseBeep(); },
+playStartBeep() { this.playCloseBeep(); },
+playEndBeep() { this.playOpenBeep(); }
 };
 
 const LiveVoice = {
