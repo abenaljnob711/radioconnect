@@ -869,13 +869,29 @@ const LiveVoice = {
   },
 
   attachAudio(track, identity) {
-    this.detachAudio(identity);
-    const el = track.attach();
-    el.autoplay = true; el.playsInline = true; el.style.display = 'none';
-    document.body.appendChild(el);
-    this.audioElements[identity] = el;
-    el.play().catch(() => { document.body.addEventListener('click', () => el.play().catch(() => {}), { once: true }); });
-  },
+  this.detachAudio(identity);
+  const el = track.attach();
+  el.autoplay = true;
+  el.playsInline = true;
+  el.style.display = 'none';
+  el.volume = 1.0;
+  document.body.appendChild(el);
+  this.audioElements[identity] = el;
+  
+  // حاول التشغيل فوراً
+  const tryPlay = () => {
+    el.play().then(() => {
+      console.log('✅ صوت المشترك يعمل:', identity);
+    }).catch(err => {
+      console.warn('⚠️ تشغيل صوت المشترك فشل:', err.message);
+    });
+  };
+  tryPlay();
+  
+  // أعد المحاولة عند أي لمس
+  document.body.addEventListener('click', tryPlay, { once: true });
+  document.body.addEventListener('touchstart', tryPlay, { once: true });
+},
 
   detachAudio(identity) {
     const el = this.audioElements[identity];
