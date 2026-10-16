@@ -841,9 +841,11 @@ const LiveVoice = {
       this.connected = true;
       this.currentWaveId = waveId;
       return true;
-    } catch (e) { toast('❌ فشل الاتصال بالصوت الحي', 'error'); return false; }
-  },
-
+    } catch (e) {
+  console.error('LiveKit connect error:', e);
+  toast('❌ فشل الاتصال: ' + (e.message || 'خطأ غير معروف'), 'error');
+  return false;
+}
   
   async startPublish() {
     if (!this.connected || !this.room || this.publishing || !pttHolding) {
