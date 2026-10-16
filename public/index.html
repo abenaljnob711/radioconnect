@@ -798,12 +798,12 @@ const PTTEngine = {
     if (navigator.vibrate) navigator.vibrate([30, 40, 30]);
   },
   playRealBeep() { this.playCloseBeep(); },
-  playStartBeep() { this.playCloseBeep(); },
-  playEndBeep() { this.playOpenBeep(); }
+playStartBeep() { this.playCloseBeep(); },
+playEndBeep() { this.playOpenBeep(); }
 };
 
 const LiveVoice = {
-  room: null, connected: false, publishing: false,
+  room: null, connected: false, publishing: false, localTrack: null,
   audioElements: {}, currentWaveId: null,
 
   async getToken(roomId) {
@@ -828,7 +828,7 @@ const LiveVoice = {
       const { Room, RoomEvent } = LivekitClient;
       this.room = new Room({
         adaptiveStream: true, dynacast: true,
-        audioCaptureDefaults: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
+        audioCaptureDefaults: { echoCancellation: false, noiseSuppression: false, autoGainControl: false }
       });
       this.room
         .on(RoomEvent.TrackSubscribed, (track, pub, participant) => {
@@ -836,29 +836,58 @@ const LiveVoice = {
         })
         .on(RoomEvent.TrackUnsubscribed, (track, pub, participant) => this.detachAudio(participant.identity))
         .on(RoomEvent.ParticipantDisconnected, (participant) => this.detachAudio(participant.identity))
-        .on(RoomEvent.Disconnected, () => { this.connected = false; this.publishing = false; this.currentWaveId = null; });
-
+        .on(RoomEvent.Disconnected, () => { this.connected = false; this.currentWaveId = null; });
       await this.room.connect(LIVEKIT_URL, token);
       this.connected = true;
       this.currentWaveId = waveId;
       return true;
-    } catch (e) {
-      console.error('LiveKit connect error:', e);
-      toast('❌ فشل الاتصال: ' + (e.message || 'خطأ غير معروف'), 'error');
-      return false;
-    }
+    } catch (e) { toast('❌ فشل الاتصال بالصوت الحي', 'error'); return false; }
   },
+
   
   async startPublish() {
-    if (!this.connected || !this.room) return false;
-    if (this.publishing) return true;
+    if (!this.connected || !this.room || this.publishing || !pttHolding) {
+      return false;
+    }
+
+    let track = null;
 
     try {
-      await this.room.localParticipant.setMicrophoneEnabled(true);
+      const { createLocalAudioTrack } = LivekitClient;
+
+      track = await createLocalAudioTrack({
+        echoCancellation: false,
+        noiseSuppression: false,
+        autoGainControl: false
+      });
+
+      // إذا رفعت إصبعك أثناء تشغيل الميكروفون، أوقفه
+      if (!pttHolding || !this.connected || !this.room) {
+        track.stop();
+        return false;
+      }
+
+      const activeRoom = this.room;
+      await activeRoom.localParticipant.publishTrack(track);
+
+      // تحقق مرة أخرى إذا انتهى الضغط أثناء نشر الصوت
+      if (!pttHolding || !this.connected || this.room !== activeRoom) {
+        try {
+          await activeRoom.localParticipant.unpublishTrack(track);
+        } catch (e) {}
+        track.stop();
+        return false;
+      }
+
+      this.localTrack = track;
       this.publishing = true;
       return true;
+
     } catch (e) {
-      console.error('Mic publish error:', e);
+      if (track) {
+        try { track.stop(); } catch (err) {}
+      }
+      this.localTrack = null;
       this.publishing = false;
       toast('❌ تعذّر إرسال الصوت: ' + (e.message || 'تحقق من الميكروفون والاتصال'), 'error');
       return false;
@@ -866,25 +895,34 @@ const LiveVoice = {
   },
 
   async stopPublish() {
-    if (!this.room || !this.publishing) return;
+    const track = this.localTrack;
+    const activeRoom = this.room;
+
+    // أوقف حالة الإرسال فوراً
+    this.localTrack = null;
     this.publishing = false;
+
+    if (!track) return;
+
     try {
-      await this.room.localParticipant.setMicrophoneEnabled(false);
+      if (activeRoom && this.connected) {
+        await activeRoom.localParticipant.unpublishTrack(track);
+      }
     } catch (e) {
-      console.error('Mic stop error:', e);
+      // يستمر إيقاف الميكروفون حتى لو تعذر إلغاء النشر
+    } finally {
+      try { track.stop(); } catch (e) {}
     }
   },
+
 
   attachAudio(track, identity) {
     this.detachAudio(identity);
     const el = track.attach();
-    el.autoplay = true; el.playsInline = true; 
-    el.setAttribute('playsinline', '');
-    el.setAttribute('autoplay', '');
-    el.style.display = 'none';
+    el.autoplay = true; el.playsInline = true; el.style.display = 'none';
     document.body.appendChild(el);
     this.audioElements[identity] = el;
-    el.play().catch(err => console.log('Autoplay deferred:', err));
+    el.play().catch(() => { document.body.addEventListener('click', () => el.play().catch(() => {}), { once: true }); });
   },
 
   detachAudio(identity) {
@@ -894,9 +932,7 @@ const LiveVoice = {
 
   async disconnect() {
     try {
-      if (this.publishing && this.room) {
-        await this.room.localParticipant.setMicrophoneEnabled(false);
-      }
+      if (this.localTrack) { this.localTrack.stop(); this.localTrack = null; }
       if (this.room) await this.room.disconnect();
     } catch (e) {}
     Object.keys(this.audioElements).forEach(k => this.detachAudio(k));
@@ -1365,24 +1401,13 @@ function stopWaveTimer() {
 
 async function onPTTStart() {
   if (pttHolding) return;
-  if (!currentUser.waveId) {
-    toast('⚠️ انضم لفرقة أولاً', 'error');
-    return;
-  }
-
   pttHolding = true;
   pttMain.classList.add('holding');
   document.body.classList.add('ptt-active');
-
-  await PTTEngine.init();
-  if (PTTEngine.audioCtx && PTTEngine.audioCtx.state === 'suspended') {
-    PTTEngine.audioCtx.resume();
-  }
-
-  Object.values(LiveVoice.audioElements).forEach(el => {
-    if (el) el.play().catch(() => {});
-  });
-
+// شغّل كل الأصوات المعلّقة
+Object.values(LiveVoice.audioElements).forEach(el => {
+  el.play().catch(() => {});
+});
   const statusChip = document.getElementById('waveStatusChip');
   const statusText = document.getElementById('waveStatusText');
   if (statusChip) { statusChip.classList.add('live'); statusChip.classList.remove('disconnected'); }
@@ -1394,22 +1419,11 @@ async function onPTTStart() {
   if (lcdSt) lcdSt.textContent = '●';
 
   startWaveTimer();
+  await PTTEngine.init();
   PTTEngine.playStartBeep();
 
-  if (!LiveVoice.connected && currentUser.waveId) {
-    const connected = await LiveVoice.connect(currentUser.waveId);
-    if (!connected) {
-      toast('❌ تعذر الاتصال بالموجة الصوتية', 'error');
-      onPTTEnd();
-      return;
-    }
-  }
-
-  const published = await LiveVoice.startPublish();
-  if (!published) {
-    onPTTEnd();
-    return;
-  }
+  if (!LiveVoice.connected && currentUser.waveId) await LiveVoice.connect(currentUser.waveId);
+  await LiveVoice.startPublish();
 
   if (socket && currentUser.waveId) {
     socket.emit('wave_broadcast_start', {
@@ -1445,7 +1459,6 @@ async function onPTTEnd() {
 
 pttMain.addEventListener('pointerdown', (e) => { e.preventDefault(); onPTTStart(); });
 window.addEventListener('pointerup', () => { onPTTEnd(); });
-window.addEventListener('pointercancel', () => { onPTTEnd(); });
 pttMain.addEventListener('touchstart', (e) => { e.preventDefault(); onPTTStart(); }, { passive: false });
 window.addEventListener('touchend', () => { onPTTEnd(); });
 
@@ -1892,21 +1905,23 @@ async function createRoom() {
   const name = document.getElementById('roomName').value.trim();
   if (!name) { toast('⚠️ أدخل اسم الغرفة', 'error'); return; }
   
+  // ولّد رقم غرفة (G + 5 أحرف/أرقام)
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   let roomCode = "G";
   for (let i = 0; i < 5; i++) {
     roomCode += chars[Math.floor(Math.random() * chars.length)];
   }
 
-  localStorage.setItem('rc_saved_room_code', roomCode);
-  localStorage.setItem('rc_saved_room_name', name);
+// حفظ الغرفة تلقائياً
+localStorage.setItem('rc_saved_room_code', roomCode);
+localStorage.setItem('rc_saved_room_name', name);
 
-  currentUser.roomName = name;
-  currentUser.roomCode = roomCode;
+currentUser.roomName = name;
+currentUser.roomCode = roomCode;
 
-  document.getElementById('createdRoomCode').textContent = roomCode;
-  document.getElementById('roomNameLabel').textContent = name;
-  document.getElementById('roomName').value = '';
+document.getElementById('createdRoomCode').textContent = roomCode;
+document.getElementById('roomNameLabel').textContent = name;
+document.getElementById('roomName').value = '';
   
   closeModal('modalCreate');
   openModal('modalRoomCreated');
@@ -2084,17 +2099,7 @@ document.addEventListener('click', (e) => {
     md.classList.remove('show');
   }
 });
-
-function loadSavedWave(){
-  const savedId = localStorage.getItem('rc_wave_id');
-  if(savedId){
-    currentUser.waveId = savedId;
-    currentUser.waveCode = savedId;
-    const chip = document.getElementById('waveCodeChip');
-    if(chip) chip.textContent = savedId;
-  }
-}
-loadSavedWave();
   </script>
 </body>
 </html>
+pttHolding
