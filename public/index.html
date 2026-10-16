@@ -1422,9 +1422,21 @@ Object.values(LiveVoice.audioElements).forEach(el => {
   await PTTEngine.init();
   PTTEngine.playStartBeep();
 
-  if (!LiveVoice.connected && currentUser.waveId) await LiveVoice.connect(currentUser.waveId);
-  await LiveVoice.startPublish();
+  if (!LiveVoice.connected && currentUser.waveId) {
+  const connected = await LiveVoice.connect(currentUser.waveId);
 
+  if (!connected) {
+    toast('❌ تعذر الاتصال بالموجة الصوتية', 'error');
+    return;
+  }
+}
+
+const published = await LiveVoice.startPublish();
+
+if (!published) {
+  toast('❌ لم يبدأ إرسال الصوت', 'error');
+  return;
+}
   if (socket && currentUser.waveId) {
     socket.emit('wave_broadcast_start', {
       waveId: currentUser.waveId, deviceId: currentUser.id, userName: currentUser.name
