@@ -2099,7 +2099,47 @@ document.addEventListener('click', (e) => {
     md.classList.remove('show');
   }
 });
+    // SAVE
+localStorage.setItem('rc_wave_id',data.waveId);
+localStorage.setItem('rc_wave_name',data.waveName);
+
+function loadSavedWave(){
+  const savedId = localStorage.getItem('rc_wave_id');
+  if(savedId){
+    currentUser.waveId = savedId;
+    currentUser.waveCode = savedId;
+    document.getElementById('waveCodeChip').textContent=savedId;
+  }
+}
+loadSavedWave();
+
+(function setupPTT(){
+  const pttBtn = document.getElementById('pttMain');
+  let isHolding = false;
+  async function startTalk(e){
+    e.preventDefault();
+    if(isHolding) return;
+    if(!currentUser.waveId){ toast('⚠️ انضم لفرقة أولاً','error'); return; }
+    isHolding = true;
+    await PTTEngine.init(); PTTEngine.playStartBeep();
+    document.body.classList.add('ptt-active'); pttBtn.classList.add('holding');
+    if(!LiveVoice.connected){
+      const ok = await LiveVoice.connect(currentUser.waveId);
+      if(!ok){ isHolding=false; pttBtn.classList.remove('holding'); document.body.classList.remove('ptt-active'); return; }
+    }
+    await LiveVoice.startPublish();
+  }
+  async function stopTalk(e){
+    if(e) e.preventDefault(); if(!isHolding) return;
+    isHolding=false; PTTEngine.playEndBeep();
+    document.body.classList.remove('ptt-active'); pttBtn.classList.remove('holding');
+    await LiveVoice.stopPublish();
+  }
+  pttBtn.addEventListener('pointerdown', startTalk);
+  pttBtn.addEventListener('pointerup', stopTalk);
+  pttBtn.addEventListener('pointerleave', stopTalk);
+  pttBtn.addEventListener('pointercancel', stopTalk);
+})();
   </script>
 </body>
 </html>
-pttHolding
