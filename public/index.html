@@ -838,14 +838,16 @@ const LiveVoice = {
         .on(RoomEvent.ParticipantDisconnected, (participant) => this.detachAudio(participant.identity))
         .on(RoomEvent.Disconnected, () => { this.connected = false; this.currentWaveId = null; });
       await this.room.connect(LIVEKIT_URL, token);
+            await this.room.connect(LIVEKIT_URL, token);
       this.connected = true;
       this.currentWaveId = waveId;
       return true;
     } catch (e) {
-  console.error('LiveKit connect error:', e);
-  toast('❌ فشل الاتصال: ' + (e.message || 'خطأ غير معروف'), 'error');
-  return false;
-}
+      console.error('LiveKit connect error:', e);
+      toast('❌ فشل الاتصال: ' + (e.message || 'خطأ غير معروف'), 'error');
+      return false;
+    }
+  },
   
   async startPublish() {
     if (!this.connected || !this.room || this.publishing || !pttHolding) {
