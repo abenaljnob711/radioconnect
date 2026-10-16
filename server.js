@@ -19,8 +19,10 @@ try {
   const lk = require("livekit-server-sdk");
   AccessToken = lk.AccessToken;
 } catch (e) {
-  console.warn("⚠️ livekit-server-sdk غير مثبّت");
-}
+  console.error('LiveKit connect error:', e);
+  toast('❌ فشل الاتصال بالصوت الحي: ' + (e.message || 'خطأ غير معروف'), 'error');
+  return false;
+} 
 
 const app = express();
 const server = http.createServer(app);
