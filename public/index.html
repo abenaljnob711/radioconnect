@@ -844,29 +844,77 @@ const LiveVoice = {
     } catch (e) { toast('❌ فشل الاتصال بالصوت الحي', 'error'); return false; }
   },
 
+  
   async startPublish() {
-    if (!this.connected || this.publishing) return false;
+    if (!this.connected || !this.room || this.publishing || !pttHolding) {
+      return false;
+    }
+
+    let track = null;
+
     try {
       const { createLocalAudioTrack } = LivekitClient;
-      this.localTrack = await createLocalAudioTrack({
-        echoCancellation: false, noiseSuppression: false, autoGainControl: false
+
+      track = await createLocalAudioTrack({
+        echoCancellation: false,
+        noiseSuppression: false,
+        autoGainControl: false
       });
-      await this.room.localParticipant.publishTrack(this.localTrack);
+
+      // إذا رفعت إصبعك أثناء تشغيل الميكروفون، أوقفه
+      if (!pttHolding || !this.connected || !this.room) {
+        track.stop();
+        return false;
+      }
+
+      const activeRoom = this.room;
+      await activeRoom.localParticipant.publishTrack(track);
+
+      // تحقق مرة أخرى إذا انتهى الضغط أثناء نشر الصوت
+      if (!pttHolding || !this.connected || this.room !== activeRoom) {
+        try {
+          await activeRoom.localParticipant.unpublishTrack(track);
+        } catch (e) {}
+        track.stop();
+        return false;
+      }
+
+      this.localTrack = track;
       this.publishing = true;
       return true;
-    } catch (e) { toast('❌ تعذّر بدء البث', 'error'); return false; }
+
+    } catch (e) {
+      if (track) {
+        try { track.stop(); } catch (err) {}
+      }
+      this.localTrack = null;
+      this.publishing = false;
+      toast('❌ تعذّر إرسال الصوت: ' + (e.message || 'تحقق من الميكروفون والاتصال'), 'error');
+      return false;
+    }
   },
 
   async stopPublish() {
-    if (!this.publishing) return;
+    const track = this.localTrack;
+    const activeRoom = this.room;
+
+    // أوقف حالة الإرسال فوراً
+    this.localTrack = null;
+    this.publishing = false;
+
+    if (!track) return;
+
     try {
-      if (this.localTrack) {
-        await this.room.localParticipant.unpublishTrack(this.localTrack);
-        this.localTrack.stop(); this.localTrack = null;
+      if (activeRoom && this.connected) {
+        await activeRoom.localParticipant.unpublishTrack(track);
       }
-      this.publishing = false;
-    } catch (e) {}
+    } catch (e) {
+      // يستمر إيقاف الميكروفون حتى لو تعذر إلغاء النشر
+    } finally {
+      try { track.stop(); } catch (e) {}
+    }
   },
+
 
   attachAudio(track, identity) {
     this.detachAudio(identity);
