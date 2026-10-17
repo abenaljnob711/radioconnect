@@ -1,19 +1,13 @@
 {
-  "background_color": "#ffffff",
-  "dir": "ltr",
-  "display": "standalone",
-  "name": "Radio Connect",
-  "orientation": "any",
-  "scope": "/",
-  "short_name": "Radio Connect",
-  "start_url": "/",
-  "theme_color": "#ffffff",
-  "description": "Radio connect app",
-  "icons": [
-    {
-      "src": "./icon.png",
-      "sizes": "512x512",
-      "type": "image/png"
+  "appId": "com.radioconnect.app",
+  "appName": "Radio Connect",
+  "webDir": "public",
+  "server": {
+    "androidScheme": "https"
+  },
+  "plugins": {
+    "Permissions": {
+      "microphone": "granted"
     }
-  ]
+  }
 }
