@@ -1,43 +1,19 @@
-async function onPTTStart() {
-  if (pttHolding) return;
-  pttHolding = true;
-  pttMain.classList.add('holding');
-  document.body.classList.add('ptt-active');
-
-  Object.values(LiveVoice.audioElements).forEach(el => {
-    el.play().catch(() => {});
-  });
-
-  const statusChip = document.getElementById('waveStatusChip');
-  const statusText = document.getElementById('waveStatusText');
-  if (statusChip) { statusChip.classList.add('live'); statusChip.classList.remove('disconnected'); }
-  if (statusText) statusText.innerHTML = '🟢 يتحدث';
-
-  const lcd3 = document.getElementById('lcdLine3');
-  if (lcd3) lcd3.textContent = (currentUser.radCode || '—') + ' • TX';
-  const lcdSt = document.getElementById('lcdStatus');
-  if (lcdSt) lcdSt.textContent = '●';
-
-  startWaveTimer();
-  await PTTEngine.init();
-  PTTEngine.playStartBeep();
-
-  // التعديل الجوهري: نطلب الصوت مباشرة
-  const published = await LiveVoice.startPublish();
-  if (!published) {
-    toast('❌ لم يبدأ إرسال الصوت', 'error');
-    pttHolding = false;
-    pttMain.classList.remove('holding');
-    document.body.classList.remove('ptt-active');
-    stopWaveTimer();
-    if (statusChip) { statusChip.classList.remove('live'); statusChip.classList.add('disconnected'); }
-    if (statusText) statusText.innerHTML = '🔴 غير متصل';
-    return;
-  }
-
-  if (socket && currentUser.waveId) {
-    socket.emit('wave_broadcast_start', {
-      waveId: currentUser.waveId, deviceId: currentUser.id, userName: currentUser.name
-    });
-  }
+{
+  "background_color": "#ffffff",
+  "dir": "ltr",
+  "display": "standalone",
+  "name": "Radio Connect",
+  "orientation": "any",
+  "scope": "/",
+  "short_name": "Radio Connect",
+  "start_url": "/",
+  "theme_color": "#ffffff",
+  "description": "Radio connect app",
+  "icons": [
+    {
+      "src": "./icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
 }
