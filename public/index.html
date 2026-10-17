@@ -1425,14 +1425,28 @@ async function onPTTEnd() {
   }
 }
 
-// زر PTT كـ Toggle (ضغطة تشغل، ضغطة توقف)
-pttMain.addEventListener('click', async (e) => {
+// زر PTT الحقيقي: ضغط = تشغيل، رفع = إيقاف
+pttMain.addEventListener('pointerdown', async (e) => {
   e.preventDefault();
-  if (pttHolding) {
-    await onPTTEnd();
-  } else {
-    await onPTTStart();
-  }
+  if (pttHolding) return;
+  await onPTTStart();
+});
+
+window.addEventListener('pointerup', async () => {
+  if (!pttHolding) return;
+  await onPTTEnd();
+});
+
+// دعم شاشات اللمس
+pttMain.addEventListener('touchstart', async (e) => {
+  e.preventDefault();
+  if (pttHolding) return;
+  await onPTTStart();
+}, { passive: false });
+
+window.addEventListener('touchend', async () => {
+  if (!pttHolding) return;
+  await onPTTEnd();
 });
 
 function openCreateWave() { openModal('modalWave'); }
