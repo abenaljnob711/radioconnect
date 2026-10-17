@@ -8,7 +8,7 @@
 <audio id="walkieOpen" src="./walkie_open.mp3" preload="auto"></audio>
 <audio id="walkieClose" src="./walkie_close.mp3" preload="auto"></audio>
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/livekit-client@2.5.7/dist/livekit-client.umd.min.js"></script>
+<script src="https://unpkg.com/livekit-client@2.5.7/dist/livekit-client.umd.min.js"></script>
 <style>
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 :root { --bg: #05080c; --card: #0f1921; --card-2: #142028; --border: #1c2a36; --text: #e6f0f5; --text-dim: #6b8899; --cyan: #00e5ff; --cyan-dark: #008fa8; --green: #00ff88; --red: #ff2a4d; --red-dark: #b01530; --yellow: #ffcc00; --blue-msg: #1a4d6b; --blue-msg-2: #0f3550; --red-msg: #6b1220; --red-msg-2: #45080f; --radius: 14px; }
@@ -435,9 +435,8 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
     </div>
     <div id="sideMenuContent"></div>
   </aside>
-
   <div class="members-dropdown" id="membersDropdown"></div>
-  <!-- قائمة الغرفة -->
+<!-- قائمة الغرفة -->
 <div class="modal-overlay" id="modalRoomMenu">
   <div class="modal">
     <div class="modal-title">☰ خيارات الغرفة</div>
@@ -727,7 +726,6 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
     </div>
   </div>
 </div>
-
 <input type="file" id="hiddenFileInput" style="display:none;">
   <script>
 const SERVER_URL   = 'https://radio-connect-server.onrender.com';
@@ -750,7 +748,8 @@ let batteryPercent = null;
 let menuBusy = false;
 let searchResultUser = null;
 let socket = null;
-let pttHolding = false; /* ✅ تم نقلها هنا لتفادي مشكلة الـ Hoisting */
+let pttHolding = false;
+let pttBusy = false; // لمنع تكرار الضغط السريع
 
 const PTTEngine = {
   audioCtx: null, beepReady: false,
@@ -804,15 +803,25 @@ const LiveVoice = {
       const data = await res.json();
       if (!res.ok || !data.token) throw new Error(data.error || 'Token فشل');
       return data.token;
-    } catch (e) { toast('❌ تعذّر الاتصال بالصوت الحي', 'error'); return null; }
+    } catch (e) {
+      console.error('❌ Token Error:', e);
+      toast('❌ Token: ' + (e.message || 'غير معروف'), 'error');
+      return null;
+    }
   },
 
   async connect(waveId) {
     if (this.connected && this.currentWaveId === waveId) return true;
     if (this.connected) await this.disconnect();
-    if (typeof LivekitClient === 'undefined') { toast('❌ مكتبة LiveKit لم تُحمّل', 'error'); return false; }
+    if (typeof LivekitClient === 'undefined') {
+      toast('❌ مكتبة LiveKit لم تُحمّل', 'error');
+      return false;
+    }
     const token = await this.getToken(waveId);
-    if (!token) return false;
+    if (!token) {
+      toast('❌ فشل الحصول على Token', 'error');
+      return false;
+    }
     try {
       const { Room, RoomEvent } = LivekitClient;
       this.room = new Room({
@@ -830,57 +839,58 @@ const LiveVoice = {
       this.connected = true;
       this.currentWaveId = waveId;
       return true;
-    } catch (e) { toast('❌ فشل الاتصال بالصوت الحي', 'error'); return false; }
+    } catch (e) {
+      console.error('❌ LiveKit Error:', e);
+      toast('❌ فشل: ' + (e.message || e.name || 'غير معروف'), 'error');
+      return false;
+    }
   },
 
   async startPublish() {
-  if (!this.connected || !this.room || this.publishing) {
-    return false;
-  }
-  let track = null;
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    stream.getTracks().forEach(t => t.stop());
+    let track = null;
+    try {
+      // طلب المايك مباشرة بدون اتصال مسبق بـ LiveKit
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
+      });
 
-    const { createLocalAudioTrack } = LivekitClient;
-    
-    track = await createLocalAudioTrack({
-      echoCancellation: true,
-      noiseSuppression: true,
-      autoGainControl: true
-    });
+      // الاتصال بـ LiveKit إذا لم يكن متصلاً
+      if (!this.connected) {
+        const ok = await this.connect(currentUser.waveId);
+        if (!ok) {
+          stream.getTracks().forEach(t => t.stop());
+          toast('❌ فشل الاتصال بالخادم الصوتي', 'error');
+          return false;
+        }
+      }
 
-    if (!this.connected || !this.room) {
-      track.stop();
+      if (!this.room || this.publishing) {
+        stream.getTracks().forEach(t => t.stop());
+        return false;
+      }
+
+      const { LocalAudioTrack } = LivekitClient;
+      // استخدام المسار الحالي
+      track = new LocalAudioTrack(stream.getAudioTracks()[0], undefined, false);
+
+      await this.room.localParticipant.publishTrack(track);
+      this.localTrack = track;
+      this.publishing = true;
+      toast('🎙️ المايك شغال...', 'success');
+      return true;
+    } catch (e) {
+      if (track) { try { track.stop(); } catch (err) {} }
+      this.localTrack = null;
+      this.publishing = false;
+      console.error(e);
+      toast('❌ مشكلة في المايك: ' + (e.message || 'تأكد من الإذن'), 'error');
       return false;
     }
-
-    const activeRoom = this.room;
-    await activeRoom.localParticipant.publishTrack(track);
-
-    if (!this.connected || this.room !== activeRoom) {
-      try { await activeRoom.localParticipant.unpublishTrack(track); } catch (err) {}
-      track.stop();
-      return false;
-    }
-    this.localTrack = track;
-    this.publishing = true;
-    toast('🎙️ المايك شغال...', 'success');
-    return true;
-  } catch (e) {
-    if (track) { try { track.stop(); } catch (err) {} }
-    this.localTrack = null;
-    this.publishing = false;
-    console.error(e);
-    toast('❌ مشكلة في المايك: ' + (e.message || 'تأكد من الإذن'), 'error');
-    return false;
-  }
-},
+  },
 
   async stopPublish() {
     const track = this.localTrack;
     const activeRoom = this.room;
-    // أوقف حالة الإرسال فوراً
     this.localTrack = null;
     this.publishing = false;
     if (!track) return;
@@ -888,9 +898,8 @@ const LiveVoice = {
       if (activeRoom && this.connected) {
         await activeRoom.localParticipant.unpublishTrack(track);
       }
-    } catch (e) {
-      // يستمر إيقاف الميكروفون حتى لو تعذر إلغاء النشر
-    } finally {
+    } catch (e) {}
+    finally {
       try { track.stop(); } catch (e) {}
     }
   },
@@ -901,7 +910,9 @@ const LiveVoice = {
     el.autoplay = true; el.playsInline = true; el.style.display = 'none';
     document.body.appendChild(el);
     this.audioElements[identity] = el;
-    el.play().catch(() => { document.body.addEventListener('click', () => el.play().catch(() => {}), { once: true }); });
+    el.play().catch(() => {
+      document.body.addEventListener('click', () => el.play().catch(() => {}), { once: true });
+    });
   },
 
   detachAudio(identity) {
@@ -1030,7 +1041,6 @@ async function createWave() {
     const el4 = document.getElementById('waveNameLabel'); if (el4) el4.textContent = name;
     const el5 = document.getElementById('lcdLine3'); if (el5) el5.textContent = data.waveId + ' • TX';
 
-    // حفظ الموجة تلقائياً
     localStorage.setItem('rc_saved_wave_id', data.waveId);
     localStorage.setItem('rc_saved_wave_name', name);
 
@@ -1058,7 +1068,6 @@ async function joinWaveAsMember(waveId) {
   const el2 = document.getElementById('waveCodeValue'); if (el2) el2.textContent = waveId;
   const el3 = document.getElementById('lcdLine3'); if (el3) el3.textContent = waveId + ' • RX';
 
-  // حفظ الموجة تلقائياً
   localStorage.setItem('rc_saved_wave_id', waveId);
   localStorage.setItem('rc_saved_wave_name', currentUser.waveName || '');
 
@@ -1166,7 +1175,8 @@ async function removeMember(memberId) {
     toast('✅ تم إخراج العضو', 'success');
   } catch (e) { toast('❌ فشل الإخراج', 'error'); }
 }
-    function switchTab(tabName) {
+
+function switchTab(tabName) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   const screen = document.getElementById('screen-' + tabName);
@@ -1349,15 +1359,11 @@ function stopWaveTimer() {
 }
 
 async function onPTTStart() {
-  if (pttHolding) return;
+  if (pttHolding || pttBusy) return;
+  pttBusy = true;
   pttHolding = true;
   pttMain.classList.add('holding');
   document.body.classList.add('ptt-active');
-
-  // شغّل كل الأصوات المعلّقة
-  Object.values(LiveVoice.audioElements).forEach(el => {
-    el.play().catch(() => {});
-  });
 
   const statusChip = document.getElementById('waveStatusChip');
   const statusText = document.getElementById('waveStatusText');
@@ -1373,22 +1379,16 @@ async function onPTTStart() {
   await PTTEngine.init();
   PTTEngine.playStartBeep();
 
-  if (!LiveVoice.connected && currentUser.waveId) {
-    const connected = await LiveVoice.connect(currentUser.waveId);
-    if (!connected) {
-      toast('❌ تعذر الاتصال بالموجة الصوتية', 'error');
-      pttHolding = false;
-      pttMain.classList.remove('holding');
-      document.body.classList.remove('ptt-active');
-      return;
-    }
-  }
   const published = await LiveVoice.startPublish();
+  
   if (!published) {
-    toast('❌ لم يبدأ إرسال الصوت', 'error');
     pttHolding = false;
+    pttBusy = false;
     pttMain.classList.remove('holding');
     document.body.classList.remove('ptt-active');
+    if (statusChip) { statusChip.classList.remove('live'); statusChip.classList.add('disconnected'); }
+    if (statusText) statusText.innerHTML = '🔴 غير متصل';
+    stopWaveTimer();
     return;
   }
 
@@ -1397,6 +1397,7 @@ async function onPTTStart() {
       waveId: currentUser.waveId, deviceId: currentUser.id, userName: currentUser.name
     });
   }
+  pttBusy = false;
 }
 
 async function onPTTEnd() {
@@ -1424,10 +1425,15 @@ async function onPTTEnd() {
   }
 }
 
-pttMain.addEventListener('pointerdown', (e) => { e.preventDefault(); onPTTStart(); });
-window.addEventListener('pointerup', () => { onPTTEnd(); });
-pttMain.addEventListener('touchstart', (e) => { e.preventDefault(); onPTTStart(); }, { passive: false });
-window.addEventListener('touchend', () => { onPTTEnd(); });
+// زر PTT كـ Toggle (ضغطة تشغل، ضغطة توقف)
+pttMain.addEventListener('click', async (e) => {
+  e.preventDefault();
+  if (pttHolding) {
+    await onPTTEnd();
+  } else {
+    await onPTTStart();
+  }
+});
 
 function openCreateWave() { openModal('modalWave'); }
 function openEditWaveName() {
@@ -1661,16 +1667,35 @@ function addChatMessage(msg, direction, scroll = true) {
 }
 
 function sendTextMessage(text) {
-  if (!text.trim() || !currentUser.currentConvId) {
-    if (!currentUser.currentConvId) toast('⚠️ اختر محادثة أولاً', 'error');
+  if (!text.trim()) return;
+  if (!currentUser.currentConvId) {
+    toast('⚠️ ادخل الغرفة أولاً', 'error');
     return;
   }
+  
   const msg = {
     id: 'msg_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
-    sender: currentUser.id, senderName: currentUser.name, type: 'text',
-    text: text.trim(), time: Date.now()
+    sender: currentUser.id,
+    senderName: currentUser.name,
+    type: 'text',
+    text: text.trim(),
+    time: Date.now()
   };
-  if (socket) socket.emit('send_direct_message', { conversationId: currentUser.currentConvId, message: msg });
+  
+  // إذا كانت غرفة داخلية (تجربة ذاتية)
+  if (currentUser.currentConvId.startsWith('conv_self_')) {
+    addChatMessage(msg, 'out');
+    toast('✅ تم إرسال الرسالة', 'success');
+    return;
+  }
+  
+  // غرفة عادية
+  if (socket) {
+    socket.emit('send_direct_message', {
+      conversationId: currentUser.currentConvId,
+      message: msg
+    });
+  }
   addChatMessage(msg, 'out');
 }
 
@@ -1741,6 +1766,13 @@ async function stopVoiceRecordingAndSend() {
         id: 'msg_' + Date.now(), sender: currentUser.id, senderName: currentUser.name,
         type: 'voice', url: base64, duration: duration, time: Date.now()
       };
+      
+      if (currentUser.currentConvId.startsWith('conv_self_')) {
+        addChatMessage(msg, 'out');
+        toast('✅ تم إرسال الرسالة الصوتية', 'success');
+        return;
+      }
+      
       if (socket) socket.emit('send_direct_message', { conversationId: currentUser.currentConvId, message: msg });
       addChatMessage(msg, 'out');
       toast('✅ تم إرسال الرسالة الصوتية', 'success');
@@ -1823,6 +1855,13 @@ function sendContactMessage(name, phone) {
     id: 'msg_' + Date.now(), sender: currentUser.id, senderName: currentUser.name,
     type: 'contact', contactName: name, contactPhone: phone, time: Date.now()
   };
+  
+  if (currentUser.currentConvId.startsWith('conv_self_')) {
+    addChatMessage(msg, 'out');
+    toast('✅ تم إرسال جهة الاتصال', 'success');
+    return;
+  }
+  
   if (socket) socket.emit('send_direct_message', { conversationId: currentUser.currentConvId, message: msg });
   addChatMessage(msg, 'out');
   toast('✅ تم إرسال جهة الاتصال', 'success');
@@ -1842,6 +1881,13 @@ document.getElementById('hiddenFileInput').addEventListener('change', (e) => {
       id: 'msg_' + Date.now(), sender: currentUser.id, senderName: currentUser.name,
       type: type, url: reader.result, fileName: file.name, duration: 0, time: Date.now()
     };
+    
+    if (currentUser.currentConvId.startsWith('conv_self_')) {
+      addChatMessage(msg, 'out');
+      toast('✅ تم إرسال الملف', 'success');
+      return;
+    }
+    
     if (socket) socket.emit('send_direct_message', { conversationId: currentUser.currentConvId, message: msg });
     addChatMessage(msg, 'out');
     toast('✅ تم إرسال الملف', 'success');
@@ -1883,7 +1929,6 @@ async function createRoom() {
   currentUser.roomName = name;
   currentUser.roomCode = roomCode;
 
-  // حفظ الغرفة تلقائياً
   localStorage.setItem('rc_saved_room_code', roomCode);
   localStorage.setItem('rc_saved_room_name', name);
 
@@ -1894,6 +1939,24 @@ async function createRoom() {
   closeModal('modalCreate');
   openModal('modalRoomCreated');
   toast('✅ تم إنشاء الغرفة "' + name + '"', 'success');
+
+  // فتح دردشة الغرفة تلقائياً (غرفة تجريبية)
+  const selfConvId = 'conv_self_' + roomCode;
+  currentUser.currentConvId = selfConvId;
+  currentUser.currentChatWith = 'self';
+
+  document.getElementById('chatWithName').textContent = name + ' (غرفتك)';
+  document.getElementById('chatWithCode').textContent = roomCode;
+
+  switchTab('chat');
+  
+  document.getElementById('chatMessages').innerHTML = `
+    <div style="padding:20px;text-align:center;color:var(--text-dim);font-size:12px;">
+      💬 هذه غرفتك "${name}"<br>
+      شارك رقم الغرفة: <strong style="color:var(--cyan);">${roomCode}</strong><br>
+      يمكنك تجربة كل الميزات هنا.
+    </div>
+  `;
 }
 
 function saveRoomName() {
@@ -2069,11 +2132,9 @@ window.addEventListener('DOMContentLoaded', async () => {
 
 document.addEventListener('keydown', (e) => {
   if (e.code === 'Space' && !e.repeat && !document.querySelector('.modal-overlay.show')) {
-    e.preventDefault(); onPTTStart();
+    e.preventDefault(); 
+    if (pttHolding) onPTTEnd(); else onPTTStart();
   }
-});
-document.addEventListener('keyup', (e) => {
-  if (e.code === 'Space') { e.preventDefault(); onPTTEnd(); }
 });
 
 document.addEventListener('click', (e) => {
@@ -2085,4 +2146,4 @@ document.addEventListener('click', (e) => {
 });
   </script>
 </body>
-  </html>
+</html>
