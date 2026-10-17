@@ -817,7 +817,7 @@ const LiveVoice = {
       const { Room, RoomEvent } = LivekitClient;
       this.room = new Room({
         adaptiveStream: true, dynacast: true,
-        audioCaptureDefaults: { echoCancellation: false, noiseSuppression: false, autoGainControl: false }
+        audioCaptureDefaults: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
       });
       this.room
         .on(RoomEvent.TrackSubscribed, (track, pub, participant) => {
@@ -834,43 +834,48 @@ const LiveVoice = {
   },
 
   async startPublish() {
-    if (!this.connected || !this.room || this.publishing) {
+  if (!this.connected || !this.room || this.publishing) {
+    return false;
+  }
+  let track = null;
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    stream.getTracks().forEach(t => t.stop());
+
+    const { createLocalAudioTrack } = LivekitClient;
+    
+    track = await createLocalAudioTrack({
+      echoCancellation: true,
+      noiseSuppression: true,
+      autoGainControl: true
+    });
+
+    if (!this.connected || !this.room) {
+      track.stop();
       return false;
     }
-    let track = null;
-    try {
-      const { createLocalAudioTrack } = LivekitClient;
-      track = await createLocalAudioTrack({
-        echoCancellation: false, noiseSuppression: false, autoGainControl: false
-      });
-      // إذا رفعت إصبعك أثناء تشغيل الميكروفون، أوقفه
-      if (!this.connected || !this.room) {
-        track.stop();
-        return false;
-      }
-      const activeRoom = this.room;
-      await activeRoom.localParticipant.publishTrack(track);
-      // تحقق مرة أخرى إذا انتهى الضغط أثناء نشر الصوت
-      if (!this.connected || this.room !== activeRoom) {
-        try {
-          await activeRoom.localParticipant.unpublishTrack(track);
-        } catch (err) {}
-        track.stop();
-        return false;
-      }
-      this.localTrack = track;
-      this.publishing = true;
-      return true;
-    } catch (e) {
-      if (track) {
-        try { track.stop(); } catch (err) {}
-      }
-      this.localTrack = null;
-      this.publishing = false;
-      toast('❌ تعذّر إرسال الصوت: ' + (e.message || 'تحقق من الميكروفون والاتصال'), 'error');
+
+    const activeRoom = this.room;
+    await activeRoom.localParticipant.publishTrack(track);
+
+    if (!this.connected || this.room !== activeRoom) {
+      try { await activeRoom.localParticipant.unpublishTrack(track); } catch (err) {}
+      track.stop();
       return false;
     }
-  },
+    this.localTrack = track;
+    this.publishing = true;
+    toast('🎙️ المايك شغال...', 'success');
+    return true;
+  } catch (e) {
+    if (track) { try { track.stop(); } catch (err) {} }
+    this.localTrack = null;
+    this.publishing = false;
+    console.error(e);
+    toast('❌ مشكلة في المايك: ' + (e.message || 'تأكد من الإذن'), 'error');
+    return false;
+  }
+},
 
   async stopPublish() {
     const track = this.localTrack;
