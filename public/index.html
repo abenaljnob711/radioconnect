@@ -838,16 +838,12 @@ const LiveVoice = {
         .on(RoomEvent.ParticipantDisconnected, (participant) => this.detachAudio(participant.identity))
         .on(RoomEvent.Disconnected, () => { this.connected = false; this.currentWaveId = null; });
       await this.room.connect(LIVEKIT_URL, token);
-            await this.room.connect(LIVEKIT_URL, token);
       this.connected = true;
       this.currentWaveId = waveId;
       return true;
-    } catch (e) {
-      console.error('LiveKit connect error:', e);
-      toast('❌ فشل الاتصال: ' + (e.message || 'خطأ غير معروف'), 'error');
-      return false;
-    }
+    } catch (e) { toast('❌ فشل الاتصال بالصوت الحي', 'error'); return false; }
   },
+
   
   async startPublish() {
     if (!this.connected || !this.room || this.publishing || !pttHolding) {
@@ -1426,21 +1422,9 @@ Object.values(LiveVoice.audioElements).forEach(el => {
   await PTTEngine.init();
   PTTEngine.playStartBeep();
 
-  if (!LiveVoice.connected && currentUser.waveId) {
-  const connected = await LiveVoice.connect(currentUser.waveId);
+  if (!LiveVoice.connected && currentUser.waveId) await LiveVoice.connect(currentUser.waveId);
+  await LiveVoice.startPublish();
 
-  if (!connected) {
-    toast('❌ تعذر الاتصال بالموجة الصوتية', 'error');
-    return;
-  }
-}
-
-const published = await LiveVoice.startPublish();
-
-if (!published) {
-  toast('❌ لم يبدأ إرسال الصوت', 'error');
-  return;
-}
   if (socket && currentUser.waveId) {
     socket.emit('wave_broadcast_start', {
       waveId: currentUser.waveId, deviceId: currentUser.id, userName: currentUser.name
@@ -2115,44 +2099,6 @@ document.addEventListener('click', (e) => {
     md.classList.remove('show');
   }
 });
-
-function loadSavedWave(){
-  const savedId = localStorage.getItem('rc_wave_id');
-  if(savedId){
-    currentUser.waveId = savedId;
-    currentUser.waveCode = savedId;
-    document.getElementById('waveCodeChip').textContent=savedId;
-  }
-}
-loadSavedWave();
-
-(function setupPTT(){
-  const pttBtn = document.getElementById('pttMain');
-  let isHolding = false;
-  async function startTalk(e){
-    e.preventDefault();
-    if(isHolding) return;
-    if(!currentUser.waveId){ toast('⚠️ انضم لفرقة أولاً','error'); return; }
-    isHolding = true;
-    await PTTEngine.init(); PTTEngine.playStartBeep();
-    document.body.classList.add('ptt-active'); pttBtn.classList.add('holding');
-    if(!LiveVoice.connected){
-      const ok = await LiveVoice.connect(currentUser.waveId);
-      if(!ok){ isHolding=false; pttBtn.classList.remove('holding'); document.body.classList.remove('ptt-active'); return; }
-    }
-    await LiveVoice.startPublish();
-  }
-  async function stopTalk(e){
-    if(e) e.preventDefault(); if(!isHolding) return;
-    isHolding=false; PTTEngine.playEndBeep();
-    document.body.classList.remove('ptt-active'); pttBtn.classList.remove('holding');
-    await LiveVoice.stopPublish();
-  }
-  pttBtn.addEventListener('pointerdown', startTalk);
-  pttBtn.addEventListener('pointerup', stopTalk);
-  pttBtn.addEventListener('pointerleave', stopTalk);
-  pttBtn.addEventListener('pointercancel', stopTalk);
-})();
   </script>
 </body>
 </html>
