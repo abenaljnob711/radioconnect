@@ -7,10 +7,9 @@
 <title>Radio Connect — راديو كونكت</title>
 <audio id="walkieOpen" src="./walkie_open.mp3" preload="auto"></audio>
 <audio id="walkieClose" src="./walkie_close.mp3" preload="auto"></audio>
-<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
-<script src="https://unpkg.com/livekit-client@2.5.7/dist/livekit-client.umd.min.js"></script>
-<style>
-*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script> <script src="https://unpkg.com/@capacitor/core@5/dist/capacitor.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/livekit-client@2.5.7/dist/livekit-client.umd.min.js"></script>
+<style>*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 :root { --bg: #05080c; --card: #0f1921; --card-2: #142028; --border: #1c2a36; --text: #e6f0f5; --text-dim: #6b8899; --cyan: #00e5ff; --cyan-dark: #008fa8; --green: #00ff88; --red: #ff2a4d; --red-dark: #b01530; --yellow: #ffcc00; --blue-msg: #1a4d6b; --blue-msg-2: #0f3550; --red-msg: #6b1220; --red-msg-2: #45080f; --radius: 14px; }
 html, body { height: 100%; overflow: hidden; background: var(--bg); }
 body { font-family: 'Segoe UI', 'Tahoma', system-ui, -apple-system, sans-serif; color: var(--text); user-select: none; -webkit-user-select: none; position: relative; }
@@ -804,20 +803,13 @@ const LiveVoice = {
       const data = await res.json();
       if (!res.ok || !data.token) throw new Error(data.error || 'Token فشل');
       return data.token;
-    } catch (e) {
-  console.error('❌ Token Error:', e);
-  toast('❌ Token: ' + (e.message || 'غير معروف'), 'error');
-  return null;
-}
+    } catch (e) { toast('❌ تعذّر الاتصال بالصوت الحي', 'error'); return null; }
   },
 
   async connect(waveId) {
     if (this.connected && this.currentWaveId === waveId) return true;
     if (this.connected) await this.disconnect();
-    if (typeof LivekitClient === 'undefined') { 
-  toast('❌ مكتبة LiveKit لم تُحمّل من الإنترنت - تأكد من الشبكة', 'error'); 
-  return false; 
-}
+    if (typeof LivekitClient === 'undefined') { toast('❌ مكتبة LiveKit لم تُحمّل', 'error'); return false; }
     const token = await this.getToken(waveId);
     if (!token) return false;
     try {
@@ -837,11 +829,7 @@ const LiveVoice = {
       this.connected = true;
       this.currentWaveId = waveId;
       return true;
-} catch (e) {
-  console.error('❌ LiveKit Error:', e);
-  toast('❌ فشل: ' + (e.message || e.name || 'غير معروف'), 'error');
-  return false;
-}
+    } catch (e) { toast('❌ فشل الاتصال بالصوت الحي', 'error'); return false; }
   },
 
   async startPublish() {
