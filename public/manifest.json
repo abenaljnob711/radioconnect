@@ -1,13 +1,40 @@
-{
-  "appId": "com.radioconnect.app",
-  "appName": "Radio Connect",
-  "webDir": "public",
-  "server": {
-    "androidScheme": "https"
-  },
-  "plugins": {
-    "Permissions": {
-      "microphone": "granted"
+async startPublish() {
+  let track = null;
+  try {
+    // 1. طلب إذن المايك أولاً (هذا السطر سيجبر الجوال على إظهار نافذة السماح)
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    stream.getTracks().forEach(t => t.stop()); // نغلقه فوراً، أردنا الإذن فقط
+
+    // 2. إذا لم يكن LiveKit متصلاً، نتصل الآن
+    if (!this.connected) {
+      const ok = await this.connect(this.currentWaveId);
+      if (!ok) {
+        toast('❌ فشل الاتصال بالخادم الصوتي', 'error');
+        return false;
+      }
     }
+
+    // 3. الآن أصبحنا متصلين ومصرح لنا، ننشئ المسار الصوتي
+    const { createLocalAudioTrack } = LivekitClient;
+    track = await createLocalAudioTrack({
+      echoCancellation: true,
+      noiseSuppression: true,
+      autoGainControl: true
+    });
+
+    const activeRoom = this.room;
+    await activeRoom.localParticipant.publishTrack(track);
+
+    this.localTrack = track;
+    this.publishing = true;
+    toast('🎙️ المايك شغال...', 'success');
+    return true;
+  } catch (e) {
+    if (track) { try { track.stop(); } catch (err) {} }
+    this.localTrack = null;
+    this.publishing = false;
+    console.error(e);
+    toast('❌ مشكلة: ' + (e.message || 'تأكد من السماح للميكروفون'), 'error');
+    return false;
   }
-}
+},
