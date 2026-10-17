@@ -804,7 +804,11 @@ const LiveVoice = {
       const data = await res.json();
       if (!res.ok || !data.token) throw new Error(data.error || 'Token فشل');
       return data.token;
-    } catch (e) { toast('❌ تعذّر الاتصال بالصوت الحي', 'error'); return null; }
+    } catch (e) {
+  console.error('❌ Token Error:', e);
+  toast('❌ Token: ' + (e.message || 'غير معروف'), 'error');
+  return null;
+}
   },
 
   async connect(waveId) {
