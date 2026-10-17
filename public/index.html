@@ -814,7 +814,10 @@ const LiveVoice = {
   async connect(waveId) {
     if (this.connected && this.currentWaveId === waveId) return true;
     if (this.connected) await this.disconnect();
-    if (typeof LivekitClient === 'undefined') { toast('❌ مكتبة LiveKit لم تُحمّل', 'error'); return false; }
+    if (typeof LivekitClient === 'undefined') { 
+  toast('❌ مكتبة LiveKit لم تُحمّل من الإنترنت - تأكد من الشبكة', 'error'); 
+  return false; 
+}
     const token = await this.getToken(waveId);
     if (!token) return false;
     try {
