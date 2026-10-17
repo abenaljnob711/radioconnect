@@ -845,11 +845,12 @@ const LiveVoice = {
   },
 
   
-  async startPublish() {
-    if (!this.connected || !this.room || this.publishing || !pttHolding) {
-      return false;
-    }
-
+  
+async startPublish() {
+  if (!this.connected || !this.room || this.publishing) {
+    return false;
+  }
+  // ...
     let track = null;
 
     try {
@@ -862,17 +863,16 @@ const LiveVoice = {
       });
 
       // إذا رفعت إصبعك أثناء تشغيل الميكروفون، أوقفه
-      if (!pttHolding || !this.connected || !this.room) {
-        track.stop();
-        return false;
-      }
+if (!this.connected || !this.room) {
+  track.stop();
+  return false;
+}
 
       const activeRoom = this.room;
       await activeRoom.localParticipant.publishTrack(track);
 
       // تحقق مرة أخرى إذا انتهى الضغط أثناء نشر الصوت
-      if (!pttHolding || !this.connected || this.room !== activeRoom) {
-        try {
+if (!this.connected || this.room !== activeRoom) {
           await activeRoom.localParticipant.unpublishTrack(track);
         } catch (e) {}
         track.stop();
@@ -1029,6 +1029,7 @@ function saveUserName() {
 
 async function createWave() {
   const name = document.getElementById('waveName').value.trim();
+  // ...
   if (!name) { toast('⚠️ أدخل اسم الفرقة', 'error'); return; }
   try {
     const res = await fetch(SERVER_URL + '/api/waves/create', {
@@ -1057,9 +1058,9 @@ async function createWave() {
     toast('✅ تم إنشاء الفرقة "' + name + '"', 'success');
   } catch (e) { toast('❌ ' + e.message, 'error'); }
 }
-
 async function joinWaveAsMember(waveId) {
-  currentUser.waveId = waveId; currentUser.waveCode = waveId;
+  currentUser.waveId = waveId;
+  // ...
   try {
     const res = await fetch(SERVER_URL + '/api/waves/' + waveId);
     const data = await res.json();
@@ -1265,13 +1266,13 @@ function openSideMenu() {
           <span class="menu-desc">ابحث برقم الفرقة</span>
         </span>
       </button>
-      <button class="menu-item" onclick="closeSideMenu();saveMyRoom()">
+     <button class="menu-item" onclick="closeSideMenu();saveMyWave()">
   <span class="menu-icon">💾</span>
   <span class="menu-text">
-    <span class="menu-label">حفظ الغرفة</span>
+    <span class="menu-label">حفظ الفرقة</span>
     <span class="menu-desc">استرجعها تلقائياً عند الدخول</span>
   </span>
-</button>
+</button> 
       <button class="menu-item" onclick="closeSideMenu();openEditWaveName()">
         <span class="menu-icon">✏️</span>
         <span class="menu-text">
@@ -1936,7 +1937,33 @@ function saveRoomName() {
   toast('✅ تم تحديث اسم الغرفة', 'success');
   closeModal('modalEditName');
 }
+function copyMyRoomCode() {
+  if (!currentUser.roomCode) { toast('⚠️ لا يوجد رقم غرفة', 'error'); return; }
+  navigator.clipboard.writeText(currentUser.roomCode)
+    .then(() => toast('📋 تم نسخ رقم الغرفة', 'success'))
+    .catch(() => toast('رقم الغرفة: ' + currentUser.roomCode, 'success'));
+}
 
+function saveMyWave() {
+  if (!currentUser.waveId) { toast('⚠️ لا توجد فرقة', 'error'); return; }
+  localStorage.setItem('rc_saved_wave_id', currentUser.waveId);
+  localStorage.setItem('rc_saved_wave_name', currentUser.waveName || '');
+  toast('✅ تم حفظ الفرقة — ستسترجع تلقائياً', 'success');
+}
+
+function saveMyRoom() {
+  if (!currentUser.roomCode) { toast('⚠️ لا توجد غرفة', 'error'); return; }
+  localStorage.setItem('rc_saved_room_code', currentUser.roomCode);
+  localStorage.setItem('rc_saved_room_name', currentUser.roomName || '');
+  toast('✅ تم حفظ الغرفة — ستسترجع تلقائياً', 'success');
+}
+
+function copyRoomCode() {
+  if (!currentUser.roomCode) return;
+  navigator.clipboard.writeText(currentUser.roomCode)
+    .then(() => toast('📋 تم نسخ الرقم', 'success'))
+    .catch(() => toast('رقم الغرفة: ' + currentUser.roomCode, 'success'));
+}
 function copyRoomCode() {
   if (!currentUser.roomCode) return;
   navigator.clipboard.writeText(currentUser.roomCode)
