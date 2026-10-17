@@ -1,40 +1,43 @@
-async startPublish() {
-  let track = null;
-  try {
-    // 1. طلب إذن المايك أولاً (هذا السطر سيجبر الجوال على إظهار نافذة السماح)
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    stream.getTracks().forEach(t => t.stop()); // نغلقه فوراً، أردنا الإذن فقط
+async function onPTTStart() {
+  if (pttHolding) return;
+  pttHolding = true;
+  pttMain.classList.add('holding');
+  document.body.classList.add('ptt-active');
 
-    // 2. إذا لم يكن LiveKit متصلاً، نتصل الآن
-    if (!this.connected) {
-      const ok = await this.connect(this.currentWaveId);
-      if (!ok) {
-        toast('❌ فشل الاتصال بالخادم الصوتي', 'error');
-        return false;
-      }
-    }
+  Object.values(LiveVoice.audioElements).forEach(el => {
+    el.play().catch(() => {});
+  });
 
-    // 3. الآن أصبحنا متصلين ومصرح لنا، ننشئ المسار الصوتي
-    const { createLocalAudioTrack } = LivekitClient;
-    track = await createLocalAudioTrack({
-      echoCancellation: true,
-      noiseSuppression: true,
-      autoGainControl: true
-    });
+  const statusChip = document.getElementById('waveStatusChip');
+  const statusText = document.getElementById('waveStatusText');
+  if (statusChip) { statusChip.classList.add('live'); statusChip.classList.remove('disconnected'); }
+  if (statusText) statusText.innerHTML = '🟢 يتحدث';
 
-    const activeRoom = this.room;
-    await activeRoom.localParticipant.publishTrack(track);
+  const lcd3 = document.getElementById('lcdLine3');
+  if (lcd3) lcd3.textContent = (currentUser.radCode || '—') + ' • TX';
+  const lcdSt = document.getElementById('lcdStatus');
+  if (lcdSt) lcdSt.textContent = '●';
 
-    this.localTrack = track;
-    this.publishing = true;
-    toast('🎙️ المايك شغال...', 'success');
-    return true;
-  } catch (e) {
-    if (track) { try { track.stop(); } catch (err) {} }
-    this.localTrack = null;
-    this.publishing = false;
-    console.error(e);
-    toast('❌ مشكلة: ' + (e.message || 'تأكد من السماح للميكروفون'), 'error');
-    return false;
+  startWaveTimer();
+  await PTTEngine.init();
+  PTTEngine.playStartBeep();
+
+  // التعديل الجوهري: نطلب الصوت مباشرة
+  const published = await LiveVoice.startPublish();
+  if (!published) {
+    toast('❌ لم يبدأ إرسال الصوت', 'error');
+    pttHolding = false;
+    pttMain.classList.remove('holding');
+    document.body.classList.remove('ptt-active');
+    stopWaveTimer();
+    if (statusChip) { statusChip.classList.remove('live'); statusChip.classList.add('disconnected'); }
+    if (statusText) statusText.innerHTML = '🔴 غير متصل';
+    return;
   }
-},
+
+  if (socket && currentUser.waveId) {
+    socket.emit('wave_broadcast_start', {
+      waveId: currentUser.waveId, deviceId: currentUser.id, userName: currentUser.name
+    });
+  }
+}
