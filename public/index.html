@@ -835,8 +835,8 @@ const LiveVoice = {
 
   async startPublish() {
   if (!this.connected || !this.room || this.publishing) {
-  return false;
-}
+    return false;
+  }
   let track = null;
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -2085,4 +2085,4 @@ document.addEventListener('click', (e) => {
 });
   </script>
 </body>
-</html>
+  </html>
