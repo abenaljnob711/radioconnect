@@ -244,12 +244,9 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
         </div>
       </header>
 
-      <!-- الصف الأول: الشبكة (يمين) | الفرقة النشطة (وسط) | رقم الموجة (يسار) -->
       <div class="status-row">
         <div class="chip" id="networkChip">
-          <div class="bars">
-            <span></span><span></span><span></span><span></span>
-          </div>
+          <div class="bars"><span></span><span></span><span></span><span></span></div>
           <div class="chip-label">الشبكة</div>
         </div>
         <div class="chip" id="waveNameChip">
@@ -262,7 +259,6 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
         </div>
       </div>
 
-      <!-- الصف الثاني: غير متصل (يمين) | العمليات (وسط) | البطارية (يسار) -->
       <div class="status-row">
         <div class="chip" id="waveStatusChip" class="disconnected">
           <div class="status-text" id="waveStatusText">🔴 غير متصل</div>
@@ -274,9 +270,7 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
         <div class="chip" id="batteryChip">
           <div class="chip-value">
             <div class="battery-visual">
-              <div class="battery-bars">
-                <span></span><span></span><span></span><span></span><span></span>
-              </div>
+              <div class="battery-bars"><span></span><span></span><span></span><span></span><span></span></div>
               <span class="battery-pct" id="batteryValue">--%</span>
             </div>
           </div>
@@ -333,12 +327,8 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
       <div class="empty-room" id="emptyRoom">
         <div class="empty-room-icon">💬</div>
         <div class="empty-room-title">لا توجد محادثات بعد</div>
-        <div class="empty-room-text">
-          اضغط ☰ بالأعلى، ثم اختر "البحث" للعثور على مستخدم وبدء محادثة.
-        </div>
-        <button class="empty-room-btn" onclick="openSearchUser()">
-          🔍 البحث عن مستخدم
-        </button>
+        <div class="empty-room-text">اضغط ☰ بالأعلى، ثم اختر "البحث" للعثور على مستخدم وبدء محادثة.</div>
+        <button class="empty-room-btn" onclick="openSearchUser()">🔍 البحث عن مستخدم</button>
       </div>
     </section>
 
@@ -678,9 +668,7 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
       <div class="join-request-name" id="joinTargetName">—</div>
       <div class="join-request-code" id="joinTargetCode">Q00000</div>
     </div>
-    <div class="modal-sub" style="margin-bottom:0;">
-      ⚠️ سيحتاج صاحب الفرقة للموافقة على طلبك
-    </div>
+    <div class="modal-sub" style="margin-bottom:0;">⚠️ سيحتاج صاحب الفرقة للموافقة على طلبك</div>
     <div class="modal-actions">
       <button class="modal-btn cancel" onclick="cancelJoin()">❌ إلغاء</button>
       <button class="modal-btn confirm" onclick="confirmJoin()">✅ موافق</button>
@@ -762,6 +750,7 @@ let batteryPercent = null;
 let menuBusy = false;
 let searchResultUser = null;
 let socket = null;
+let pttHolding = false; /* ✅ تم نقلها هنا لتفادي مشكلة الـ Hoisting */
 
 const PTTEngine = {
   audioCtx: null, beepReady: false,
@@ -798,8 +787,8 @@ const PTTEngine = {
     if (navigator.vibrate) navigator.vibrate([30, 40, 30]);
   },
   playRealBeep() { this.playCloseBeep(); },
-playStartBeep() { this.playCloseBeep(); },
-playEndBeep() { this.playOpenBeep(); }
+  playStartBeep() { this.playCloseBeep(); },
+  playEndBeep() { this.playOpenBeep(); }
 };
 
 const LiveVoice = {
@@ -844,45 +833,34 @@ const LiveVoice = {
     } catch (e) { toast('❌ فشل الاتصال بالصوت الحي', 'error'); return false; }
   },
 
-  
-  
-async startPublish() {
-  if (!this.connected || !this.room || this.publishing) {
-    return false;
-  }
-  // ...
+  async startPublish() {
+    if (!this.connected || !this.room || this.publishing) {
+      return false;
+    }
     let track = null;
-
     try {
       const { createLocalAudioTrack } = LivekitClient;
-
       track = await createLocalAudioTrack({
-        echoCancellation: false,
-        noiseSuppression: false,
-        autoGainControl: false
+        echoCancellation: false, noiseSuppression: false, autoGainControl: false
       });
-
       // إذا رفعت إصبعك أثناء تشغيل الميكروفون، أوقفه
-if (!this.connected || !this.room) {
-  track.stop();
-  return false;
-}
-
-      const activeRoom = this.room;
-      await activeRoom.localParticipant.publishTrack(track);
-
-      // تحقق مرة أخرى إذا انتهى الضغط أثناء نشر الصوت
-if (!this.connected || this.room !== activeRoom) {
-          await activeRoom.localParticipant.unpublishTrack(track);
-        } catch (e) {}
+      if (!this.connected || !this.room) {
         track.stop();
         return false;
       }
-
+      const activeRoom = this.room;
+      await activeRoom.localParticipant.publishTrack(track);
+      // تحقق مرة أخرى إذا انتهى الضغط أثناء نشر الصوت
+      if (!this.connected || this.room !== activeRoom) {
+        try {
+          await activeRoom.localParticipant.unpublishTrack(track);
+        } catch (err) {}
+        track.stop();
+        return false;
+      }
       this.localTrack = track;
       this.publishing = true;
       return true;
-
     } catch (e) {
       if (track) {
         try { track.stop(); } catch (err) {}
@@ -897,13 +875,10 @@ if (!this.connected || this.room !== activeRoom) {
   async stopPublish() {
     const track = this.localTrack;
     const activeRoom = this.room;
-
     // أوقف حالة الإرسال فوراً
     this.localTrack = null;
     this.publishing = false;
-
     if (!track) return;
-
     try {
       if (activeRoom && this.connected) {
         await activeRoom.localParticipant.unpublishTrack(track);
@@ -914,7 +889,6 @@ if (!this.connected || this.room !== activeRoom) {
       try { track.stop(); } catch (e) {}
     }
   },
-
 
   attachAudio(track, identity) {
     this.detachAudio(identity);
@@ -1029,7 +1003,6 @@ function saveUserName() {
 
 async function createWave() {
   const name = document.getElementById('waveName').value.trim();
-  // ...
   if (!name) { toast('⚠️ أدخل اسم الفرقة', 'error'); return; }
   try {
     const res = await fetch(SERVER_URL + '/api/waves/create', {
@@ -1052,15 +1025,19 @@ async function createWave() {
     const el4 = document.getElementById('waveNameLabel'); if (el4) el4.textContent = name;
     const el5 = document.getElementById('lcdLine3'); if (el5) el5.textContent = data.waveId + ' • TX';
 
+    // حفظ الموجة تلقائياً
+    localStorage.setItem('rc_saved_wave_id', data.waveId);
+    localStorage.setItem('rc_saved_wave_name', name);
+
     await PTTEngine.init(); PTTEngine.playStartBeep();
     await LiveVoice.connect(data.waveId);
     if (socket) socket.emit('wave_join', { waveId: data.waveId, deviceId: currentUser.id, userName: currentUser.name });
     toast('✅ تم إنشاء الفرقة "' + name + '"', 'success');
   } catch (e) { toast('❌ ' + e.message, 'error'); }
 }
+
 async function joinWaveAsMember(waveId) {
-  currentUser.waveId = waveId;
-  // ...
+  currentUser.waveId = waveId; currentUser.waveCode = waveId;
   try {
     const res = await fetch(SERVER_URL + '/api/waves/' + waveId);
     const data = await res.json();
@@ -1075,6 +1052,10 @@ async function joinWaveAsMember(waveId) {
   const el1 = document.getElementById('waveCodeChip'); if (el1) el1.innerHTML = waveId + ' <span style="font-size:12px;">🔑</span>';
   const el2 = document.getElementById('waveCodeValue'); if (el2) el2.textContent = waveId;
   const el3 = document.getElementById('lcdLine3'); if (el3) el3.textContent = waveId + ' • RX';
+
+  // حفظ الموجة تلقائياً
+  localStorage.setItem('rc_saved_wave_id', waveId);
+  localStorage.setItem('rc_saved_wave_name', currentUser.waveName || '');
 
   await LiveVoice.connect(waveId);
   if (socket) socket.emit('wave_join', { waveId, deviceId: currentUser.id, userName: currentUser.name });
@@ -1180,8 +1161,7 @@ async function removeMember(memberId) {
     toast('✅ تم إخراج العضو', 'success');
   } catch (e) { toast('❌ فشل الإخراج', 'error'); }
 }
-    
-function switchTab(tabName) {
+    function switchTab(tabName) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   const screen = document.getElementById('screen-' + tabName);
@@ -1254,103 +1234,67 @@ function openSideMenu() {
     content.innerHTML = `
       <button class="menu-item primary" onclick="closeSideMenu();openCreateWave()">
         <span class="menu-icon">➕</span>
-        <span class="menu-text">
-          <span class="menu-label">إضافة فرقة</span>
-          <span class="menu-desc">إنشاء موجة لاسلكية جديدة</span>
-        </span>
+        <span class="menu-text"><span class="menu-label">إضافة فرقة</span><span class="menu-desc">إنشاء موجة لاسلكية جديدة</span></span>
       </button>
       <button class="menu-item" onclick="closeSideMenu();openSearchWave()">
         <span class="menu-icon">🔍</span>
-        <span class="menu-text">
-          <span class="menu-label">البحث عن فرقة</span>
-          <span class="menu-desc">ابحث برقم الفرقة</span>
-        </span>
+        <span class="menu-text"><span class="menu-label">البحث عن فرقة</span><span class="menu-desc">ابحث برقم الفرقة</span></span>
       </button>
-     <button class="menu-item" onclick="closeSideMenu();saveMyWave()">
-  <span class="menu-icon">💾</span>
-  <span class="menu-text">
-    <span class="menu-label">حفظ الفرقة</span>
-    <span class="menu-desc">استرجعها تلقائياً عند الدخول</span>
-  </span>
-</button> 
+      <button class="menu-item" onclick="closeSideMenu();saveMyWave()">
+        <span class="menu-icon">💾</span>
+        <span class="menu-text"><span class="menu-label">حفظ الفرقة</span><span class="menu-desc">استرجعها تلقائياً عند الدخول</span></span>
+      </button>
       <button class="menu-item" onclick="closeSideMenu();openEditWaveName()">
         <span class="menu-icon">✏️</span>
-        <span class="menu-text">
-          <span class="menu-label">تعديل اسم الفرقة</span>
-          <span class="menu-desc">غيّر اسم فرقتك</span>
-        </span>
+        <span class="menu-text"><span class="menu-label">تعديل اسم الفرقة</span><span class="menu-desc">غيّر اسم فرقتك</span></span>
       </button>
       <button class="menu-item" onclick="closeSideMenu();leaveWave()">
         <span class="menu-icon">🗑️</span>
-        <span class="menu-text">
-          <span class="menu-label">مسح الفرقة</span>
-          <span class="menu-desc">مغادرة الفرقة الحالية</span>
-        </span>
+        <span class="menu-text"><span class="menu-label">مسح الفرقة</span><span class="menu-desc">مغادرة الفرقة الحالية</span></span>
       </button>
     `;
   } else if (activeId === 'screen-log' || activeId === 'screen-chat') {
-  title.textContent = '💬 قائمة الغرفة';
-  content.innerHTML = `
-    <div style="background:rgba(0,229,255,.05); border:1px solid rgba(0,229,255,.3); border-radius:12px; padding:12px; margin-bottom:12px; text-align:center;">
-      <div style="font-size:11px; color:var(--text-dim); margin-bottom:4px;">📛 اسم الغرفة</div>
-      <div style="font-size:14px; font-weight:800; color:var(--text); margin-bottom:10px;">${currentUser.roomName || '—'}</div>
-      <div style="font-size:11px; color:var(--text-dim); margin-bottom:4px;">🔑 رقم الغرفة</div>
-      <div onclick="copyMyRoomCode()" style="font-size:16px; font-weight:900; color:var(--cyan); font-family:'Courier New',monospace; letter-spacing:2px; cursor:pointer; padding:6px; border-radius:8px; background:rgba(0,229,255,.1); border:1px solid rgba(0,229,255,.4);">
-        ${currentUser.roomCode || '—'} 📋
+    title.textContent = '💬 قائمة الغرفة';
+    content.innerHTML = `
+      <div style="background:rgba(0,229,255,.05); border:1px solid rgba(0,229,255,.3); border-radius:12px; padding:12px; margin-bottom:12px; text-align:center;">
+        <div style="font-size:11px; color:var(--text-dim); margin-bottom:4px;">📛 اسم الغرفة</div>
+        <div style="font-size:14px; font-weight:800; color:var(--text); margin-bottom:10px;">${currentUser.roomName || '—'}</div>
+        <div style="font-size:11px; color:var(--text-dim); margin-bottom:4px;">🔑 رقم الغرفة</div>
+        <div onclick="copyMyRoomCode()" style="font-size:16px; font-weight:900; color:var(--cyan); font-family:'Courier New',monospace; letter-spacing:2px; cursor:pointer; padding:6px; border-radius:8px; background:rgba(0,229,255,.1); border:1px solid rgba(0,229,255,.4);">
+          ${currentUser.roomCode || '—'} 📋
+        </div>
       </div>
-    </div>
-    <button class="menu-item primary" onclick="closeSideMenu();openCreateRoom()">
-      <span class="menu-icon">➕</span>
-      <span class="menu-text">
-        <span class="menu-label">إضافة غرفة</span>
-        <span class="menu-desc">إنشاء غرفة دردشة جديدة</span>
-      </span>
-    </button>
-    <button class="menu-item" onclick="closeSideMenu();openSearchUser()">
-      <span class="menu-icon">🔍</span>
-      <span class="menu-text">
-        <span class="menu-label">البحث عن غرفة</span>
-        <span class="menu-desc">ابحث برقم المستخدم</span>
-      </span>
-    </button>
-    <button class="menu-item" onclick="closeSideMenu();saveMyRoom()">
-      <span class="menu-icon">💾</span>
-      <span class="menu-text">
-        <span class="menu-label">حفظ الغرفة</span>
-        <span class="menu-desc">استرجعها تلقائياً عند الدخول</span>
-      </span>
-    </button>
-    <button class="menu-item" onclick="closeSideMenu();openEditRoomName()">
-      <span class="menu-icon">✏️</span>
-      <span class="menu-text">
-        <span class="menu-label">تعديل اسم الغرفة</span>
-        <span class="menu-desc">غيّر اسم غرفتك</span>
-      </span>
-    </button>
-    <button class="menu-item" onclick="closeSideMenu();confirmClearChat()">
-      <span class="menu-icon">🗑️</span>
-      <span class="menu-text">
-        <span class="menu-label">مسح المحادثة</span>
-        <span class="menu-desc">حذف كل الرسائل</span>
-      </span>
-    </button>
-  `;
+      <button class="menu-item primary" onclick="closeSideMenu();openCreateRoom()">
+        <span class="menu-icon">➕</span>
+        <span class="menu-text"><span class="menu-label">إضافة غرفة</span><span class="menu-desc">إنشاء غرفة دردشة جديدة</span></span>
+      </button>
+      <button class="menu-item" onclick="closeSideMenu();openSearchUser()">
+        <span class="menu-icon">🔍</span>
+        <span class="menu-text"><span class="menu-label">البحث عن غرفة</span><span class="menu-desc">ابحث برقم المستخدم</span></span>
+      </button>
+      <button class="menu-item" onclick="closeSideMenu();saveMyRoom()">
+        <span class="menu-icon">💾</span>
+        <span class="menu-text"><span class="menu-label">حفظ الغرفة</span><span class="menu-desc">استرجعها تلقائياً عند الدخول</span></span>
+      </button>
+      <button class="menu-item" onclick="closeSideMenu();openEditRoomName()">
+        <span class="menu-icon">✏️</span>
+        <span class="menu-text"><span class="menu-label">تعديل اسم الغرفة</span><span class="menu-desc">غيّر اسم غرفتك</span></span>
+      </button>
+      <button class="menu-item" onclick="closeSideMenu();confirmClearChat()">
+        <span class="menu-icon">🗑️</span>
+        <span class="menu-text"><span class="menu-label">مسح المحادثة</span><span class="menu-desc">حذف كل الرسائل</span></span>
+      </button>
+    `;
   } else {
     title.textContent = '⚙️ الإعدادات السريعة';
     content.innerHTML = `
       <button class="menu-item" onclick="closeSideMenu();openSearchUser()">
         <span class="menu-icon">🔍</span>
-        <span class="menu-text">
-          <span class="menu-label">البحث</span>
-          <span class="menu-desc">ابحث عن مستخدم</span>
-        </span>
+        <span class="menu-text"><span class="menu-label">البحث</span><span class="menu-desc">ابحث عن مستخدم</span></span>
       </button>
       <button class="menu-item" onclick="closeSideMenu();testCall()">
         <span class="menu-icon">🔔</span>
-        <span class="menu-text">
-          <span class="menu-label">اختبار النداء</span>
-          <span class="menu-desc">تجربة صوت البيب</span>
-        </span>
+        <span class="menu-text"><span class="menu-label">اختبار النداء</span><span class="menu-desc">تجربة صوت البيب</span></span>
       </button>
     `;
   }
@@ -1377,7 +1321,6 @@ menuToggle.addEventListener('click', (e) => {
 menuBackdrop.addEventListener('click', closeSideMenu);
 
 const pttMain = document.getElementById('pttMain');
-let pttHolding = false;
 let waveTimerInterval = null;
 let waveStartTime = 0;
 
@@ -1405,10 +1348,12 @@ async function onPTTStart() {
   pttHolding = true;
   pttMain.classList.add('holding');
   document.body.classList.add('ptt-active');
-// شغّل كل الأصوات المعلّقة
-Object.values(LiveVoice.audioElements).forEach(el => {
-  el.play().catch(() => {});
-});
+
+  // شغّل كل الأصوات المعلّقة
+  Object.values(LiveVoice.audioElements).forEach(el => {
+    el.play().catch(() => {});
+  });
+
   const statusChip = document.getElementById('waveStatusChip');
   const statusText = document.getElementById('waveStatusText');
   if (statusChip) { statusChip.classList.add('live'); statusChip.classList.remove('disconnected'); }
@@ -1423,8 +1368,24 @@ Object.values(LiveVoice.audioElements).forEach(el => {
   await PTTEngine.init();
   PTTEngine.playStartBeep();
 
-  if (!LiveVoice.connected && currentUser.waveId) await LiveVoice.connect(currentUser.waveId);
-  await LiveVoice.startPublish();
+  if (!LiveVoice.connected && currentUser.waveId) {
+    const connected = await LiveVoice.connect(currentUser.waveId);
+    if (!connected) {
+      toast('❌ تعذر الاتصال بالموجة الصوتية', 'error');
+      pttHolding = false;
+      pttMain.classList.remove('holding');
+      document.body.classList.remove('ptt-active');
+      return;
+    }
+  }
+  const published = await LiveVoice.startPublish();
+  if (!published) {
+    toast('❌ لم يبدأ إرسال الصوت', 'error');
+    pttHolding = false;
+    pttMain.classList.remove('holding');
+    document.body.classList.remove('ptt-active');
+    return;
+  }
 
   if (socket && currentUser.waveId) {
     socket.emit('wave_broadcast_start', {
@@ -1529,6 +1490,8 @@ async function leaveWave() {
   if (socket) socket.emit('wave_leave', { waveId: currentUser.waveId, deviceId: currentUser.id });
   await LiveVoice.disconnect();
   currentUser.waveId = null; currentUser.waveCode = null; currentUser.isWaveOwner = false;
+  localStorage.removeItem('rc_saved_wave_id');
+  localStorage.removeItem('rc_saved_wave_name');
   const el1 = document.getElementById('waveCodeChip');
   if (el1) el1.innerHTML = (currentUser.radCode || 'Q00000') + ' <span style="font-size:12px;">🔑</span>';
   const statusText = document.getElementById('waveStatusText');
@@ -1905,25 +1868,24 @@ function openEditRoomIcon() {
 async function createRoom() {
   const name = document.getElementById('roomName').value.trim();
   if (!name) { toast('⚠️ أدخل اسم الغرفة', 'error'); return; }
-  
-  // ولّد رقم غرفة (G + 5 أحرف/أرقام)
+
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   let roomCode = "G";
   for (let i = 0; i < 5; i++) {
     roomCode += chars[Math.floor(Math.random() * chars.length)];
   }
 
-// حفظ الغرفة تلقائياً
-localStorage.setItem('rc_saved_room_code', roomCode);
-localStorage.setItem('rc_saved_room_name', name);
+  currentUser.roomName = name;
+  currentUser.roomCode = roomCode;
 
-currentUser.roomName = name;
-currentUser.roomCode = roomCode;
+  // حفظ الغرفة تلقائياً
+  localStorage.setItem('rc_saved_room_code', roomCode);
+  localStorage.setItem('rc_saved_room_name', name);
 
-document.getElementById('createdRoomCode').textContent = roomCode;
-document.getElementById('roomNameLabel').textContent = name;
-document.getElementById('roomName').value = '';
-  
+  document.getElementById('createdRoomCode').textContent = roomCode;
+  document.getElementById('roomNameLabel').textContent = name;
+  document.getElementById('roomName').value = '';
+
   closeModal('modalCreate');
   openModal('modalRoomCreated');
   toast('✅ تم إنشاء الغرفة "' + name + '"', 'success');
@@ -1937,6 +1899,7 @@ function saveRoomName() {
   toast('✅ تم تحديث اسم الغرفة', 'success');
   closeModal('modalEditName');
 }
+
 function copyMyRoomCode() {
   if (!currentUser.roomCode) { toast('⚠️ لا يوجد رقم غرفة', 'error'); return; }
   navigator.clipboard.writeText(currentUser.roomCode)
@@ -1958,12 +1921,6 @@ function saveMyRoom() {
   toast('✅ تم حفظ الغرفة — ستسترجع تلقائياً', 'success');
 }
 
-function copyRoomCode() {
-  if (!currentUser.roomCode) return;
-  navigator.clipboard.writeText(currentUser.roomCode)
-    .then(() => toast('📋 تم نسخ الرقم', 'success'))
-    .catch(() => toast('رقم الغرفة: ' + currentUser.roomCode, 'success'));
-}
 function copyRoomCode() {
   if (!currentUser.roomCode) return;
   navigator.clipboard.writeText(currentUser.roomCode)
@@ -2078,33 +2035,28 @@ window.addEventListener('DOMContentLoaded', async () => {
   initSocket();
   refreshChatList();
 
-  // ================= استرجاع الموجة =================
+  // استرجاع الموجة
   const savedWaveId = localStorage.getItem('rc_saved_wave_id');
   const savedWaveName = localStorage.getItem('rc_saved_wave_name');
   if (savedWaveId) {
-    console.log('🔄 استرجاع الموجة:', savedWaveId);
     currentUser.waveId = savedWaveId;
     currentUser.waveCode = savedWaveId;
     currentUser.waveName = savedWaveName;
-    
     const el1 = document.getElementById('waveCodeChip');
     if (el1) el1.innerHTML = savedWaveId + ' <span style="font-size:12px;">🔑</span>';
     const el2 = document.getElementById('waveNameLabel');
     if (el2) el2.textContent = savedWaveName || 'لا توجد فرقة';
     const el3 = document.getElementById('lcdLine3');
     if (el3) el3.textContent = savedWaveId + ' • RX';
-    
     setTimeout(() => joinWaveAsMember(savedWaveId), 1500);
   }
 
-  // ================= استرجاع الغرفة =================
+  // استرجاع الغرفة
   const savedRoomCode = localStorage.getItem('rc_saved_room_code');
   const savedRoomName = localStorage.getItem('rc_saved_room_name');
   if (savedRoomCode) {
-    console.log('🔄 استرجاع الغرفة:', savedRoomCode);
     currentUser.roomCode = savedRoomCode;
     currentUser.roomName = savedRoomName;
-    
     const el4 = document.getElementById('roomNameLabel');
     if (el4 && savedRoomName) el4.textContent = savedRoomName;
   }
