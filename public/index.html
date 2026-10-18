@@ -907,7 +907,8 @@ const LiveVoice = {
   attachAudio(track, identity) {
     this.detachAudio(identity);
     const el = track.attach();
-    el.autoplay = true; el.playsInline = true; el.style.display = 'none';
+    el.autoplay = true; el.playsInline = true; el.style.cssText = 'position:fixed; top:-9999px; left:-9999px; width:1px; height:1px; opacity:0.01; pointer-events:none;';
+
     document.body.appendChild(el);
     this.audioElements[identity] = el;
     el.play().catch(() => {
