@@ -582,8 +582,14 @@ let batteryPercent = null;
 let menuBusy = false;
 let searchResultUser = null;
 let socket = null;
-let pttHolding = false;
-let pttBusy = false; // لمنع التكرار السريع
+
+// المتغيرات الخاصة بالصوت (النسخة الجديدة)
+let livekitRoom = null;
+let waveRoom = null;
+let waveLocalAudioTrack = null;
+let rawMicStream = null;
+let localTestAudio = null;
+let isTalking = false;
 
 const PTTEngine = {
   audioCtx: null, beepReady: false,
@@ -624,135 +630,152 @@ const PTTEngine = {
   playEndBeep() { this.playOpenBeep(); }
 };
 
+/* =========================================================
+   محرك الصوت الجديد (الذي يعمل في Tactical)
+   ========================================================= */
+async function connectWaveChannel() {
+  try {
+    if (!window.LivekitClient || !currentUser.radCode) return false;
+    if (waveRoom && waveRoom.state === "connected") return true;
+
+    const tokenRes = await fetch(SERVER_URL + '/api/livekit/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ roomId: currentUser.waveId, deviceId: currentUser.id, userName: currentUser.name })
+    });
+    const tokenData = await tokenRes.json();
+    if (!tokenData.token) return false;
+
+    waveRoom = new window.LivekitClient.Room();
+    
+    waveRoom.on(window.LivekitClient.RoomEvent.TrackSubscribed, (track) => {
+      if (track.kind === "audio") {
+        const audioElement = track.attach();
+        document.body.appendChild(audioElement);
+      }
+    });
+
+    waveRoom.on(window.LivekitClient.RoomEvent.TrackUnsubscribed, () => {});
+
+    await waveRoom.connect(LIVEKIT_URL, tokenData.token);
+    return true;
+  } catch (e) {
+    console.error("Wave Connect Error:", e);
+    waveRoom = null;
+    return false;
+  }
+}
+
+async function onPTTStart() {
+  if (isTalking) return;
+  isTalking = true;
+  
+  const pttMain = document.getElementById('pttMain');
+  pttMain.classList.add('holding');
+  document.body.classList.add('ptt-active');
+
+  const statusChip = document.getElementById('waveStatusChip');
+  const statusText = document.getElementById('waveStatusText');
+  if (statusChip) { statusChip.classList.add('live'); statusChip.classList.remove('disconnected'); }
+  if (statusText) statusText.innerHTML = '🟢 يتحدث';
+
+  const lcd3 = document.getElementById('lcdLine3');
+  if (lcd3) lcd3.textContent = (currentUser.radCode || '—') + ' • TX';
+
+  startWaveTimer();
+  await PTTEngine.init();
+  PTTEngine.playStartBeep();
+
+  try {
+    rawMicStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
+    
+    if (!waveRoom || waveRoom.participants.size === 0) {
+      localTestAudio = new Audio();
+      localTestAudio.srcObject = rawMicStream;
+      localTestAudio.volume = 0.8;
+      localTestAudio.play().catch(()=>{});
+    }
+
+    connectWaveChannel().then(() => {
+      if (waveRoom && waveRoom.state === "connected" && rawMicStream) {
+        window.LivekitClient.LocalAudioTrack.createTrack(rawMicStream.getAudioTracks()[0]).then(track => {
+          waveLocalAudioTrack = track;
+          waveRoom.localParticipant.publishTrack(waveLocalAudioTrack);
+          waveLocalAudioTrack.enable();
+        });
+      }
+    });
+  } catch (err) {
+    toast("⚠️ تعذر تشغيل الميكروفون");
+    stopTalking();
+  }
+}
+
+function stopTalking() {
+  if (isTalking) PTTEngine.playEndBeep();
+  if (localTestAudio) {
+    try { localTestAudio.pause(); localTestAudio.srcObject = null; } catch (e) {}
+    localTestAudio = null;
+  }
+  if (waveLocalAudioTrack && waveRoom) {
+    try { waveRoom.localParticipant.unpublishTrack(waveLocalAudioTrack); waveLocalAudioTrack.stop(); } catch (e) {}
+    waveLocalAudioTrack = null;
+  }
+  if (rawMicStream) {
+    rawMicStream.getTracks().forEach(t => t.stop());
+    rawMicStream = null;
+  }
+  isTalking = false;
+  
+  const pttMain = document.getElementById('pttMain');
+  pttMain.classList.remove('holding');
+  document.body.classList.remove('ptt-active');
+
+  const statusChip = document.getElementById('waveStatusChip');
+  const statusText = document.getElementById('waveStatusText');
+  if (statusChip) { statusChip.classList.remove('live'); statusChip.classList.add('disconnected'); }
+  if (statusText) statusText.innerHTML = '🔴 غير متصل';
+
+  const lcd3 = document.getElementById('lcdLine3');
+  if (lcd3) lcd3.textContent = (currentUser.radCode || '—') + ' • RX';
+
+  stopWaveTimer();
+  if (socket && currentUser.waveId) {
+    socket.emit('wave_broadcast_stop', { waveId: currentUser.waveId, deviceId: currentUser.id });
+  }
+}
+
+/* =========================================================
+   LiveVoice (للغرف فقط)
+   ========================================================= */
 const LiveVoice = {
-  room: null, connected: false, publishing: false, localTrack: null,
-  audioElements: {}, currentWaveId: null,
-
-  async getToken(roomId) {
-    try {
-      const res = await fetch(SERVER_URL + '/api/livekit/token', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ roomId, deviceId: currentUser.id, userName: currentUser.name || currentUser.id })
-      });
-      const data = await res.json();
-      if (!res.ok || !data.token) throw new Error(data.error || 'Token فشل');
-      return data.token;
-    } catch (e) {
-      console.error('❌ Token Error:', e);
-      toast('❌ Token: ' + (e.message || 'غير معروف'), 'error');
-      return null;
-    }
-  },
-
+  room: null, connected: false,
   async connect(waveId) {
-    if (this.connected && this.currentWaveId === waveId) return true;
-    if (this.connected) await this.disconnect();
-    if (typeof LivekitClient === 'undefined') { toast('❌ مكتبة LiveKit لم تُحمّل', 'error'); return false; }
-    const token = await this.getToken(waveId);
-    if (!token) return false;
+    if (this.connected) return true;
     try {
-      const { Room, RoomEvent } = LivekitClient;
-      this.room = new Room({
-        adaptiveStream: true, dynacast: true,
-        audioCaptureDefaults: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
+      const tokenRes = await fetch(SERVER_URL + '/api/livekit/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ roomId: waveId, deviceId: currentUser.id, userName: currentUser.name })
       });
-      this.room
-        .on(RoomEvent.TrackSubscribed, (track, pub, participant) => {
-          if (track.kind === 'audio') this.attachAudio(track, participant.identity);
-        })
-        .on(RoomEvent.TrackUnsubscribed, (track, pub, participant) => this.detachAudio(participant.identity))
-        .on(RoomEvent.ParticipantDisconnected, (participant) => this.detachAudio(participant.identity))
-        .on(RoomEvent.Disconnected, () => { this.connected = false; this.currentWaveId = null; });
-      await this.room.connect(LIVEKIT_URL, token);
+      const data = await tokenRes.json();
+      if (!data.token) return false;
+      this.room = new window.LivekitClient.Room();
+      await this.room.connect(LIVEKIT_URL, data.token);
       this.connected = true;
-      this.currentWaveId = waveId;
       return true;
-    } catch (e) { toast('❌ فشل الاتصال بالصوت الحي', 'error'); return false; }
-  },
-
-  async startPublish() {
-    if (!this.connected || !this.room || this.publishing) {
-      return false;
-    }
-    let track = null;
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      stream.getTracks().forEach(t => t.stop());
-
-      const { createLocalAudioTrack } = LivekitClient;
-
-      track = await createLocalAudioTrack({
-        echoCancellation: true,
-        noiseSuppression: true,
-        autoGainControl: true
-      });
-
-      if (!this.connected || !this.room) {
-        track.stop();
-        return false;
-      }
-
-      const activeRoom = this.room;
-      await activeRoom.localParticipant.publishTrack(track);
-
-      if (!this.connected || this.room !== activeRoom) {
-        try { await activeRoom.localParticipant.unpublishTrack(track); } catch (err) {}
-        track.stop();
-        return false;
-      }
-      this.localTrack = track;
-      this.publishing = true;
-      toast('🎙️ المايك شغال...', 'success');
-      return true;
-    } catch (e) {
-      if (track) { try { track.stop(); } catch (err) {} }
-      this.localTrack = null;
-      this.publishing = false;
-      console.error(e);
-      toast('❌ مشكلة في المايك: ' + (e.message || 'تأكد من الإذن'), 'error');
-      return false;
-    }
-  },
-
-  async stopPublish() {
-    const track = this.localTrack;
-    const activeRoom = this.room;
-    this.localTrack = null;
-    this.publishing = false;
-    if (!track) return;
-    try {
-      if (activeRoom && this.connected) {
-        await activeRoom.localParticipant.unpublishTrack(track);
-      }
-    } catch (e) {}
-    finally {
-      try { track.stop(); } catch (e) {}
-    }
-  },
-
-  attachAudio(track, identity) {
-    this.detachAudio(identity);
-    const el = track.attach();
-    el.autoplay = true; el.playsInline = true; el.style.display = 'none';
-    document.body.appendChild(el);
-    this.audioElements[identity] = el;
-    el.play().catch(() => { document.body.addEventListener('click', () => el.play().catch(() => {}), { once: true }); });
-  },
-
-  detachAudio(identity) {
-    const el = this.audioElements[identity];
-    if (el) { try { el.pause(); el.srcObject = null; el.remove(); } catch (e) {} delete this.audioElements[identity]; }
-  },
-
-  async disconnect() {
-    try {
-      if (this.localTrack) { this.localTrack.stop(); this.localTrack = null; }
-      if (this.room) await this.room.disconnect();
-    } catch (e) {}
-    Object.keys(this.audioElements).forEach(k => this.detachAudio(k));
-    this.room = null; this.connected = false; this.publishing = false; this.currentWaveId = null;
+    } catch (e) { return false; }
   }
 };
+
+// ربط حدث الضغط والإفلات لزر PTT الرئيسي
+const pttMainBtn = document.getElementById('pttMain');
+pttMainBtn.addEventListener('pointerdown', (e) => { e.preventDefault(); onPTTStart(); });
+pttMainBtn.addEventListener('pointerup', (e) => { e.preventDefault(); stopTalking(); });
+pttMainBtn.addEventListener('pointercancel', (e) => { e.preventDefault(); stopTalking(); });
+pttMainBtn.addEventListener('touchstart', (e) => { e.preventDefault(); onPTTStart(); }, { passive: false });
+pttMainBtn.addEventListener('touchend', (e) => { e.preventDefault(); stopTalking(); }, { passive: false });
+
 
 function initSocket() {
   if (typeof io === 'undefined') return;
@@ -1159,7 +1182,6 @@ menuToggle.addEventListener('click', (e) => {
 });
 menuBackdrop.addEventListener('click', closeSideMenu);
 
-const pttMain = document.getElementById('pttMain');
 let waveTimerInterval = null;
 let waveStartTime = 0;
 
@@ -1183,9 +1205,10 @@ function stopWaveTimer() {
 }
 
 async function onPTTStart() {
-  if (pttHolding || pttBusy) return;
-  pttBusy = true;
-  pttHolding = true;
+  if (isTalking) return;
+  isTalking = true;
+  
+  const pttMain = document.getElementById('pttMain');
   pttMain.classList.add('holding');
   document.body.classList.add('ptt-active');
 
@@ -1196,37 +1219,53 @@ async function onPTTStart() {
 
   const lcd3 = document.getElementById('lcdLine3');
   if (lcd3) lcd3.textContent = (currentUser.radCode || '—') + ' • TX';
-  const lcdSt = document.getElementById('lcdStatus');
-  if (lcdSt) lcdSt.textContent = '●';
 
   startWaveTimer();
   await PTTEngine.init();
   PTTEngine.playStartBeep();
 
-  const published = await LiveVoice.startPublish();
-  
-  if (!published) {
-    pttHolding = false;
-    pttBusy = false;
-    pttMain.classList.remove('holding');
-    document.body.classList.remove('ptt-active');
-    if (statusChip) { statusChip.classList.remove('live'); statusChip.classList.add('disconnected'); }
-    if (statusText) statusText.innerHTML = '🔴 غير متصل';
-    stopWaveTimer();
-    return;
-  }
+  try {
+    rawMicStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
+    
+    if (!waveRoom || waveRoom.participants.size === 0) {
+      localTestAudio = new Audio();
+      localTestAudio.srcObject = rawMicStream;
+      localTestAudio.volume = 0.8;
+      localTestAudio.play().catch(()=>{});
+    }
 
-  if (socket && currentUser.waveId) {
-    socket.emit('wave_broadcast_start', {
-      waveId: currentUser.waveId, deviceId: currentUser.id, userName: currentUser.name
+    connectWaveChannel().then(() => {
+      if (waveRoom && waveRoom.state === "connected" && rawMicStream) {
+        window.LivekitClient.LocalAudioTrack.createTrack(rawMicStream.getAudioTracks()[0]).then(track => {
+          waveLocalAudioTrack = track;
+          waveRoom.localParticipant.publishTrack(waveLocalAudioTrack);
+          waveLocalAudioTrack.enable();
+        });
+      }
     });
+  } catch (err) {
+    toast("⚠️ تعذر تشغيل الميكروفون");
+    stopTalking();
   }
-  pttBusy = false;
 }
 
-async function onPTTEnd() {
-  if (!pttHolding) return;
-  pttHolding = false;
+function stopTalking() {
+  if (isTalking) PTTEngine.playEndBeep();
+  if (localTestAudio) {
+    try { localTestAudio.pause(); localTestAudio.srcObject = null; } catch (e) {}
+    localTestAudio = null;
+  }
+  if (waveLocalAudioTrack && waveRoom) {
+    try { waveRoom.localParticipant.unpublishTrack(waveLocalAudioTrack); waveLocalAudioTrack.stop(); } catch (e) {}
+    waveLocalAudioTrack = null;
+  }
+  if (rawMicStream) {
+    rawMicStream.getTracks().forEach(t => t.stop());
+    rawMicStream = null;
+  }
+  isTalking = false;
+  
+  const pttMain = document.getElementById('pttMain');
   pttMain.classList.remove('holding');
   document.body.classList.remove('ptt-active');
 
@@ -1237,22 +1276,12 @@ async function onPTTEnd() {
 
   const lcd3 = document.getElementById('lcdLine3');
   if (lcd3) lcd3.textContent = (currentUser.radCode || '—') + ' • RX';
-  const lcdSt = document.getElementById('lcdStatus');
-  if (lcdSt) lcdSt.textContent = '•';
 
   stopWaveTimer();
-  PTTEngine.playEndBeep();
-  await LiveVoice.stopPublish();
-
   if (socket && currentUser.waveId) {
     socket.emit('wave_broadcast_stop', { waveId: currentUser.waveId, deviceId: currentUser.id });
   }
 }
-
-pttMain.addEventListener('pointerdown', (e) => { e.preventDefault(); onPTTStart(); });
-window.addEventListener('pointerup', () => { onPTTEnd(); });
-pttMain.addEventListener('touchstart', (e) => { e.preventDefault(); onPTTStart(); }, { passive: false });
-window.addEventListener('touchend', () => { onPTTEnd(); });
 
 function openCreateWave() { openModal('modalWave'); }
 function openEditWaveName() {
@@ -1949,7 +1978,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 document.addEventListener('keydown', (e) => {
   if (e.code === 'Space' && !e.repeat && !document.querySelector('.modal-overlay.show')) {
     e.preventDefault(); 
-    if (pttHolding) onPTTEnd(); else onPTTStart();
+    if (isTalking) stopTalking(); else onPTTStart();
   }
 });
 
