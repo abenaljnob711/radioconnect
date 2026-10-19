@@ -511,8 +511,8 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
   </div>
   <div class="modal-overlay" id="modalWave">
     <div class="modal">
-      <div class="modal-title">📡 إنشاء فرقة</div>
-      <div class="modal-sub">سيُولَّد رقم فرقتك الخاص</div>
+      <div class="modal-title">📡 إنشاء موجة</div>
+      <div class="modal-sub">إنشاء فرقة جديدة</div>
       <div class="modal-field"><label>اسم الفرقة</label><input type="text" id="waveName" maxlength="30"></div>
       <div class="modal-actions"><button class="modal-btn cancel" onclick="closeModal('modalWave')">إلغاء</button><button class="modal-btn confirm" onclick="createWave()">إنشاء</button></div>
     </div>
@@ -614,10 +614,10 @@ let savedWavesList = JSON.parse(localStorage.getItem('rc_user_waves_list') || '[
 let savedRoomsList = JSON.parse(localStorage.getItem('rc_user_rooms_list') || '[]');
 
 // ==========================================
-// 2. دالة إعادة ضبط التطبيق
+// 2. دالة إعادة ضبط التطبيق (لحل مشكلة الرقم العالق)
 // ==========================================
 function resetAppData() {
-  if (!confirm('⚠️ تحذير: سيتم مسح جميع البيانات والفرق والغرف من هذا الجهاز. هل أنت متأكد؟')) return;
+  if (!confirm('⚠️ تحذير: سيتم مسح جميع البيانات والفرق والغرف من هذا الجهاز، وستحصل على رقم مستخدم جديد. هل أنت متأكد؟')) return;
   localStorage.clear();
   window.location.reload();
 }
@@ -832,7 +832,6 @@ function removeRoomFromList(roomCode) {
     localStorage.setItem('rc_user_rooms_list', JSON.stringify(savedRoomsList));
 }
 
-// قائمة العمليات
 function openOperationsMenu() {
     const title = document.getElementById('sideMenuTitle');
     const content = document.getElementById('sideMenuContent');
@@ -879,7 +878,6 @@ function openOperationsMenu() {
     if(menuToggle) menuToggle.classList.add('open');
 }
 
-// قائمة إدارة الفرق
 function openManageWavesMenu() {
     const title = document.getElementById('sideMenuTitle');
     const content = document.getElementById('sideMenuContent');
@@ -904,7 +902,6 @@ function openManageWavesMenu() {
     if(menuToggle) menuToggle.classList.add('open');
 }
 
-// قائمة إدارة الغرف
 function openManageRoomsMenu() {
     const title = document.getElementById('sideMenuTitle');
     const content = document.getElementById('sideMenuContent');
@@ -963,7 +960,6 @@ function exitWaveTemporarily() {
     }
     
     isWaveActive = false;
-    // مسح البيانات من الواجهة لتبدو فارغة
     currentUser.waveId = null;
     currentUser.waveName = null;
     currentUser.waveCode = null;
@@ -1047,7 +1043,7 @@ function deleteWaveFromList(waveId) {
         toast('⚠️ لا يمكنك الحذف وأنت نشط في الفرقة. اخرج أولاً.', 'error');
         return;
     }
-    if (!confirm('هل تريد حذف هذه الفرقة نهائياً من سجلك؟')) return;
+    if (!confirm('هل تريد حذف هذه الفرقة نهائياً من سجلك؟ (سيتم حذفها من قائمة العمليات)')) return;
     
     if (currentUser.waveId === waveId) {
         currentUser.waveId = null;
@@ -1321,7 +1317,6 @@ function openSideMenu() {
   if (activeId === 'screen-radio') {
     title.textContent = '📡 قائمة الفرقة';
     
-    // زر الخروج أو العودة
     const exitBtnHtml = isWaveActive 
         ? `<button class="menu-item" onclick="exitWaveTemporarily()" style="border-color:var(--yellow); color:var(--yellow);"><span class="menu-icon" style="background:rgba(255,204,0,.1); border-color:rgba(255,204,0,.3);">🚪</span><span class="menu-text"><span class="menu-label">الخروج من الفرقة</span><span class="menu-desc">ابقَ في السجل وعد لاحقاً</span></span></button>`
         : `<button class="menu-item primary" onclick="returnToWave(currentUser.waveId)"><span class="menu-icon">↩️</span><span class="menu-text"><span class="menu-label">العودة إلى الفرقة</span><span class="menu-desc">أنت خارجها حالياً</span></span></button>`;
@@ -1329,7 +1324,7 @@ function openSideMenu() {
     content.innerHTML = `
       <button class="menu-item primary" onclick="closeSideMenu();openCreateWave()">
         <span class="menu-icon">➕</span>
-        <span class="menu-text"><span class="menu-label">إضافة فرقة</span><span class="menu-desc">إنشاء موجة لاسلكية جديدة</span></span>
+        <span class="menu-text"><span class="menu-label">إضافة موجة</span><span class="menu-desc">إنشاء فرقة جديدة</span></span>
       </button>
       <button class="menu-item" onclick="closeSideMenu();openSearchWave()">
         <span class="menu-icon">🔍</span>
@@ -1516,7 +1511,7 @@ function testCall() {
 }
 
 // ==========================================
-// 10. دالة مسح الغرفة نهائياً (للغرف التي في السجل)
+// 10. دالة حذف الغرفة
 // ==========================================
 function deleteRoom() {
   if (!currentUser.roomCode) { toast('⚠️ لا توجد غرفة لحذفها', 'error'); return; }
@@ -1627,6 +1622,38 @@ chatPrimaryBtn.addEventListener('click', () => {
         toast('🎙️ جاري التسجيل... (اضغط مرة أخرى للإيقاف)', 'success');
     }
 });
+
+// دالة إرسال النص (تم إرجاعها لكي يعمل الزر)
+function sendTextMessage(text) {
+  if (!text.trim()) return;
+  if (!currentUser.currentConvId) {
+    toast('⚠️ ادخل الغرفة أولاً', 'error');
+    return;
+  }
+  
+  const msg = {
+    id: 'msg_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+    sender: currentUser.id,
+    senderName: currentUser.name,
+    type: 'text',
+    text: text.trim(),
+    time: Date.now()
+  };
+  
+  if (currentUser.currentConvId.startsWith('conv_self_')) {
+    addChatMessage(msg, 'out');
+    toast('✅ تم إرسال الرسالة', 'success');
+    return;
+  }
+  
+  if (socket) {
+    socket.emit('send_direct_message', {
+      conversationId: currentUser.currentConvId,
+      message: msg
+    });
+  }
+  addChatMessage(msg, 'out');
+}
   </script>
 </body>
 </html>
