@@ -262,7 +262,7 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
           <div class="status-text" id="waveStatusText">🔴 غير متصل</div>
           <div class="wave-timer" id="waveTimer">00:00</div>
         </div>
-        <div class="chip" id="operationsChip">
+        <div class="chip" id="operationsChip" style="cursor:pointer;">
           <div class="chip-value" style="font-size:13px; font-weight:800;">📋 العمليات</div>
         </div>
         <div class="chip" id="batteryChip">
@@ -382,7 +382,6 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
           <span class="setting-value">تجربة</span>
         </div>
         
-        <!-- زر استعادة ضبط المصنع الجديد -->
         <div class="setting-item" onclick="factoryReset()">
           <div class="setting-info">
             <span class="setting-title" style="color:var(--red);">⚠️ استعادة ضبط المصنع</span>
@@ -593,7 +592,7 @@ let menuBusy = false;
 let searchResultUser = null;
 let socket = null;
 
-// المتغيرات الخاصة بالصوت (النسخة الجديدة)
+// المتغيرات الخاصة بالصوت
 let livekitRoom = null;
 let waveRoom = null;
 let waveLocalAudioTrack = null;
@@ -602,7 +601,7 @@ let localTestAudio = null;
 let isTalking = false;
 
 // ==========================================
-// دالة استعادة ضبط المصنع (تمت إضافتها)
+// دالة استعادة ضبط المصنع
 // ==========================================
 function factoryReset() {
   if (!confirm('⚠️ تحذير خطير: سيتم مسح جميع البيانات (اسمك، رقمك، فرقك، وغرفك). هل أنت متأكد؟')) {
@@ -655,7 +654,7 @@ const PTTEngine = {
 };
 
 /* =========================================================
-   محرك الصوت الجديد (الذي يعمل في Tactical)
+   محرك الصوت 
    ========================================================= */
 async function connectWaveChannel() {
   try {
@@ -678,8 +677,6 @@ async function connectWaveChannel() {
         document.body.appendChild(audioElement);
       }
     });
-
-    waveRoom.on(window.LivekitClient.RoomEvent.TrackUnsubscribed, () => {});
 
     await waveRoom.connect(LIVEKIT_URL, tokenData.token);
     return true;
@@ -797,8 +794,6 @@ const pttMainBtn = document.getElementById('pttMain');
 pttMainBtn.addEventListener('pointerdown', (e) => { e.preventDefault(); onPTTStart(); });
 pttMainBtn.addEventListener('pointerup', (e) => { e.preventDefault(); stopTalking(); });
 pttMainBtn.addEventListener('pointercancel', (e) => { e.preventDefault(); stopTalking(); });
-pttMainBtn.addEventListener('touchstart', (e) => { e.preventDefault(); onPTTStart(); }, { passive: false });
-pttMainBtn.addEventListener('touchend', (e) => { e.preventDefault(); stopTalking(); }, { passive: false });
 
 
 function initSocket() {
@@ -1126,6 +1121,10 @@ function openSideMenu() {
         <span class="menu-icon">🔍</span>
         <span class="menu-text"><span class="menu-label">البحث عن فرقة</span><span class="menu-desc">ابحث برقم الفرقة</span></span>
       </button>
+      <button class="menu-item" onclick="closeSideMenu();openOperationsList()">
+        <span class="menu-icon">📋</span>
+        <span class="menu-text"><span class="menu-label">قائمة العمليات</span><span class="menu-desc">الفرق التي أنت مشترك فيها</span></span>
+      </button>
       <button class="menu-item" onclick="closeSideMenu();saveMyWave()">
         <span class="menu-icon">💾</span>
         <span class="menu-text"><span class="menu-label">حفظ الفرقة</span><span class="menu-desc">استرجعها تلقائياً عند الدخول</span></span>
@@ -1157,6 +1156,10 @@ function openSideMenu() {
       <button class="menu-item" onclick="closeSideMenu();openSearchUser()">
         <span class="menu-icon">🔍</span>
         <span class="menu-text"><span class="menu-label">البحث عن غرفة</span><span class="menu-desc">ابحث برقم المستخدم</span></span>
+      </button>
+      <button class="menu-item" onclick="closeSideMenu();openOperationsList()">
+        <span class="menu-icon">📋</span>
+        <span class="menu-text"><span class="menu-label">قائمة العمليات</span><span class="menu-desc">الغرف التي أنت مشترك فيها</span></span>
       </button>
       <button class="menu-item" onclick="closeSideMenu();saveMyRoom()">
         <span class="menu-icon">💾</span>
@@ -2013,6 +2016,130 @@ document.addEventListener('click', (e) => {
     md.classList.remove('show');
   }
 });
+
+// دالة مخصصة لقائمة العمليات
+function openOperationsList() {
+    if (typeof sideMenu === 'undefined') return;
+    const title = document.getElementById('sideMenuTitle');
+    const content = document.getElementById('sideMenuContent');
+    
+    // نجمع الفرق من العمليات والغرف
+    let allWaves = JSON.parse(localStorage.getItem('rc_user_waves_list') || '[]');
+    let allRooms = JSON.parse(localStorage.getItem('rc_user_rooms_list') || '[]');
+    
+    // إذا كان لديك عملية حالية، أضفها
+    if (currentUser.waveId && !allWaves.find(w => w.id === currentUser.waveId)) {
+        allWaves.push({ id: currentUser.waveId, name: currentUser.waveName || 'فرقة حالية' });
+    }
+    if (currentUser.roomCode && !allRooms.find(r => r.code === currentUser.roomCode)) {
+        allRooms.push({ code: currentUser.roomCode, name: currentUser.roomName || 'غرفة حالية' });
+    }
+
+    title.textContent = '📋 سجل العمليات';
+
+    let html = '';
+    
+    // قائمة الفرق
+    html += `<div style="font-size:13px; color:var(--cyan); font-weight:800; margin-bottom:8px; margin-top:4px;">📡 الفرق المشترك بها:</div>`;
+    if (allWaves.length === 0) {
+        html += `<div style="font-size:11px; color:var(--text-dim); margin-bottom:15px;">لا توجد فرق مسجلة بعد.</div>`;
+    } else {
+        allWaves.forEach(w => {
+            const isActive = currentUser.waveId === w.id;
+            html += `
+                <button class="menu-item ${isActive ? 'primary' : ''}" onclick="switchToWave('${w.id}')">
+                    <span class="menu-icon">${isActive ? '🟢' : '📡'}</span>
+                    <span class="menu-text">
+                        <span class="menu-label">${w.name} ${isActive ? '(نشطة)' : ''}</span>
+                        <span class="menu-desc">${w.id}</span>
+                    </span>
+                </button>`;
+        });
+    }
+
+    html += `<div style="border-top:1px solid var(--border); margin:10px 0;"></div>`;
+
+    // قائمة الغرف
+    html += `<div style="font-size:13px; color:var(--cyan); font-weight:800; margin-bottom:8px;">💬 الغرف المشترك بها:</div>`;
+    if (allRooms.length === 0) {
+        html += `<div style="font-size:11px; color:var(--text-dim); margin-bottom:15px;">لا توجد غرف مسجلة بعد.</div>`;
+    } else {
+        allRooms.forEach(r => {
+            const isActive = currentUser.roomCode === r.code;
+            html += `
+                <button class="menu-item ${isActive ? 'primary' : ''}" onclick="switchToRoom('${r.code}', '${r.name}')">
+                    <span class="menu-icon">${isActive ? '🟢' : '💬'}</span>
+                    <span class="menu-text">
+                        <span class="menu-label">${r.name} ${isActive ? '(نشطة)' : ''}</span>
+                        <span class="menu-desc">${r.code}</span>
+                    </span>
+                </button>`;
+        });
+    }
+
+    content.innerHTML = html;
+    sideMenu.classList.add('open');
+    menuBackdrop.classList.add('show');
+    menuToggle.classList.add('open');
+}
+
+// دوال تبديل الفرقة والغرفة
+async function switchToWave(waveId) {
+    closeSideMenu();
+    if (currentUser.waveId === waveId) return;
+    
+    // البحث عن الاسم
+    let allWaves = JSON.parse(localStorage.getItem('rc_user_waves_list') || '[]');
+    let targetWave = allWaves.find(w => w.id === waveId);
+    let name = targetWave ? targetWave.name : (currentUser.waveName || 'فرقة');
+    
+    toast('⏳ جاري التبديل...', 'success');
+    
+    // إيقاف الاتصال الحالي
+    stopTalking();
+    if (waveRoom) { waveRoom.disconnect(); waveRoom = null; }
+    if (socket) socket.emit('wave_leave', { waveId: currentUser.waveId, deviceId: currentUser.id });
+    
+    // الانتقال
+    currentUser.waveId = waveId;
+    currentUser.waveName = name;
+    currentUser.waveCode = waveId;
+    localStorage.setItem('rc_saved_wave_id', waveId);
+    localStorage.setItem('rc_saved_wave_name', name);
+    
+    // تحديث الواجهة
+    document.getElementById('waveNameLabel').textContent = name;
+    document.getElementById('waveNameValue').textContent = name;
+    document.getElementById('waveCodeValue').textContent = waveId;
+    document.getElementById('waveCodeChip').innerHTML = waveId + ' <span style="font-size:12px;">🔑</span>';
+    document.getElementById('lcdLine3').textContent = waveId + ' • RX';
+    
+    await joinWaveAsMember(waveId);
+    toast('✅ تم الانتقال إلى ' + name, 'success');
+}
+
+function switchToRoom(roomCode, roomName) {
+    closeSideMenu();
+    if (currentUser.roomCode === roomCode) return;
+    
+    currentUser.roomCode = roomCode;
+    currentUser.roomName = roomName;
+    currentUser.currentConvId = 'conv_self_' + roomCode;
+    currentUser.currentChatWith = 'self';
+    
+    localStorage.setItem('rc_saved_room_code', roomCode);
+    localStorage.setItem('rc_saved_room_name', roomName);
+    
+    document.getElementById('roomNameLabel').textContent = roomName;
+    document.getElementById('chatWithName').textContent = roomName + ' (غرفتك)';
+    document.getElementById('chatWithCode').textContent = roomCode;
+    
+    switchTab('chat');
+    toast('✅ تم الانتقال إلى الغرفة', 'success');
+}
+
+// إضافة قائمة العمليات للزر
+document.getElementById('operationsChip').addEventListener('click', openOperationsList);
   </script>
 </body>
 </html>
