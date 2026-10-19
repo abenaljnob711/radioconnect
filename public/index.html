@@ -1011,48 +1011,71 @@ async function joinWaveAsMember(waveId) {
 }
 
 async function deleteWave() {
-  if (!currentUser.waveId) { toast('⚠️ لا توجد فرقة', 'error'); return; }
+  if (!currentUser.waveId && !currentUser.waveCode) { 
+      toast('⚠️ لا توجد فرقة نشطة لحذفها', 'error'); 
+      return; 
+  }
   
   if (!confirm('هل أنت متأكد من حذف هذه الفرقة نهائياً؟\n(إذا كنت المالك، سيتم حذفها للجميع)')) return;
 
   try {
-    if (currentUser.isWaveOwner) {
+    // 1. إرسال طلب الحذف للخادم
+    if (currentUser.isWaveOwner && currentUser.waveId) {
         await fetch(SERVER_URL + '/api/waves/delete', {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ waveId: currentUser.waveId, deviceId: currentUser.id })
         }).catch(e => console.log("Delete API Error:", e));
     }
 
-    if (socket) socket.emit('wave_leave', { waveId: currentUser.waveId, deviceId: currentUser.id });
+    // 2. إرسال أمر المغادرة عبر السوكيت
+    if (socket && currentUser.waveId) {
+        socket.emit('wave_leave', { waveId: currentUser.waveId, deviceId: currentUser.id });
+    }
 
+    // 3. إغلاق اتصال الصوت
     if (waveRoom) { waveRoom.disconnect(); waveRoom = null; }
+    if (typeof LiveVoice !== 'undefined') LiveVoice.disconnect();
     
-    // إزالة من القائمة
-    removeWaveFromList(currentUser.waveId);
-
+    // 4. تصفير جميع بيانات الفرقة (هذا هو الإصلاح الأهم)
+    if(currentUser.waveId) removeWaveFromList(currentUser.waveId);
+    
     currentUser.waveId = null; 
-    currentUser.waveCode = null; 
+    currentUser.waveCode = null; // مسح رقم الموجة
     currentUser.isWaveOwner = false;
     currentUser.waveName = null;
 
+    // 5. مسح البيانات من ذاكرة الهاتف
     localStorage.removeItem('rc_saved_wave_id');
     localStorage.removeItem('rc_saved_wave_name');
 
+    // 6. إعادة الواجهة إلى حالتها الأصلية (Q00000)
     const el1 = document.getElementById('waveCodeChip');
-    if (el1) el1.innerHTML = (currentUser.radCode || 'Q00000') + ' <span style="font-size:12px;">🔑</span>';
+    if (el1) el1.innerHTML = 'Q00000 <span style="font-size:12px;">🔑</span>'; // إعادة الرقم للصفر
+    
+    const statusChip = document.getElementById('waveStatusChip');
     const statusText = document.getElementById('waveStatusText');
+    if (statusChip) { statusChip.classList.add('disconnected'); statusChip.classList.remove('live'); }
     if (statusText) statusText.innerHTML = '🔴 غير متصل';
-    const el3 = document.getElementById('waveNameLabel'); if (el3) el3.textContent = 'لا توجد فرقة';
-    const el4 = document.getElementById('waveNameValue'); if (el4) el4.textContent = '—';
-    const el5 = document.getElementById('lcdLine3'); if (el5) el5.textContent = (currentUser.radCode || 'Q00000') + ' • RX';
+    
+    const el3 = document.getElementById('waveNameLabel'); 
+    if (el3) el3.textContent = 'لا توجد فرقة';
+    
+    const el4 = document.getElementById('waveNameValue'); 
+    if (el4) el4.textContent = '—';
+    
+    const el5 = document.getElementById('lcdLine3'); 
+    if (el5) el5.textContent = 'Q00000 • RX'; // تصفير شاشة LCD
 
-    toast('✅ تم حذف الفرقة بنجاح', 'success');
+    toast('✅ تم حذف الفرقة بنجاح، يمكنك إنشاء واحدة جديدة', 'success');
+    
+    // إغلاق أي قائمة جانبية مفتوحة
+    closeSideMenu();
+
   } catch (e) {
     console.error(e);
     toast('❌ حدث خطأ أثناء الحذف', 'error');
   }
 }
-
 // ==========================================
 // 7. الواجهة والتنقل
 // ==========================================
