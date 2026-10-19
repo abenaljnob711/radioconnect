@@ -10,6 +10,7 @@
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/livekit-client@2.15.3/dist/livekit-client.umd.min.js"></script>
 <style>
+/* ... (نفس أكواد CSS السابقة، لا حاجة لتغييرها) ... */
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 :root { --bg: #05080c; --card: #0f1921; --card-2: #142028; --border: #1c2a36; --text: #e6f0f5; --text-dim: #6b8899; --cyan: #00e5ff; --cyan-dark: #008fa8; --green: #00ff88; --red: #ff2a4d; --red-dark: #b01530; --yellow: #ffcc00; --blue-msg: #1a4d6b; --blue-msg-2: #0f3550; --red-msg: #6b1220; --red-msg-2: #45080f; --radius: 14px; }
 html, body { height: 100%; overflow: hidden; background: var(--bg); }
@@ -444,6 +445,16 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
   <div class="members-dropdown" id="membersDropdown"></div>
 
   <!-- Modals -->
+  <div class="modal-overlay" id="modalFactoryReset">
+    <div class="modal">
+      <div class="modal-title" style="color:var(--red);">⚠️ تحذير خطير</div>
+      <div class="modal-sub">سيتم مسح جميع البيانات (اسمك، رقمك، فرقك، وغرفك). هل أنت متأكد؟</div>
+      <div class="modal-actions">
+        <button class="modal-btn cancel" onclick="closeModal('modalFactoryReset')">إلغاء</button>
+        <button class="modal-btn danger" onclick="confirmFactoryReset()">حسناً، امسح</button>
+      </div>
+    </div>
+  </div>
   <div class="modal-overlay" id="modalRoomMenu">
     <div class="modal">
       <div class="modal-title">☰ خيارات الغرفة</div>
@@ -602,14 +613,13 @@ let rawMicStream = null;
 let localTestAudio = null;
 let isTalking = false;
 
-// دالة استعادة ضبط المصنع
+// دوال استعادة ضبط المصنع (بدون رسائل المتصفح)
 function factoryReset() {
-  if (!confirm('⚠️ تحذير خطير: سيتم مسح جميع البيانات (اسمك، رقمك، فرقك، وغرفك). هل أنت متأكد؟')) {
-    return;
-  }
-  if (!confirm('هل أنت متأكد 100%؟ لا يمكن التراجع عن هذه الخطوة.')) {
-    return;
-  }
+  openModal('modalFactoryReset');
+}
+
+function confirmFactoryReset() {
+  closeModal('modalFactoryReset');
   localStorage.clear();
   window.location.reload();
 }
@@ -626,7 +636,7 @@ const PTTEngine = {
       const closeEl = document.getElementById('walkieClose');
       [openEl, closeEl].forEach(el => {
         if (el) {
-          el.volume = 1.0; // رفع الصوت لأقصى درجة
+          el.volume = 1.0; // أقصى صوت
           el.play().then(() => {
             el.pause(); el.currentTime = 0; el.volume = 1.0;
             this.beepReady = true;
@@ -821,6 +831,7 @@ function initSocket() {
     if (statusText) statusText.innerHTML = '🔴 غير متصل';
   });
 
+  // استقبال طلب الانضمام من شخص آخر
   socket.on('wave_join_request_received', (data) => {
     document.getElementById('incomingName').textContent = data.fromUserName || 'مستخدم';
     document.getElementById('incomingCode').textContent = data.waveId;
@@ -1334,13 +1345,10 @@ function stopTalking() {
     try { waveRoom.localParticipant.unpublishTrack(waveLocalAudioTrack); waveLocalAudioTrack.stop(); } catch (e) {}
     waveLocalAudioTrack = null;
   }
-  
-  // إغلاق المايك قسرياً
   if (rawMicStream) {
     rawMicStream.getTracks().forEach(t => t.stop());
     rawMicStream = null;
   }
-  
   isTalking = false;
   
   const pttMain = document.getElementById('pttMain');
