@@ -312,7 +312,7 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
     <section class="screen" id="screen-log">
       <div class="log-header">
         <div class="log-actions">
-          <span id="roomMenuBtn">☰</span>
+          <span id="roomMenuBtn" style="cursor:pointer;">☰</span>
           <span onclick="toast('معلومات الغرفة')">ⓘ</span>
         </div>
         <div class="log-title">
@@ -383,6 +383,16 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
           </div>
           <span class="setting-value">تجربة</span>
         </div>
+        
+        <!-- زر إعادة الضبط الجديد -->
+        <div class="setting-item" onclick="resetAppData()">
+          <div class="setting-info">
+            <span class="setting-title" style="color:var(--red);">🗑️ إعادة ضبط التطبيق</span>
+            <span class="setting-desc" style="color:var(--red-dark);">مسح جميع البيانات والفرق القديمة</span>
+          </div>
+          <span class="setting-value" style="color:var(--red);">مسح</span>
+        </div>
+
         <div class="setting-item" onclick="toast('الإصدار 4.3.0')">
           <div class="setting-info">
             <span class="setting-title">ℹ️ حول التطبيق</span>
@@ -587,7 +597,6 @@ let batteryPercent = null;
 let menuBusy = false;
 let searchResultUser = null;
 let socket = null;
-let chatListLoaded = false;
 
 // متغيرات الصوت
 let livekitRoom = null;
@@ -597,12 +606,25 @@ let rawMicStream = null;
 let localTestAudio = null;
 let isTalking = false;
 
-// مصفوفات لحفظ الفرق والغرف الخاصة بالمستخدم
+// مصفوفات الحفظ
 let savedWavesList = JSON.parse(localStorage.getItem('rc_user_waves_list') || '[]');
 let savedRoomsList = JSON.parse(localStorage.getItem('rc_user_rooms_list') || '[]');
 
 // ==========================================
-// 2. محرك الأصوات (البيبات)
+// 2. دالة إعادة ضبط التطبيق (لحل مشكلة الرقم العالق)
+// ==========================================
+function resetAppData() {
+  if (!confirm('⚠️ تحذير: سيتم مسح جميع البيانات والفرق والغرف من هذا الجهاز، وستحصل على رقم مستخدم جديد. هل أنت متأكد؟')) return;
+  
+  // مسح كل شيء من الذاكرة
+  localStorage.clear();
+  
+  // إعادة تحميل الصفحة لتبدأ من جديد
+  window.location.reload();
+}
+
+// ==========================================
+// 3. محرك الأصوات (البيبات)
 // ==========================================
 const PTTEngine = {
   audioCtx: null, beepReady: false,
@@ -644,7 +666,7 @@ const PTTEngine = {
 };
 
 // ==========================================
-// 3. محرك LiveKit (الصوت)
+// 4. محرك LiveKit (الصوت)
 // ==========================================
 async function connectWaveChannel() {
   try {
@@ -769,18 +791,8 @@ function stopTalking() {
   }
 }
 
-// ربط زر الـ PTT
-document.addEventListener('DOMContentLoaded', () => {
-    const pttMainBtn = document.getElementById('pttMain');
-    if(pttMainBtn) {
-        pttMainBtn.addEventListener('pointerdown', (e) => { e.preventDefault(); onPTTStart(); });
-        pttMainBtn.addEventListener('pointerup', (e) => { e.preventDefault(); stopTalking(); });
-        pttMainBtn.addEventListener('pointercancel', (e) => { e.preventDefault(); stopTalking(); });
-    }
-});
-
 // ==========================================
-// 4. إدارة القوائم (العمليات والحفظ)
+// 5. إدارة القوائم (العمليات والحفظ)
 // ==========================================
 function saveWaveToList(waveId, waveName) {
     if (!waveId || !waveName) return;
@@ -810,7 +822,7 @@ function removeRoomFromList(roomCode) {
     localStorage.setItem('rc_user_rooms_list', JSON.stringify(savedRoomsList));
 }
 
-// قائمة العمليات (الفرق المسجل فيها)
+// قائمة العمليات
 function openOperationsMenu() {
     const title = document.getElementById('sideMenuTitle');
     const content = document.getElementById('sideMenuContent');
@@ -836,7 +848,7 @@ function openOperationsMenu() {
     if(menuToggle) menuToggle.classList.add('open');
 }
 
-// قائمة إدارة/حفظ الفرق (للحذف)
+// قائمة إدارة الفرق
 function openManageWavesMenu() {
     const title = document.getElementById('sideMenuTitle');
     const content = document.getElementById('sideMenuContent');
@@ -861,7 +873,7 @@ function openManageWavesMenu() {
     if(menuToggle) menuToggle.classList.add('open');
 }
 
-// قائمة إدارة/حفظ الغرف (للحذف)
+// قائمة إدارة الغرف
 function openManageRoomsMenu() {
     const title = document.getElementById('sideMenuTitle');
     const content = document.getElementById('sideMenuContent');
@@ -910,11 +922,9 @@ async function switchToWave(waveId, waveName) {
     toast('✅ تم التبديل إلى ' + waveName, 'success');
 }
 
-// دوال الحذف من قائمة الحفظ
 async function deleteSavedWave(waveId) {
     if (!confirm('هل تريد حذف هذه الفرقة نهائياً من سجلك؟')) return;
     
-    // إذا كانت هي النشطة الآن، نقوم بفصلها
     if (currentUser.waveId === waveId) {
         stopTalking();
         if (waveRoom) { waveRoom.disconnect(); waveRoom = null; }
@@ -931,7 +941,7 @@ async function deleteSavedWave(waveId) {
     }
     
     removeWaveFromList(waveId);
-    openManageWavesMenu(); // تحديث القائمة
+    openManageWavesMenu(); 
     toast('✅ تم الحذف من السجل', 'success');
 }
 
@@ -946,12 +956,12 @@ function deleteSavedRoom(roomCode) {
     }
     
     removeRoomFromList(roomCode);
-    openManageRoomsMenu(); // تحديث القائمة
+    openManageRoomsMenu(); 
     toast('✅ تم الحذف من السجل', 'success');
 }
 
 // ==========================================
-// 5. السوكيت (الاتصال بالخادم)
+// 6. السوكيت (الاتصال بالخادم)
 // ==========================================
 function initSocket() {
   if (typeof io === 'undefined') return;
@@ -1012,7 +1022,7 @@ function initSocket() {
 }
 
 // ==========================================
-// 6. دوال التسجيل والفرق
+// 7. دوال التسجيل والفرق
 // ==========================================
 async function registerUser() {
   try {
@@ -1169,7 +1179,7 @@ async function deleteWave() {
 }
 
 // ==========================================
-// 7. الواجهة والتنقل
+// 8. الواجهة والتنقل
 // ==========================================
 function switchTab(tabName) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -1332,8 +1342,17 @@ if(menuToggle) {
 }
 if(menuBackdrop) menuBackdrop.addEventListener('click', closeSideMenu);
 
+// ربط زر الغرفة يدوياً لضمان عمله
+const roomMenuBtn = document.getElementById('roomMenuBtn');
+if (roomMenuBtn) {
+    roomMenuBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openSideMenu();
+    });
+}
+
 // ==========================================
-// 8. المؤقتات والبطارية والشبكة
+// 9. المؤقتات والبطارية والشبكة
 // ==========================================
 let waveTimerInterval = null;
 let waveStartTime = 0;
@@ -1407,7 +1426,7 @@ function testCall() {
 }
 
 // ==========================================
-// 9. دالة حذف الغرفة
+// 10. دالة حذف الغرفة
 // ==========================================
 function deleteRoom() {
   if (!currentUser.roomCode) { toast('⚠️ لا توجد غرفة لحذفها', 'error'); return; }
@@ -1429,7 +1448,7 @@ function deleteRoom() {
 }
 
 // ==========================================
-// 10. تشغيل التطبيق
+// 11. تشغيل التطبيق
 // ==========================================
 window.addEventListener('DOMContentLoaded', async () => {
   const bar = document.getElementById('chatInputBar');
