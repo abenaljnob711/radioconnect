@@ -312,7 +312,7 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
     <section class="screen" id="screen-log">
       <div class="log-header">
         <div class="log-actions">
-          <span id="roomMenuBtn" style="cursor:pointer;">☰</span>
+          <span id="roomMenuBtn">☰</span>
           <span onclick="toast('معلومات الغرفة')">ⓘ</span>
         </div>
         <div class="log-title">
@@ -606,20 +606,20 @@ let rawMicStream = null;
 let localTestAudio = null;
 let isTalking = false;
 
+// حالة الاتصال (هل هو نشط الآن أم خرج؟)
+let isWaveActive = false;
+let isRoomActive = false;
+
 // مصفوفات الحفظ
 let savedWavesList = JSON.parse(localStorage.getItem('rc_user_waves_list') || '[]');
 let savedRoomsList = JSON.parse(localStorage.getItem('rc_user_rooms_list') || '[]');
 
 // ==========================================
-// 2. دالة إعادة ضبط التطبيق (لحل مشكلة الرقم العالق)
+// 2. دالة إعادة ضبط التطبيق
 // ==========================================
 function resetAppData() {
-  if (!confirm('⚠️ تحذير: سيتم مسح جميع البيانات والفرق والغرف من هذا الجهاز، وستحصل على رقم مستخدم جديد. هل أنت متأكد؟')) return;
-  
-  // مسح كل شيء من الذاكرة
+  if (!confirm('⚠️ تحذير: سيتم مسح جميع البيانات والفرق والغرف من هذا الجهاز. هل أنت متأكد؟')) return;
   localStorage.clear();
-  
-  // إعادة تحميل الصفحة لتبدأ من جديد
   window.location.reload();
 }
 
@@ -701,6 +701,11 @@ async function connectWaveChannel() {
 }
 
 async function onPTTStart() {
+  // منع التحدث إذا لم يكن مشتركاً (خرج من الفرقة)
+  if (!isWaveActive) {
+      toast("⚠️ أنت خارج الفرقة. عد إليها أولاً للتحدث.", "error");
+      return;
+  }
   if (isTalking) return;
   isTalking = true;
   
@@ -740,7 +745,7 @@ async function onPTTStart() {
             red: true
         });
     } else {
-        toast("⚠️ فشل الاتصال بالفرقة، تأكد من إنشائها أولاً");
+        toast("⚠️ فشل الاتصال بالفرقة");
         stopTalking();
     }
   } catch (err) {
@@ -777,10 +782,17 @@ function stopTalking() {
   if (pttMain) pttMain.classList.remove('holding');
   document.body.classList.remove('ptt-active');
 
-  const statusChip = document.getElementById('waveStatusChip');
-  const statusText = document.getElementById('waveStatusText');
-  if (statusChip) { statusChip.classList.remove('live'); statusChip.classList.add('disconnected'); }
-  if (statusText) statusText.innerHTML = '🔴 غير متصل';
+  if (!isWaveActive) {
+      const statusChip = document.getElementById('waveStatusChip');
+      const statusText = document.getElementById('waveStatusText');
+      if (statusChip) { statusChip.classList.remove('live'); statusChip.classList.add('disconnected'); }
+      if (statusText) statusText.innerHTML = '🔴 خارج الفرقة';
+  } else {
+      const statusChip = document.getElementById('waveStatusChip');
+      const statusText = document.getElementById('waveStatusText');
+      if (statusChip) { statusChip.classList.remove('live'); statusChip.classList.add('disconnected'); }
+      if (statusText) statusText.innerHTML = '🔴 متصل';
+  }
 
   const lcd3 = document.getElementById('lcdLine3');
   if (lcd3) lcd3.textContent = (currentUser.radCode || '—') + ' • RX';
@@ -792,7 +804,7 @@ function stopTalking() {
 }
 
 // ==========================================
-// 5. إدارة القوائم (العمليات والحفظ)
+// 5. إدارة القوائم (العمليات والخروج والحذف)
 // ==========================================
 function saveWaveToList(waveId, waveName) {
     if (!waveId || !waveName) return;
@@ -822,7 +834,7 @@ function removeRoomFromList(roomCode) {
     localStorage.setItem('rc_user_rooms_list', JSON.stringify(savedRoomsList));
 }
 
-// قائمة العمليات
+// قائمة العمليات (تعرض الفرق غير المشترك فيها، أو التي خرجت منها)
 function openOperationsMenu() {
     const title = document.getElementById('sideMenuTitle');
     const content = document.getElementById('sideMenuContent');
@@ -832,15 +844,36 @@ function openOperationsMenu() {
         content.innerHTML = `<div class="operations-empty">لا توجد فرق مسجلة.<br>قم بإنشاء فرقة أو الانضمام لواحدة لتظهر هنا.</div>`;
     } else {
         content.innerHTML = savedWavesList.map(w => {
-            const isActive = currentUser.waveId === w.id;
+            const isCurrentlyActive = (currentUser.waveId === w.id && isWaveActive);
+            const isCurrentlyInactive = (currentUser.waveId === w.id && !isWaveActive);
+            
+            let statusLabel = 'غير مشترك فيها';
+            let statusIcon = '📡';
+            let actionBtn = `<button onclick="returnToWave('${w.id}')" style="background:rgba(0,229,255,0.2); border:1px solid #00e5ff; color:#00e5ff; border-radius:8px; padding:8px; cursor:pointer; font-family:inherit; margin-left:5px;">↩️ رجوع</button>`;
+            
+            if (isCurrentlyActive) {
+                statusLabel = 'نشطة الآن';
+                statusIcon = '🟢';
+                actionBtn = '';
+            } else if (isCurrentlyInactive) {
+                statusLabel = 'خرجت منها (غير نشط)';
+                statusIcon = '🔴';
+            }
+
             return `
-            <button class="menu-item ${isActive ? 'primary' : ''}" onclick="switchToWave('${w.id}', '${w.name.replace(/'/g, "")}')">
-                <span class="menu-icon">${isActive ? '🟢' : '📡'}</span>
-                <span class="menu-text">
-                    <span class="menu-label">${w.name} ${isActive ? '(نشطة)' : ''}</span>
-                    <span class="menu-desc">${w.id}</span>
-                </span>
-            </button>`;
+            <div class="menu-item" style="justify-content:space-between; flex-direction:column; align-items:flex-start; gap:10px; padding:14px;">
+                <div style="display:flex; align-items:center; gap:10px; width:100%;">
+                    <span class="menu-icon">${statusIcon}</span>
+                    <div class="menu-text">
+                        <span class="menu-label">${w.name}</span>
+                        <span class="menu-desc">${w.id} • ${statusLabel}</span>
+                    </div>
+                </div>
+                <div style="display:flex; justify-content:flex-end; width:100%; gap:8px;">
+                    ${actionBtn}
+                    <button onclick="deleteWaveFromList('${w.id}')" style="background:rgba(255,42,77,0.2); border:1px solid #ff5577; color:#ff5577; border-radius:8px; padding:8px; cursor:pointer; font-family:inherit;">🗑️ حذف</button>
+                </div>
+            </div>`;
         }).join('');
     }
     if(sideMenu) sideMenu.classList.add('open');
@@ -864,7 +897,7 @@ function openManageWavesMenu() {
                     <span class="menu-label">${w.name}</span>
                     <span class="menu-desc">${w.id}</span>
                 </span>
-                <button onclick="deleteSavedWave('${w.id}')" style="background:rgba(255,42,77,0.2); border:1px solid #ff5577; color:#ff5577; border-radius:8px; padding:8px; cursor:pointer; font-family:inherit;">🗑️ حذف</button>
+                <button onclick="deleteWaveFromList('${w.id}')" style="background:rgba(255,42,77,0.2); border:1px solid #ff5577; color:#ff5577; border-radius:8px; padding:8px; cursor:pointer; font-family:inherit;">🗑️ حذف</button>
             </div>`;
         }).join('');
     }
@@ -883,13 +916,35 @@ function openManageRoomsMenu() {
         content.innerHTML = `<div class="operations-empty">لا توجد غرف محفوظة لحذفها.</div>`;
     } else {
         content.innerHTML = savedRoomsList.map(r => {
+            const isCurrentlyActive = (currentUser.roomCode === r.code && isRoomActive);
+            const isCurrentlyInactive = (currentUser.roomCode === r.code && !isRoomActive);
+            
+            let statusLabel = 'غير مشترك فيها';
+            let statusIcon = '💬';
+            let actionBtn = `<button onclick="returnToRoom('${r.code}')" style="background:rgba(0,229,255,0.2); border:1px solid #00e5ff; color:#00e5ff; border-radius:8px; padding:8px; cursor:pointer; font-family:inherit; margin-left:5px;">↩️ رجوع</button>`;
+            
+            if (isCurrentlyActive) {
+                statusLabel = 'نشطة الآن';
+                statusIcon = '🟢';
+                actionBtn = '';
+            } else if (isCurrentlyInactive) {
+                statusLabel = 'خرجت منها (غير نشط)';
+                statusIcon = '🔴';
+            }
+
             return `
-            <div class="menu-item" style="justify-content:space-between;">
-                <span class="menu-text">
-                    <span class="menu-label">${r.name}</span>
-                    <span class="menu-desc">${r.code}</span>
-                </span>
-                <button onclick="deleteSavedRoom('${r.code}')" style="background:rgba(255,42,77,0.2); border:1px solid #ff5577; color:#ff5577; border-radius:8px; padding:8px; cursor:pointer; font-family:inherit;">🗑️ حذف</button>
+            <div class="menu-item" style="justify-content:space-between; flex-direction:column; align-items:flex-start; gap:10px; padding:14px;">
+                <div style="display:flex; align-items:center; gap:10px; width:100%;">
+                    <span class="menu-icon">${statusIcon}</span>
+                    <div class="menu-text">
+                        <span class="menu-label">${r.name}</span>
+                        <span class="menu-desc">${r.code} • ${statusLabel}</span>
+                    </div>
+                </div>
+                <div style="display:flex; justify-content:flex-end; width:100%; gap:8px;">
+                    ${actionBtn}
+                    <button onclick="deleteRoomFromList('${r.code}')" style="background:rgba(255,42,77,0.2); border:1px solid #ff5577; color:#ff5577; border-radius:8px; padding:8px; cursor:pointer; font-family:inherit;">🗑️ حذف</button>
+                </div>
             </div>`;
         }).join('');
     }
@@ -898,36 +953,105 @@ function openManageRoomsMenu() {
     if(menuToggle) menuToggle.classList.add('open');
 }
 
-async function switchToWave(waveId, waveName) {
-    closeSideMenu();
-    if (currentUser.waveId === waveId) return; 
-
-    toast('⏳ جاري التبديل للفرقة...', 'success');
+// --- دوال الخروج والعودة للفرقة ---
+function exitWaveTemporarily() {
+    if (!isWaveActive) { toast('⚠️ أنت خارج الفرقة بالفعل', 'error'); return; }
+    if (!confirm('هل تريد الخروج من الفرقة مؤقتاً؟ (لن يتم حذفها، ويمكنك العودة لها لاحقاً)')) return;
     
     stopTalking();
     if (waveRoom) { waveRoom.disconnect(); waveRoom = null; }
-    if (socket) socket.emit('wave_leave', { waveId: currentUser.waveId, deviceId: currentUser.id });
-
-    currentUser.waveId = waveId;
-    currentUser.waveName = waveName;
-    currentUser.waveCode = waveId;
-
-    const el1 = document.getElementById('waveCodeChip'); if (el1) el1.innerHTML = waveId + ' <span style="font-size:12px;">🔑</span>';
-    const el2 = document.getElementById('waveNameLabel'); if (el2) el2.textContent = waveName;
-    const el3 = document.getElementById('waveNameValue'); if (el3) el3.textContent = waveName;
-    const el4 = document.getElementById('waveCodeValue'); if (el4) el4.textContent = waveId;
-    const el5 = document.getElementById('lcdLine3'); if (el5) el5.textContent = waveId + ' • RX';
-
-    await joinWaveAsMember(waveId);
-    toast('✅ تم التبديل إلى ' + waveName, 'success');
+    if (socket && currentUser.waveId) {
+        socket.emit('wave_leave', { waveId: currentUser.waveId, deviceId: currentUser.id });
+    }
+    
+    isWaveActive = false;
+    
+    // تحديث الواجهة لتبين أنه خرج لكنه لا يزال في الفرقة
+    const statusText = document.getElementById('waveStatusText');
+    if (statusText) statusText.innerHTML = '🔴 خارج الفرقة';
+    
+    const el2 = document.getElementById('waveNameLabel'); 
+    if (el2) el2.textContent = (currentUser.waveName || 'فرقة') + ' (غير نشط)';
+    
+    toast('✅ خرجت من الفرقة (يمكنك العودة من قائمة العمليات)', 'success');
+    closeSideMenu();
+    openOperationsMenu(); // فتح القائمة لتظهر زر الرجوع
 }
 
-async function deleteSavedWave(waveId) {
-    if (!confirm('هل تريد حذف هذه الفرقة نهائياً من سجلك؟')) return;
+async function returnToWave(waveId) {
+    if (isWaveActive) { toast('⚠️ أنت مشترك بالفعل', 'error'); return; }
+    
+    // البحث عن اسم الفرقة
+    const wave = savedWavesList.find(w => w.id === waveId);
+    if (!wave) return;
+
+    toast('⏳ جاري طلب العودة...', 'success');
+    
+    // محاكاة الاتصال
+    currentUser.waveId = waveId;
+    currentUser.waveName = wave.name;
+    currentUser.waveCode = waveId;
+    
+    await joinWaveAsMember(waveId);
+    isWaveActive = true;
+    
+    const statusText = document.getElementById('waveStatusText');
+    if (statusText) statusText.innerHTML = '🟢 متصل';
+    
+    const el2 = document.getElementById('waveNameLabel'); 
+    if (el2) el2.textContent = wave.name;
+    
+    toast('✅ عدت إلى الفرقة بنجاح', 'success');
+    closeSideMenu();
+}
+
+// --- دوال الخروج والعودة للغرفة ---
+function exitRoomTemporarily() {
+    if (!isRoomActive) { toast('⚠️ أنت خارج الغرفة بالفعل', 'error'); return; }
+    if (!confirm('هل تريد الخروج من الغرفة مؤقتاً؟ (لن يتم حذف الرسائل)')) return;
+    
+    isRoomActive = false;
+    currentUser.currentConvId = null;
+    currentUser.currentChatWith = null;
+    
+    toast('✅ خرجت من الغرفة (يمكنك العودة من قائمة الغرفة)', 'success');
+    switchTab('log');
+    closeSideMenu();
+    // فتح قائمة الإدارة لإظهار زر الرجوع
+    openManageRoomsMenu();
+}
+
+async function returnToRoom(roomCode) {
+    if (isRoomActive) { toast('⚠️ أنت مشترك بالفعل', 'error'); return; }
+    
+    const room = savedRoomsList.find(r => r.code === roomCode);
+    if (!room) return;
+
+    isRoomActive = true;
+    currentUser.roomCode = room.code;
+    currentUser.roomName = room.name;
+    currentUser.currentConvId = 'conv_self_' + room.code; // محاكاة للدخول
+    currentUser.currentChatWith = 'self';
+    
+    document.getElementById('roomNameLabel').textContent = room.name;
+    document.getElementById('chatWithName').textContent = room.name + ' (غرفتك)';
+    document.getElementById('chatWithCode').textContent = room.code;
+    
+    toast('✅ عدت إلى الغرفة بنجاح', 'success');
+    switchTab('chat');
+    closeSideMenu();
+}
+
+// --- دوال الحذف من السجل (لا تحذف من الخادم بل من الهاتف) ---
+function deleteWaveFromList(waveId) {
+    if (currentUser.waveId === waveId && isWaveActive) {
+        toast('⚠️ لا يمكنك الحذف وأنت نشط في الفرقة. اخرج أولاً.', 'error');
+        return;
+    }
+    if (!confirm('هل تريد حذف هذه الفرقة نهائياً من سجلك؟ (لن تتأثر الفرقة نفسها)')) return;
     
     if (currentUser.waveId === waveId) {
-        stopTalking();
-        if (waveRoom) { waveRoom.disconnect(); waveRoom = null; }
+        // إذا كان هو نفس الرقم، نمسحه من الواجهة
         currentUser.waveId = null;
         currentUser.waveName = null;
         currentUser.waveCode = null;
@@ -945,7 +1069,11 @@ async function deleteSavedWave(waveId) {
     toast('✅ تم الحذف من السجل', 'success');
 }
 
-function deleteSavedRoom(roomCode) {
+function deleteRoomFromList(roomCode) {
+    if (currentUser.roomCode === roomCode && isRoomActive) {
+        toast('⚠️ لا يمكنك الحذف وأنت نشط في الغرفة. اخرج أولاً.', 'error');
+        return;
+    }
     if (!confirm('هل تريد حذف هذه الغرفة نهائياً من سجلك؟')) return;
     
     if (currentUser.roomCode === roomCode) {
@@ -961,7 +1089,7 @@ function deleteSavedRoom(roomCode) {
 }
 
 // ==========================================
-// 6. السوكيت (الاتصال بالخادم)
+// 6. السوكيت
 // ==========================================
 function initSocket() {
   if (typeof io === 'undefined') return;
@@ -969,7 +1097,7 @@ function initSocket() {
 
   socket.on('connect', () => {
     socket.emit('register_device', { deviceId: currentUser.id, userName: currentUser.name });
-    if (currentUser.waveId) {
+    if (currentUser.waveId && isWaveActive) {
       socket.emit('wave_join', { waveId: currentUser.waveId, deviceId: currentUser.id, userName: currentUser.name });
     }
   });
@@ -980,6 +1108,7 @@ function initSocket() {
     toast('⚠️ تم إخراجك من الفرقة', 'error');
     removeWaveFromList(currentUser.waveId);
     currentUser.waveId = null; 
+    isWaveActive = false;
     if(waveRoom) { waveRoom.disconnect(); waveRoom = null; }
     const statusChip = document.getElementById('waveStatusChip');
     const statusText = document.getElementById('waveStatusText');
@@ -1039,7 +1168,6 @@ async function registerUser() {
       const el3 = document.getElementById('waveCodeValue'); if (el3) el3.textContent = data.radCode;
       const el4 = document.getElementById('lcdLine3'); if (el4) el4.textContent = data.radCode + ' • RX';
     }
-    if (data.waveId) { currentUser.waveId = data.waveId; currentUser.waveCode = data.waveId; }
     return data;
   } catch (e) { console.error(e); return null; }
 }
@@ -1070,6 +1198,7 @@ async function createWave() {
 
     currentUser.waveId = data.waveId; currentUser.waveCode = data.waveId;
     currentUser.waveName = data.waveName; currentUser.isWaveOwner = true;
+    isWaveActive = true;
 
     document.getElementById('createdWaveCode').textContent = data.waveId;
     document.getElementById('waveName').value = '';
@@ -1094,6 +1223,8 @@ async function createWave() {
 
 async function joinWaveAsMember(waveId) {
   currentUser.waveId = waveId; currentUser.waveCode = waveId;
+  isWaveActive = true;
+  
   try {
     const res = await fetch(SERVER_URL + '/api/waves/' + waveId);
     const data = await res.json();
@@ -1116,66 +1247,6 @@ async function joinWaveAsMember(waveId) {
 
   if (socket) socket.emit('wave_join', { waveId, deviceId: currentUser.id, userName: currentUser.name });
   toast('✅ انضممت إلى الفرقة', 'success');
-}
-
-async function deleteWave() {
-  if (!currentUser.waveId && !currentUser.waveCode) { 
-      toast('⚠️ لا توجد فرقة نشطة لحذفها', 'error'); 
-      return; 
-  }
-  
-  if (!confirm('هل أنت متأكد من حذف هذه الفرقة نهائياً؟')) return;
-
-  try {
-    if (currentUser.isWaveOwner && currentUser.waveId) {
-        await fetch(SERVER_URL + '/api/waves/delete', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ waveId: currentUser.waveId, deviceId: currentUser.id })
-        }).catch(e => console.log("Delete API Error:", e));
-    }
-
-    if (socket && currentUser.waveId) {
-        socket.emit('wave_leave', { waveId: currentUser.waveId, deviceId: currentUser.id });
-    }
-
-    if (waveRoom) { waveRoom.disconnect(); waveRoom = null; }
-    
-    if(currentUser.waveId) removeWaveFromList(currentUser.waveId);
-    
-    currentUser.waveId = null; 
-    currentUser.waveCode = null; 
-    currentUser.isWaveOwner = false;
-    currentUser.waveName = null;
-
-    localStorage.removeItem('rc_saved_wave_id');
-    localStorage.removeItem('rc_saved_wave_name');
-
-    const myPersonalCode = currentUser.radCode || 'Q00000';
-
-    const el1 = document.getElementById('waveCodeChip');
-    if (el1) el1.innerHTML = myPersonalCode + ' <span style="font-size:12px;">🔑</span>'; 
-    
-    const statusChip = document.getElementById('waveStatusChip');
-    const statusText = document.getElementById('waveStatusText');
-    if (statusChip) { statusChip.classList.add('disconnected'); statusChip.classList.remove('live'); }
-    if (statusText) statusText.innerHTML = '🔴 غير متصل';
-    
-    const el3 = document.getElementById('waveNameLabel'); 
-    if (el3) el3.textContent = 'لا توجد فرقة';
-    
-    const el4 = document.getElementById('waveNameValue'); 
-    if (el4) el4.textContent = '—';
-    
-    const el5 = document.getElementById('lcdLine3'); 
-    if (el5) el5.textContent = myPersonalCode + ' • RX'; 
-
-    toast('✅ تم حذف الفرقة بنجاح', 'success');
-    closeSideMenu();
-
-  } catch (e) {
-    console.error(e);
-    toast('❌ حدث خطأ أثناء الحذف', 'error');
-  }
 }
 
 // ==========================================
@@ -1251,6 +1322,11 @@ function openSideMenu() {
 
   if (activeId === 'screen-radio') {
     title.textContent = '📡 قائمة الفرقة';
+    
+    const exitBtnHtml = isWaveActive 
+        ? `<button class="menu-item danger" onclick="exitWaveTemporarily()"><span class="menu-icon">🚪</span><span class="menu-text"><span class="menu-label">الخروج من الفرقة</span><span class="menu-desc">ابقَ في السجل وعد لاحقاً</span></span></button>`
+        : `<button class="menu-item primary" onclick="returnToWave(currentUser.waveId)"><span class="menu-icon">↩️</span><span class="menu-text"><span class="menu-label">العودة إلى الفرقة</span><span class="menu-desc">أنت خارجها حالياً</span></span></button>`;
+
     content.innerHTML = `
       <button class="menu-item primary" onclick="closeSideMenu();openCreateWave()">
         <span class="menu-icon">➕</span>
@@ -1264,17 +1340,19 @@ function openSideMenu() {
         <span class="menu-icon">✏️</span>
         <span class="menu-text"><span class="menu-label">تعديل اسم الفرقة</span><span class="menu-desc">غيّر اسم فرقتك</span></span>
       </button>
+      ${exitBtnHtml}
       <button class="menu-item" onclick="closeSideMenu();openManageWavesMenu()">
         <span class="menu-icon">💾</span>
-        <span class="menu-text"><span class="menu-label">حفظ وإدارة الفرق</span><span class="menu-desc">عرض وحذف الفرق المسجلة</span></span>
-      </button>
-      <button class="menu-item danger" onclick="closeSideMenu();deleteWave()">
-        <span class="menu-icon">🗑️</span>
-        <span class="menu-text"><span class="menu-label">حذف الفرقة النشطة</span><span class="menu-desc">حذف نهائي وإلغاء الاشتراك</span></span>
+        <span class="menu-text"><span class="menu-label">إدارة وحفظ الفرق</span><span class="menu-desc">حذف الفرق من السجل</span></span>
       </button>
     `;
   } else if (activeId === 'screen-log' || activeId === 'screen-chat') {
     title.textContent = '💬 قائمة الغرفة';
+
+    const exitBtnHtml = isRoomActive
+        ? `<button class="menu-item danger" onclick="exitRoomTemporarily()"><span class="menu-icon">🚪</span><span class="menu-text"><span class="menu-label">الخروج من الغرفة</span><span class="menu-desc">ابقَ في السجل وعد لاحقاً</span></span></button>`
+        : `<button class="menu-item primary" onclick="returnToRoom(currentUser.roomCode)"><span class="menu-icon">↩️</span><span class="menu-text"><span class="menu-label">العودة إلى الغرفة</span><span class="menu-desc">أنت خارجها حالياً</span></span></button>`;
+
     content.innerHTML = `
       <div style="background:rgba(0,229,255,.05); border:1px solid rgba(0,229,255,.3); border-radius:12px; padding:12px; margin-bottom:12px; text-align:center;">
         <div style="font-size:11px; color:var(--text-dim); margin-bottom:4px;">📛 اسم الغرفة</div>
@@ -1292,17 +1370,14 @@ function openSideMenu() {
         <span class="menu-icon">🔍</span>
         <span class="menu-text"><span class="menu-label">البحث عن غرفة</span><span class="menu-desc">ابحث برقم المستخدم</span></span>
       </button>
+      ${exitBtnHtml}
       <button class="menu-item" onclick="closeSideMenu();openManageRoomsMenu()">
         <span class="menu-icon">💾</span>
-        <span class="menu-text"><span class="menu-label">حفظ وإدارة الغرف</span><span class="menu-desc">عرض وحذف الغرف المسجلة</span></span>
+        <span class="menu-text"><span class="menu-label">إدارة وحفظ الغرف</span><span class="menu-desc">حذف الغرف من السجل</span></span>
       </button>
       <button class="menu-item" onclick="closeSideMenu();confirmClearChat()">
         <span class="menu-icon">🧹</span>
         <span class="menu-text"><span class="menu-label">مسح المحادثة</span><span class="menu-desc">حذف الرسائل فقط</span></span>
-      </button>
-      <button class="menu-item danger" onclick="closeSideMenu();deleteRoom()">
-        <span class="menu-icon">🗑️</span>
-        <span class="menu-text"><span class="menu-label">حذف الغرفة نهائياً</span><span class="menu-desc">إزالة الغرفة من السجل</span></span>
       </button>
     `;
   } else {
@@ -1349,6 +1424,14 @@ if (roomMenuBtn) {
         e.stopPropagation();
         openSideMenu();
     });
+}
+
+// ربط زر PTT
+const pttMainBtn = document.getElementById('pttMain');
+if(pttMainBtn) {
+    pttMainBtn.addEventListener('pointerdown', (e) => { e.preventDefault(); onPTTStart(); });
+    pttMainBtn.addEventListener('pointerup', (e) => { e.preventDefault(); stopTalking(); });
+    pttMainBtn.addEventListener('pointercancel', (e) => { e.preventDefault(); stopTalking(); });
 }
 
 // ==========================================
@@ -1426,7 +1509,7 @@ function testCall() {
 }
 
 // ==========================================
-// 10. دالة حذف الغرفة
+// 10. دالة مسح الغرفة نهائياً (للغرف التي في السجل)
 // ==========================================
 function deleteRoom() {
   if (!currentUser.roomCode) { toast('⚠️ لا توجد غرفة لحذفها', 'error'); return; }
@@ -1439,6 +1522,7 @@ function deleteRoom() {
   currentUser.roomName = null;
   currentUser.currentConvId = null;
   currentUser.currentChatWith = null;
+  isRoomActive = false;
   
   document.getElementById('roomNameLabel').textContent = 'الغرفة';
   document.getElementById('chatMessages').innerHTML = '';
@@ -1474,13 +1558,15 @@ window.addEventListener('DOMContentLoaded', async () => {
       opsChip.addEventListener('click', openOperationsMenu);
   }
 
-  // استرجاع الفرقة النشطة
+  // استرجاع الفرقة النشطة (افتراضياً يكون نشطاً إذا كان محفوظاً)
   const savedWaveId = localStorage.getItem('rc_saved_wave_id');
   const savedWaveName = localStorage.getItem('rc_saved_wave_name');
   if (savedWaveId) {
     currentUser.waveId = savedWaveId;
     currentUser.waveCode = savedWaveId;
     currentUser.waveName = savedWaveName;
+    isWaveActive = true; // نعتبره نشطاً عند فتح التطبيق لأول مرة
+    
     const el1 = document.getElementById('waveCodeChip');
     if (el1) el1.innerHTML = savedWaveId + ' <span style="font-size:12px;">🔑</span>';
     const el2 = document.getElementById('waveNameLabel');
@@ -1495,6 +1581,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (savedRoomCode) {
     currentUser.roomCode = savedRoomCode;
     currentUser.roomName = savedRoomName;
+    isRoomActive = true;
     const el4 = document.getElementById('roomNameLabel');
     if (el4 && savedRoomName) el4.textContent = savedRoomName;
   }
