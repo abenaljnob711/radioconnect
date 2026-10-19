@@ -381,6 +381,16 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
           </div>
           <span class="setting-value">تجربة</span>
         </div>
+        
+        <!-- زر استعادة ضبط المصنع الجديد -->
+        <div class="setting-item" onclick="factoryReset()">
+          <div class="setting-info">
+            <span class="setting-title" style="color:var(--red);">⚠️ استعادة ضبط المصنع</span>
+            <span class="setting-desc" style="color:var(--red-dark);">مسح كل شيء (الاسم، الفرق، الغرف، والرقم العالق)</span>
+          </div>
+          <span class="setting-value" style="color:var(--red);">مسح شامل</span>
+        </div>
+
         <div class="setting-item" onclick="toast('الإصدار 4.3.0')">
           <div class="setting-info">
             <span class="setting-title">ℹ️ حول التطبيق</span>
@@ -590,6 +600,20 @@ let waveLocalAudioTrack = null;
 let rawMicStream = null;
 let localTestAudio = null;
 let isTalking = false;
+
+// ==========================================
+// دالة استعادة ضبط المصنع (تمت إضافتها)
+// ==========================================
+function factoryReset() {
+  if (!confirm('⚠️ تحذير خطير: سيتم مسح جميع البيانات (اسمك، رقمك، فرقك، وغرفك). هل أنت متأكد؟')) {
+    return;
+  }
+  if (!confirm('هل أنت متأكد 100%؟ لا يمكن التراجع عن هذه الخطوة.')) {
+    return;
+  }
+  localStorage.clear();
+  window.location.reload();
+}
 
 const PTTEngine = {
   audioCtx: null, beepReady: false,
