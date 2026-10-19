@@ -47,8 +47,6 @@ body::before { content: ''; position: fixed; inset: 0; background: radial-gradie
 .menu-item .menu-desc { font-size: 10.5px; color: var(--text-dim); font-weight: 500; }
 .menu-item.primary { background: linear-gradient(180deg, rgba(0,229,255,.08), rgba(0,229,255,.02)); border-color: rgba(0,229,255,.4); }
 .menu-item.primary .menu-icon { background: rgba(0,229,255,.2); }
-.menu-item.danger { background: linear-gradient(180deg, rgba(255,42,77,.08), rgba(255,42,77,.02)); border-color: rgba(255,42,77,.3); color: #ff5577; }
-.menu-item.danger .menu-icon { background: rgba(255,42,77,.1); border-color: rgba(255,42,77,.25); }
 .status-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 7px; margin-bottom: 8px; }
 .chip { background: linear-gradient(180deg, var(--card-2), var(--card)); border: 1px solid var(--border); border-radius: 10px; padding: 9px 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 10.5px; color: var(--text-dim); min-height: 54px; text-align: center; }
 .chip-value { font-size: 13px; font-weight: 800; color: var(--text); display: flex; align-items: center; justify-content: center; gap: 4px; line-height: 1.2; }
@@ -264,7 +262,7 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
           <div class="status-text" id="waveStatusText">🔴 غير متصل</div>
           <div class="wave-timer" id="waveTimer">00:00</div>
         </div>
-        <div class="chip" id="operationsChip" style="cursor:pointer; transition: all .2s;">
+        <div class="chip" id="operationsChip">
           <div class="chip-value" style="font-size:13px; font-weight:800;">📋 العمليات</div>
         </div>
         <div class="chip" id="batteryChip">
@@ -383,15 +381,6 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
           </div>
           <span class="setting-value">تجربة</span>
         </div>
-        
-        <div class="setting-item" onclick="resetAppData()">
-          <div class="setting-info">
-            <span class="setting-title" style="color:var(--red);">🗑️ إعادة ضبط التطبيق</span>
-            <span class="setting-desc" style="color:var(--red-dark);">مسح جميع البيانات والفرق القديمة</span>
-          </div>
-          <span class="setting-value" style="color:var(--red);">مسح</span>
-        </div>
-
         <div class="setting-item" onclick="toast('الإصدار 4.3.0')">
           <div class="setting-info">
             <span class="setting-title">ℹ️ حول التطبيق</span>
@@ -511,8 +500,8 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
   </div>
   <div class="modal-overlay" id="modalWave">
     <div class="modal">
-      <div class="modal-title">📡 إنشاء موجة</div>
-      <div class="modal-sub">إنشاء فرقة جديدة</div>
+      <div class="modal-title">📡 إنشاء فرقة</div>
+      <div class="modal-sub">سيُولَّد رقم فرقتك الخاص</div>
       <div class="modal-field"><label>اسم الفرقة</label><input type="text" id="waveName" maxlength="30"></div>
       <div class="modal-actions"><button class="modal-btn cancel" onclick="closeModal('modalWave')">إلغاء</button><button class="modal-btn confirm" onclick="createWave()">إنشاء</button></div>
     </div>
@@ -573,9 +562,6 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
   <input type="file" id="hiddenFileInput" style="display:none;">
 
   <script>
-// ==========================================
-// 1. الإعدادات والمتغيرات الأساسية
-// ==========================================
 const SERVER_URL   = 'https://radio-connect-server.onrender.com';
 const LIVEKIT_URL  = 'wss://radioconnect-8uyh53qc.livekit.cloud';
 
@@ -597,7 +583,7 @@ let menuBusy = false;
 let searchResultUser = null;
 let socket = null;
 
-// متغيرات الصوت
+// المتغيرات الخاصة بالصوت (النسخة الجديدة)
 let livekitRoom = null;
 let waveRoom = null;
 let waveLocalAudioTrack = null;
@@ -605,26 +591,6 @@ let rawMicStream = null;
 let localTestAudio = null;
 let isTalking = false;
 
-// حالة الاتصال
-let isWaveActive = false;
-let isRoomActive = false;
-
-// مصفوفات الحفظ
-let savedWavesList = JSON.parse(localStorage.getItem('rc_user_waves_list') || '[]');
-let savedRoomsList = JSON.parse(localStorage.getItem('rc_user_rooms_list') || '[]');
-
-// ==========================================
-// 2. دالة إعادة ضبط التطبيق (لحل مشكلة الرقم العالق)
-// ==========================================
-function resetAppData() {
-  if (!confirm('⚠️ تحذير: سيتم مسح جميع البيانات والفرق والغرف من هذا الجهاز، وستحصل على رقم مستخدم جديد. هل أنت متأكد؟')) return;
-  localStorage.clear();
-  window.location.reload();
-}
-
-// ==========================================
-// 3. محرك الأصوات (البيبات)
-// ==========================================
 const PTTEngine = {
   audioCtx: null, beepReady: false,
   async init() {
@@ -664,9 +630,9 @@ const PTTEngine = {
   playEndBeep() { this.playOpenBeep(); }
 };
 
-// ==========================================
-// 4. محرك LiveKit (الصوت)
-// ==========================================
+/* =========================================================
+   محرك الصوت الجديد (الذي يعمل في Tactical)
+   ========================================================= */
 async function connectWaveChannel() {
   try {
     if (!window.LivekitClient || !currentUser.radCode) return false;
@@ -685,10 +651,11 @@ async function connectWaveChannel() {
     waveRoom.on(window.LivekitClient.RoomEvent.TrackSubscribed, (track) => {
       if (track.kind === "audio") {
         const audioElement = track.attach();
-        audioElement.style.display = 'none';
         document.body.appendChild(audioElement);
       }
     });
+
+    waveRoom.on(window.LivekitClient.RoomEvent.TrackUnsubscribed, () => {});
 
     await waveRoom.connect(LIVEKIT_URL, tokenData.token);
     return true;
@@ -700,15 +667,11 @@ async function connectWaveChannel() {
 }
 
 async function onPTTStart() {
-  if (!isWaveActive) {
-      toast("⚠️ أنت خارج الفرقة. عد إليها أولاً للتحدث.", "error");
-      return;
-  }
   if (isTalking) return;
   isTalking = true;
   
   const pttMain = document.getElementById('pttMain');
-  if(pttMain) pttMain.classList.add('holding');
+  pttMain.classList.add('holding');
   document.body.classList.add('ptt-active');
 
   const statusChip = document.getElementById('waveStatusChip');
@@ -726,28 +689,23 @@ async function onPTTStart() {
   try {
     rawMicStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
     
-    const connected = await connectWaveChannel();
-    
-    if (connected && waveRoom) {
-        const audioTrack = rawMicStream.getAudioTracks()[0];
-        
-        if (waveLocalAudioTrack) {
-            await waveRoom.localParticipant.unpublishTrack(waveLocalAudioTrack);
-        }
-        
-        waveLocalAudioTrack = new window.LivekitClient.LocalAudioTrack(audioTrack);
-        
-        await waveRoom.localParticipant.publishTrack(waveLocalAudioTrack, {
-            audioBitrate: 32000,
-            dtx: true,
-            red: true
-        });
-    } else {
-        toast("⚠️ فشل الاتصال بالفرقة");
-        stopTalking();
+    if (!waveRoom || waveRoom.participants.size === 0) {
+      localTestAudio = new Audio();
+      localTestAudio.srcObject = rawMicStream;
+      localTestAudio.volume = 0.8;
+      localTestAudio.play().catch(()=>{});
     }
+
+    connectWaveChannel().then(() => {
+      if (waveRoom && waveRoom.state === "connected" && rawMicStream) {
+        window.LivekitClient.LocalAudioTrack.createTrack(rawMicStream.getAudioTracks()[0]).then(track => {
+          waveLocalAudioTrack = track;
+          waveRoom.localParticipant.publishTrack(waveLocalAudioTrack);
+          waveLocalAudioTrack.enable();
+        });
+      }
+    });
   } catch (err) {
-    console.error(err);
     toast("⚠️ تعذر تشغيل الميكروفون");
     stopTalking();
   }
@@ -755,42 +713,28 @@ async function onPTTStart() {
 
 function stopTalking() {
   if (isTalking) PTTEngine.playEndBeep();
-  
   if (localTestAudio) {
     try { localTestAudio.pause(); localTestAudio.srcObject = null; } catch (e) {}
     localTestAudio = null;
   }
-  
   if (waveLocalAudioTrack && waveRoom) {
-    try { 
-        waveRoom.localParticipant.unpublishTrack(waveLocalAudioTrack); 
-        waveLocalAudioTrack.stop();
-    } catch (e) {}
+    try { waveRoom.localParticipant.unpublishTrack(waveLocalAudioTrack); waveLocalAudioTrack.stop(); } catch (e) {}
     waveLocalAudioTrack = null;
   }
-  
   if (rawMicStream) {
     rawMicStream.getTracks().forEach(t => t.stop());
     rawMicStream = null;
   }
-  
   isTalking = false;
   
   const pttMain = document.getElementById('pttMain');
-  if (pttMain) pttMain.classList.remove('holding');
+  pttMain.classList.remove('holding');
   document.body.classList.remove('ptt-active');
 
-  if (!isWaveActive) {
-      const statusChip = document.getElementById('waveStatusChip');
-      const statusText = document.getElementById('waveStatusText');
-      if (statusChip) { statusChip.classList.remove('live'); statusChip.classList.add('disconnected'); }
-      if (statusText) statusText.innerHTML = '🔴 خارج الفرقة';
-  } else {
-      const statusChip = document.getElementById('waveStatusChip');
-      const statusText = document.getElementById('waveStatusText');
-      if (statusChip) { statusChip.classList.remove('live'); statusChip.classList.add('disconnected'); }
-      if (statusText) statusText.innerHTML = '🔴 متصل';
-  }
+  const statusChip = document.getElementById('waveStatusChip');
+  const statusText = document.getElementById('waveStatusText');
+  if (statusChip) { statusChip.classList.remove('live'); statusChip.classList.add('disconnected'); }
+  if (statusText) statusText.innerHTML = '🔴 غير متصل';
 
   const lcd3 = document.getElementById('lcdLine3');
   if (lcd3) lcd3.textContent = (currentUser.radCode || '—') + ' • RX';
@@ -801,297 +745,45 @@ function stopTalking() {
   }
 }
 
-// ==========================================
-// 5. إدارة القوائم (العمليات والخروج والحذف)
-// ==========================================
-function saveWaveToList(waveId, waveName) {
-    if (!waveId || !waveName) return;
-    const exists = savedWavesList.find(w => w.id === waveId);
-    if (!exists) {
-        savedWavesList.push({ id: waveId, name: waveName });
-        localStorage.setItem('rc_user_waves_list', JSON.stringify(savedWavesList));
-    }
-}
+/* =========================================================
+   LiveVoice (للغرف فقط)
+   ========================================================= */
+const LiveVoice = {
+  room: null, connected: false,
+  async connect(waveId) {
+    if (this.connected) return true;
+    try {
+      const tokenRes = await fetch(SERVER_URL + '/api/livekit/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ roomId: waveId, deviceId: currentUser.id, userName: currentUser.name })
+      });
+      const data = await tokenRes.json();
+      if (!data.token) return false;
+      this.room = new window.LivekitClient.Room();
+      await this.room.connect(LIVEKIT_URL, data.token);
+      this.connected = true;
+      return true;
+    } catch (e) { return false; }
+  }
+};
 
-function removeWaveFromList(waveId) {
-    savedWavesList = savedWavesList.filter(w => w.id !== waveId);
-    localStorage.setItem('rc_user_waves_list', JSON.stringify(savedWavesList));
-}
+// ربط حدث الضغط والإفلات لزر PTT الرئيسي
+const pttMainBtn = document.getElementById('pttMain');
+pttMainBtn.addEventListener('pointerdown', (e) => { e.preventDefault(); onPTTStart(); });
+pttMainBtn.addEventListener('pointerup', (e) => { e.preventDefault(); stopTalking(); });
+pttMainBtn.addEventListener('pointercancel', (e) => { e.preventDefault(); stopTalking(); });
+pttMainBtn.addEventListener('touchstart', (e) => { e.preventDefault(); onPTTStart(); }, { passive: false });
+pttMainBtn.addEventListener('touchend', (e) => { e.preventDefault(); stopTalking(); }, { passive: false });
 
-function saveRoomToList(roomCode, roomName) {
-    if (!roomCode || !roomName) return;
-    const exists = savedRoomsList.find(r => r.code === roomCode);
-    if (!exists) {
-        savedRoomsList.push({ code: roomCode, name: roomName });
-        localStorage.setItem('rc_user_rooms_list', JSON.stringify(savedRoomsList));
-    }
-}
 
-function removeRoomFromList(roomCode) {
-    savedRoomsList = savedRoomsList.filter(r => r.code !== roomCode);
-    localStorage.setItem('rc_user_rooms_list', JSON.stringify(savedRoomsList));
-}
-
-function openOperationsMenu() {
-    const title = document.getElementById('sideMenuTitle');
-    const content = document.getElementById('sideMenuContent');
-    title.textContent = '📋 سجل العمليات (الفرق)';
-    
-    if (savedWavesList.length === 0) {
-        content.innerHTML = `<div class="operations-empty">لا توجد فرق مسجلة.<br>قم بإنشاء فرقة أو الانضمام لواحدة لتظهر هنا.</div>`;
-    } else {
-        content.innerHTML = savedWavesList.map(w => {
-            const isCurrentlyActive = (currentUser.waveId === w.id && isWaveActive);
-            const isCurrentlyInactive = (currentUser.waveId === w.id && !isWaveActive);
-            
-            let statusLabel = 'غير مشترك فيها';
-            let statusIcon = '📡';
-            let actionBtn = `<button onclick="returnToWave('${w.id}')" style="background:rgba(0,229,255,0.2); border:1px solid #00e5ff; color:#00e5ff; border-radius:8px; padding:8px; cursor:pointer; font-family:inherit; margin-left:5px;">↩️ رجوع</button>`;
-            
-            if (isCurrentlyActive) {
-                statusLabel = 'نشطة الآن';
-                statusIcon = '🟢';
-                actionBtn = '';
-            } else if (isCurrentlyInactive) {
-                statusLabel = 'خرجت منها (غير نشط)';
-                statusIcon = '🔴';
-            }
-
-            return `
-            <div class="menu-item" style="justify-content:space-between; flex-direction:column; align-items:flex-start; gap:10px; padding:14px;">
-                <div style="display:flex; align-items:center; gap:10px; width:100%;">
-                    <span class="menu-icon">${statusIcon}</span>
-                    <div class="menu-text">
-                        <span class="menu-label">${w.name}</span>
-                        <span class="menu-desc">${w.id} • ${statusLabel}</span>
-                    </div>
-                </div>
-                <div style="display:flex; justify-content:flex-end; width:100%; gap:8px;">
-                    ${actionBtn}
-                    <button onclick="deleteWaveFromList('${w.id}')" style="background:rgba(255,42,77,0.2); border:1px solid #ff5577; color:#ff5577; border-radius:8px; padding:8px; cursor:pointer; font-family:inherit;">🗑️ حذف</button>
-                </div>
-            </div>`;
-        }).join('');
-    }
-    if(sideMenu) sideMenu.classList.add('open');
-    if(menuBackdrop) menuBackdrop.classList.add('show');
-    if(menuToggle) menuToggle.classList.add('open');
-}
-
-function openManageWavesMenu() {
-    const title = document.getElementById('sideMenuTitle');
-    const content = document.getElementById('sideMenuContent');
-    title.textContent = '💾 إدارة وحفظ الفرق';
-    
-    if (savedWavesList.length === 0) {
-        content.innerHTML = `<div class="operations-empty">لا توجد فرق محفوظة لحذفها.</div>`;
-    } else {
-        content.innerHTML = savedWavesList.map(w => {
-            return `
-            <div class="menu-item" style="justify-content:space-between;">
-                <span class="menu-text">
-                    <span class="menu-label">${w.name}</span>
-                    <span class="menu-desc">${w.id}</span>
-                </span>
-                <button onclick="deleteWaveFromList('${w.id}')" style="background:rgba(255,42,77,0.2); border:1px solid #ff5577; color:#ff5577; border-radius:8px; padding:8px; cursor:pointer; font-family:inherit;">🗑️ حذف</button>
-            </div>`;
-        }).join('');
-    }
-    if(sideMenu) sideMenu.classList.add('open');
-    if(menuBackdrop) menuBackdrop.classList.add('show');
-    if(menuToggle) menuToggle.classList.add('open');
-}
-
-function openManageRoomsMenu() {
-    const title = document.getElementById('sideMenuTitle');
-    const content = document.getElementById('sideMenuContent');
-    title.textContent = '💾 إدارة وحفظ الغرف';
-    
-    if (savedRoomsList.length === 0) {
-        content.innerHTML = `<div class="operations-empty">لا توجد غرف محفوظة لحذفها.</div>`;
-    } else {
-        content.innerHTML = savedRoomsList.map(r => {
-            const isCurrentlyActive = (currentUser.roomCode === r.code && isRoomActive);
-            const isCurrentlyInactive = (currentUser.roomCode === r.code && !isRoomActive);
-            
-            let statusLabel = 'غير مشترك فيها';
-            let statusIcon = '💬';
-            let actionBtn = `<button onclick="returnToRoom('${r.code}')" style="background:rgba(0,229,255,0.2); border:1px solid #00e5ff; color:#00e5ff; border-radius:8px; padding:8px; cursor:pointer; font-family:inherit; margin-left:5px;">↩️ رجوع</button>`;
-            
-            if (isCurrentlyActive) {
-                statusLabel = 'نشطة الآن';
-                statusIcon = '🟢';
-                actionBtn = '';
-            } else if (isCurrentlyInactive) {
-                statusLabel = 'خرجت منها (غير نشط)';
-                statusIcon = '🔴';
-            }
-
-            return `
-            <div class="menu-item" style="justify-content:space-between; flex-direction:column; align-items:flex-start; gap:10px; padding:14px;">
-                <div style="display:flex; align-items:center; gap:10px; width:100%;">
-                    <span class="menu-icon">${statusIcon}</span>
-                    <div class="menu-text">
-                        <span class="menu-label">${r.name}</span>
-                        <span class="menu-desc">${r.code} • ${statusLabel}</span>
-                    </div>
-                </div>
-                <div style="display:flex; justify-content:flex-end; width:100%; gap:8px;">
-                    ${actionBtn}
-                    <button onclick="deleteRoomFromList('${r.code}')" style="background:rgba(255,42,77,0.2); border:1px solid #ff5577; color:#ff5577; border-radius:8px; padding:8px; cursor:pointer; font-family:inherit;">🗑️ حذف</button>
-                </div>
-            </div>`;
-        }).join('');
-    }
-    if(sideMenu) sideMenu.classList.add('open');
-    if(menuBackdrop) menuBackdrop.classList.add('show');
-    if(menuToggle) menuToggle.classList.add('open');
-}
-
-// --- دوال الخروج والعودة للفرقة ---
-function exitWaveTemporarily() {
-    if (!isWaveActive) { toast('⚠️ أنت خارج الفرقة بالفعل', 'error'); return; }
-    if (!confirm('هل تريد الخروج من الفرقة مؤقتاً؟ (لن يتم حذفها، ويمكنك العودة لها لاحقاً)')) return;
-    
-    stopTalking();
-    if (waveRoom) { waveRoom.disconnect(); waveRoom = null; }
-    if (socket && currentUser.waveId) {
-        socket.emit('wave_leave', { waveId: currentUser.waveId, deviceId: currentUser.id });
-    }
-    
-    isWaveActive = false;
-    currentUser.waveId = null;
-    currentUser.waveName = null;
-    currentUser.waveCode = null;
-    
-    const statusText = document.getElementById('waveStatusText');
-    if (statusText) statusText.innerHTML = '🔴 خارج الفرقة';
-    
-    const el1 = document.getElementById('waveCodeChip');
-    if (el1) el1.innerHTML = (currentUser.radCode || 'Q00000') + ' <span style="font-size:12px;">🔑</span>';
-    const el2 = document.getElementById('waveNameLabel'); 
-    if (el2) el2.textContent = 'لا توجد فرقة';
-    const el3 = document.getElementById('lcdLine3'); 
-    if (el3) el3.textContent = (currentUser.radCode || 'Q00000') + ' • RX';
-    
-    toast('✅ خرجت من الفرقة (يمكنك العودة من قائمة العمليات)', 'success');
-    closeSideMenu();
-}
-
-async function returnToWave(waveId) {
-    if (isWaveActive) { toast('⚠️ أنت مشترك بالفعل', 'error'); return; }
-    
-    const wave = savedWavesList.find(w => w.id === waveId);
-    if (!wave) return;
-
-    toast('⏳ جاري طلب العودة...', 'success');
-    
-    currentUser.waveId = waveId;
-    currentUser.waveName = wave.name;
-    currentUser.waveCode = waveId;
-    
-    await joinWaveAsMember(waveId);
-    isWaveActive = true;
-    
-    const statusText = document.getElementById('waveStatusText');
-    if (statusText) statusText.innerHTML = '🟢 متصل';
-    
-    const el2 = document.getElementById('waveNameLabel'); 
-    if (el2) el2.textContent = wave.name;
-    
-    toast('✅ عدت إلى الفرقة بنجاح', 'success');
-    closeSideMenu();
-}
-
-// --- دوال الخروج والعودة للغرفة ---
-function exitRoomTemporarily() {
-    if (!isRoomActive) { toast('⚠️ أنت خارج الغرفة بالفعل', 'error'); return; }
-    if (!confirm('هل تريد الخروج من الغرفة مؤقتاً؟ (لن يتم حذف الرسائل)')) return;
-    
-    isRoomActive = false;
-    currentUser.currentConvId = null;
-    currentUser.currentChatWith = null;
-    
-    toast('✅ خرجت من الغرفة (يمكنك العودة من قائمة الغرفة)', 'success');
-    switchTab('log');
-    closeSideMenu();
-}
-
-async function returnToRoom(roomCode) {
-    if (isRoomActive) { toast('⚠️ أنت مشترك بالفعل', 'error'); return; }
-    
-    const room = savedRoomsList.find(r => r.code === roomCode);
-    if (!room) return;
-
-    isRoomActive = true;
-    currentUser.roomCode = room.code;
-    currentUser.roomName = room.name;
-    currentUser.currentConvId = 'conv_self_' + room.code;
-    currentUser.currentChatWith = 'self';
-    
-    document.getElementById('roomNameLabel').textContent = room.name;
-    document.getElementById('chatWithName').textContent = room.name + ' (غرفتك)';
-    document.getElementById('chatWithCode').textContent = room.code;
-    
-    toast('✅ عدت إلى الغرفة بنجاح', 'success');
-    switchTab('chat');
-    closeSideMenu();
-}
-
-function deleteWaveFromList(waveId) {
-    if (currentUser.waveId === waveId && isWaveActive) {
-        toast('⚠️ لا يمكنك الحذف وأنت نشط في الفرقة. اخرج أولاً.', 'error');
-        return;
-    }
-    if (!confirm('هل تريد حذف هذه الفرقة نهائياً من سجلك؟ (سيتم حذفها من قائمة العمليات)')) return;
-    
-    if (currentUser.waveId === waveId) {
-        currentUser.waveId = null;
-        currentUser.waveName = null;
-        currentUser.waveCode = null;
-        localStorage.removeItem('rc_saved_wave_id');
-        localStorage.removeItem('rc_saved_wave_name');
-        
-        const myCode = currentUser.radCode || 'Q00000';
-        document.getElementById('waveCodeChip').innerHTML = myCode + ' <span style="font-size:12px;">🔑</span>';
-        document.getElementById('waveNameLabel').textContent = 'لا توجد فرقة';
-        document.getElementById('lcdLine3').textContent = myCode + ' • RX';
-    }
-    
-    removeWaveFromList(waveId);
-    openManageWavesMenu(); 
-    toast('✅ تم الحذف من السجل', 'success');
-}
-
-function deleteRoomFromList(roomCode) {
-    if (currentUser.roomCode === roomCode && isRoomActive) {
-        toast('⚠️ لا يمكنك الحذف وأنت نشط في الغرفة. اخرج أولاً.', 'error');
-        return;
-    }
-    if (!confirm('هل تريد حذف هذه الغرفة نهائياً من سجلك؟')) return;
-    
-    if (currentUser.roomCode === roomCode) {
-        currentUser.roomCode = null;
-        currentUser.roomName = null;
-        localStorage.removeItem('rc_saved_room_code');
-        localStorage.removeItem('rc_saved_room_name');
-    }
-    
-    removeRoomFromList(roomCode);
-    openManageRoomsMenu(); 
-    toast('✅ تم الحذف من السجل', 'success');
-}
-
-// ==========================================
-// 6. السوكيت
-// ==========================================
 function initSocket() {
   if (typeof io === 'undefined') return;
   socket = io(SERVER_URL, { transports: ['websocket', 'polling'], reconnection: true });
 
   socket.on('connect', () => {
     socket.emit('register_device', { deviceId: currentUser.id, userName: currentUser.name });
-    if (currentUser.waveId && isWaveActive) {
+    if (currentUser.waveId) {
       socket.emit('wave_join', { waveId: currentUser.waveId, deviceId: currentUser.id, userName: currentUser.name });
     }
   });
@@ -1100,10 +792,7 @@ function initSocket() {
 
   socket.on('wave_removed', () => {
     toast('⚠️ تم إخراجك من الفرقة', 'error');
-    removeWaveFromList(currentUser.waveId);
-    currentUser.waveId = null; 
-    isWaveActive = false;
-    if(waveRoom) { waveRoom.disconnect(); waveRoom = null; }
+    currentUser.waveId = null; LiveVoice.disconnect();
     const statusChip = document.getElementById('waveStatusChip');
     const statusText = document.getElementById('waveStatusText');
     if (statusChip) { statusChip.classList.add('disconnected'); statusChip.classList.remove('live'); }
@@ -1144,9 +833,6 @@ function initSocket() {
   socket.on('conversation_updated', () => refreshChatList());
 }
 
-// ==========================================
-// 7. دوال التسجيل والفرق
-// ==========================================
 async function registerUser() {
   try {
     const res = await fetch(SERVER_URL + '/api/users/register', {
@@ -1154,7 +840,6 @@ async function registerUser() {
       body: JSON.stringify({ deviceId: currentUser.id, userName: currentUser.name || 'مستخدم' })
     });
     const data = await res.json();
-    
     if (data.radCode) {
       currentUser.radCode = data.radCode;
       const el1 = document.getElementById('myRadCode'); if (el1) el1.textContent = data.radCode;
@@ -1162,12 +847,12 @@ async function registerUser() {
       const el3 = document.getElementById('waveCodeValue'); if (el3) el3.textContent = data.radCode;
       const el4 = document.getElementById('lcdLine3'); if (el4) el4.textContent = data.radCode + ' • RX';
     }
+    if (data.waveId) { currentUser.waveId = data.waveId; currentUser.waveCode = data.waveId; }
     return data;
-  } catch (e) { console.error(e); return null; }
+  } catch (e) { return null; }
 }
 
 function askUserNameIfNeeded() { if (!currentUser.name) openModal('modalUserName'); }
-
 function saveUserName() {
   const v = document.getElementById('userNameInput').value.trim();
   if (!v) { toast('⚠️ أدخل اسماً', 'error'); return; }
@@ -1192,7 +877,6 @@ async function createWave() {
 
     currentUser.waveId = data.waveId; currentUser.waveCode = data.waveId;
     currentUser.waveName = data.waveName; currentUser.isWaveOwner = true;
-    isWaveActive = true;
 
     document.getElementById('createdWaveCode').textContent = data.waveId;
     document.getElementById('waveName').value = '';
@@ -1204,12 +888,11 @@ async function createWave() {
     const el4 = document.getElementById('waveNameLabel'); if (el4) el4.textContent = name;
     const el5 = document.getElementById('lcdLine3'); if (el5) el5.textContent = data.waveId + ' • TX';
 
-    saveWaveToList(data.waveId, name);
-
     localStorage.setItem('rc_saved_wave_id', data.waveId);
     localStorage.setItem('rc_saved_wave_name', name);
 
     await PTTEngine.init(); PTTEngine.playStartBeep();
+    await LiveVoice.connect(data.waveId);
     if (socket) socket.emit('wave_join', { waveId: data.waveId, deviceId: currentUser.id, userName: currentUser.name });
     toast('✅ تم إنشاء الفرقة "' + name + '"', 'success');
   } catch (e) { toast('❌ ' + e.message, 'error'); }
@@ -1217,8 +900,6 @@ async function createWave() {
 
 async function joinWaveAsMember(waveId) {
   currentUser.waveId = waveId; currentUser.waveCode = waveId;
-  isWaveActive = true;
-  
   try {
     const res = await fetch(SERVER_URL + '/api/waves/' + waveId);
     const data = await res.json();
@@ -1226,8 +907,6 @@ async function joinWaveAsMember(waveId) {
       currentUser.waveName = data.waveName;
       const el1 = document.getElementById('waveNameValue'); if (el1) el1.textContent = data.waveName;
       const el2 = document.getElementById('waveNameLabel'); if (el2) el2.textContent = data.waveName;
-      
-      saveWaveToList(waveId, data.waveName);
     }
     if (data.members) renderWaveMembers(data.members);
   } catch (e) {}
@@ -1239,13 +918,111 @@ async function joinWaveAsMember(waveId) {
   localStorage.setItem('rc_saved_wave_id', waveId);
   localStorage.setItem('rc_saved_wave_name', currentUser.waveName || '');
 
+  await LiveVoice.connect(waveId);
   if (socket) socket.emit('wave_join', { waveId, deviceId: currentUser.id, userName: currentUser.name });
   toast('✅ انضممت إلى الفرقة', 'success');
 }
 
-// ==========================================
-// 8. الواجهة والتنقل
-// ==========================================
+function doSearch() {
+  const q = document.getElementById('searchQuery').value.trim().toUpperCase();
+  const res = document.getElementById('searchResults');
+  if (!q) { res.innerHTML = '<div class="no-results"><span class="no-results-icon">⚠️</span>أدخل الرقم</div>'; return; }
+
+  fetch(SERVER_URL + '/api/waves/' + q)
+    .then(r => r.json())
+    .then(data => {
+      if (data.waveId) {
+        searchResultUser = { name: data.waveName || 'فرقة', code: data.waveId, type: 'wave' };
+        res.innerHTML = `
+          <div class="search-result-card" onclick="askJoinWave()">
+            <div class="search-result-icon">📡</div>
+            <div class="search-result-info">
+              <div class="search-result-name">${searchResultUser.name}</div>
+              <div class="search-result-code">${searchResultUser.code} • ${data.totalMembers || 0} أعضاء</div>
+            </div>
+            <div style="color:var(--cyan)">←</div>
+          </div>`;
+        return;
+      }
+      return fetch(SERVER_URL + '/api/users/search/' + q)
+        .then(r => r.json())
+        .then(user => {
+          if (user.deviceId) {
+            searchResultUser = { name: user.userName, code: user.radCode, deviceId: user.deviceId, type: 'user' };
+            res.innerHTML = `
+              <div class="search-result-card" onclick="startUserChat()">
+                <div class="search-result-icon">👤</div>
+                <div class="search-result-info">
+                  <div class="search-result-name">${searchResultUser.name}</div>
+                  <div class="search-result-code">${searchResultUser.code}</div>
+                </div>
+                <div style="color:var(--cyan)">←</div>
+              </div>`;
+          } else {
+            res.innerHTML = '<div class="no-results"><span class="no-results-icon">❌</span>لا نتائج</div>';
+          }
+        });
+    })
+    .catch(() => { res.innerHTML = '<div class="no-results"><span class="no-results-icon">❌</span>خطأ في البحث</div>'; });
+}
+
+function askJoinWave() {
+  if (!searchResultUser) return;
+  document.getElementById('joinTargetName').textContent = searchResultUser.name;
+  document.getElementById('joinTargetCode').textContent = searchResultUser.code;
+  closeModal('modalSearch'); openModal('modalJoinConfirm');
+}
+
+function confirmJoin() {
+  if (!searchResultUser) return;
+  closeModal('modalJoinConfirm');
+  if (socket) socket.emit('wave_join_request', {
+    waveId: searchResultUser.code, fromDeviceId: currentUser.id, fromUserName: currentUser.name
+  });
+}
+
+function cancelJoin() { closeModal('modalJoinConfirm'); openModal('modalSearch'); }
+
+function rejectIncoming() {
+  closeModal('modalIncomingRequest');
+  if (window._incomingRequest && socket) socket.emit('wave_join_response', { requestId: window._incomingRequest.requestId, accepted: false });
+  toast('تم رفض الطلب', 'error');
+}
+
+function acceptIncoming() {
+  closeModal('modalIncomingRequest');
+  if (window._incomingRequest && socket) socket.emit('wave_join_response', { requestId: window._incomingRequest.requestId, accepted: true });
+  PTTEngine.playRealBeep();
+  toast('✅ تم قبول الطلب', 'success');
+}
+
+function renderWaveMembers(members) {
+  if (!members) return;
+  const dd = document.getElementById('membersDropdown');
+  if (dd && dd.classList.contains('show')) {
+    dd.innerHTML = `
+      <div class="members-dropdown-title">👥 المشتركون (${members.length})</div>
+      ${members.map(m => `
+        <div class="members-dropdown-item">
+          <span>${m.name} ${m.id === currentUser.id ? '(أنت)' : ''} ${m.isOwner ? '👑' : ''}</span>
+          <span class="${m.online ? 'status-active' : 'status-inactive'}">${m.online ? '🟢 نشط' : '🔴 غير نشط'}</span>
+        </div>
+      `).join('')}
+    `;
+  }
+}
+
+async function removeMember(memberId) {
+  if (!currentUser.isWaveOwner) return;
+  try {
+    await fetch(SERVER_URL + '/api/waves/remove-member', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ waveId: currentUser.waveId, memberId, ownerDevice: currentUser.id })
+    });
+    toast('✅ تم إخراج العضو', 'success');
+  } catch (e) { toast('❌ فشل الإخراج', 'error'); }
+}
+
 function switchTab(tabName) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -1258,15 +1035,15 @@ function switchTab(tabName) {
   const bottomInfo = document.getElementById('bottomInfo');
 
   if (tabName === 'chat') {
-    if(chatBar) chatBar.classList.add('active');
-    if(bottomInfo) bottomInfo.style.display = 'none';
+    chatBar.classList.add('active');
+    bottomInfo.style.display = 'none';
   } else if (tabName === 'log') {
-    if(chatBar) chatBar.classList.add('active');
-    if(bottomInfo) bottomInfo.style.display = 'none';
+    chatBar.classList.add('active');
+    bottomInfo.style.display = 'none';
     refreshChatList();
   } else {
-    if(chatBar) chatBar.classList.remove('active');
-    if(bottomInfo) bottomInfo.style.display = 'block';
+    chatBar.classList.remove('active');
+    bottomInfo.style.display = 'block';
   }
 
   if (sideMenu && sideMenu.classList.contains('open')) closeSideMenu();
@@ -1316,41 +1093,30 @@ function openSideMenu() {
 
   if (activeId === 'screen-radio') {
     title.textContent = '📡 قائمة الفرقة';
-    
-    const exitBtnHtml = isWaveActive 
-        ? `<button class="menu-item" onclick="exitWaveTemporarily()" style="border-color:var(--yellow); color:var(--yellow);"><span class="menu-icon" style="background:rgba(255,204,0,.1); border-color:rgba(255,204,0,.3);">🚪</span><span class="menu-text"><span class="menu-label">الخروج من الفرقة</span><span class="menu-desc">ابقَ في السجل وعد لاحقاً</span></span></button>`
-        : `<button class="menu-item primary" onclick="returnToWave(currentUser.waveId)"><span class="menu-icon">↩️</span><span class="menu-text"><span class="menu-label">العودة إلى الفرقة</span><span class="menu-desc">أنت خارجها حالياً</span></span></button>`;
-
     content.innerHTML = `
       <button class="menu-item primary" onclick="closeSideMenu();openCreateWave()">
         <span class="menu-icon">➕</span>
-        <span class="menu-text"><span class="menu-label">إضافة موجة</span><span class="menu-desc">إنشاء فرقة جديدة</span></span>
+        <span class="menu-text"><span class="menu-label">إضافة فرقة</span><span class="menu-desc">إنشاء موجة لاسلكية جديدة</span></span>
       </button>
       <button class="menu-item" onclick="closeSideMenu();openSearchWave()">
         <span class="menu-icon">🔍</span>
         <span class="menu-text"><span class="menu-label">البحث عن فرقة</span><span class="menu-desc">ابحث برقم الفرقة</span></span>
       </button>
+      <button class="menu-item" onclick="closeSideMenu();saveMyWave()">
+        <span class="menu-icon">💾</span>
+        <span class="menu-text"><span class="menu-label">حفظ الفرقة</span><span class="menu-desc">استرجعها تلقائياً عند الدخول</span></span>
+      </button>
       <button class="menu-item" onclick="closeSideMenu();openEditWaveName()">
         <span class="menu-icon">✏️</span>
         <span class="menu-text"><span class="menu-label">تعديل اسم الفرقة</span><span class="menu-desc">غيّر اسم فرقتك</span></span>
       </button>
-      ${exitBtnHtml}
-      <button class="menu-item" onclick="closeSideMenu();openManageWavesMenu()">
-        <span class="menu-icon">💾</span>
-        <span class="menu-text"><span class="menu-label">إدارة وحفظ الفرق</span><span class="menu-desc">حذف الفرق من السجل</span></span>
-      </button>
-      <button class="menu-item danger" onclick="closeSideMenu();deleteWave()">
+      <button class="menu-item" onclick="closeSideMenu();leaveWave()">
         <span class="menu-icon">🗑️</span>
-        <span class="menu-text"><span class="menu-label">حذف الفرقة</span><span class="menu-desc">حذف نهائي وإلغاء الاشتراك</span></span>
+        <span class="menu-text"><span class="menu-label">مسح الفرقة</span><span class="menu-desc">مغادرة الفرقة الحالية</span></span>
       </button>
     `;
   } else if (activeId === 'screen-log' || activeId === 'screen-chat') {
     title.textContent = '💬 قائمة الغرفة';
-
-    const exitBtnHtml = isRoomActive
-        ? `<button class="menu-item" onclick="exitRoomTemporarily()" style="border-color:var(--yellow); color:var(--yellow);"><span class="menu-icon" style="background:rgba(255,204,0,.1); border-color:rgba(255,204,0,.3);">🚪</span><span class="menu-text"><span class="menu-label">الخروج من الغرفة</span><span class="menu-desc">ابقَ في السجل وعد لاحقاً</span></span></button>`
-        : `<button class="menu-item primary" onclick="returnToRoom(currentUser.roomCode)"><span class="menu-icon">↩️</span><span class="menu-text"><span class="menu-label">العودة إلى الغرفة</span><span class="menu-desc">أنت خارجها حالياً</span></span></button>`;
-
     content.innerHTML = `
       <div style="background:rgba(0,229,255,.05); border:1px solid rgba(0,229,255,.3); border-radius:12px; padding:12px; margin-bottom:12px; text-align:center;">
         <div style="font-size:11px; color:var(--text-dim); margin-bottom:4px;">📛 اسم الغرفة</div>
@@ -1368,18 +1134,17 @@ function openSideMenu() {
         <span class="menu-icon">🔍</span>
         <span class="menu-text"><span class="menu-label">البحث عن غرفة</span><span class="menu-desc">ابحث برقم المستخدم</span></span>
       </button>
-      ${exitBtnHtml}
-      <button class="menu-item" onclick="closeSideMenu();openManageRoomsMenu()">
+      <button class="menu-item" onclick="closeSideMenu();saveMyRoom()">
         <span class="menu-icon">💾</span>
-        <span class="menu-text"><span class="menu-label">إدارة وحفظ الغرف</span><span class="menu-desc">حذف الغرف من السجل</span></span>
+        <span class="menu-text"><span class="menu-label">حفظ الغرفة</span><span class="menu-desc">استرجعها تلقائياً عند الدخول</span></span>
+      </button>
+      <button class="menu-item" onclick="closeSideMenu();openEditRoomName()">
+        <span class="menu-icon">✏️</span>
+        <span class="menu-text"><span class="menu-label">تعديل اسم الغرفة</span><span class="menu-desc">غيّر اسم غرفتك</span></span>
       </button>
       <button class="menu-item" onclick="closeSideMenu();confirmClearChat()">
-        <span class="menu-icon">🧹</span>
-        <span class="menu-text"><span class="menu-label">مسح المحادثة</span><span class="menu-desc">حذف الرسائل فقط</span></span>
-      </button>
-      <button class="menu-item danger" onclick="closeSideMenu();deleteRoom()">
         <span class="menu-icon">🗑️</span>
-        <span class="menu-text"><span class="menu-label">حذف الغرفة نهائياً</span><span class="menu-desc">إزالة الغرفة من السجل</span></span>
+        <span class="menu-text"><span class="menu-label">مسح المحادثة</span><span class="menu-desc">حذف كل الرسائل</span></span>
       </button>
     `;
   } else {
@@ -1396,49 +1161,27 @@ function openSideMenu() {
     `;
   }
 
-  if(sideMenu) sideMenu.classList.add('open');
-  if(menuBackdrop) menuBackdrop.classList.add('show');
-  if(menuToggle) menuToggle.classList.add('open');
+  sideMenu.classList.add('open');
+  menuBackdrop.classList.add('show');
+  menuToggle.classList.add('open');
 }
 
 function closeSideMenu() {
-  if(sideMenu) sideMenu.classList.remove('open');
-  if(menuBackdrop) menuBackdrop.classList.remove('show');
-  if(menuToggle) menuToggle.classList.remove('open');
+  sideMenu.classList.remove('open');
+  menuBackdrop.classList.remove('show');
+  menuToggle.classList.remove('open');
 }
 
-if(menuToggle) {
-    menuToggle.addEventListener('click', (e) => {
-      e.stopPropagation();
-      if (menuBusy) return;
-      menuBusy = true;
-      setTimeout(() => menuBusy = false, 300);
-      if (sideMenu.classList.contains('open')) closeSideMenu();
-      else openSideMenu();
-    });
-}
-if(menuBackdrop) menuBackdrop.addEventListener('click', closeSideMenu);
+menuToggle.addEventListener('click', (e) => {
+  e.stopPropagation();
+  if (menuBusy) return;
+  menuBusy = true;
+  setTimeout(() => menuBusy = false, 300);
+  if (sideMenu.classList.contains('open')) closeSideMenu();
+  else openSideMenu();
+});
+menuBackdrop.addEventListener('click', closeSideMenu);
 
-// ربط زر الغرفة يدوياً لضمان عمله
-const roomMenuBtn = document.getElementById('roomMenuBtn');
-if (roomMenuBtn) {
-    roomMenuBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        openSideMenu();
-    });
-}
-
-// ربط زر PTT
-const pttMainBtn = document.getElementById('pttMain');
-if(pttMainBtn) {
-    pttMainBtn.addEventListener('pointerdown', (e) => { e.preventDefault(); onPTTStart(); });
-    pttMainBtn.addEventListener('pointerup', (e) => { e.preventDefault(); stopTalking(); });
-    pttMainBtn.addEventListener('pointercancel', (e) => { e.preventDefault(); stopTalking(); });
-}
-
-// ==========================================
-// 9. المؤقتات والبطارية والشبكة
-// ==========================================
 let waveTimerInterval = null;
 let waveStartTime = 0;
 
@@ -1461,8 +1204,659 @@ function stopWaveTimer() {
   if (el) el.textContent = '00:00';
 }
 
+async function onPTTStart() {
+  if (isTalking) return;
+  isTalking = true;
+  
+  const pttMain = document.getElementById('pttMain');
+  pttMain.classList.add('holding');
+  document.body.classList.add('ptt-active');
+
+  const statusChip = document.getElementById('waveStatusChip');
+  const statusText = document.getElementById('waveStatusText');
+  if (statusChip) { statusChip.classList.add('live'); statusChip.classList.remove('disconnected'); }
+  if (statusText) statusText.innerHTML = '🟢 يتحدث';
+
+  const lcd3 = document.getElementById('lcdLine3');
+  if (lcd3) lcd3.textContent = (currentUser.radCode || '—') + ' • TX';
+
+  startWaveTimer();
+  await PTTEngine.init();
+  PTTEngine.playStartBeep();
+
+  try {
+    rawMicStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
+    
+    if (!waveRoom || waveRoom.participants.size === 0) {
+      localTestAudio = new Audio();
+      localTestAudio.srcObject = rawMicStream;
+      localTestAudio.volume = 0.8;
+      localTestAudio.play().catch(()=>{});
+    }
+
+    connectWaveChannel().then(() => {
+      if (waveRoom && waveRoom.state === "connected" && rawMicStream) {
+        window.LivekitClient.LocalAudioTrack.createTrack(rawMicStream.getAudioTracks()[0]).then(track => {
+          waveLocalAudioTrack = track;
+          waveRoom.localParticipant.publishTrack(waveLocalAudioTrack);
+          waveLocalAudioTrack.enable();
+        });
+      }
+    });
+  } catch (err) {
+    toast("⚠️ تعذر تشغيل الميكروفون");
+    stopTalking();
+  }
+}
+
+function stopTalking() {
+  if (isTalking) PTTEngine.playEndBeep();
+  if (localTestAudio) {
+    try { localTestAudio.pause(); localTestAudio.srcObject = null; } catch (e) {}
+    localTestAudio = null;
+  }
+  if (waveLocalAudioTrack && waveRoom) {
+    try { waveRoom.localParticipant.unpublishTrack(waveLocalAudioTrack); waveLocalAudioTrack.stop(); } catch (e) {}
+    waveLocalAudioTrack = null;
+  }
+  if (rawMicStream) {
+    rawMicStream.getTracks().forEach(t => t.stop());
+    rawMicStream = null;
+  }
+  isTalking = false;
+  
+  const pttMain = document.getElementById('pttMain');
+  pttMain.classList.remove('holding');
+  document.body.classList.remove('ptt-active');
+
+  const statusChip = document.getElementById('waveStatusChip');
+  const statusText = document.getElementById('waveStatusText');
+  if (statusChip) { statusChip.classList.remove('live'); statusChip.classList.add('disconnected'); }
+  if (statusText) statusText.innerHTML = '🔴 غير متصل';
+
+  const lcd3 = document.getElementById('lcdLine3');
+  if (lcd3) lcd3.textContent = (currentUser.radCode || '—') + ' • RX';
+
+  stopWaveTimer();
+  if (socket && currentUser.waveId) {
+    socket.emit('wave_broadcast_stop', { waveId: currentUser.waveId, deviceId: currentUser.id });
+  }
+}
+
+function openCreateWave() { openModal('modalWave'); }
+function openEditWaveName() {
+  document.getElementById('newWaveName').value = currentUser.waveName || '';
+  openModal('modalEditWave');
+}
+function openSearchWave() {
+  document.getElementById('searchSubTitle').textContent = 'ابحث برقم الفرقة (Q#####)';
+  document.getElementById('searchFieldLabel').textContent = 'رقم الفرقة';
+  document.getElementById('searchQuery').placeholder = 'Q#####';
+  document.getElementById('searchQuery').value = '';
+  document.getElementById('searchResults').innerHTML = `
+    <div class="no-results">
+      <span class="no-results-icon">🔎</span>
+      اكتب رقم الفرقة واضغط بحث
+    </div>`;
+  openModal('modalSearch');
+}
+function openSearchUser() {
+  document.getElementById('searchSubTitle').textContent = 'ابحث برقم المستخدم أو الغرفة';
+  document.getElementById('searchFieldLabel').textContent = 'رقم المستخدم / الغرفة';
+  document.getElementById('searchQuery').placeholder = 'Q##### / G#####';
+  document.getElementById('searchQuery').value = '';
+  document.getElementById('searchResults').innerHTML = `
+    <div class="no-results">
+      <span class="no-results-icon">🔎</span>
+      اكتب الرقم واضغط بحث
+    </div>`;
+  openModal('modalSearch');
+}
+
+function copyWaveCode() {
+  if (!currentUser.waveCode) return;
+  navigator.clipboard.writeText(currentUser.waveCode)
+    .then(() => toast('📋 تم نسخ رقم الفرقة', 'success'))
+    .catch(() => toast('رقم الفرقة: ' + currentUser.waveCode, 'success'));
+}
+function copyMyWaveCode() {
+  if (!currentUser.radCode) { toast('⚠️ لم يتم توليد الرقم بعد', 'error'); return; }
+  navigator.clipboard.writeText(currentUser.radCode)
+    .then(() => toast('📋 تم نسخ رقمك', 'success'))
+    .catch(() => toast('رقمك: ' + currentUser.radCode, 'success'));
+}
+
+async function saveWaveName() {
+  const name = document.getElementById('newWaveName').value.trim();
+  if (!name) { toast('⚠️ أدخل اسماً', 'error'); return; }
+  if (!currentUser.waveId) { toast('⚠️ لا توجد فرقة', 'error'); return; }
+  try {
+    await fetch(SERVER_URL + '/api/waves/rename', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ waveId: currentUser.waveId, newName: name, deviceId: currentUser.id })
+    });
+    currentUser.waveName = name;
+    const el1 = document.getElementById('waveNameValue'); if (el1) el1.textContent = name;
+    const el2 = document.getElementById('waveNameLabel'); if (el2) el2.textContent = name;
+    toast('✅ تم تحديث اسم الفرقة', 'success');
+    closeModal('modalEditWave');
+  } catch (e) { toast('❌ فشل التحديث', 'error'); }
+}
+
+async function leaveWave() {
+  if (!currentUser.waveId) { toast('⚠️ لا توجد فرقة', 'error'); return; }
+  if (!confirm('هل تريد مغادرة الفرقة؟')) return;
+  if (socket) socket.emit('wave_leave', { waveId: currentUser.waveId, deviceId: currentUser.id });
+  await LiveVoice.disconnect();
+  currentUser.waveId = null; currentUser.waveCode = null; currentUser.isWaveOwner = false;
+  localStorage.removeItem('rc_saved_wave_id');
+  localStorage.removeItem('rc_saved_wave_name');
+  const el1 = document.getElementById('waveCodeChip');
+  if (el1) el1.innerHTML = (currentUser.radCode || 'Q00000') + ' <span style="font-size:12px;">🔑</span>';
+  const statusText = document.getElementById('waveStatusText');
+  if (statusText) statusText.innerHTML = '🔴 غير متصل';
+  const el3 = document.getElementById('waveNameLabel'); if (el3) el3.textContent = 'لا توجد فرقة';
+  const el4 = document.getElementById('waveNameValue'); if (el4) el4.textContent = '—';
+  toast('✅ غادرت الفرقة', 'success');
+}
+
+async function refreshChatList() {
+  try {
+    const res = await fetch(SERVER_URL + '/api/conversations/list/' + currentUser.id);
+    const data = await res.json();
+    const list = document.getElementById('chatListContainer');
+    const empty = document.getElementById('emptyRoom');
+
+    if (!data.conversations || data.conversations.length === 0) {
+      list.innerHTML = '';
+      empty.style.display = 'flex';
+      return;
+    }
+    empty.style.display = 'none';
+
+    list.innerHTML = data.conversations.map(c => {
+      const initial = (c.otherUser.userName || '?').charAt(0);
+      const lastText = c.lastMessage ? (c.lastMessage.text || '') : 'لا رسائل';
+      const timeStr = c.lastMessageAt ? new Date(c.lastMessageAt).toLocaleTimeString('ar', { hour: '2-digit', minute: '2-digit' }) : '';
+      return `
+        <div class="chat-list-item" onclick="openChatWith('${c.otherUser.deviceId}', '${(c.otherUser.userName || '').replace(/'/g, "")}', '${c.conversationId}')">
+          <div class="chat-list-avatar">${initial}</div>
+          <div class="chat-list-info">
+            <div class="chat-list-name">${c.otherUser.userName}</div>
+            <div class="chat-list-last">${lastText}</div>
+          </div>
+          <div class="chat-list-time">${timeStr}</div>
+        </div>`;
+    }).join('');
+  } catch (e) {}
+}
+
+async function startUserChat() {
+  if (!searchResultUser || !searchResultUser.deviceId) return;
+  try {
+    const res = await fetch(SERVER_URL + '/api/conversations/start', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ myDeviceId: currentUser.id, otherDeviceId: searchResultUser.deviceId })
+    });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error);
+    closeModal('modalSearch');
+    openChatWith(searchResultUser.deviceId, searchResultUser.name, data.conversationId);
+  } catch (e) { toast('❌ ' + e.message, 'error'); }
+}
+
+async function openChatWith(otherDeviceId, otherName, convId) {
+  currentUser.currentConvId = convId;
+  currentUser.currentChatWith = otherDeviceId;
+  document.getElementById('chatWithName').textContent = otherName;
+  document.getElementById('chatWithCode').textContent = otherDeviceId;
+
+  switchTab('chat');
+  const bar = document.getElementById('chatInputBar');
+  if (bar) bar.classList.add('active');
+
+  if (socket) socket.emit('join_conversation', { conversationId: convId });
+  document.getElementById('chatMessages').innerHTML = '';
+  try {
+    const res = await fetch(SERVER_URL + '/api/conversations/' + convId + '/messages');
+    const data = await res.json();
+    (data.messages || []).forEach(m => addChatMessage(m, m.sender === currentUser.id ? 'out' : 'in', false));
+    const c = document.getElementById('chatMessages');
+    c.scrollTop = c.scrollHeight;
+  } catch (e) {}
+}
+
+document.getElementById('chatBackBtn').addEventListener('click', () => {
+  if (socket && currentUser.currentConvId) socket.emit('leave_conversation', { conversationId: currentUser.currentConvId });
+  currentUser.currentConvId = null;
+  currentUser.currentChatWith = null;
+  switchTab('log');
+});
+
+function addChatMessage(msg, direction, scroll = true) {
+  const container = document.getElementById('chatMessages');
+  const div = document.createElement('div');
+  div.className = 'msg msg-' + direction;
+
+  const time = msg.time ? new Date(msg.time).toLocaleTimeString('ar', { hour: '2-digit', minute: '2-digit' }) : '';
+  const senderName = direction === 'out' ? (currentUser.name || 'أنا') : (msg.senderName || '');
+
+  let bodyHtml = '';
+
+  if (msg.type === 'voice' && msg.url) {
+    bodyHtml = `
+      <div class="voice-msg">
+        <button class="play-btn">▶</button>
+        <div class="waveform">
+          <audio src="${msg.url}" preload="auto"></audio>
+          <span style="height:10px"></span><span style="height:18px"></span>
+          <span style="height:14px"></span><span style="height:22px"></span>
+          <span style="height:12px"></span>
+        </div>
+      </div>
+      <div class="voice-meta"><span>${(msg.duration || 0).toFixed(1)}s</span><span>${time}</span></div>`;
+  } else if (msg.type === 'image' && msg.url) {
+    bodyHtml = `<img src="${msg.url}" class="attachment-preview-img" onclick="window.open('${msg.url}','_blank')"><div class="voice-meta"><span>${time}</span></div>`;
+  } else if (msg.type === 'video' && msg.url) {
+    bodyHtml = `<video src="${msg.url}" class="attachment-preview-video" controls></video><div class="voice-meta"><span>${time}</span></div>`;
+  } else if (msg.type === 'file' && msg.url) {
+    bodyHtml = `
+      <div class="attach-msg">
+        <span class="attach-msg-icon">📄</span>
+        <div class="attach-msg-info">
+          <div class="attach-msg-name">${msg.fileName || 'ملف'}</div>
+          <div class="attach-msg-type">اضغط للتحميل</div>
+        </div>
+      </div>
+      <div class="voice-meta"><span><a href="${msg.url}" download="${msg.fileName || ''}" style="color:var(--cyan)">تحميل</a></span><span>${time}</span></div>`;
+  } else if (msg.type === 'contact') {
+    bodyHtml = `
+      <div class="attach-msg">
+        <span class="attach-msg-icon">👥</span>
+        <div class="attach-msg-info">
+          <div class="attach-msg-name">${msg.contactName || ''}</div>
+          <div class="attach-msg-type">${msg.contactPhone || ''}</div>
+        </div>
+      </div>
+      <div class="voice-meta"><span>${time}</span></div>`;
+  } else {
+    bodyHtml = `<div class="text-msg">${msg.text || ''}</div><div class="voice-meta"><span>${time}</span><span>${direction === 'out' ? '✓✓' : ''}</span></div>`;
+  }
+
+  div.innerHTML = `
+    <div class="msg-header">${senderName}</div>
+    <div class="msg-body" data-msgid="${msg.id || ''}">${bodyHtml}</div>
+  `;
+
+  const playBtn = div.querySelector('.play-btn');
+  if (playBtn) {
+    playBtn.addEventListener('click', () => {
+      const audio = playBtn.nextElementSibling.querySelector('audio');
+      if (audio) {
+        if (audio.paused) { audio.play(); playBtn.textContent = '⏸'; }
+        else { audio.pause(); playBtn.textContent = '▶'; }
+        audio.onended = () => playBtn.textContent = '▶';
+      }
+    });
+  }
+
+  let pressTimer;
+  const body = div.querySelector('.msg-body');
+  body.addEventListener('pointerdown', () => {
+    pressTimer = setTimeout(() => {
+      if (confirm('هل تريد مسح هذه الرسالة؟')) { div.remove(); toast('🗑️ تم مسح الرسالة', 'success'); }
+    }, 700);
+  });
+  body.addEventListener('pointerup', () => clearTimeout(pressTimer));
+  body.addEventListener('pointerleave', () => clearTimeout(pressTimer));
+
+  container.appendChild(div);
+  if (scroll) container.scrollTop = container.scrollHeight;
+}
+
+function sendTextMessage(text) {
+  if (!text.trim()) return;
+  if (!currentUser.currentConvId) {
+    toast('⚠️ ادخل الغرفة أولاً', 'error');
+    return;
+  }
+  
+  const msg = {
+    id: 'msg_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+    sender: currentUser.id,
+    senderName: currentUser.name,
+    type: 'text',
+    text: text.trim(),
+    time: Date.now()
+  };
+  
+  if (currentUser.currentConvId.startsWith('conv_self_')) {
+    addChatMessage(msg, 'out');
+    toast('✅ تم إرسال الرسالة', 'success');
+    return;
+  }
+  
+  if (socket) {
+    socket.emit('send_direct_message', {
+      conversationId: currentUser.currentConvId,
+      message: msg
+    });
+  }
+  addChatMessage(msg, 'out');
+}
+
+const chatInput = document.getElementById('chatInput');
+const chatPrimaryBtn = document.getElementById('chatPrimaryBtn');
+const chatClip = document.getElementById('chatClip');
+const emojiBtn = document.getElementById('emojiBtn');
+
+let isRecordingVoice = false;
+let voiceRecorder = null;
+let voiceChunks = [];
+let voiceStartTime = 0;
+let voiceTimerInt = null;
+
+chatInput.addEventListener('input', () => {
+  const hasText = chatInput.value.trim().length > 0;
+  if (hasText) { chatPrimaryBtn.textContent = '➤'; chatPrimaryBtn.title = 'إرسال'; }
+  else { chatPrimaryBtn.textContent = '🎙️'; chatPrimaryBtn.title = 'تسجيل صوتي'; }
+});
+
+chatPrimaryBtn.addEventListener('click', async () => {
+  const hasText = chatInput.value.trim().length > 0;
+  if (hasText) {
+    sendTextMessage(chatInput.value);
+    chatInput.value = '';
+    chatPrimaryBtn.textContent = '🎙️';
+  } else {
+    if (!isRecordingVoice) await startVoiceRecording();
+    else await stopVoiceRecordingAndSend();
+  }
+});
+
+async function startVoiceRecording() {
+  if (!currentUser.currentConvId) { toast('⚠️ اختر محادثة أولاً', 'error'); return; }
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    voiceChunks = [];
+    voiceRecorder = new MediaRecorder(stream);
+    voiceRecorder.ondataavailable = (e) => { if (e.data.size > 0) voiceChunks.push(e.data); };
+    voiceRecorder.start(100);
+    isRecordingVoice = true;
+    voiceStartTime = Date.now();
+    chatPrimaryBtn.classList.add('recording');
+    chatPrimaryBtn.textContent = '⏹';
+    clearInterval(voiceTimerInt);
+    voiceTimerInt = setInterval(() => {
+      const s = Math.floor((Date.now() - voiceStartTime) / 1000);
+      chatInput.placeholder = 'جاري التسجيل... ' + s + 's';
+    }, 250);
+    toast('🎙️ جاري التسجيل...', 'success');
+  } catch (e) { toast('❌ تعذّر الوصول للمايك', 'error'); }
+}
+
+async function stopVoiceRecordingAndSend() {
+  if (!voiceRecorder) return;
+  const duration = (Date.now() - voiceStartTime) / 1000;
+  chatPrimaryBtn.classList.remove('recording');
+  chatPrimaryBtn.textContent = '🎙️';
+  chatInput.placeholder = 'اكتب رسالة...';
+  clearInterval(voiceTimerInt);
+
+  voiceRecorder.onstop = async () => {
+    const blob = new Blob(voiceChunks, { type: 'audio/webm' });
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64 = reader.result;
+      const msg = {
+        id: 'msg_' + Date.now(), sender: currentUser.id, senderName: currentUser.name,
+        type: 'voice', url: base64, duration: duration, time: Date.now()
+      };
+      
+      if (currentUser.currentConvId.startsWith('conv_self_')) {
+        addChatMessage(msg, 'out');
+        toast('✅ تم إرسال الرسالة الصوتية', 'success');
+        return;
+      }
+      
+      if (socket) socket.emit('send_direct_message', { conversationId: currentUser.currentConvId, message: msg });
+      addChatMessage(msg, 'out');
+      toast('✅ تم إرسال الرسالة الصوتية', 'success');
+    };
+    reader.readAsDataURL(blob);
+    voiceRecorder.stream.getTracks().forEach(t => t.stop());
+    isRecordingVoice = false;
+    voiceRecorder = null;
+  };
+  voiceRecorder.stop();
+}
+
+const EMOJIS = ['😀','😂','🥰','😎','🤔','😢','😡','👍','👏','🙏','❤️','🔥','⭐','🎉','📻','📡','🎙️','✅','❌','⚠️'];
+emojiBtn.addEventListener('click', (ev) => {
+  ev.stopPropagation();
+  const picker = document.createElement('div');
+  picker.style.cssText = 'position:fixed;bottom:130px;left:12px;right:12px;max-width:476px;margin:0 auto;background:var(--card-2);border:1px solid var(--cyan);border-radius:14px;padding:10px;z-index:600;display:grid;grid-template-columns:repeat(10,1fr);gap:6px;';
+  picker.innerHTML = EMOJIS.map(e => `<button style="font-size:22px;background:none;border:none;cursor:pointer;padding:4px;" data-emoji="${e}">${e}</button>`).join('');
+  document.body.appendChild(picker);
+
+  picker.addEventListener('click', (ev2) => {
+    if (ev2.target.dataset.emoji) {
+      chatInput.value += ev2.target.dataset.emoji;
+      chatInput.dispatchEvent(new Event('input'));
+      picker.remove();
+    }
+  });
+
+  setTimeout(() => {
+    const closePicker = (e2) => {
+      if (!picker.contains(e2.target)) { picker.remove(); document.removeEventListener('click', closePicker); }
+    };
+    document.addEventListener('click', closePicker);
+  }, 100);
+});
+
+chatClip.addEventListener('click', () => {
+  if (!currentUser.currentConvId) { toast('⚠️ اختر محادثة أولاً', 'error'); return; }
+  openModal('modalAttach');
+});
+
+function pickCamera() {
+  const inp = document.getElementById('hiddenFileInput');
+  inp.accept = 'image/*'; inp.setAttribute('capture', 'environment');
+  inp.click(); closeModal('modalAttach');
+}
+
+function pickFile(type) {
+  const inp = document.getElementById('hiddenFileInput');
+  if (type === 'image') inp.accept = 'image/*';
+  else if (type === 'video') inp.accept = 'video/*';
+  else if (type === 'audio') inp.accept = 'audio/*';
+  else if (type === 'document') inp.accept = '.pdf,.doc,.docx,.txt,.xls,.xlsx,.ppt,.pptx,application/*';
+  else inp.accept = '*/*';
+  inp.removeAttribute('capture');
+  inp.click(); closeModal('modalAttach');
+}
+
+function pickContact() {
+  closeModal('modalAttach');
+  if ('contacts' in navigator && 'ContactsManager' in window) {
+    navigator.contacts.select(['name', 'tel'], { multiple: false })
+      .then(contacts => {
+        if (contacts.length) sendContactMessage(contacts[0].name[0], contacts[0].tel[0] || '');
+      })
+      .catch(() => openModal('modalContactPick'));
+  } else openModal('modalContactPick');
+}
+
+function sendContact() {
+  const name = document.getElementById('contactName').value.trim();
+  const phone = document.getElementById('contactPhone').value.trim();
+  if (!name) { toast('⚠️ أدخل الاسم', 'error'); return; }
+  closeModal('modalContactPick');
+  sendContactMessage(name, phone);
+}
+
+function sendContactMessage(name, phone) {
+  const msg = {
+    id: 'msg_' + Date.now(), sender: currentUser.id, senderName: currentUser.name,
+    type: 'contact', contactName: name, contactPhone: phone, time: Date.now()
+  };
+  
+  if (currentUser.currentConvId.startsWith('conv_self_')) {
+    addChatMessage(msg, 'out');
+    toast('✅ تم إرسال جهة الاتصال', 'success');
+    return;
+  }
+  
+  if (socket) socket.emit('send_direct_message', { conversationId: currentUser.currentConvId, message: msg });
+  addChatMessage(msg, 'out');
+  toast('✅ تم إرسال جهة الاتصال', 'success');
+}
+
+document.getElementById('hiddenFileInput').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    let type = 'file';
+    if (file.type.startsWith('image/')) type = 'image';
+    else if (file.type.startsWith('video/')) type = 'video';
+    else if (file.type.startsWith('audio/')) type = 'voice';
+
+    const msg = {
+      id: 'msg_' + Date.now(), sender: currentUser.id, senderName: currentUser.name,
+      type: type, url: reader.result, fileName: file.name, duration: 0, time: Date.now()
+    };
+    
+    if (currentUser.currentConvId.startsWith('conv_self_')) {
+      addChatMessage(msg, 'out');
+      toast('✅ تم إرسال الملف', 'success');
+      return;
+    }
+    
+    if (socket) socket.emit('send_direct_message', { conversationId: currentUser.currentConvId, message: msg });
+    addChatMessage(msg, 'out');
+    toast('✅ تم إرسال الملف', 'success');
+  };
+  reader.readAsDataURL(file);
+  e.target.value = '';
+});
+
+function openCreateRoom() { openModal('modalCreate'); }
+function openEditRoomName() {
+  document.getElementById('newRoomName').value = currentUser.roomName || '';
+  openModal('modalEditName');
+}
+function openEditRoomIcon() {
+  closeModal('modalRoomMenu');
+  openModal('modalEditIcon');
+  document.querySelectorAll('.icon-option').forEach(o => {
+    o.onclick = () => {
+      currentUser.roomIcon = o.dataset.icon;
+      document.getElementById('roomIcon').textContent = o.dataset.icon;
+      document.querySelectorAll('.icon-option').forEach(x => x.classList.remove('selected'));
+      o.classList.add('selected');
+      toast('تم تغيير الأيقونة', 'success');
+      closeModal('modalEditIcon');
+    };
+  });
+}
+
+async function createRoom() {
+  const name = document.getElementById('roomName').value.trim();
+  if (!name) { toast('⚠️ أدخل اسم الغرفة', 'error'); return; }
+
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let roomCode = "G";
+  for (let i = 0; i < 5; i++) {
+    roomCode += chars[Math.floor(Math.random() * chars.length)];
+  }
+
+  currentUser.roomName = name;
+  currentUser.roomCode = roomCode;
+
+  localStorage.setItem('rc_saved_room_code', roomCode);
+  localStorage.setItem('rc_saved_room_name', name);
+
+  document.getElementById('createdRoomCode').textContent = roomCode;
+  document.getElementById('roomNameLabel').textContent = name;
+  document.getElementById('roomName').value = '';
+
+  closeModal('modalCreate');
+  openModal('modalRoomCreated');
+  toast('✅ تم إنشاء الغرفة "' + name + '"', 'success');
+
+  const selfConvId = 'conv_self_' + roomCode;
+  currentUser.currentConvId = selfConvId;
+  currentUser.currentChatWith = 'self';
+
+  document.getElementById('chatWithName').textContent = name + ' (غرفتك)';
+  document.getElementById('chatWithCode').textContent = roomCode;
+
+  switchTab('chat');
+  
+  document.getElementById('chatMessages').innerHTML = `
+    <div style="padding:20px;text-align:center;color:var(--text-dim);font-size:12px;">
+      💬 هذه غرفتك "${name}"<br>
+      شارك رقم الغرفة: <strong style="color:var(--cyan);">${roomCode}</strong><br>
+      يمكنك تجربة كل الميزات هنا.
+    </div>
+  `;
+}
+
+function saveRoomName() {
+  const name = document.getElementById('newRoomName').value.trim();
+  if (!name) { toast('⚠️ أدخل اسماً', 'error'); return; }
+  currentUser.roomName = name;
+  document.getElementById('roomNameLabel').textContent = name;
+  toast('✅ تم تحديث اسم الغرفة', 'success');
+  closeModal('modalEditName');
+}
+
+function copyMyRoomCode() {
+  if (!currentUser.roomCode) { toast('⚠️ لا يوجد رقم غرفة', 'error'); return; }
+  navigator.clipboard.writeText(currentUser.roomCode)
+    .then(() => toast('📋 تم نسخ رقم الغرفة', 'success'))
+    .catch(() => toast('رقم الغرفة: ' + currentUser.roomCode, 'success'));
+}
+
+function saveMyWave() {
+  if (!currentUser.waveId) { toast('⚠️ لا توجد فرقة', 'error'); return; }
+  localStorage.setItem('rc_saved_wave_id', currentUser.waveId);
+  localStorage.setItem('rc_saved_wave_name', currentUser.waveName || '');
+  toast('✅ تم حفظ الفرقة — ستسترجع تلقائياً', 'success');
+}
+
+function saveMyRoom() {
+  if (!currentUser.roomCode) { toast('⚠️ لا توجد غرفة', 'error'); return; }
+  localStorage.setItem('rc_saved_room_code', currentUser.roomCode);
+  localStorage.setItem('rc_saved_room_name', currentUser.roomName || '');
+  toast('✅ تم حفظ الغرفة — ستسترجع تلقائياً', 'success');
+}
+
+function copyRoomCode() {
+  if (!currentUser.roomCode) return;
+  navigator.clipboard.writeText(currentUser.roomCode)
+    .then(() => toast('📋 تم نسخ الرقم', 'success'))
+    .catch(() => toast('رقم الغرفة: ' + currentUser.roomCode, 'success'));
+}
+
+function confirmClearChat() { closeModal('modalRoomMenu'); openModal('modalClearChat'); }
+function doClearChat() {
+  const container = document.getElementById('chatMessages');
+  if (container) container.innerHTML = '';
+  closeModal('modalClearChat');
+  toast('✅ تم مسح الدردشة', 'success');
+}
+
+document.getElementById('roomMenuBtn').addEventListener('click', openSideMenu);
+
 async function initBattery() {
-  if (!navigator.getBattery) return;
+  if (!navigator.getBattery) {
+    const el1 = document.getElementById('batteryValue'); if (el1) el1.textContent = '—';
+    const el2 = document.getElementById('bottomBattery'); if (el2) el2.textContent = '—';
+    return;
+  }
   try {
     const battery = await navigator.getBattery();
     const update = () => {
@@ -1507,35 +1901,36 @@ function updateConnectionIcon() {
 
 function testCall() {
   PTTEngine.init().then(() => PTTEngine.playRealBeep());
-  toast('🔔 تجربة صوت النداء', 'success');
+  toast('🔔 تجربة walkie_beep.mp3', 'success');
 }
 
-// ==========================================
-// 10. دالة حذف الغرفة
-// ==========================================
-function deleteRoom() {
-  if (!currentUser.roomCode) { toast('⚠️ لا توجد غرفة لحذفها', 'error'); return; }
-  if (!confirm('هل أنت متأكد من حذف الغرفة نهائياً؟ سيتم مسح جميع الرسائل.')) return;
-  
-  removeRoomFromList(currentUser.roomCode);
-  localStorage.removeItem('rc_saved_room_code');
-  localStorage.removeItem('rc_saved_room_name');
-  currentUser.roomCode = null;
-  currentUser.roomName = null;
-  currentUser.currentConvId = null;
-  currentUser.currentChatWith = null;
-  isRoomActive = false;
-  
-  document.getElementById('roomNameLabel').textContent = 'الغرفة';
-  document.getElementById('chatMessages').innerHTML = '';
-  
-  toast('✅ تم حذف الغرفة نهائياً', 'success');
-  switchTab('log');
-}
+document.getElementById('waveNameChip').addEventListener('click', () => {
+  const dd = document.getElementById('membersDropdown');
+  if (!dd) return;
+  if (dd.classList.contains('show')) { dd.classList.remove('show'); return; }
+  if (currentUser.waveId) {
+    fetch(SERVER_URL + '/api/waves/' + currentUser.waveId)
+      .then(r => r.json())
+      .then(data => {
+        if (data.members) {
+          dd.innerHTML = `
+            <div class="members-dropdown-title">👥 المشتركون (${data.members.length})</div>
+            ${data.members.map(m => `
+              <div class="members-dropdown-item">
+                <span>${m.name} ${m.id === currentUser.id ? '(أنت)' : ''} ${m.isOwner ? '👑' : ''}</span>
+                <span class="${m.online ? 'status-active' : 'status-inactive'}">${m.online ? '🟢 نشط' : '🔴 غير نشط'}</span>
+              </div>
+            `).join('')}
+          `;
+        } else dd.innerHTML = '<div class="operations-empty">لا يوجد مشتركون</div>';
+        dd.classList.add('show');
+      });
+  } else {
+    dd.innerHTML = '<div class="operations-empty">لا توجد فرقة نشطة</div>';
+    dd.classList.add('show');
+  }
+});
 
-// ==========================================
-// 11. تشغيل التطبيق
-// ==========================================
 window.addEventListener('DOMContentLoaded', async () => {
   const bar = document.getElementById('chatInputBar');
   if (bar) bar.classList.remove('active');
@@ -1549,26 +1944,17 @@ window.addEventListener('DOMContentLoaded', async () => {
   window.addEventListener('offline', updateConnectionIcon);
 
   askUserNameIfNeeded();
-  
   await registerUser();
-  
   initSocket();
+  refreshChatList();
 
-  // ربط زر العمليات
-  const opsChip = document.getElementById('operationsChip');
-  if(opsChip) {
-      opsChip.addEventListener('click', openOperationsMenu);
-  }
-
-  // استرجاع الفرقة النشطة
+  // استرجاع الموجة
   const savedWaveId = localStorage.getItem('rc_saved_wave_id');
   const savedWaveName = localStorage.getItem('rc_saved_wave_name');
   if (savedWaveId) {
     currentUser.waveId = savedWaveId;
     currentUser.waveCode = savedWaveId;
     currentUser.waveName = savedWaveName;
-    isWaveActive = true; 
-    
     const el1 = document.getElementById('waveCodeChip');
     if (el1) el1.innerHTML = savedWaveId + ' <span style="font-size:12px;">🔑</span>';
     const el2 = document.getElementById('waveNameLabel');
@@ -1578,82 +1964,31 @@ window.addEventListener('DOMContentLoaded', async () => {
     setTimeout(() => joinWaveAsMember(savedWaveId), 1500);
   }
 
+  // استرجاع الغرفة
   const savedRoomCode = localStorage.getItem('rc_saved_room_code');
   const savedRoomName = localStorage.getItem('rc_saved_room_name');
   if (savedRoomCode) {
     currentUser.roomCode = savedRoomCode;
     currentUser.roomName = savedRoomName;
-    isRoomActive = true;
     const el4 = document.getElementById('roomNameLabel');
     if (el4 && savedRoomName) el4.textContent = savedRoomName;
   }
 });
 
-// ==========================================
-// 12. نظام إرسال الرسائل (المايك والإرسال)
-// ==========================================
-const chatInput = document.getElementById('chatInput');
-const chatPrimaryBtn = document.getElementById('chatPrimaryBtn');
-
-// تحديث الزر عند الكتابة
-chatInput.addEventListener('input', () => {
-    if (chatInput.value.trim().length > 0) {
-        chatPrimaryBtn.innerHTML = '➤';
-        chatPrimaryBtn.title = 'إرسال';
-    } else {
-        chatPrimaryBtn.innerHTML = '🎙️';
-        chatPrimaryBtn.title = 'تسجيل صوتي';
-    }
+document.addEventListener('keydown', (e) => {
+  if (e.code === 'Space' && !e.repeat && !document.querySelector('.modal-overlay.show')) {
+    e.preventDefault(); 
+    if (isTalking) stopTalking(); else onPTTStart();
+  }
 });
 
-// الضغط على الزر
-chatPrimaryBtn.addEventListener('click', () => {
-    if (chatInput.value.trim().length > 0) {
-        // إرسال نص
-        if (typeof sendTextMessage === 'function') {
-            sendTextMessage(chatInput.value);
-            chatInput.value = '';
-            chatPrimaryBtn.innerHTML = '🎙️'; // إعادة الزر للمايك
-        } else {
-            toast('⚠️ وظيفة الإرسال غير مكتملة في الكود', 'error');
-        }
-    } else {
-        // تسجيل صوتي (وظيفة تجريبية إن لم تكن موجودة)
-        toast('🎙️ جاري التسجيل... (اضغط مرة أخرى للإيقاف)', 'success');
-    }
+document.addEventListener('click', (e) => {
+  const md = document.getElementById('membersDropdown');
+  const wnc = document.getElementById('waveNameChip');
+  if (md && md.classList.contains('show') && !md.contains(e.target) && wnc && !wnc.contains(e.target)) {
+    md.classList.remove('show');
+  }
 });
-
-// دالة إرسال النص (تم إرجاعها لكي يعمل الزر)
-function sendTextMessage(text) {
-  if (!text.trim()) return;
-  if (!currentUser.currentConvId) {
-    toast('⚠️ ادخل الغرفة أولاً', 'error');
-    return;
-  }
-  
-  const msg = {
-    id: 'msg_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
-    sender: currentUser.id,
-    senderName: currentUser.name,
-    type: 'text',
-    text: text.trim(),
-    time: Date.now()
-  };
-  
-  if (currentUser.currentConvId.startsWith('conv_self_')) {
-    addChatMessage(msg, 'out');
-    toast('✅ تم إرسال الرسالة', 'success');
-    return;
-  }
-  
-  if (socket) {
-    socket.emit('send_direct_message', {
-      conversationId: currentUser.currentConvId,
-      message: msg
-    });
-  }
-  addChatMessage(msg, 'out');
-}
   </script>
 </body>
 </html>
