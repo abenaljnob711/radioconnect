@@ -606,7 +606,7 @@ let rawMicStream = null;
 let localTestAudio = null;
 let isTalking = false;
 
-// حالة الاتصال (هل هو نشط الآن أم خرج؟)
+// حالة الاتصال
 let isWaveActive = false;
 let isRoomActive = false;
 
@@ -701,7 +701,6 @@ async function connectWaveChannel() {
 }
 
 async function onPTTStart() {
-  // منع التحدث إذا لم يكن مشتركاً (خرج من الفرقة)
   if (!isWaveActive) {
       toast("⚠️ أنت خارج الفرقة. عد إليها أولاً للتحدث.", "error");
       return;
@@ -834,7 +833,7 @@ function removeRoomFromList(roomCode) {
     localStorage.setItem('rc_user_rooms_list', JSON.stringify(savedRoomsList));
 }
 
-// قائمة العمليات (تعرض الفرق غير المشترك فيها، أو التي خرجت منها)
+// قائمة العمليات
 function openOperationsMenu() {
     const title = document.getElementById('sideMenuTitle');
     const content = document.getElementById('sideMenuContent');
@@ -953,7 +952,7 @@ function openManageRoomsMenu() {
     if(menuToggle) menuToggle.classList.add('open');
 }
 
-// --- دوال الخروج والعودة للفرقة ---
+// --- دوال الخروج والعودة ---
 function exitWaveTemporarily() {
     if (!isWaveActive) { toast('⚠️ أنت خارج الفرقة بالفعل', 'error'); return; }
     if (!confirm('هل تريد الخروج من الفرقة مؤقتاً؟ (لن يتم حذفها، ويمكنك العودة لها لاحقاً)')) return;
@@ -966,7 +965,6 @@ function exitWaveTemporarily() {
     
     isWaveActive = false;
     
-    // تحديث الواجهة لتبين أنه خرج لكنه لا يزال في الفرقة
     const statusText = document.getElementById('waveStatusText');
     if (statusText) statusText.innerHTML = '🔴 خارج الفرقة';
     
@@ -975,19 +973,16 @@ function exitWaveTemporarily() {
     
     toast('✅ خرجت من الفرقة (يمكنك العودة من قائمة العمليات)', 'success');
     closeSideMenu();
-    openOperationsMenu(); // فتح القائمة لتظهر زر الرجوع
 }
 
 async function returnToWave(waveId) {
     if (isWaveActive) { toast('⚠️ أنت مشترك بالفعل', 'error'); return; }
     
-    // البحث عن اسم الفرقة
     const wave = savedWavesList.find(w => w.id === waveId);
     if (!wave) return;
 
     toast('⏳ جاري طلب العودة...', 'success');
     
-    // محاكاة الاتصال
     currentUser.waveId = waveId;
     currentUser.waveName = wave.name;
     currentUser.waveCode = waveId;
@@ -1005,7 +1000,6 @@ async function returnToWave(waveId) {
     closeSideMenu();
 }
 
-// --- دوال الخروج والعودة للغرفة ---
 function exitRoomTemporarily() {
     if (!isRoomActive) { toast('⚠️ أنت خارج الغرفة بالفعل', 'error'); return; }
     if (!confirm('هل تريد الخروج من الغرفة مؤقتاً؟ (لن يتم حذف الرسائل)')) return;
@@ -1017,8 +1011,6 @@ function exitRoomTemporarily() {
     toast('✅ خرجت من الغرفة (يمكنك العودة من قائمة الغرفة)', 'success');
     switchTab('log');
     closeSideMenu();
-    // فتح قائمة الإدارة لإظهار زر الرجوع
-    openManageRoomsMenu();
 }
 
 async function returnToRoom(roomCode) {
@@ -1030,7 +1022,7 @@ async function returnToRoom(roomCode) {
     isRoomActive = true;
     currentUser.roomCode = room.code;
     currentUser.roomName = room.name;
-    currentUser.currentConvId = 'conv_self_' + room.code; // محاكاة للدخول
+    currentUser.currentConvId = 'conv_self_' + room.code;
     currentUser.currentChatWith = 'self';
     
     document.getElementById('roomNameLabel').textContent = room.name;
@@ -1042,16 +1034,14 @@ async function returnToRoom(roomCode) {
     closeSideMenu();
 }
 
-// --- دوال الحذف من السجل (لا تحذف من الخادم بل من الهاتف) ---
 function deleteWaveFromList(waveId) {
     if (currentUser.waveId === waveId && isWaveActive) {
         toast('⚠️ لا يمكنك الحذف وأنت نشط في الفرقة. اخرج أولاً.', 'error');
         return;
     }
-    if (!confirm('هل تريد حذف هذه الفرقة نهائياً من سجلك؟ (لن تتأثر الفرقة نفسها)')) return;
+    if (!confirm('هل تريد حذف هذه الفرقة نهائياً من سجلك؟')) return;
     
     if (currentUser.waveId === waveId) {
-        // إذا كان هو نفس الرقم، نمسحه من الواجهة
         currentUser.waveId = null;
         currentUser.waveName = null;
         currentUser.waveCode = null;
@@ -1323,8 +1313,9 @@ function openSideMenu() {
   if (activeId === 'screen-radio') {
     title.textContent = '📡 قائمة الفرقة';
     
+    // زر الخروج أو العودة
     const exitBtnHtml = isWaveActive 
-        ? `<button class="menu-item danger" onclick="exitWaveTemporarily()"><span class="menu-icon">🚪</span><span class="menu-text"><span class="menu-label">الخروج من الفرقة</span><span class="menu-desc">ابقَ في السجل وعد لاحقاً</span></span></button>`
+        ? `<button class="menu-item" onclick="exitWaveTemporarily()" style="border-color:var(--yellow); color:var(--yellow);"><span class="menu-icon" style="background:rgba(255,204,0,.1); border-color:rgba(255,204,0,.3);">🚪</span><span class="menu-text"><span class="menu-label">الخروج من الفرقة</span><span class="menu-desc">ابقَ في السجل وعد لاحقاً</span></span></button>`
         : `<button class="menu-item primary" onclick="returnToWave(currentUser.waveId)"><span class="menu-icon">↩️</span><span class="menu-text"><span class="menu-label">العودة إلى الفرقة</span><span class="menu-desc">أنت خارجها حالياً</span></span></button>`;
 
     content.innerHTML = `
@@ -1345,12 +1336,16 @@ function openSideMenu() {
         <span class="menu-icon">💾</span>
         <span class="menu-text"><span class="menu-label">إدارة وحفظ الفرق</span><span class="menu-desc">حذف الفرق من السجل</span></span>
       </button>
+      <button class="menu-item danger" onclick="closeSideMenu();deleteWave()">
+        <span class="menu-icon">🗑️</span>
+        <span class="menu-text"><span class="menu-label">حذف الفرقة</span><span class="menu-desc">حذف نهائي وإلغاء الاشتراك</span></span>
+      </button>
     `;
   } else if (activeId === 'screen-log' || activeId === 'screen-chat') {
     title.textContent = '💬 قائمة الغرفة';
 
     const exitBtnHtml = isRoomActive
-        ? `<button class="menu-item danger" onclick="exitRoomTemporarily()"><span class="menu-icon">🚪</span><span class="menu-text"><span class="menu-label">الخروج من الغرفة</span><span class="menu-desc">ابقَ في السجل وعد لاحقاً</span></span></button>`
+        ? `<button class="menu-item" onclick="exitRoomTemporarily()" style="border-color:var(--yellow); color:var(--yellow);"><span class="menu-icon" style="background:rgba(255,204,0,.1); border-color:rgba(255,204,0,.3);">🚪</span><span class="menu-text"><span class="menu-label">الخروج من الغرفة</span><span class="menu-desc">ابقَ في السجل وعد لاحقاً</span></span></button>`
         : `<button class="menu-item primary" onclick="returnToRoom(currentUser.roomCode)"><span class="menu-icon">↩️</span><span class="menu-text"><span class="menu-label">العودة إلى الغرفة</span><span class="menu-desc">أنت خارجها حالياً</span></span></button>`;
 
     content.innerHTML = `
@@ -1378,6 +1373,10 @@ function openSideMenu() {
       <button class="menu-item" onclick="closeSideMenu();confirmClearChat()">
         <span class="menu-icon">🧹</span>
         <span class="menu-text"><span class="menu-label">مسح المحادثة</span><span class="menu-desc">حذف الرسائل فقط</span></span>
+      </button>
+      <button class="menu-item danger" onclick="closeSideMenu();deleteRoom()">
+        <span class="menu-icon">🗑️</span>
+        <span class="menu-text"><span class="menu-label">حذف الغرفة نهائياً</span><span class="menu-desc">إزالة الغرفة من السجل</span></span>
       </button>
     `;
   } else {
@@ -1509,7 +1508,7 @@ function testCall() {
 }
 
 // ==========================================
-// 10. دالة مسح الغرفة نهائياً (للغرف التي في السجل)
+// 10. دالة حذف الغرفة
 // ==========================================
 function deleteRoom() {
   if (!currentUser.roomCode) { toast('⚠️ لا توجد غرفة لحذفها', 'error'); return; }
@@ -1558,14 +1557,14 @@ window.addEventListener('DOMContentLoaded', async () => {
       opsChip.addEventListener('click', openOperationsMenu);
   }
 
-  // استرجاع الفرقة النشطة (افتراضياً يكون نشطاً إذا كان محفوظاً)
+  // استرجاع الفرقة النشطة
   const savedWaveId = localStorage.getItem('rc_saved_wave_id');
   const savedWaveName = localStorage.getItem('rc_saved_wave_name');
   if (savedWaveId) {
     currentUser.waveId = savedWaveId;
     currentUser.waveCode = savedWaveId;
     currentUser.waveName = savedWaveName;
-    isWaveActive = true; // نعتبره نشطاً عند فتح التطبيق لأول مرة
+    isWaveActive = true; 
     
     const el1 = document.getElementById('waveCodeChip');
     if (el1) el1.innerHTML = savedWaveId + ' <span style="font-size:12px;">🔑</span>';
@@ -1585,6 +1584,40 @@ window.addEventListener('DOMContentLoaded', async () => {
     const el4 = document.getElementById('roomNameLabel');
     if (el4 && savedRoomName) el4.textContent = savedRoomName;
   }
+});
+
+// ==========================================
+// 12. نظام إرسال الرسائل (المايك والإرسال)
+// ==========================================
+const chatInput = document.getElementById('chatInput');
+const chatPrimaryBtn = document.getElementById('chatPrimaryBtn');
+
+// تحديث الزر عند الكتابة
+chatInput.addEventListener('input', () => {
+    if (chatInput.value.trim().length > 0) {
+        chatPrimaryBtn.innerHTML = '➤';
+        chatPrimaryBtn.title = 'إرسال';
+    } else {
+        chatPrimaryBtn.innerHTML = '🎙️';
+        chatPrimaryBtn.title = 'تسجيل صوتي';
+    }
+});
+
+// الضغط على الزر
+chatPrimaryBtn.addEventListener('click', () => {
+    if (chatInput.value.trim().length > 0) {
+        // إرسال نص
+        if (typeof sendTextMessage === 'function') {
+            sendTextMessage(chatInput.value);
+            chatInput.value = '';
+            chatPrimaryBtn.innerHTML = '🎙️'; // إعادة الزر للمايك
+        } else {
+            toast('⚠️ وظيفة الإرسال غير مكتملة في الكود', 'error');
+        }
+    } else {
+        // تسجيل صوتي (وظيفة تجريبية إن لم تكن موجودة)
+        toast('🎙️ جاري التسجيل... (اضغط مرة أخرى للإيقاف)', 'success');
+    }
 });
   </script>
 </body>
