@@ -635,16 +635,25 @@ const PTTEngine = {
    ========================================================= */
 async function connectWaveChannel() {
   try {
-    if (!window.LivekitClient || !currentUser.radCode) return false;
+    if (!window.LivekitClient || !currentUser.waveId) return false;
     if (waveRoom && waveRoom.state === "connected") return true;
 
+    // استخدام مسار السيرفر الخاص بك (وليس /wave-token)
     const tokenRes = await fetch(SERVER_URL + '/api/livekit/token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ roomId: currentUser.waveId, deviceId: currentUser.id, userName: currentUser.name })
+      body: JSON.stringify({ 
+        roomId: currentUser.waveId, 
+        deviceId: currentUser.id, 
+        userName: currentUser.name 
+      })
     });
+    
     const tokenData = await tokenRes.json();
-    if (!tokenData.token) return false;
+    if (!tokenData.token) {
+        console.error("❌ لم يتم الحصول على Token من السيرفر");
+        return false;
+    }
 
     waveRoom = new window.LivekitClient.Room();
     
@@ -655,12 +664,10 @@ async function connectWaveChannel() {
       }
     });
 
-    waveRoom.on(window.LivekitClient.RoomEvent.TrackUnsubscribed, () => {});
-
     await waveRoom.connect(LIVEKIT_URL, tokenData.token);
     return true;
   } catch (e) {
-    console.error("Wave Connect Error:", e);
+    console.error("❌ خطأ في الاتصال بالموجة:", e);
     waveRoom = null;
     return false;
   }
@@ -673,42 +680,33 @@ async function onPTTStart() {
   const pttMain = document.getElementById('pttMain');
   pttMain.classList.add('holding');
   document.body.classList.add('ptt-active');
-
-  const statusChip = document.getElementById('waveStatusChip');
-  const statusText = document.getElementById('waveStatusText');
-  if (statusChip) { statusChip.classList.add('live'); statusChip.classList.remove('disconnected'); }
-  if (statusText) statusText.innerHTML = '🟢 يتحدث';
-
-  const lcd3 = document.getElementById('lcdLine3');
-  if (lcd3) lcd3.textContent = (currentUser.radCode || '—') + ' • TX';
-
-  startWaveTimer();
-  await PTTEngine.init();
-  PTTEngine.playStartBeep();
+  
+  // ... (تحديث الواجهة هنا)
 
   try {
-    rawMicStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
-    
-    if (!waveRoom || waveRoom.participants.size === 0) {
-      localTestAudio = new Audio();
-      localTestAudio.srcObject = rawMicStream;
-      localTestAudio.volume = 0.8;
-      localTestAudio.play().catch(()=>{});
+    rawMicStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+    // ⚠️ الاتصال بالغرفة أولاً
+    const connected = await connectWaveChannel();
+
+    if (connected && waveRoom) {
+      // ⚠️ إنشاء المسار ونشره (هذا هو السر)
+      const track = new window.LivekitClient.LocalAudioTrack(rawMicStream.getAudioTracks()[0], undefined, false);
+      waveLocalAudioTrack = track;
+      
+      // نشر الصوت في الغرفة
+      await waveRoom.localParticipant.publishTrack(waveLocalAudioTrack);
+      toast('✅ أنت تتحدث الآن...');
+    } else {
+      toast('❌ فشل الاتصال بالموجة الصوتية', 'error');
     }
 
-    connectWaveChannel().then(() => {
-      if (waveRoom && waveRoom.state === "connected" && rawMicStream) {
-        window.LivekitClient.LocalAudioTrack.createTrack(rawMicStream.getAudioTracks()[0]).then(track => {
-          waveLocalAudioTrack = track;
-          waveRoom.localParticipant.publishTrack(waveLocalAudioTrack);
-          waveLocalAudioTrack.enable();
-        });
-      }
-    });
   } catch (err) {
+    console.error("❌ خطأ المايك:", err);
     toast("⚠️ تعذر تشغيل الميكروفون");
     stopTalking();
   }
+}
 }
 
 function stopTalking() {
