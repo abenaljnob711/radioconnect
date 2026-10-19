@@ -742,10 +742,13 @@ function stopTalking() {
     try { waveRoom.localParticipant.unpublishTrack(waveLocalAudioTrack); waveLocalAudioTrack.stop(); } catch (e) {}
     waveLocalAudioTrack = null;
   }
+  
+  // الحل النهائي لمشكلة تعليق المايك (إغلاق المسار قسرياً)
   if (rawMicStream) {
     rawMicStream.getTracks().forEach(t => t.stop());
     rawMicStream = null;
   }
+  
   isTalking = false;
   
   const pttMain = document.getElementById('pttMain');
@@ -951,6 +954,22 @@ function doSearch() {
   const res = document.getElementById('searchResults');
   if (!q) { res.innerHTML = '<div class="no-results"><span class="no-results-icon">⚠️</span>أدخل الرقم</div>'; return; }
 
+  // التعديل الجديد: إذا كان يبدأ بحرف G، اظهر الغرفة مباشرة
+  if (q.startsWith('G')) {
+    searchResultUser = { name: 'غرفة', code: q, type: 'room' };
+    res.innerHTML = `
+      <div class="search-result-card" onclick="askJoinRoom('${q}')">
+        <div class="search-result-icon">💬</div>
+        <div class="search-result-info">
+          <div class="search-result-name">غرفة ${q}</div>
+          <div class="search-result-code">اضغط للدخول</div>
+        </div>
+        <div style="color:var(--cyan)">←</div>
+      </div>`;
+    return;
+  }
+
+  // البحث عن الفرق والمستخدمين (للأرقام التي تبدأ بـ Q)
   fetch(SERVER_URL + '/api/waves/' + q)
     .then(r => r.json())
     .then(data => {
@@ -987,6 +1006,13 @@ function doSearch() {
         });
     })
     .catch(() => { res.innerHTML = '<div class="no-results"><span class="no-results-icon">❌</span>خطأ في البحث</div>'; });
+}
+
+function askJoinRoom(roomCode) {
+  if (!confirm('هل تريد الانضمام إلى هذه الغرفة؟')) return;
+  closeModal('modalSearch');
+  // تحويل المستخدم إلى الغرفة (محاكاة الدخول)
+  switchToRoom(roomCode, 'غرفة ' + roomCode);
 }
 
 function askJoinWave() {
@@ -1145,7 +1171,7 @@ function openSideMenu() {
         <span class="menu-icon">✏️</span>
         <span class="menu-text"><span class="menu-label">تعديل اسم الفرقة</span><span class="menu-desc">غيّر اسم فرقتك</span></span>
       </button>
-      <button class="menu-item danger" onclick="closeSideMenu();leaveWave()">
+      <button class="menu-item" onclick="closeSideMenu();leaveWave()">
         <span class="menu-icon">🗑️</span>
         <span class="menu-text"><span class="menu-label">مسح الفرقة</span><span class="menu-desc">مغادرة الفرقة الحالية</span></span>
       </button>
