@@ -47,6 +47,8 @@ body::before { content: ''; position: fixed; inset: 0; background: radial-gradie
 .menu-item .menu-desc { font-size: 10.5px; color: var(--text-dim); font-weight: 500; }
 .menu-item.primary { background: linear-gradient(180deg, rgba(0,229,255,.08), rgba(0,229,255,.02)); border-color: rgba(0,229,255,.4); }
 .menu-item.primary .menu-icon { background: rgba(0,229,255,.2); }
+.menu-item.danger { background: linear-gradient(180deg, rgba(255,42,77,.08), rgba(255,42,77,.02)); border-color: rgba(255,42,77,.3); color: #ff5577; }
+.menu-item.danger .menu-icon { background: rgba(255,42,77,.1); border-color: rgba(255,42,77,.25); }
 .status-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 7px; margin-bottom: 8px; }
 .chip { background: linear-gradient(180deg, var(--card-2), var(--card)); border: 1px solid var(--border); border-radius: 10px; padding: 9px 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 10.5px; color: var(--text-dim); min-height: 54px; text-align: center; }
 .chip-value { font-size: 13px; font-weight: 800; color: var(--text); display: flex; align-items: center; justify-content: center; gap: 4px; line-height: 1.2; }
@@ -1183,6 +1185,10 @@ function openSideMenu() {
         <span class="menu-icon">🗑️</span>
         <span class="menu-text"><span class="menu-label">مسح المحادثة</span><span class="menu-desc">حذف كل الرسائل</span></span>
       </button>
+      <button class="menu-item danger" onclick="closeSideMenu();deleteRoomPermanently()">
+        <span class="menu-icon">🗑️</span>
+        <span class="menu-text"><span class="menu-label">حذف الغرفة نهائياً</span><span class="menu-desc">مسح الغرفة من السجل</span></span>
+      </button>
     `;
   } else {
     title.textContent = '⚙️ الإعدادات السريعة';
@@ -1886,6 +1892,27 @@ function doClearChat() {
   if (container) container.innerHTML = '';
   closeModal('modalClearChat');
   toast('✅ تم مسح الدردشة', 'success');
+}
+
+// دالة حذف الغرفة نهائياً
+function deleteRoomPermanently() {
+  if (!currentUser.roomCode) { toast('⚠️ لا توجد غرفة لحذفها', 'error'); return; }
+  if (!confirm('هل أنت متأكد من حذف هذه الغرفة نهائياً؟ سيتم مسحها من السجل.')) return;
+  
+  localStorage.removeItem('rc_saved_room_code');
+  localStorage.removeItem('rc_saved_room_name');
+  localStorage.removeItem('rc_is_room_owner');
+  
+  currentUser.roomCode = null;
+  currentUser.roomName = null;
+  currentUser.currentConvId = null;
+  currentUser.currentChatWith = null;
+  
+  document.getElementById('roomNameLabel').textContent = 'الغرفة';
+  document.getElementById('chatMessages').innerHTML = '';
+  
+  toast('✅ تم حذف الغرفة نهائياً', 'success');
+  switchTab('log');
 }
 
 document.getElementById('roomMenuBtn').addEventListener('click', openSideMenu);
