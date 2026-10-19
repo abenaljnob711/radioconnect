@@ -1115,9 +1115,17 @@ function openSideMenu() {
   if (activeId === 'screen-radio') {
     title.textContent = '📡 قائمة الفرقة';
     content.innerHTML = `
+      <div style="background:rgba(0,229,255,.05); border:1px solid rgba(0,229,255,.3); border-radius:12px; padding:12px; margin-bottom:12px; text-align:center;">
+        <div style="font-size:11px; color:var(--text-dim); margin-bottom:4px;">📛 اسم الفرقة</div>
+        <div style="font-size:14px; font-weight:800; color:var(--text); margin-bottom:10px;">${currentUser.waveName || '—'}</div>
+        <div style="font-size:11px; color:var(--text-dim); margin-bottom:4px;">🔑 رقم الفرقة</div>
+        <div onclick="copyMyWaveCode()" style="font-size:16px; font-weight:900; color:var(--cyan); font-family:'Courier New',monospace; letter-spacing:2px; cursor:pointer; padding:6px; border-radius:8px; background:rgba(0,229,255,.1); border:1px solid rgba(0,229,255,.4);">
+          ${currentUser.waveCode || '—'} 📋
+        </div>
+      </div>
       <button class="menu-item primary" onclick="closeSideMenu();openCreateWave()">
         <span class="menu-icon">➕</span>
-        <span class="menu-text"><span class="menu-label">إضافة فرقة</span><span class="menu-desc">إنشاء موجة لاسلكية جديدة</span></span>
+        <span class="menu-text"><span class="menu-label">إنشاء فرقة</span><span class="menu-desc">إنشاء موجة لاسلكية جديدة</span></span>
       </button>
       <button class="menu-item" onclick="closeSideMenu();openSearchWave()">
         <span class="menu-icon">🔍</span>
@@ -1153,7 +1161,7 @@ function openSideMenu() {
       </div>
       <button class="menu-item primary" onclick="closeSideMenu();openCreateRoom()">
         <span class="menu-icon">➕</span>
-        <span class="menu-text"><span class="menu-label">إضافة غرفة</span><span class="menu-desc">إنشاء غرفة دردشة جديدة</span></span>
+        <span class="menu-text"><span class="menu-label">إنشاء غرفة</span><span class="menu-desc">إنشاء غرفة دردشة جديدة</span></span>
       </button>
       <button class="menu-item" onclick="closeSideMenu();openSearchUser()">
         <span class="menu-icon">🔍</span>
