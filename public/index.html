@@ -384,7 +384,6 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
           <span class="setting-value">تجربة</span>
         </div>
         
-        <!-- زر إعادة الضبط الجديد -->
         <div class="setting-item" onclick="resetAppData()">
           <div class="setting-info">
             <span class="setting-title" style="color:var(--red);">🗑️ إعادة ضبط التطبيق</span>
@@ -952,7 +951,7 @@ function openManageRoomsMenu() {
     if(menuToggle) menuToggle.classList.add('open');
 }
 
-// --- دوال الخروج والعودة ---
+// --- دوال الخروج والعودة للفرقة ---
 function exitWaveTemporarily() {
     if (!isWaveActive) { toast('⚠️ أنت خارج الفرقة بالفعل', 'error'); return; }
     if (!confirm('هل تريد الخروج من الفرقة مؤقتاً؟ (لن يتم حذفها، ويمكنك العودة لها لاحقاً)')) return;
@@ -964,12 +963,20 @@ function exitWaveTemporarily() {
     }
     
     isWaveActive = false;
+    // مسح البيانات من الواجهة لتبدو فارغة
+    currentUser.waveId = null;
+    currentUser.waveName = null;
+    currentUser.waveCode = null;
     
     const statusText = document.getElementById('waveStatusText');
     if (statusText) statusText.innerHTML = '🔴 خارج الفرقة';
     
+    const el1 = document.getElementById('waveCodeChip');
+    if (el1) el1.innerHTML = (currentUser.radCode || 'Q00000') + ' <span style="font-size:12px;">🔑</span>';
     const el2 = document.getElementById('waveNameLabel'); 
-    if (el2) el2.textContent = (currentUser.waveName || 'فرقة') + ' (غير نشط)';
+    if (el2) el2.textContent = 'لا توجد فرقة';
+    const el3 = document.getElementById('lcdLine3'); 
+    if (el3) el3.textContent = (currentUser.radCode || 'Q00000') + ' • RX';
     
     toast('✅ خرجت من الفرقة (يمكنك العودة من قائمة العمليات)', 'success');
     closeSideMenu();
@@ -1000,6 +1007,7 @@ async function returnToWave(waveId) {
     closeSideMenu();
 }
 
+// --- دوال الخروج والعودة للغرفة ---
 function exitRoomTemporarily() {
     if (!isRoomActive) { toast('⚠️ أنت خارج الغرفة بالفعل', 'error'); return; }
     if (!confirm('هل تريد الخروج من الغرفة مؤقتاً؟ (لن يتم حذف الرسائل)')) return;
@@ -1508,7 +1516,7 @@ function testCall() {
 }
 
 // ==========================================
-// 10. دالة حذف الغرفة
+// 10. دالة مسح الغرفة نهائياً (للغرف التي في السجل)
 // ==========================================
 function deleteRoom() {
   if (!currentUser.roomCode) { toast('⚠️ لا توجد غرفة لحذفها', 'error'); return; }
