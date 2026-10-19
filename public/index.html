@@ -614,7 +614,7 @@ let savedWavesList = JSON.parse(localStorage.getItem('rc_user_waves_list') || '[
 let savedRoomsList = JSON.parse(localStorage.getItem('rc_user_rooms_list') || '[]');
 
 // ==========================================
-// 2. دالة إعادة ضبط التطبيق (لحل مشكلة الرقم العالق)
+// 2. دالة إعادة ضبط التطبيق
 // ==========================================
 function resetAppData() {
   if (!confirm('⚠️ تحذير: سيتم مسح جميع البيانات والفرق والغرف من هذا الجهاز، وستحصل على رقم مستخدم جديد. هل أنت متأكد؟')) return;
@@ -802,7 +802,7 @@ function stopTalking() {
 }
 
 // ==========================================
-// 5. إدارة القوائم
+// 5. إدارة القوائم (العمليات والخروج والحذف)
 // ==========================================
 function saveWaveToList(waveId, waveName) {
     if (!waveId || !waveName) return;
