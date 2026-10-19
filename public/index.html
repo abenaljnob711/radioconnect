@@ -1167,7 +1167,7 @@ function openSideMenu() {
       </button>
       <button class="menu-item" onclick="closeSideMenu();openSearchUser()">
         <span class="menu-icon">🔍</span>
-        <span class="menu-text"><span class="menu-label">البحث عن غرفة</span><span class="menu-desc">ابحث برقم المستخدم</span></span>
+        <span class="menu-text"><span class="menu-label">البحث عن مستخدم</span><span class="menu-desc">ابحث برقم المستخدم لبدء محادثة</span></span>
       </button>
       <button class="menu-item" onclick="closeSideMenu();openOperationsList()">
         <span class="menu-icon">📋</span>
@@ -1182,8 +1182,8 @@ function openSideMenu() {
         <span class="menu-text"><span class="menu-label">تعديل اسم الغرفة</span><span class="menu-desc">غيّر اسم غرفتك</span></span>
       </button>
       <button class="menu-item" onclick="closeSideMenu();confirmClearChat()">
-        <span class="menu-icon">🗑️</span>
-        <span class="menu-text"><span class="menu-label">مسح المحادثة</span><span class="menu-desc">حذف كل الرسائل</span></span>
+        <span class="menu-icon">🧹</span>
+        <span class="menu-text"><span class="menu-label">مسح المحادثة</span><span class="menu-desc">حذف الرسائل فقط</span></span>
       </button>
       <button class="menu-item danger" onclick="closeSideMenu();deleteRoomPermanently()">
         <span class="menu-icon">🗑️</span>
@@ -1344,9 +1344,9 @@ function openSearchWave() {
   openModal('modalSearch');
 }
 function openSearchUser() {
-  document.getElementById('searchSubTitle').textContent = 'ابحث برقم المستخدم أو الغرفة';
-  document.getElementById('searchFieldLabel').textContent = 'رقم المستخدم / الغرفة';
-  document.getElementById('searchQuery').placeholder = 'Q##### / G#####';
+  document.getElementById('searchSubTitle').textContent = 'ابحث برقم المستخدم';
+  document.getElementById('searchFieldLabel').textContent = 'رقم المستخدم';
+  document.getElementById('searchQuery').placeholder = 'Q#####';
   document.getElementById('searchQuery').value = '';
   document.getElementById('searchResults').innerHTML = `
     <div class="no-results">
@@ -1894,7 +1894,6 @@ function doClearChat() {
   toast('✅ تم مسح الدردشة', 'success');
 }
 
-// دالة حذف الغرفة نهائياً
 function deleteRoomPermanently() {
   if (!currentUser.roomCode) { toast('⚠️ لا توجد غرفة لحذفها', 'error'); return; }
   if (!confirm('هل أنت متأكد من حذف هذه الغرفة نهائياً؟ سيتم مسحها من السجل.')) return;
