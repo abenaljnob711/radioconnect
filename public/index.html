@@ -614,7 +614,7 @@ let savedWavesList = JSON.parse(localStorage.getItem('rc_user_waves_list') || '[
 let savedRoomsList = JSON.parse(localStorage.getItem('rc_user_rooms_list') || '[]');
 
 // ==========================================
-// 2. دالة إعادة ضبط التطبيق (لحل مشكلة الرقم العالق)
+// 2. دالة إعادة ضبط التطبيق
 // ==========================================
 function resetAppData() {
   if (!confirm('⚠️ تحذير: سيتم مسح جميع البيانات والفرق والغرف من هذا الجهاز، وستحصل على رقم مستخدم جديد. هل أنت متأكد؟')) return;
@@ -868,77 +868,6 @@ function openOperationsMenu() {
                 </div>
                 <div style="display:flex; justify-content:flex-end; width:100%; gap:8px;">
                     ${actionBtn}
-                    <button onclick="deleteWaveFromList('${w.id}')" style="background:rgba(255,42,77,0.2); border:1px solid #ff5577; color:#ff5577; border-radius:8px; padding:8px; cursor:pointer; font-family:inherit;">🗑️ حذف</button>
-                </div>
-            </div>`;
-        }).join('');
-    }
-    if(sideMenu) sideMenu.classList.add('open');
-    if(menuBackdrop) menuBackdrop.classList.add('show');
-    if(menuToggle) menuToggle.classList.add('open');
-}
-
-function openManageWavesMenu() {
-    const title = document.getElementById('sideMenuTitle');
-    const content = document.getElementById('sideMenuContent');
-    title.textContent = '💾 إدارة وحفظ الفرق';
-    
-    if (savedWavesList.length === 0) {
-        content.innerHTML = `<div class="operations-empty">لا توجد فرق محفوظة لحذفها.</div>`;
-    } else {
-        content.innerHTML = savedWavesList.map(w => {
-            return `
-            <div class="menu-item" style="justify-content:space-between;">
-                <span class="menu-text">
-                    <span class="menu-label">${w.name}</span>
-                    <span class="menu-desc">${w.id}</span>
-                </span>
-                <button onclick="deleteWaveFromList('${w.id}')" style="background:rgba(255,42,77,0.2); border:1px solid #ff5577; color:#ff5577; border-radius:8px; padding:8px; cursor:pointer; font-family:inherit;">🗑️ حذف</button>
-            </div>`;
-        }).join('');
-    }
-    if(sideMenu) sideMenu.classList.add('open');
-    if(menuBackdrop) menuBackdrop.classList.add('show');
-    if(menuToggle) menuToggle.classList.add('open');
-}
-
-function openManageRoomsMenu() {
-    const title = document.getElementById('sideMenuTitle');
-    const content = document.getElementById('sideMenuContent');
-    title.textContent = '💾 إدارة وحفظ الغرف';
-    
-    if (savedRoomsList.length === 0) {
-        content.innerHTML = `<div class="operations-empty">لا توجد غرف محفوظة لحذفها.</div>`;
-    } else {
-        content.innerHTML = savedRoomsList.map(r => {
-            const isCurrentlyActive = (currentUser.roomCode === r.code && isRoomActive);
-            const isCurrentlyInactive = (currentUser.roomCode === r.code && !isRoomActive);
-            
-            let statusLabel = 'غير مشترك فيها';
-            let statusIcon = '💬';
-            let actionBtn = `<button onclick="returnToRoom('${r.code}')" style="background:rgba(0,229,255,0.2); border:1px solid #00e5ff; color:#00e5ff; border-radius:8px; padding:8px; cursor:pointer; font-family:inherit; margin-left:5px;">↩️ رجوع</button>`;
-            
-            if (isCurrentlyActive) {
-                statusLabel = 'نشطة الآن';
-                statusIcon = '🟢';
-                actionBtn = '';
-            } else if (isCurrentlyInactive) {
-                statusLabel = 'خرجت منها (غير نشط)';
-                statusIcon = '🔴';
-            }
-
-            return `
-            <div class="menu-item" style="justify-content:space-between; flex-direction:column; align-items:flex-start; gap:10px; padding:14px;">
-                <div style="display:flex; align-items:center; gap:10px; width:100%;">
-                    <span class="menu-icon">${statusIcon}</span>
-                    <div class="menu-text">
-                        <span class="menu-label">${r.name}</span>
-                        <span class="menu-desc">${r.code} • ${statusLabel}</span>
-                    </div>
-                </div>
-                <div style="display:flex; justify-content:flex-end; width:100%; gap:8px;">
-                    ${actionBtn}
-                    <button onclick="deleteRoomFromList('${r.code}')" style="background:rgba(255,42,77,0.2); border:1px solid #ff5577; color:#ff5577; border-radius:8px; padding:8px; cursor:pointer; font-family:inherit;">🗑️ حذف</button>
                 </div>
             </div>`;
         }).join('');
@@ -1036,50 +965,6 @@ async function returnToRoom(roomCode) {
     toast('✅ عدت إلى الغرفة بنجاح', 'success');
     switchTab('chat');
     closeSideMenu();
-}
-
-function deleteWaveFromList(waveId) {
-    if (currentUser.waveId === waveId && isWaveActive) {
-        toast('⚠️ لا يمكنك الحذف وأنت نشط في الفرقة. اخرج أولاً.', 'error');
-        return;
-    }
-    if (!confirm('هل تريد حذف هذه الفرقة نهائياً من سجلك؟ (سيتم حذفها من قائمة العمليات)')) return;
-    
-    if (currentUser.waveId === waveId) {
-        currentUser.waveId = null;
-        currentUser.waveName = null;
-        currentUser.waveCode = null;
-        localStorage.removeItem('rc_saved_wave_id');
-        localStorage.removeItem('rc_saved_wave_name');
-        
-        const myCode = currentUser.radCode || 'Q00000';
-        document.getElementById('waveCodeChip').innerHTML = myCode + ' <span style="font-size:12px;">🔑</span>';
-        document.getElementById('waveNameLabel').textContent = 'لا توجد فرقة';
-        document.getElementById('lcdLine3').textContent = myCode + ' • RX';
-    }
-    
-    removeWaveFromList(waveId);
-    openManageWavesMenu(); 
-    toast('✅ تم الحذف من السجل', 'success');
-}
-
-function deleteRoomFromList(roomCode) {
-    if (currentUser.roomCode === roomCode && isRoomActive) {
-        toast('⚠️ لا يمكنك الحذف وأنت نشط في الغرفة. اخرج أولاً.', 'error');
-        return;
-    }
-    if (!confirm('هل تريد حذف هذه الغرفة نهائياً من سجلك؟')) return;
-    
-    if (currentUser.roomCode === roomCode) {
-        currentUser.roomCode = null;
-        currentUser.roomName = null;
-        localStorage.removeItem('rc_saved_room_code');
-        localStorage.removeItem('rc_saved_room_name');
-    }
-    
-    removeRoomFromList(roomCode);
-    openManageRoomsMenu(); 
-    toast('✅ تم الحذف من السجل', 'success');
 }
 
 // ==========================================
@@ -1335,14 +1220,6 @@ function openSideMenu() {
         <span class="menu-text"><span class="menu-label">تعديل اسم الفرقة</span><span class="menu-desc">غيّر اسم فرقتك</span></span>
       </button>
       ${exitBtnHtml}
-      <button class="menu-item" onclick="closeSideMenu();openManageWavesMenu()">
-        <span class="menu-icon">💾</span>
-        <span class="menu-text"><span class="menu-label">إدارة وحفظ الفرق</span><span class="menu-desc">حذف الفرق من السجل</span></span>
-      </button>
-      <button class="menu-item danger" onclick="closeSideMenu();deleteWave()">
-        <span class="menu-icon">🗑️</span>
-        <span class="menu-text"><span class="menu-label">حذف الفرقة</span><span class="menu-desc">حذف نهائي وإلغاء الاشتراك</span></span>
-      </button>
     `;
   } else if (activeId === 'screen-log' || activeId === 'screen-chat') {
     title.textContent = '💬 قائمة الغرفة';
@@ -1369,17 +1246,9 @@ function openSideMenu() {
         <span class="menu-text"><span class="menu-label">البحث عن غرفة</span><span class="menu-desc">ابحث برقم المستخدم</span></span>
       </button>
       ${exitBtnHtml}
-      <button class="menu-item" onclick="closeSideMenu();openManageRoomsMenu()">
-        <span class="menu-icon">💾</span>
-        <span class="menu-text"><span class="menu-label">إدارة وحفظ الغرف</span><span class="menu-desc">حذف الغرف من السجل</span></span>
-      </button>
       <button class="menu-item" onclick="closeSideMenu();confirmClearChat()">
         <span class="menu-icon">🧹</span>
         <span class="menu-text"><span class="menu-label">مسح المحادثة</span><span class="menu-desc">حذف الرسائل فقط</span></span>
-      </button>
-      <button class="menu-item danger" onclick="closeSideMenu();deleteRoom()">
-        <span class="menu-icon">🗑️</span>
-        <span class="menu-text"><span class="menu-label">حذف الغرفة نهائياً</span><span class="menu-desc">إزالة الغرفة من السجل</span></span>
       </button>
     `;
   } else {
