@@ -538,12 +538,13 @@ async function connectWaveChannel() {
     if (!tokenData.token) return false;
     waveRoom = new window.LivekitClient.Room();
     waveRoom.on(window.LivekitClient.RoomEvent.TrackSubscribed, (track, pub, participant) => {
-      if (track.kind === "audio") {
-        const audioElement = track.attach();
-        audioElement.dataset.lkTrack = participant.identity;
-        document.body.appendChild(audioElement);
-      }
-    });
+  if (track.kind === "audio") {
+    const audioElement = track.attach();
+    audioElement.volume = 1.0; // ✅ رفع صوت المتحدث الآخر لأقصى حد
+    audioElement.autoplay = true;
+    document.body.appendChild(audioElement);
+  }
+});
     waveRoom.on(window.LivekitClient.RoomEvent.TrackUnsubscribed, (track) => {
       track.detach().forEach(el => el.remove());
     });
