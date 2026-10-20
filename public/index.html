@@ -384,6 +384,7 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
           <span class="setting-value">تجربة</span>
         </div>
         
+        <!-- زر استعادة ضبط المصنع المحدث -->
         <div class="setting-item" onclick="factoryReset()">
           <div class="setting-info">
             <span class="setting-title" style="color:var(--red);">⚠️ استعادة ضبط المصنع</span>
@@ -612,9 +613,11 @@ let rawMicStream = null;
 let localTestAudio = null;
 let isTalking = false;
 
+// دوال استعادة ضبط المصنع (بدون رسائل المتصفح)
 function factoryReset() {
   openModal('modalFactoryReset');
 }
+
 function confirmFactoryReset() {
   closeModal('modalFactoryReset');
   localStorage.clear();
@@ -633,7 +636,7 @@ const PTTEngine = {
       const closeEl = document.getElementById('walkieClose');
       [openEl, closeEl].forEach(el => {
         if (el) {
-          el.volume = 1.0; 
+          el.volume = 1.0; // أقصى صوت
           el.play().then(() => {
             el.pause(); el.currentTime = 0; el.volume = 1.0;
             this.beepReady = true;
@@ -660,6 +663,9 @@ const PTTEngine = {
   playEndBeep() { this.playOpenBeep(); }
 };
 
+/* =========================================================
+   محرك الصوت 
+   ========================================================= */
 async function connectWaveChannel() {
   try {
     if (!window.LivekitClient || !currentUser.radCode) return false;
@@ -747,6 +753,7 @@ function stopTalking() {
     waveLocalAudioTrack = null;
   }
   
+  // إغلاق المايك قسرياً لمنع التعليق
   if (rawMicStream) {
     rawMicStream.getTracks().forEach(t => t.stop());
     rawMicStream = null;
@@ -772,6 +779,30 @@ function stopTalking() {
   }
 }
 
+/* =========================================================
+   LiveVoice (للغرف فقط)
+   ========================================================= */
+const LiveVoice = {
+  room: null, connected: false,
+  async connect(waveId) {
+    if (this.connected) return true;
+    try {
+      const tokenRes = await fetch(SERVER_URL + '/api/livekit/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ roomId: waveId, deviceId: currentUser.id, userName: currentUser.name })
+      });
+      const data = await tokenRes.json();
+      if (!data.token) return false;
+      this.room = new window.LivekitClient.Room();
+      await this.room.connect(LIVEKIT_URL, data.token);
+      this.connected = true;
+      return true;
+    } catch (e) { return false; }
+  }
+};
+
+// ربط حدث الضغط والإفلات لزر PTT الرئيسي
 const pttMainBtn = document.getElementById('pttMain');
 pttMainBtn.addEventListener('pointerdown', (e) => { e.preventDefault(); onPTTStart(); });
 pttMainBtn.addEventListener('pointerup', (e) => { e.preventDefault(); stopTalking(); });
@@ -800,14 +831,12 @@ function initSocket() {
     if (statusText) statusText.innerHTML = '🔴 غير متصل';
   });
 
-  // 🔴 استقبال طلب الانضمام (النافذة المنبثقة)
   socket.on('wave_join_request_received', (data) => {
     document.getElementById('incomingName').textContent = data.fromUserName || 'مستخدم';
     document.getElementById('incomingCode').textContent = data.waveId;
     openModal('modalIncomingRequest');
     window._incomingRequest = data;
     PTTEngine.playRealBeep();
-    toast('🔔 لديك طلب انضمام جديد!', 'success');
   });
 
   socket.on('wave_join_request_sent', () => toast('📤 تم إرسال طلب الانضمام', 'success'));
@@ -937,6 +966,7 @@ async function doSearch() {
 
   res.innerHTML = '<div class="no-results">⏳ جاري البحث...</div>';
 
+  // 1. البحث عن غرفة (G)
   if (q.startsWith('G')) {
     try {
       const roomRes = await fetch(SERVER_URL + '/api/rooms/' + q);
@@ -953,9 +983,10 @@ async function doSearch() {
           </div>`;
         return;
       }
-    } catch (e) { /* تجاهل */ }
+    } catch (e) { /* تجاهل الخطأ */ }
   }
 
+  // 2. البحث عن فرقة أو مستخدم (Q)
   fetch(SERVER_URL + '/api/waves/' + q)
     .then(r => r.json())
     .then(data => {
@@ -1010,17 +1041,9 @@ function askJoinWave() {
 function confirmJoin() {
   if (!searchResultUser) return;
   closeModal('modalJoinConfirm');
-  
-  if (socket) {
-    socket.emit('wave_join_request', {
-      waveId: searchResultUser.code, 
-      fromDeviceId: currentUser.id, 
-      fromUserName: currentUser.name
-    });
-    toast('📤 تم إرسال طلب الانضمام...', 'success');
-  } else {
-    toast('⚠️ لا يوجد اتصال بالخادم', 'error');
-  }
+  if (socket) socket.emit('wave_join_request', {
+    waveId: searchResultUser.code, fromDeviceId: currentUser.id, fromUserName: currentUser.name
+  });
 }
 
 function cancelJoin() { closeModal('modalJoinConfirm'); openModal('modalSearch'); }
@@ -2101,8 +2124,7 @@ async function openOperationsList() {
     let allWaves = JSON.parse(localStorage.getItem('rc_user_waves_list') || '[]');
     let allRooms = JSON.parse(localStorage.getItem('rc_user_rooms_list') || '[]');
     
-    // إضافة الفرقة الحالية إن لم تكن في القائمة
-    if (currentUser.waveId && !allWaves.find(w => w.id === currentUser.waveId)) {
+    // إضافة الفرقة الحالية إن لم تكن في القائمة    if (currentUser.waveId && !allWaves.find(w => w.id === currentUser.waveId)) {
         allWaves.push({ id: currentUser.waveId, name: currentUser.waveName || 'فرقة حالية' });
     }
     if (currentUser.roomCode && !allRooms.find(r => r.code === currentUser.roomCode)) {
