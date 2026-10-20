@@ -1930,6 +1930,53 @@ document.addEventListener('click', (e) => {
   const status = (socket && socket.connected) ? "متصل ✅" : "غير متصل ❌";
   alert("📱 معرّفي:\n" + currentUser.id + "\n\n🌐 حالة السيرفر:\n" + status);
 }, 4000);  
+     // ===== FIX: إصلاح وصول طلب الصداقة فقط - لا يمس أي كود آخر =====
+(function(){
+  window.sendFriendRequestSignal = function(toDeviceId, payload){
+    if(!socket){ toast('❌ غير متصل','error'); return; }
+    const txt = JSON.stringify(payload);
+    socket.emit('friend_request_send', {toDeviceId: toDeviceId, fromDeviceId: currentUser.id, fromName: currentUser.name, fromCode: currentUser.radCode});
+    socket.emit('send_direct_message', {toDeviceId: toDeviceId, fromDeviceId: currentUser.id, fromName: currentUser.name, fromCode: currentUser.radCode, text: txt, message: {text: txt}});
+    socket.emit('direct_message', {toDeviceId: toDeviceId, text: txt, fromDeviceId: currentUser.id, fromName: currentUser.name});
+    socket.emit('private_message', {to: toDeviceId, text: txt});
+  };
+
+  // Override الإرسال ليضمن الوصول
+  const origSend = window.sendFriendRequestToUser;
+  window.sendFriendRequestToUser = function(){
+    if(!searchResultUser || searchResultUser.type!=='user'){ if(origSend) origSend(); return; }
+    try{
+      let sent = JSON.parse(localStorage.getItem('rc_sent_requests')||'[]');
+      if(!sent.find(r=>r.deviceId===searchResultUser.deviceId)){
+        sent.push({deviceId:searchResultUser.deviceId,name:searchResultUser.name,code:searchResultUser.code,time:new Date().toLocaleString('ar-SA')});
+        localStorage.setItem('rc_sent_requests', JSON.stringify(sent));
+      }
+    }catch(e){}
+    window.sendFriendRequestSignal(searchResultUser.deviceId, {type:'friend_request', fromDeviceId: currentUser.id, fromName: currentUser.name, fromCode: currentUser.radCode});
+    if(window.updateFriendBadge) updateFriendBadge();
+    toast('📤 تم إرسال طلب الصداقة إلى '+searchResultUser.name,'success');
+    closeModal('modalSearch');
+    closeModal('modalFriendSend');
+  };
+
+  // تأكد أن الاستقبال شغال
+  setTimeout(()=>{
+    if(!socket) return;
+    socket.on('friend_request_received', (data)=>{ if(window.handleIncomingFriendRequest) handleIncomingFriendRequest(data); });
+    socket.on('new_direct_message', (payload)=>{
+      try{
+        let txt = payload?.message?.text || payload?.text || '';
+        if(typeof txt === 'string' && txt.includes('friend_request')){
+          let obj = JSON.parse(txt);
+          if(obj.type==='friend_request' && window.handleIncomingFriendRequest){
+            handleIncomingFriendRequest({fromDeviceId: obj.fromDeviceId, fromName: obj.fromName, fromCode: obj.fromCode});
+          }
+        }
+      }catch(e){}
+    });
+  }, 1500);
+  console.log('✅ FIX: Friend request delivery patched - only this changed');
+})(); 
   </script>
 </body>
   </html>
