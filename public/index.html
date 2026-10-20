@@ -582,7 +582,7 @@ async function onPTTStart() {
     if (!waveRoom || waveRoom.participants.size === 0) {
       localTestAudio = new Audio();
       localTestAudio.srcObject = rawMicStream;
-      localTestAudio.volume = 0.8;
+      localTestAudio.volume = 1.0;
       localTestAudio.play().catch(()=>{});
     }
     connectWaveChannel().then(() => {
