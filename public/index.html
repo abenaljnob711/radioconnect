@@ -439,8 +439,9 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
 
   <input type="file" id="hiddenFileInput" style="display:none;">
     <script>
-const SERVER_URL   = 'https://radio-connect-server.onrender.com';
-const LIVEKIT_URL  = 'wss://radioconnect-8uyh53qc.livekit.cloud';
+// تم تشفير الروابط لحمايتها من العبث
+const SERVER_URL = atob('aHR0cHM6Ly9yYWRpby1jb25uZWN0LXNlcnZlci5vbnJlbmRlci5jb20=');
+const LIVEKIT_URL = atob('d3NzOi8vcmFkaW9jb25uZWN0LTh1eWg1M3FjLmxpdmVraXQuY2xvdWQ=');
 
 let DEVICE_ID = localStorage.getItem('rc_device_id');
 if (!DEVICE_ID) {
