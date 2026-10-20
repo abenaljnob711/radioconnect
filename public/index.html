@@ -47,6 +47,8 @@ body::before { content: ''; position: fixed; inset: 0; background: radial-gradie
 .menu-item .menu-desc { font-size: 10.5px; color: var(--text-dim); font-weight: 500; }
 .menu-item.primary { background: linear-gradient(180deg, rgba(0,229,255,.08), rgba(0,229,255,.02)); border-color: rgba(0,229,255,.4); }
 .menu-item.primary .menu-icon { background: rgba(0,229,255,.2); }
+.menu-item.danger { background: linear-gradient(180deg, rgba(255,42,77,.08), rgba(255,42,77,.02)); border-color: rgba(255,42,77,.3); color: #ff5577; }
+.menu-item.danger .menu-icon { background: rgba(255,42,77,.1); border-color: rgba(255,42,77,.25); }
 .status-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 7px; margin-bottom: 8px; }
 .chip { background: linear-gradient(180deg, var(--card-2), var(--card)); border: 1px solid var(--border); border-radius: 10px; padding: 9px 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 10.5px; color: var(--text-dim); min-height: 54px; text-align: center; }
 .chip-value { font-size: 13px; font-weight: 800; color: var(--text); display: flex; align-items: center; justify-content: center; gap: 4px; line-height: 1.2; }
@@ -54,7 +56,6 @@ body::before { content: ''; position: fixed; inset: 0; background: radial-gradie
 .chip-value.code { color: var(--cyan); font-family: 'Courier New', monospace; letter-spacing: 1px; font-size: 13px; font-weight: 900; text-shadow: 0 0 8px rgba(0,229,255,.6); }
 #waveNameChip { cursor: pointer; transition: all .2s; }
 #waveNameChip:active { border-color: var(--cyan); box-shadow: 0 0 12px rgba(0,229,255,.3); }
-#networkChip { cursor: pointer; }
 #networkChip .bars { display: inline-flex; align-items: flex-end; gap: 2px; height: 14px; flex-direction: row-reverse; }
 #networkChip .bars span { width: 3px; border-radius: 2px; background: #3a4048; }
 #networkChip .bars span:nth-child(1) { height: 4px; }
@@ -78,6 +79,10 @@ body::before { content: ''; position: fixed; inset: 0; background: radial-gradie
 #waveStatusChip.live .status-text { color: var(--green); }
 #waveStatusChip .wave-timer { font-family: 'Courier New', monospace; color: var(--text-dim); font-size: 11px; font-weight: 700; }
 #waveStatusChip.live .wave-timer { color: var(--green); }
+#friendRequestsChip, #friendRequestsChip2 { cursor: pointer; position: relative; }
+#friendRequestsChip:active, #friendRequestsChip2:active { border-color: var(--cyan); box-shadow: 0 0 12px rgba(0,229,255,.3); }
+#sendFriendChip, #sendFriendChip2 { cursor: pointer; }
+#friendReqBadge, #friendReqBadge2 { position: absolute; top: -4px; left: -4px; background: var(--red); color: #fff; border-radius: 50%; min-width: 18px; height: 18px; font-size: 10px; font-weight: 900; align-items: center; justify-content: center; padding: 0 4px; box-shadow: 0 0 8px var(--red); display: none; }
 .radio-stage { position: relative; height: 360px; display: flex; align-items: center; justify-content: center; margin: 8px 0 16px; }
 .radio-device { position: relative; width: 210px; height: 320px; filter: drop-shadow(0 20px 40px rgba(0,0,0,.8)) drop-shadow(0 0 30px rgba(0,229,255,.15)); }
 .antenna { position: absolute; top: 0; right: 58px; width: 20px; height: 95px; background: linear-gradient(90deg, #0a0a0a, #2b2b2b 40%, #0a0a0a); border-radius: 10px 10px 3px 3px; box-shadow: inset -2px 0 3px rgba(0,0,0,.8); }
@@ -241,7 +246,6 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
           <span class="brand-icon">📻</span>
         </div>
       </header>
-
       <div class="status-row">
         <div class="chip" id="networkChip">
           <div class="bars"><span></span><span></span><span></span><span></span></div>
@@ -256,13 +260,12 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
           <div class="chip-label">رقم الموجة</div>
         </div>
       </div>
-
       <div class="status-row">
         <div class="chip" id="waveStatusChip" class="disconnected">
           <div class="status-text" id="waveStatusText">🔴 غير متصل</div>
           <div class="wave-timer" id="waveTimer">00:00</div>
         </div>
-        <div class="chip" id="operationsChip">
+        <div class="chip" id="operationsChip" style="cursor:pointer;">
           <div class="chip-value" style="font-size:13px; font-weight:800;">📋 العمليات</div>
         </div>
         <div class="chip" id="batteryChip">
@@ -275,7 +278,15 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
           <div class="chip-label">البطارية</div>
         </div>
       </div>
-
+      <div class="status-row" style="grid-template-columns:1fr 1fr;">
+        <div class="chip" id="friendRequestsChip" style="cursor:pointer;">
+          <div class="chip-value" style="font-size:13px; font-weight:800;">👥 طلبات الصداقة</div>
+          <span id="friendReqBadge">0</span>
+        </div>
+        <div class="chip" id="sendFriendChip" style="cursor:pointer;">
+          <div class="chip-value" style="font-size:13px; font-weight:800;">➕ إرسال طلب</div>
+        </div>
+      </div>
       <div class="radio-stage">
         <div class="radio-device">
           <div class="antenna"></div>
@@ -306,7 +317,6 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
         </div>
       </div>
     </section>
-
     <section class="screen" id="screen-log">
       <div class="log-header">
         <div class="log-actions">
@@ -318,9 +328,16 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
           <span class="sub" id="roomSubLabel">محادثاتك الخاصة</span>
         </div>
       </div>
-
-      <div id="chatListContainer"></div>
-
+      <div class="status-row" style="grid-template-columns:1fr 1fr;">
+        <div class="chip" id="friendRequestsChip2" style="cursor:pointer;">
+          <div class="chip-value" style="font-size:13px; font-weight:800;">👥 طلبات الصداقة</div>
+          <span id="friendReqBadge2">0</span>
+        </div>
+        <div class="chip" id="sendFriendChip2" style="cursor:pointer;">
+          <div class="chip-value" style="font-size:13px; font-weight:800;">➕ إرسال طلب</div>
+        </div>
+      </div>
+      <div id="chatListContainer" style="margin-top:14px;"></div>
       <div class="empty-room" id="emptyRoom">
         <div class="empty-room-icon">💬</div>
         <div class="empty-room-title">لا توجد محادثات بعد</div>
@@ -328,7 +345,6 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
         <button class="empty-room-btn" onclick="openSearchUser()">🔍 البحث عن مستخدم</button>
       </div>
     </section>
-
     <section class="screen" id="screen-chat">
       <div class="log-header">
         <div class="log-actions">
@@ -341,7 +357,6 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
       </div>
       <div id="chatMessages"></div>
     </section>
-
     <section class="screen" id="screen-settings">
       <header class="top-header">
         <div class="brand">
@@ -354,62 +369,37 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
       </header>
       <div class="settings-list">
         <div class="setting-item" onclick="toast('اسم الموجة: ' + (currentUser.waveName || '—'), 'success')">
-          <div class="setting-info">
-            <span class="setting-title">📡 اسم الموجة</span>
-            <span class="setting-desc">اسم موجتك الحالية</span>
-          </div>
+          <div class="setting-info"><span class="setting-title">📡 اسم الموجة</span><span class="setting-desc">اسم موجتك الحالية</span></div>
           <span class="setting-value" id="waveNameValue">—</span>
         </div>
         <div class="setting-item" onclick="copyMyWaveCode()">
-          <div class="setting-info">
-            <span class="setting-title">🔑 رقم الموجة</span>
-            <span class="setting-desc">اضغط للنسخ</span>
-          </div>
+          <div class="setting-info"><span class="setting-title">🔑 رقم الموجة</span><span class="setting-desc">اضغط للنسخ</span></div>
           <span class="setting-value" id="waveCodeValue">—</span>
         </div>
         <div class="setting-item" onclick="toast('معرّفك: ' + (currentUser.radCode || '—'))">
-          <div class="setting-info">
-            <span class="setting-title">👤 معرّف المستخدم</span>
-            <span class="setting-desc">هويتك في التطبيق</span>
-          </div>
+          <div class="setting-info"><span class="setting-title">👤 معرّف المستخدم</span><span class="setting-desc">هويتك في التطبيق</span></div>
           <span class="setting-value" id="myRadCode">—</span>
         </div>
         <div class="setting-item" onclick="testCall()">
-          <div class="setting-info">
-            <span class="setting-title">🔔 اختبار صوت النداء</span>
-            <span class="setting-desc">تأكد من أن الصوت يعمل</span>
-          </div>
+          <div class="setting-info"><span class="setting-title">🔔 اختبار صوت النداء</span><span class="setting-desc">تأكد من أن الصوت يعمل</span></div>
           <span class="setting-value">تجربة</span>
         </div>
+        <div class="setting-item" onclick="factoryReset()">
+          <div class="setting-info"><span class="setting-title" style="color:var(--red);">⚠️ استعادة ضبط المصنع</span><span class="setting-desc" style="color:var(--red-dark);">مسح كل شيء</span></div>
+          <span class="setting-value" style="color:var(--red);">مسح شامل</span>
+        </div>
         <div class="setting-item" onclick="toast('الإصدار 4.3.0')">
-          <div class="setting-info">
-            <span class="setting-title">ℹ️ حول التطبيق</span>
-            <span class="setting-desc">Radio Connect</span>
-          </div>
+          <div class="setting-info"><span class="setting-title">ℹ️ حول التطبيق</span><span class="setting-desc">Radio Connect</span></div>
           <span class="setting-value">v4.3</span>
         </div>
       </div>
     </section>
-
     <nav class="tab-bar">
-      <button class="tab" data-tab="log" onclick="switchTab('log')">
-        <span class="tab-icon">💬</span>
-        <span>الغرفة</span>
-      </button>
-      <button class="tab active" data-tab="radio" onclick="switchTab('radio')">
-        <span class="tab-icon">📡</span>
-        <span>النداء اللاسلكي</span>
-      </button>
-      <button class="tab" data-tab="settings" onclick="switchTab('settings')">
-        <span class="tab-icon">⚙️</span>
-        <span>الإعدادات</span>
-      </button>
+      <button class="tab" data-tab="log" onclick="switchTab('log')"><span class="tab-icon">💬</span><span>الغرفة</span></button>
+      <button class="tab active" data-tab="radio" onclick="switchTab('radio')"><span class="tab-icon">📡</span><span>النداء اللاسلكي</span></button>
+      <button class="tab" data-tab="settings" onclick="switchTab('settings')"><span class="tab-icon">⚙️</span><span>الإعدادات</span></button>
     </nav>
-
-    <div class="bottom-info" id="bottomInfo">
-      إشارة: <span class="hl">قوي</span> • بطارية الراديو: <span class="hl" id="bottomBattery">--%</span>
-    </div>
-
+    <div class="bottom-info" id="bottomInfo">إشارة: <span class="hl">قوي</span> • بطارية الراديو: <span class="hl" id="bottomBattery">--%</span></div>
     <div class="chat-input-bar" id="chatInputBar">
       <button class="chat-primary" id="chatPrimaryBtn" title="التسجيل أو الإرسال">🎙️</button>
       <button class="chat-clip-btn" id="chatClip" title="إرفاق">📎</button>
@@ -417,151 +407,38 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
       <button class="chat-emoji-btn" id="emojiBtn" title="إيموجي">😊</button>
     </div>
   </div>
-
   <div class="side-menu-backdrop" id="menuBackdrop"></div>
   <aside class="side-menu" id="sideMenu">
     <div class="side-menu-header">
-      <div class="side-menu-title">
-        <span class="icon">⚙️</span>
-        <span id="sideMenuTitle">الإعدادات السريعة</span>
-      </div>
+      <div class="side-menu-title"><span class="icon">⚙️</span><span id="sideMenuTitle">الإعدادات السريعة</span></div>
       <button class="side-menu-close" onclick="closeSideMenu()">✕</button>
     </div>
     <div id="sideMenuContent"></div>
   </aside>
-
   <div class="members-dropdown" id="membersDropdown"></div>
 
-  <!-- Modals -->
-  <div class="modal-overlay" id="modalRoomMenu">
-    <div class="modal">
-      <div class="modal-title">☰ خيارات الغرفة</div>
-      <div class="modal-sub">إدارة الغرفة والدردشة</div>
-      <button class="modal-menu-item" onclick="openEditRoomName()"><span class="modal-menu-icon">✏️</span><span>تعديل اسم الغرفة</span></button>
-      <button class="modal-menu-item" onclick="openEditRoomIcon()"><span class="modal-menu-icon">🎨</span><span>تغيير أيقونة الغرفة</span></button>
-      <button class="modal-menu-item danger" onclick="confirmClearChat()"><span class="modal-menu-icon">🗑️</span><span>مسح الدردشة كاملة</span></button>
-      <div class="modal-actions" style="grid-template-columns:1fr;margin-top:14px;"><button class="modal-btn cancel" onclick="closeModal('modalRoomMenu')">إغلاق</button></div>
-    </div>
-  </div>
-  <div class="modal-overlay" id="modalEditWave">
-    <div class="modal">
-      <div class="modal-title">✏️ تعديل اسم الفرقة</div>
-      <div class="modal-sub">اكتب الاسم الجديد</div>
-      <div class="modal-field"><label>اسم الفرقة</label><input type="text" id="newWaveName" maxlength="30"></div>
-      <div class="modal-actions"><button class="modal-btn cancel" onclick="closeModal('modalEditWave')">إلغاء</button><button class="modal-btn confirm" onclick="saveWaveName()">حفظ</button></div>
-    </div>
-  </div>
-  <div class="modal-overlay" id="modalEditName">
-    <div class="modal">
-      <div class="modal-title">✏️ تعديل اسم الغرفة</div>
-      <div class="modal-sub">اكتب الاسم الجديد</div>
-      <div class="modal-field"><label>اسم الغرفة</label><input type="text" id="newRoomName" maxlength="30"></div>
-      <div class="modal-actions"><button class="modal-btn cancel" onclick="closeModal('modalEditName')">إلغاء</button><button class="modal-btn confirm" onclick="saveRoomName()">حفظ</button></div>
-    </div>
-  </div>
-  <div class="modal-overlay" id="modalEditIcon">
-    <div class="modal">
-      <div class="modal-title">🎨 تغيير أيقونة الغرفة</div>
-      <div class="icon-grid" id="iconGrid">
-        <div class="icon-option" data-icon="💬">💬</div><div class="icon-option" data-icon="📻">📻</div><div class="icon-option" data-icon="📡">📡</div><div class="icon-option" data-icon="🎙️">🎙️</div><div class="icon-option" data-icon="🔊">🔊</div><div class="icon-option" data-icon="📞">📞</div><div class="icon-option" data-icon="🛡️">🛡️</div><div class="icon-option" data-icon="⚡">⚡</div>
-      </div>
-      <div class="modal-actions" style="grid-template-columns:1fr;margin-top:14px;"><button class="modal-btn cancel" onclick="closeModal('modalEditIcon')">إغلاق</button></div>
-    </div>
-  </div>
-  <div class="modal-overlay" id="modalClearChat">
-    <div class="modal">
-      <div class="modal-title">🗑️ مسح الدردشة</div>
-      <div class="modal-sub">هل أنت متأكد؟ لا يمكن التراجع.</div>
-      <div class="modal-actions"><button class="modal-btn cancel" onclick="closeModal('modalClearChat')">إلغاء</button><button class="modal-btn danger" onclick="doClearChat()">مسح</button></div>
-    </div>
-  </div>
-  <div class="modal-overlay" id="modalAttach">
-    <div class="modal">
-      <div class="modal-title">📎 إرفاق</div>
-      <div class="modal-sub">اختر نوع المحتوى</div>
-      <div class="attach-grid">
-        <button class="attach-item" onclick="pickCamera()"><span class="attach-icon">📷</span><span>كاميرا</span></button>
-        <button class="attach-item" onclick="pickFile('image')"><span class="attach-icon">🖼️</span><span>صورة</span></button>
-        <button class="attach-item" onclick="pickFile('video')"><span class="attach-icon">🎬</span><span>فيديو</span></button>
-        <button class="attach-item" onclick="pickFile('document')"><span class="attach-icon">📄</span><span>مستند</span></button>
-        <button class="attach-item" onclick="pickContact()"><span class="attach-icon">👥</span><span>جهة اتصال</span></button>
-        <button class="attach-item" onclick="pickFile('audio')"><span class="attach-icon">🎵</span><span>موسيقى</span></button>
-      </div>
-      <div class="modal-actions" style="grid-template-columns:1fr;margin-top:14px;"><button class="modal-btn cancel" onclick="closeModal('modalAttach')">إلغاء</button></div>
-    </div>
-  </div>
-  <div class="modal-overlay" id="modalCreate">
-    <div class="modal">
-      <div class="modal-title">➕ إنشاء غرفة جديدة</div>
-      <div class="modal-sub">سيُولَّد رقم غرفة خاص بك تلقائياً</div>
-      <div class="modal-field"><label>اسم الغرفة</label><input type="text" id="roomName" maxlength="30"></div>
-      <div class="modal-actions"><button class="modal-btn cancel" onclick="closeModal('modalCreate')">إلغاء</button><button class="modal-btn confirm" onclick="createRoom()">إنشاء</button></div>
-    </div>
-  </div>
-  <div class="modal-overlay" id="modalWave">
-    <div class="modal">
-      <div class="modal-title">📡 إنشاء فرقة</div>
-      <div class="modal-sub">سيُولَّد رقم فرقتك الخاص</div>
-      <div class="modal-field"><label>اسم الفرقة</label><input type="text" id="waveName" maxlength="30"></div>
-      <div class="modal-actions"><button class="modal-btn cancel" onclick="closeModal('modalWave')">إلغاء</button><button class="modal-btn confirm" onclick="createWave()">إنشاء</button></div>
-    </div>
-  </div>
-  <div class="modal-overlay" id="modalWaveCreated">
-    <div class="modal">
-      <div class="modal-title">✅ تم إنشاء الفرقة</div>
-      <div class="code-display"><div class="code-display-label">رقم الفرقة</div><div class="code-display-value" id="createdWaveCode">Q00000</div></div>
-      <div class="modal-actions"><button class="modal-btn cancel" onclick="copyWaveCode()">📋 نسخ</button><button class="modal-btn confirm" onclick="closeModal('modalWaveCreated')">تمام</button></div>
-    </div>
-  </div>
-  <div class="modal-overlay" id="modalRoomCreated">
-    <div class="modal">
-      <div class="modal-title">✅ تم إنشاء الغرفة</div>
-      <div class="code-display"><div class="code-display-label">رقم الغرفة</div><div class="code-display-value" id="createdRoomCode">G00000</div></div>
-      <div class="modal-actions"><button class="modal-btn cancel" onclick="copyRoomCode()">📋 نسخ</button><button class="modal-btn confirm" onclick="closeModal('modalRoomCreated')">تمام</button></div>
-    </div>
-  </div>
-  <div class="modal-overlay" id="modalSearch">
-    <div class="modal">
-      <div class="modal-title">🔍 البحث</div>
-      <div class="modal-sub" id="searchSubTitle">ابحث برقم</div>
-      <div class="modal-field"><label id="searchFieldLabel">الرقم</label><input type="text" id="searchQuery" class="code-input" maxlength="10"></div>
-      <div class="modal-actions" style="grid-template-columns:1fr;margin-bottom:14px;"><button class="modal-btn confirm" onclick="doSearch()">🔍 بحث</button></div>
-      <div id="searchResults"><div class="no-results"><span class="no-results-icon">🔎</span>اكتب الرقم</div></div>
-      <div class="modal-actions" style="grid-template-columns:1fr;margin-top:14px;"><button class="modal-btn cancel" onclick="closeModal('modalSearch')">إغلاق</button></div>
-    </div>
-  </div>
-  <div class="modal-overlay" id="modalJoinConfirm">
-    <div class="modal">
-      <div class="modal-title">📩 طلب انضمام</div>
-      <div class="join-request-info"><div class="join-request-icon">📡</div><div class="join-request-name" id="joinTargetName">—</div><div class="join-request-code" id="joinTargetCode">Q00000</div></div>
-      <div class="modal-actions"><button class="modal-btn cancel" onclick="cancelJoin()">إلغاء</button><button class="modal-btn confirm" onclick="confirmJoin()">موافق</button></div>
-    </div>
-  </div>
-  <div class="modal-overlay" id="modalIncomingRequest">
-    <div class="modal">
-      <div class="modal-title">🔔 طلب انضمام</div>
-      <div class="join-request-info"><div class="join-request-icon">👤</div><div class="join-request-name" id="incomingName">—</div><div class="join-request-code" id="incomingCode">—</div></div>
-      <div class="modal-actions"><button class="modal-btn danger" onclick="rejectIncoming()">رفض</button><button class="modal-btn confirm" onclick="acceptIncoming()">قبول</button></div>
-    </div>
-  </div>
-  <div class="modal-overlay" id="modalUserName">
-    <div class="modal">
-      <div class="modal-title">👤 ما اسمك؟</div>
-      <div class="modal-field"><label>الاسم</label><input type="text" id="userNameInput" maxlength="20"></div>
-      <div class="modal-actions" style="grid-template-columns:1fr;"><button class="modal-btn confirm" onclick="saveUserName()">حفظ</button></div>
-    </div>
-  </div>
-  <div class="modal-overlay" id="modalContactPick">
-    <div class="modal">
-      <div class="modal-title">👥 جهة الاتصال</div>
-      <div class="modal-field"><label>الاسم</label><input type="text" id="contactName"></div>
-      <div class="modal-field"><label>رقم الهاتف</label><input type="tel" id="contactPhone"></div>
-      <div class="modal-actions"><button class="modal-btn cancel" onclick="closeModal('modalContactPick')">إلغاء</button><button class="modal-btn confirm" onclick="sendContact()">إرسال</button></div>
-    </div>
-  </div>
-  <input type="file" id="hiddenFileInput" style="display:none;">
+  <div class="modal-overlay" id="modalRoomMenu"><div class="modal"><div class="modal-title">☰ خيارات الغرفة</div><div class="modal-sub">إدارة الغرفة والدردشة</div><button class="modal-menu-item" onclick="openEditRoomName()"><span class="modal-menu-icon">✏️</span><span>تعديل اسم الغرفة</span></button><button class="modal-menu-item" onclick="openEditRoomIcon()"><span class="modal-menu-icon">🎨</span><span>تغيير أيقونة الغرفة</span></button><button class="modal-menu-item danger" onclick="confirmClearChat()"><span class="modal-menu-icon">🗑️</span><span>مسح الدردشة كاملة</span></button><div class="modal-actions" style="grid-template-columns:1fr;margin-top:14px;"><button class="modal-btn cancel" onclick="closeModal('modalRoomMenu')">إغلاق</button></div></div></div>
+  <div class="modal-overlay" id="modalEditWave"><div class="modal"><div class="modal-title">✏️ تعديل اسم الفرقة</div><div class="modal-sub">اكتب الاسم الجديد</div><div class="modal-field"><label>اسم الفرقة</label><input type="text" id="newWaveName" maxlength="30"></div><div class="modal-actions"><button class="modal-btn cancel" onclick="closeModal('modalEditWave')">إلغاء</button><button class="modal-btn confirm" onclick="saveWaveName()">حفظ</button></div></div></div>
+  <div class="modal-overlay" id="modalEditName"><div class="modal"><div class="modal-title">✏️ تعديل اسم الغرفة</div><div class="modal-sub">اكتب الاسم الجديد</div><div class="modal-field"><label>اسم الغرفة</label><input type="text" id="newRoomName" maxlength="30"></div><div class="modal-actions"><button class="modal-btn cancel" onclick="closeModal('modalEditName')">إلغاء</button><button class="modal-btn confirm" onclick="saveRoomName()">حفظ</button></div></div></div>
+  <div class="modal-overlay" id="modalEditIcon"><div class="modal"><div class="modal-title">🎨 تغيير أيقونة الغرفة</div><div class="icon-grid" id="iconGrid"><div class="icon-option" data-icon="💬">💬</div><div class="icon-option" data-icon="📻">📻</div><div class="icon-option" data-icon="📡">📡</div><div class="icon-option" data-icon="🎙️">🎙️</div><div class="icon-option" data-icon="🔊">🔊</div><div class="icon-option" data-icon="📞">📞</div><div class="icon-option" data-icon="🛡️">🛡️</div><div class="icon-option" data-icon="⚡">⚡</div></div><div class="modal-actions" style="grid-template-columns:1fr;margin-top:14px;"><button class="modal-btn cancel" onclick="closeModal('modalEditIcon')">إغلاق</button></div></div></div>
+  <div class="modal-overlay" id="modalClearChat"><div class="modal"><div class="modal-title">🗑️ مسح الدردشة</div><div class="modal-sub">هل أنت متأكد؟ لا يمكن التراجع.</div><div class="modal-actions"><button class="modal-btn cancel" onclick="closeModal('modalClearChat')">إلغاء</button><button class="modal-btn danger" onclick="doClearChat()">مسح</button></div></div></div>
+  <div class="modal-overlay" id="modalAttach"><div class="modal"><div class="modal-title">📎 إرفاق</div><div class="modal-sub">اختر نوع المحتوى</div><div class="attach-grid"><button class="attach-item" onclick="pickCamera()"><span class="attach-icon">📷</span><span>كاميرا</span></button><button class="attach-item" onclick="pickFile('image')"><span class="attach-icon">🖼️</span><span>صورة</span></button><button class="attach-item" onclick="pickFile('video')"><span class="attach-icon">🎬</span><span>فيديو</span></button><button class="attach-item" onclick="pickFile('document')"><span class="attach-icon">📄</span><span>مستند</span></button><button class="attach-item" onclick="pickContact()"><span class="attach-icon">👥</span><span>جهة اتصال</span></button><button class="attach-item" onclick="pickFile('audio')"><span class="attach-icon">🎵</span><span>موسيقى</span></button></div><div class="modal-actions" style="grid-template-columns:1fr;margin-top:14px;"><button class="modal-btn cancel" onclick="closeModal('modalAttach')">إلغاء</button></div></div></div>
+  <div class="modal-overlay" id="modalCreate"><div class="modal"><div class="modal-title">➕ إنشاء غرفة جديدة</div><div class="modal-sub">سيُولَّد رقم غرفة خاص بك تلقائياً</div><div class="modal-field"><label>اسم الغرفة</label><input type="text" id="roomName" maxlength="30"></div><div class="modal-actions"><button class="modal-btn cancel" onclick="closeModal('modalCreate')">إلغاء</button><button class="modal-btn confirm" onclick="createRoom()">إنشاء</button></div></div></div>
+  <div class="modal-overlay" id="modalWave"><div class="modal"><div class="modal-title">📡 إنشاء فرقة</div><div class="modal-sub">سيُولَّد رقم فرقتك الخاص</div><div class="modal-field"><label>اسم الفرقة</label><input type="text" id="waveName" maxlength="30"></div><div class="modal-actions"><button class="modal-btn cancel" onclick="closeModal('modalWave')">إلغاء</button><button class="modal-btn confirm" onclick="createWave()">إنشاء</button></div></div></div>
+  <div class="modal-overlay" id="modalWaveCreated"><div class="modal"><div class="modal-title">✅ تم إنشاء الفرقة</div><div class="code-display"><div class="code-display-label">رقم الفرقة</div><div class="code-display-value" id="createdWaveCode">Q00000</div></div><div class="modal-actions"><button class="modal-btn cancel" onclick="copyWaveCode()">📋 نسخ</button><button class="modal-btn confirm" onclick="closeModal('modalWaveCreated')">تمام</button></div></div></div>
+  <div class="modal-overlay" id="modalRoomCreated"><div class="modal"><div class="modal-title">✅ تم إنشاء الغرفة</div><div class="code-display"><div class="code-display-label">رقم الغرفة</div><div class="code-display-value" id="createdRoomCode">G00000</div></div><div class="modal-actions"><button class="modal-btn cancel" onclick="copyRoomCode()">📋 نسخ</button><button class="modal-btn confirm" onclick="closeModal('modalRoomCreated')">تمام</button></div></div></div>
+  <div class="modal-overlay" id="modalSearch"><div class="modal"><div class="modal-title">🔍 البحث</div><div class="modal-sub" id="searchSubTitle">ابحث برقم</div><div class="modal-field"><label id="searchFieldLabel">الرقم</label><input type="text" id="searchQuery" class="code-input" maxlength="10"></div><div class="modal-actions" style="grid-template-columns:1fr;margin-bottom:14px;"><button class="modal-btn confirm" onclick="doSearch()">🔍 بحث</button></div><div id="searchResults"><div class="no-results"><span class="no-results-icon">🔎</span>اكتب الرقم</div></div><div class="modal-actions" style="grid-template-columns:1fr;margin-top:14px;"><button class="modal-btn cancel" onclick="closeModal('modalSearch')">إغلاق</button></div></div></div>
+  <div class="modal-overlay" id="modalJoinConfirm"><div class="modal"><div class="modal-title">📩 طلب انضمام</div><div class="join-request-info"><div class="join-request-icon">📡</div><div class="join-request-name" id="joinTargetName">—</div><div class="join-request-code" id="joinTargetCode">Q00000</div></div><div class="modal-actions"><button class="modal-btn cancel" onclick="cancelJoin()">إلغاء</button><button class="modal-btn confirm" onclick="confirmJoin()">موافق</button></div></div></div>
+  <div class="modal-overlay" id="modalIncomingRequest"><div class="modal"><div class="modal-title">🔔 طلب انضمام</div><div class="join-request-info"><div class="join-request-icon">👤</div><div class="join-request-name" id="incomingName">—</div><div class="join-request-code" id="incomingCode">—</div></div><div class="modal-actions"><button class="modal-btn danger" onclick="rejectIncoming()">رفض</button><button class="modal-btn confirm" onclick="acceptIncoming()">قبول</button></div></div></div>
+  <div class="modal-overlay" id="modalUserName"><div class="modal"><div class="modal-title">👤 ما اسمك؟</div><div class="modal-field"><label>الاسم</label><input type="text" id="userNameInput" maxlength="20"></div><div class="modal-actions" style="grid-template-columns:1fr;"><button class="modal-btn confirm" onclick="saveUserName()">حفظ</button></div></div></div>
+  <div class="modal-overlay" id="modalContactPick"><div class="modal"><div class="modal-title">👥 جهة الاتصال</div><div class="modal-field"><label>الاسم</label><input type="text" id="contactName"></div><div class="modal-field"><label>رقم الهاتف</label><input type="tel" id="contactPhone"></div><div class="modal-actions"><button class="modal-btn cancel" onclick="closeModal('modalContactPick')">إلغاء</button><button class="modal-btn confirm" onclick="sendContact()">إرسال</button></div></div></div>
 
-  <script>
+  <div class="modal-overlay" id="modalFriendRequests"><div class="modal"><div class="modal-title">👥 طلبات الصداقة</div><div class="modal-sub">الطلبات الواردة والصادرة</div><div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:12px;"><button id="tabIncoming" class="modal-btn confirm" onclick="switchFriendTab('incoming')" style="padding:10px;">📥 واردة</button><button id="tabOutgoing" class="modal-btn cancel" onclick="switchFriendTab('outgoing')" style="padding:10px;">📤 صادرة</button></div><div id="friendRequestsList" style="max-height:320px; overflow-y:auto;"><div class="no-results"><span class="no-results-icon">📭</span>لا توجد طلبات</div></div><div class="modal-actions" style="grid-template-columns:1fr; margin-top:14px;"><button class="modal-btn cancel" onclick="closeModal('modalFriendRequests')">إغلاق</button></div></div></div>
+  <div class="modal-overlay" id="modalFriendIncoming"><div class="modal"><div class="modal-title">👋 طلب صداقة</div><div class="join-request-info"><div class="join-request-icon">👤</div><div class="join-request-name" id="frIncomingName">—</div><div class="join-request-code" id="frIncomingCode">—</div></div><div class="modal-actions"><button class="modal-btn danger" onclick="rejectFriendRequest()">❌ إلغاء</button><button class="modal-btn confirm" onclick="acceptFriendRequest()">✅ موافق</button></div></div></div>
+  <div class="modal-overlay" id="modalFriendSend"><div class="modal"><div class="modal-title">➕ إرسال طلب صداقة</div><div class="modal-sub">ابحث برقم المستخدم</div><div class="modal-field"><label>رقم المستخدم</label><input type="text" id="friendSearchCode" class="code-input" maxlength="10" placeholder="Q#####"></div><div id="friendSearchResults"></div><div class="modal-actions"><button class="modal-btn cancel" onclick="closeModal('modalFriendSend')">إلغاء</button><button class="modal-btn confirm" onclick="searchFriend()">🔍 بحث</button></div></div></div>
+
+  <input type="file" id="hiddenFileInput" style="display:none;">
+    <script>
 const SERVER_URL   = 'https://radio-connect-server.onrender.com';
 const LIVEKIT_URL  = 'wss://radioconnect-8uyh53qc.livekit.cloud';
 
@@ -583,13 +460,19 @@ let menuBusy = false;
 let searchResultUser = null;
 let socket = null;
 
-// المتغيرات الخاصة بالصوت (النسخة الجديدة)
 let livekitRoom = null;
 let waveRoom = null;
 let waveLocalAudioTrack = null;
 let rawMicStream = null;
 let localTestAudio = null;
 let isTalking = false;
+
+function factoryReset() {
+  if (!confirm('⚠️ تحذير: سيتم مسح جميع البيانات. متأكد؟')) return;
+  if (!confirm('متأكد 100%؟ لا يمكن التراجع.')) return;
+  localStorage.clear();
+  window.location.reload();
+}
 
 const PTTEngine = {
   audioCtx: null, beepReady: false,
@@ -630,14 +513,21 @@ const PTTEngine = {
   playEndBeep() { this.playOpenBeep(); }
 };
 
-/* =========================================================
-   محرك الصوت الجديد (الذي يعمل في Tactical)
-   ========================================================= */
+async function disconnectWaveRoom() {
+  try {
+    if (waveLocalAudioTrack && waveRoom) {
+      try { waveRoom.localParticipant.unpublishTrack(waveLocalAudioTrack); waveLocalAudioTrack.stop(); } catch(e){}
+      waveLocalAudioTrack = null;
+    }
+    if (waveRoom) { await waveRoom.disconnect(); waveRoom = null; }
+    document.querySelectorAll('audio[data-lk-track]').forEach(el => el.remove());
+  } catch(e) {}
+}
+
 async function connectWaveChannel() {
   try {
     if (!window.LivekitClient || !currentUser.radCode) return false;
     if (waveRoom && waveRoom.state === "connected") return true;
-
     const tokenRes = await fetch(SERVER_URL + '/api/livekit/token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -645,18 +535,21 @@ async function connectWaveChannel() {
     });
     const tokenData = await tokenRes.json();
     if (!tokenData.token) return false;
-
     waveRoom = new window.LivekitClient.Room();
-    
-    waveRoom.on(window.LivekitClient.RoomEvent.TrackSubscribed, (track) => {
+    waveRoom.on(window.LivekitClient.RoomEvent.TrackSubscribed, (track, pub, participant) => {
       if (track.kind === "audio") {
         const audioElement = track.attach();
+        audioElement.dataset.lkTrack = participant.identity;
         document.body.appendChild(audioElement);
       }
     });
-
-    waveRoom.on(window.LivekitClient.RoomEvent.TrackUnsubscribed, () => {});
-
+    waveRoom.on(window.LivekitClient.RoomEvent.TrackUnsubscribed, (track) => {
+      track.detach().forEach(el => el.remove());
+    });
+    waveRoom.on(window.LivekitClient.RoomEvent.Disconnected, () => {
+      waveRoom = null;
+      if (isTalking) stopTalking();
+    });
     await waveRoom.connect(LIVEKIT_URL, tokenData.token);
     return true;
   } catch (e) {
@@ -668,34 +561,28 @@ async function connectWaveChannel() {
 
 async function onPTTStart() {
   if (isTalking) return;
+  if (!currentUser.waveId) { toast('⚠️ انضم إلى فرقة أولاً', 'error'); return; }
   isTalking = true;
-  
   const pttMain = document.getElementById('pttMain');
   pttMain.classList.add('holding');
   document.body.classList.add('ptt-active');
-
   const statusChip = document.getElementById('waveStatusChip');
   const statusText = document.getElementById('waveStatusText');
   if (statusChip) { statusChip.classList.add('live'); statusChip.classList.remove('disconnected'); }
   if (statusText) statusText.innerHTML = '🟢 يتحدث';
-
   const lcd3 = document.getElementById('lcdLine3');
   if (lcd3) lcd3.textContent = (currentUser.radCode || '—') + ' • TX';
-
   startWaveTimer();
   await PTTEngine.init();
   PTTEngine.playStartBeep();
-
   try {
     rawMicStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
-    
     if (!waveRoom || waveRoom.participants.size === 0) {
       localTestAudio = new Audio();
       localTestAudio.srcObject = rawMicStream;
       localTestAudio.volume = 0.8;
       localTestAudio.play().catch(()=>{});
     }
-
     connectWaveChannel().then(() => {
       if (waveRoom && waveRoom.state === "connected" && rawMicStream) {
         window.LivekitClient.LocalAudioTrack.createTrack(rawMicStream.getAudioTracks()[0]).then(track => {
@@ -726,28 +613,21 @@ function stopTalking() {
     rawMicStream = null;
   }
   isTalking = false;
-  
   const pttMain = document.getElementById('pttMain');
-  pttMain.classList.remove('holding');
+  if (pttMain) pttMain.classList.remove('holding');
   document.body.classList.remove('ptt-active');
-
   const statusChip = document.getElementById('waveStatusChip');
   const statusText = document.getElementById('waveStatusText');
   if (statusChip) { statusChip.classList.remove('live'); statusChip.classList.add('disconnected'); }
   if (statusText) statusText.innerHTML = '🔴 غير متصل';
-
   const lcd3 = document.getElementById('lcdLine3');
   if (lcd3) lcd3.textContent = (currentUser.radCode || '—') + ' • RX';
-
   stopWaveTimer();
   if (socket && currentUser.waveId) {
     socket.emit('wave_broadcast_stop', { waveId: currentUser.waveId, deviceId: currentUser.id });
   }
 }
 
-/* =========================================================
-   LiveVoice (للغرف فقط)
-   ========================================================= */
 const LiveVoice = {
   room: null, connected: false,
   async connect(waveId) {
@@ -765,17 +645,17 @@ const LiveVoice = {
       this.connected = true;
       return true;
     } catch (e) { return false; }
+  },
+  async disconnect() {
+    try { if (this.room) { await this.room.disconnect(); this.room = null; } } catch (e) {}
+    this.connected = false;
   }
 };
 
-// ربط حدث الضغط والإفلات لزر PTT الرئيسي
 const pttMainBtn = document.getElementById('pttMain');
 pttMainBtn.addEventListener('pointerdown', (e) => { e.preventDefault(); onPTTStart(); });
 pttMainBtn.addEventListener('pointerup', (e) => { e.preventDefault(); stopTalking(); });
 pttMainBtn.addEventListener('pointercancel', (e) => { e.preventDefault(); stopTalking(); });
-pttMainBtn.addEventListener('touchstart', (e) => { e.preventDefault(); onPTTStart(); }, { passive: false });
-pttMainBtn.addEventListener('touchend', (e) => { e.preventDefault(); stopTalking(); }, { passive: false });
-
 
 function initSocket() {
   if (typeof io === 'undefined') return;
@@ -831,6 +711,23 @@ function initSocket() {
   });
 
   socket.on('conversation_updated', () => refreshChatList());
+
+  socket.on('friend_request_received', (data) => handleIncomingFriendRequest(data));
+
+  socket.on('friend_accepted', (data) => {
+    toast('✅ ' + (data.byName || 'مستخدم') + ' قبل طلب صداقتك', 'success');
+    friendRequests.outgoing = friendRequests.outgoing.filter(r => r.deviceId !== data.byDeviceId);
+    if (!friendRequests.friends.find(f => f.deviceId === data.byDeviceId)) {
+      friendRequests.friends.push({ name: data.byName, code: data.byCode, deviceId: data.byDeviceId, addedAt: Date.now() });
+    }
+    saveFriendRequests(); updateFriendBadge();
+  });
+
+  socket.on('friend_rejected', (data) => {
+    toast('❌ تم رفض طلب الصداقة', 'error');
+    friendRequests.outgoing = friendRequests.outgoing.filter(r => r.deviceId !== data.byDeviceId);
+    saveFriendRequests();
+  });
 }
 
 async function registerUser() {
@@ -853,15 +750,33 @@ async function registerUser() {
 }
 
 function askUserNameIfNeeded() { if (!currentUser.name) openModal('modalUserName'); }
+
 function saveUserName() {
   const v = document.getElementById('userNameInput').value.trim();
   if (!v) { toast('⚠️ أدخل اسماً', 'error'); return; }
   currentUser.name = v;
   localStorage.setItem('rc_user_name', v);
   closeModal('modalUserName');
-  registerUser();
-  if (socket) socket.emit('register_device', { deviceId: currentUser.id, userName: v });
-  toast('✅ مرحباً ' + v, 'success');
+  registerUser().then(() => {
+    if (socket) socket.emit('register_device', { deviceId: currentUser.id, userName: v });
+    toast('✅ مرحباً ' + v, 'success');
+  });
+}
+
+function addWaveToHistory(waveId, waveName) {
+  let list = JSON.parse(localStorage.getItem('rc_user_waves_list') || '[]');
+  if (!list.find(w => w.id === waveId)) {
+    list.push({ id: waveId, name: waveName });
+    localStorage.setItem('rc_user_waves_list', JSON.stringify(list));
+  }
+}
+
+function addRoomToHistory(roomCode, roomName) {
+  let list = JSON.parse(localStorage.getItem('rc_user_rooms_list') || '[]');
+  if (!list.find(r => r.code === roomCode)) {
+    list.push({ code: roomCode, name: roomName });
+    localStorage.setItem('rc_user_rooms_list', JSON.stringify(list));
+  }
 }
 
 async function createWave() {
@@ -874,23 +789,20 @@ async function createWave() {
     });
     const data = await res.json();
     if (!data.success) throw new Error(data.error);
-
     currentUser.waveId = data.waveId; currentUser.waveCode = data.waveId;
     currentUser.waveName = data.waveName; currentUser.isWaveOwner = true;
-
     document.getElementById('createdWaveCode').textContent = data.waveId;
     document.getElementById('waveName').value = '';
     closeModal('modalWave'); openModal('modalWaveCreated');
-
     const el1 = document.getElementById('waveCodeChip'); if (el1) el1.innerHTML = data.waveId + ' <span style="font-size:12px;">🔑</span>';
     const el2 = document.getElementById('waveCodeValue'); if (el2) el2.textContent = data.waveId;
     const el3 = document.getElementById('waveNameValue'); if (el3) el3.textContent = name;
     const el4 = document.getElementById('waveNameLabel'); if (el4) el4.textContent = name;
     const el5 = document.getElementById('lcdLine3'); if (el5) el5.textContent = data.waveId + ' • TX';
-
     localStorage.setItem('rc_saved_wave_id', data.waveId);
     localStorage.setItem('rc_saved_wave_name', name);
-
+    localStorage.setItem('rc_is_wave_owner', 'true');
+    addWaveToHistory(data.waveId, name);
     await PTTEngine.init(); PTTEngine.playStartBeep();
     await LiveVoice.connect(data.waveId);
     if (socket) socket.emit('wave_join', { waveId: data.waveId, deviceId: currentUser.id, userName: currentUser.name });
@@ -900,6 +812,8 @@ async function createWave() {
 
 async function joinWaveAsMember(waveId) {
   currentUser.waveId = waveId; currentUser.waveCode = waveId;
+  currentUser.isWaveOwner = false;
+  localStorage.setItem('rc_is_wave_owner', 'false');
   try {
     const res = await fetch(SERVER_URL + '/api/waves/' + waveId);
     const data = await res.json();
@@ -907,17 +821,15 @@ async function joinWaveAsMember(waveId) {
       currentUser.waveName = data.waveName;
       const el1 = document.getElementById('waveNameValue'); if (el1) el1.textContent = data.waveName;
       const el2 = document.getElementById('waveNameLabel'); if (el2) el2.textContent = data.waveName;
+      addWaveToHistory(waveId, data.waveName);
     }
     if (data.members) renderWaveMembers(data.members);
   } catch (e) {}
-
   const el1 = document.getElementById('waveCodeChip'); if (el1) el1.innerHTML = waveId + ' <span style="font-size:12px;">🔑</span>';
   const el2 = document.getElementById('waveCodeValue'); if (el2) el2.textContent = waveId;
   const el3 = document.getElementById('lcdLine3'); if (el3) el3.textContent = waveId + ' • RX';
-
   localStorage.setItem('rc_saved_wave_id', waveId);
   localStorage.setItem('rc_saved_wave_name', currentUser.waveName || '');
-
   await LiveVoice.connect(waveId);
   if (socket) socket.emit('wave_join', { waveId, deviceId: currentUser.id, userName: currentUser.name });
   toast('✅ انضممت إلى الفرقة', 'success');
@@ -927,21 +839,12 @@ function doSearch() {
   const q = document.getElementById('searchQuery').value.trim().toUpperCase();
   const res = document.getElementById('searchResults');
   if (!q) { res.innerHTML = '<div class="no-results"><span class="no-results-icon">⚠️</span>أدخل الرقم</div>'; return; }
-
   fetch(SERVER_URL + '/api/waves/' + q)
     .then(r => r.json())
     .then(data => {
       if (data.waveId) {
         searchResultUser = { name: data.waveName || 'فرقة', code: data.waveId, type: 'wave' };
-        res.innerHTML = `
-          <div class="search-result-card" onclick="askJoinWave()">
-            <div class="search-result-icon">📡</div>
-            <div class="search-result-info">
-              <div class="search-result-name">${searchResultUser.name}</div>
-              <div class="search-result-code">${searchResultUser.code} • ${data.totalMembers || 0} أعضاء</div>
-            </div>
-            <div style="color:var(--cyan)">←</div>
-          </div>`;
+        res.innerHTML = `<div class="search-result-card" onclick="askJoinWave()"><div class="search-result-icon">📡</div><div class="search-result-info"><div class="search-result-name">${searchResultUser.name}</div><div class="search-result-code">${searchResultUser.code} • ${data.totalMembers || 0} أعضاء</div></div><div style="color:var(--cyan)">←</div></div>`;
         return;
       }
       return fetch(SERVER_URL + '/api/users/search/' + q)
@@ -949,15 +852,7 @@ function doSearch() {
         .then(user => {
           if (user.deviceId) {
             searchResultUser = { name: user.userName, code: user.radCode, deviceId: user.deviceId, type: 'user' };
-            res.innerHTML = `
-              <div class="search-result-card" onclick="startUserChat()">
-                <div class="search-result-icon">👤</div>
-                <div class="search-result-info">
-                  <div class="search-result-name">${searchResultUser.name}</div>
-                  <div class="search-result-code">${searchResultUser.code}</div>
-                </div>
-                <div style="color:var(--cyan)">←</div>
-              </div>`;
+            res.innerHTML = `<div class="search-result-card" onclick="startUserChat()"><div class="search-result-icon">👤</div><div class="search-result-info"><div class="search-result-name">${searchResultUser.name}</div><div class="search-result-code">${searchResultUser.code}</div></div><div style="color:var(--cyan)">←</div></div>`;
           } else {
             res.innerHTML = '<div class="no-results"><span class="no-results-icon">❌</span>لا نتائج</div>';
           }
@@ -976,9 +871,7 @@ function askJoinWave() {
 function confirmJoin() {
   if (!searchResultUser) return;
   closeModal('modalJoinConfirm');
-  if (socket) socket.emit('wave_join_request', {
-    waveId: searchResultUser.code, fromDeviceId: currentUser.id, fromUserName: currentUser.name
-  });
+  if (socket) socket.emit('wave_join_request', { waveId: searchResultUser.code, fromDeviceId: currentUser.id, fromUserName: currentUser.name });
 }
 
 function cancelJoin() { closeModal('modalJoinConfirm'); openModal('modalSearch'); }
@@ -1000,15 +893,7 @@ function renderWaveMembers(members) {
   if (!members) return;
   const dd = document.getElementById('membersDropdown');
   if (dd && dd.classList.contains('show')) {
-    dd.innerHTML = `
-      <div class="members-dropdown-title">👥 المشتركون (${members.length})</div>
-      ${members.map(m => `
-        <div class="members-dropdown-item">
-          <span>${m.name} ${m.id === currentUser.id ? '(أنت)' : ''} ${m.isOwner ? '👑' : ''}</span>
-          <span class="${m.online ? 'status-active' : 'status-inactive'}">${m.online ? '🟢 نشط' : '🔴 غير نشط'}</span>
-        </div>
-      `).join('')}
-    `;
+    dd.innerHTML = `<div class="members-dropdown-title">👥 المشتركون (${members.length})</div>${members.map(m => `<div class="members-dropdown-item"><span>${m.name} ${m.id === currentUser.id ? '(أنت)' : ''} ${m.isOwner ? '👑' : ''}</span><span class="${m.online ? 'status-active' : 'status-inactive'}">${m.online ? '🟢 نشط' : '🔴 غير نشط'}</span></div>`).join('')}`;
   }
 }
 
@@ -1030,22 +915,15 @@ function switchTab(tabName) {
   if (screen) screen.classList.add('active');
   const tabBtn = document.querySelector(`.tab[data-tab="${tabName}"]`);
   if (tabBtn) tabBtn.classList.add('active');
-
   const chatBar = document.getElementById('chatInputBar');
   const bottomInfo = document.getElementById('bottomInfo');
-
   if (tabName === 'chat') {
-    chatBar.classList.add('active');
-    bottomInfo.style.display = 'none';
+    chatBar.classList.add('active'); bottomInfo.style.display = 'none';
   } else if (tabName === 'log') {
-    chatBar.classList.add('active');
-    bottomInfo.style.display = 'none';
-    refreshChatList();
+    chatBar.classList.add('active'); bottomInfo.style.display = 'none'; refreshChatList();
   } else {
-    chatBar.classList.remove('active');
-    bottomInfo.style.display = 'block';
+    chatBar.classList.remove('active'); bottomInfo.style.display = 'block';
   }
-
   if (sideMenu && sideMenu.classList.contains('open')) closeSideMenu();
   window.scrollTo(0, 0);
 }
@@ -1053,11 +931,7 @@ function switchTab(tabName) {
 let toastTimer;
 function toast(msg, type = '') {
   let el = document.getElementById('toast');
-  if (!el) {
-    el = document.createElement('div');
-    el.className = 'toast'; el.id = 'toast';
-    document.body.appendChild(el);
-  }
+  if (!el) { el = document.createElement('div'); el.className = 'toast'; el.id = 'toast'; document.body.appendChild(el); }
   el.textContent = msg;
   el.className = 'toast ' + type;
   el.classList.add('show');
@@ -1065,20 +939,11 @@ function toast(msg, type = '') {
   toastTimer = setTimeout(() => el.classList.remove('show'), 2400);
 }
 
-function openModal(id) {
-  const el = document.getElementById(id);
-  if (el) el.classList.add('show');
-  closeSideMenu();
-}
-function closeModal(id) {
-  const el = document.getElementById(id);
-  if (el) el.classList.remove('show');
-}
+function openModal(id) { const el = document.getElementById(id); if (el) el.classList.add('show'); closeSideMenu(); }
+function closeModal(id) { const el = document.getElementById(id); if (el) el.classList.remove('show'); }
 
 document.querySelectorAll('.modal-overlay').forEach(overlay => {
-  overlay.addEventListener('click', (e) => {
-    if (e.target === overlay) overlay.classList.remove('show');
-  });
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.classList.remove('show'); });
 });
 
 const sideMenu = document.getElementById('sideMenu');
@@ -1094,26 +959,20 @@ function openSideMenu() {
   if (activeId === 'screen-radio') {
     title.textContent = '📡 قائمة الفرقة';
     content.innerHTML = `
-      <button class="menu-item primary" onclick="closeSideMenu();openCreateWave()">
-        <span class="menu-icon">➕</span>
-        <span class="menu-text"><span class="menu-label">إضافة فرقة</span><span class="menu-desc">إنشاء موجة لاسلكية جديدة</span></span>
-      </button>
-      <button class="menu-item" onclick="closeSideMenu();openSearchWave()">
-        <span class="menu-icon">🔍</span>
-        <span class="menu-text"><span class="menu-label">البحث عن فرقة</span><span class="menu-desc">ابحث برقم الفرقة</span></span>
-      </button>
-      <button class="menu-item" onclick="closeSideMenu();saveMyWave()">
-        <span class="menu-icon">💾</span>
-        <span class="menu-text"><span class="menu-label">حفظ الفرقة</span><span class="menu-desc">استرجعها تلقائياً عند الدخول</span></span>
-      </button>
-      <button class="menu-item" onclick="closeSideMenu();openEditWaveName()">
-        <span class="menu-icon">✏️</span>
-        <span class="menu-text"><span class="menu-label">تعديل اسم الفرقة</span><span class="menu-desc">غيّر اسم فرقتك</span></span>
-      </button>
-      <button class="menu-item" onclick="closeSideMenu();leaveWave()">
-        <span class="menu-icon">🗑️</span>
-        <span class="menu-text"><span class="menu-label">مسح الفرقة</span><span class="menu-desc">مغادرة الفرقة الحالية</span></span>
-      </button>
+      <div style="background:rgba(0,229,255,.05); border:1px solid rgba(0,229,255,.3); border-radius:12px; padding:12px; margin-bottom:12px; text-align:center;">
+        <div style="font-size:11px; color:var(--text-dim); margin-bottom:4px;">📛 اسم الفرقة</div>
+        <div style="font-size:14px; font-weight:800; color:var(--text); margin-bottom:10px;">${currentUser.waveName || '—'}</div>
+        <div style="font-size:11px; color:var(--text-dim); margin-bottom:4px;">🔑 رقم الفرقة</div>
+        <div onclick="copyMyWaveCode()" style="font-size:16px; font-weight:900; color:var(--cyan); font-family:'Courier New',monospace; letter-spacing:2px; cursor:pointer; padding:6px; border-radius:8px; background:rgba(0,229,255,.1); border:1px solid rgba(0,229,255,.4);">${currentUser.waveCode || '—'} 📋</div>
+      </div>
+      <button class="menu-item primary" onclick="closeSideMenu();openCreateWave()"><span class="menu-icon">➕</span><span class="menu-text"><span class="menu-label">إنشاء فرقة</span><span class="menu-desc">إنشاء موجة لاسلكية جديدة</span></span></button>
+      <button class="menu-item" onclick="closeSideMenu();openSearchWave()"><span class="menu-icon">🔍</span><span class="menu-text"><span class="menu-label">البحث عن فرقة</span><span class="menu-desc">ابحث برقم الفرقة</span></span></button>
+      <button class="menu-item" onclick="closeSideMenu();openOperationsList()"><span class="menu-icon">📋</span><span class="menu-text"><span class="menu-label">قائمة العمليات</span><span class="menu-desc">الفرق التي أنت مشترك فيها</span></span></button>
+      <button class="menu-item" onclick="closeSideMenu();openFriendRequests()"><span class="menu-icon">👥</span><span class="menu-text"><span class="menu-label">طلبات الصداقة</span><span class="menu-desc">الواردة والصادرة</span></span></button>
+      <button class="menu-item" onclick="closeSideMenu();openSendFriendRequest()"><span class="menu-icon">➕</span><span class="menu-text"><span class="menu-label">إرسال طلب صداقة</span><span class="menu-desc">ابحث برقم المستخدم</span></span></button>
+      <button class="menu-item" onclick="closeSideMenu();saveMyWave()"><span class="menu-icon">💾</span><span class="menu-text"><span class="menu-label">حفظ الفرقة</span><span class="menu-desc">استرجعها تلقائياً عند الدخول</span></span></button>
+      <button class="menu-item" onclick="closeSideMenu();openEditWaveName()"><span class="menu-icon">✏️</span><span class="menu-text"><span class="menu-label">تعديل اسم الفرقة</span><span class="menu-desc">غيّر اسم فرقتك</span></span></button>
+      <button class="menu-item" onclick="closeSideMenu();leaveWave()"><span class="menu-icon">🗑️</span><span class="menu-text"><span class="menu-label">مسح الفرقة</span><span class="menu-desc">مغادرة الفرقة الحالية</span></span></button>
     `;
   } else if (activeId === 'screen-log' || activeId === 'screen-chat') {
     title.textContent = '💬 قائمة الغرفة';
@@ -1122,45 +981,27 @@ function openSideMenu() {
         <div style="font-size:11px; color:var(--text-dim); margin-bottom:4px;">📛 اسم الغرفة</div>
         <div style="font-size:14px; font-weight:800; color:var(--text); margin-bottom:10px;">${currentUser.roomName || '—'}</div>
         <div style="font-size:11px; color:var(--text-dim); margin-bottom:4px;">🔑 رقم الغرفة</div>
-        <div onclick="copyMyRoomCode()" style="font-size:16px; font-weight:900; color:var(--cyan); font-family:'Courier New',monospace; letter-spacing:2px; cursor:pointer; padding:6px; border-radius:8px; background:rgba(0,229,255,.1); border:1px solid rgba(0,229,255,.4);">
-          ${currentUser.roomCode || '—'} 📋
-        </div>
+        <div onclick="copyMyRoomCode()" style="font-size:16px; font-weight:900; color:var(--cyan); font-family:'Courier New',monospace; letter-spacing:2px; cursor:pointer; padding:6px; border-radius:8px; background:rgba(0,229,255,.1); border:1px solid rgba(0,229,255,.4);">${currentUser.roomCode || '—'} 📋</div>
       </div>
-      <button class="menu-item primary" onclick="closeSideMenu();openCreateRoom()">
-        <span class="menu-icon">➕</span>
-        <span class="menu-text"><span class="menu-label">إضافة غرفة</span><span class="menu-desc">إنشاء غرفة دردشة جديدة</span></span>
-      </button>
-      <button class="menu-item" onclick="closeSideMenu();openSearchUser()">
-        <span class="menu-icon">🔍</span>
-        <span class="menu-text"><span class="menu-label">البحث عن غرفة</span><span class="menu-desc">ابحث برقم المستخدم</span></span>
-      </button>
-      <button class="menu-item" onclick="closeSideMenu();saveMyRoom()">
-        <span class="menu-icon">💾</span>
-        <span class="menu-text"><span class="menu-label">حفظ الغرفة</span><span class="menu-desc">استرجعها تلقائياً عند الدخول</span></span>
-      </button>
-      <button class="menu-item" onclick="closeSideMenu();openEditRoomName()">
-        <span class="menu-icon">✏️</span>
-        <span class="menu-text"><span class="menu-label">تعديل اسم الغرفة</span><span class="menu-desc">غيّر اسم غرفتك</span></span>
-      </button>
-      <button class="menu-item" onclick="closeSideMenu();confirmClearChat()">
-        <span class="menu-icon">🗑️</span>
-        <span class="menu-text"><span class="menu-label">مسح المحادثة</span><span class="menu-desc">حذف كل الرسائل</span></span>
-      </button>
+      <button class="menu-item primary" onclick="closeSideMenu();openCreateRoom()"><span class="menu-icon">➕</span><span class="menu-text"><span class="menu-label">إنشاء غرفة</span><span class="menu-desc">إنشاء غرفة دردشة جديدة</span></span></button>
+      <button class="menu-item" onclick="closeSideMenu();openSearchUser()"><span class="menu-icon">🔍</span><span class="menu-text"><span class="menu-label">البحث عن مستخدم</span><span class="menu-desc">ابحث برقم المستخدم لبدء محادثة</span></span></button>
+      <button class="menu-item" onclick="closeSideMenu();openOperationsList()"><span class="menu-icon">📋</span><span class="menu-text"><span class="menu-label">قائمة العمليات</span><span class="menu-desc">الغرف التي أنت مشترك فيها</span></span></button>
+      <button class="menu-item" onclick="closeSideMenu();openFriendRequests()"><span class="menu-icon">👥</span><span class="menu-text"><span class="menu-label">طلبات الصداقة</span><span class="menu-desc">الواردة والصادرة</span></span></button>
+      <button class="menu-item" onclick="closeSideMenu();openSendFriendRequest()"><span class="menu-icon">➕</span><span class="menu-text"><span class="menu-label">إرسال طلب صداقة</span><span class="menu-desc">ابحث برقم المستخدم</span></span></button>
+      <button class="menu-item" onclick="closeSideMenu();saveMyRoom()"><span class="menu-icon">💾</span><span class="menu-text"><span class="menu-label">حفظ الغرفة</span><span class="menu-desc">استرجعها تلقائياً عند الدخول</span></span></button>
+      <button class="menu-item" onclick="closeSideMenu();openEditRoomName()"><span class="menu-icon">✏️</span><span class="menu-text"><span class="menu-label">تعديل اسم الغرفة</span><span class="menu-desc">غيّر اسم غرفتك</span></span></button>
+      <button class="menu-item" onclick="closeSideMenu();confirmClearChat()"><span class="menu-icon">🧹</span><span class="menu-text"><span class="menu-label">مسح المحادثة</span><span class="menu-desc">حذف الرسائل فقط</span></span></button>
+      <button class="menu-item danger" onclick="closeSideMenu();deleteRoomPermanently()"><span class="menu-icon">🗑️</span><span class="menu-text"><span class="menu-label">حذف الغرفة نهائياً</span><span class="menu-desc">مسح الغرفة من السجل</span></span></button>
     `;
   } else {
     title.textContent = '⚙️ الإعدادات السريعة';
     content.innerHTML = `
-      <button class="menu-item" onclick="closeSideMenu();openSearchUser()">
-        <span class="menu-icon">🔍</span>
-        <span class="menu-text"><span class="menu-label">البحث</span><span class="menu-desc">ابحث عن مستخدم</span></span>
-      </button>
-      <button class="menu-item" onclick="closeSideMenu();testCall()">
-        <span class="menu-icon">🔔</span>
-        <span class="menu-text"><span class="menu-label">اختبار النداء</span><span class="menu-desc">تجربة صوت البيب</span></span>
-      </button>
+      <button class="menu-item" onclick="closeSideMenu();openSearchUser()"><span class="menu-icon">🔍</span><span class="menu-text"><span class="menu-label">البحث</span><span class="menu-desc">ابحث عن مستخدم</span></span></button>
+      <button class="menu-item" onclick="closeSideMenu();openFriendRequests()"><span class="menu-icon">👥</span><span class="menu-text"><span class="menu-label">طلبات الصداقة</span><span class="menu-desc">الواردة والصادرة</span></span></button>
+      <button class="menu-item" onclick="closeSideMenu();openSendFriendRequest()"><span class="menu-icon">➕</span><span class="menu-text"><span class="menu-label">إرسال طلب صداقة</span><span class="menu-desc">ابحث برقم المستخدم</span></span></button>
+      <button class="menu-item" onclick="closeSideMenu();testCall()"><span class="menu-icon">🔔</span><span class="menu-text"><span class="menu-label">اختبار النداء</span><span class="menu-desc">تجربة صوت البيب</span></span></button>
     `;
   }
-
   sideMenu.classList.add('open');
   menuBackdrop.classList.add('show');
   menuToggle.classList.add('open');
@@ -1204,112 +1045,24 @@ function stopWaveTimer() {
   if (el) el.textContent = '00:00';
 }
 
-async function onPTTStart() {
-  if (isTalking) return;
-  isTalking = true;
-  
-  const pttMain = document.getElementById('pttMain');
-  pttMain.classList.add('holding');
-  document.body.classList.add('ptt-active');
-
-  const statusChip = document.getElementById('waveStatusChip');
-  const statusText = document.getElementById('waveStatusText');
-  if (statusChip) { statusChip.classList.add('live'); statusChip.classList.remove('disconnected'); }
-  if (statusText) statusText.innerHTML = '🟢 يتحدث';
-
-  const lcd3 = document.getElementById('lcdLine3');
-  if (lcd3) lcd3.textContent = (currentUser.radCode || '—') + ' • TX';
-
-  startWaveTimer();
-  await PTTEngine.init();
-  PTTEngine.playStartBeep();
-
-  try {
-    rawMicStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
-    
-    if (!waveRoom || waveRoom.participants.size === 0) {
-      localTestAudio = new Audio();
-      localTestAudio.srcObject = rawMicStream;
-      localTestAudio.volume = 0.8;
-      localTestAudio.play().catch(()=>{});
-    }
-
-    connectWaveChannel().then(() => {
-      if (waveRoom && waveRoom.state === "connected" && rawMicStream) {
-        window.LivekitClient.LocalAudioTrack.createTrack(rawMicStream.getAudioTracks()[0]).then(track => {
-          waveLocalAudioTrack = track;
-          waveRoom.localParticipant.publishTrack(waveLocalAudioTrack);
-          waveLocalAudioTrack.enable();
-        });
-      }
-    });
-  } catch (err) {
-    toast("⚠️ تعذر تشغيل الميكروفون");
-    stopTalking();
-  }
-}
-
-function stopTalking() {
-  if (isTalking) PTTEngine.playEndBeep();
-  if (localTestAudio) {
-    try { localTestAudio.pause(); localTestAudio.srcObject = null; } catch (e) {}
-    localTestAudio = null;
-  }
-  if (waveLocalAudioTrack && waveRoom) {
-    try { waveRoom.localParticipant.unpublishTrack(waveLocalAudioTrack); waveLocalAudioTrack.stop(); } catch (e) {}
-    waveLocalAudioTrack = null;
-  }
-  if (rawMicStream) {
-    rawMicStream.getTracks().forEach(t => t.stop());
-    rawMicStream = null;
-  }
-  isTalking = false;
-  
-  const pttMain = document.getElementById('pttMain');
-  pttMain.classList.remove('holding');
-  document.body.classList.remove('ptt-active');
-
-  const statusChip = document.getElementById('waveStatusChip');
-  const statusText = document.getElementById('waveStatusText');
-  if (statusChip) { statusChip.classList.remove('live'); statusChip.classList.add('disconnected'); }
-  if (statusText) statusText.innerHTML = '🔴 غير متصل';
-
-  const lcd3 = document.getElementById('lcdLine3');
-  if (lcd3) lcd3.textContent = (currentUser.radCode || '—') + ' • RX';
-
-  stopWaveTimer();
-  if (socket && currentUser.waveId) {
-    socket.emit('wave_broadcast_stop', { waveId: currentUser.waveId, deviceId: currentUser.id });
-  }
-}
-
 function openCreateWave() { openModal('modalWave'); }
-function openEditWaveName() {
-  document.getElementById('newWaveName').value = currentUser.waveName || '';
-  openModal('modalEditWave');
-}
+function openEditWaveName() { document.getElementById('newWaveName').value = currentUser.waveName || ''; openModal('modalEditWave'); }
+
 function openSearchWave() {
   document.getElementById('searchSubTitle').textContent = 'ابحث برقم الفرقة (Q#####)';
   document.getElementById('searchFieldLabel').textContent = 'رقم الفرقة';
   document.getElementById('searchQuery').placeholder = 'Q#####';
   document.getElementById('searchQuery').value = '';
-  document.getElementById('searchResults').innerHTML = `
-    <div class="no-results">
-      <span class="no-results-icon">🔎</span>
-      اكتب رقم الفرقة واضغط بحث
-    </div>`;
+  document.getElementById('searchResults').innerHTML = '<div class="no-results"><span class="no-results-icon">🔎</span>اكتب رقم الفرقة واضغط بحث</div>';
   openModal('modalSearch');
 }
+
 function openSearchUser() {
-  document.getElementById('searchSubTitle').textContent = 'ابحث برقم المستخدم أو الغرفة';
-  document.getElementById('searchFieldLabel').textContent = 'رقم المستخدم / الغرفة';
-  document.getElementById('searchQuery').placeholder = 'Q##### / G#####';
+  document.getElementById('searchSubTitle').textContent = 'ابحث برقم المستخدم';
+  document.getElementById('searchFieldLabel').textContent = 'رقم المستخدم';
+  document.getElementById('searchQuery').placeholder = 'Q#####';
   document.getElementById('searchQuery').value = '';
-  document.getElementById('searchResults').innerHTML = `
-    <div class="no-results">
-      <span class="no-results-icon">🔎</span>
-      اكتب الرقم واضغط بحث
-    </div>`;
+  document.getElementById('searchResults').innerHTML = '<div class="no-results"><span class="no-results-icon">🔎</span>اكتب الرقم واضغط بحث</div>';
   openModal('modalSearch');
 }
 
@@ -1347,10 +1100,12 @@ async function leaveWave() {
   if (!currentUser.waveId) { toast('⚠️ لا توجد فرقة', 'error'); return; }
   if (!confirm('هل تريد مغادرة الفرقة؟')) return;
   if (socket) socket.emit('wave_leave', { waveId: currentUser.waveId, deviceId: currentUser.id });
+  await disconnectWaveRoom();
   await LiveVoice.disconnect();
   currentUser.waveId = null; currentUser.waveCode = null; currentUser.isWaveOwner = false;
   localStorage.removeItem('rc_saved_wave_id');
   localStorage.removeItem('rc_saved_wave_name');
+  localStorage.removeItem('rc_is_wave_owner');
   const el1 = document.getElementById('waveCodeChip');
   if (el1) el1.innerHTML = (currentUser.radCode || 'Q00000') + ' <span style="font-size:12px;">🔑</span>';
   const statusText = document.getElementById('waveStatusText');
@@ -1366,27 +1121,15 @@ async function refreshChatList() {
     const data = await res.json();
     const list = document.getElementById('chatListContainer');
     const empty = document.getElementById('emptyRoom');
-
     if (!data.conversations || data.conversations.length === 0) {
-      list.innerHTML = '';
-      empty.style.display = 'flex';
-      return;
+      list.innerHTML = ''; empty.style.display = 'flex'; return;
     }
     empty.style.display = 'none';
-
     list.innerHTML = data.conversations.map(c => {
       const initial = (c.otherUser.userName || '?').charAt(0);
       const lastText = c.lastMessage ? (c.lastMessage.text || '') : 'لا رسائل';
       const timeStr = c.lastMessageAt ? new Date(c.lastMessageAt).toLocaleTimeString('ar', { hour: '2-digit', minute: '2-digit' }) : '';
-      return `
-        <div class="chat-list-item" onclick="openChatWith('${c.otherUser.deviceId}', '${(c.otherUser.userName || '').replace(/'/g, "")}', '${c.conversationId}')">
-          <div class="chat-list-avatar">${initial}</div>
-          <div class="chat-list-info">
-            <div class="chat-list-name">${c.otherUser.userName}</div>
-            <div class="chat-list-last">${lastText}</div>
-          </div>
-          <div class="chat-list-time">${timeStr}</div>
-        </div>`;
+      return `<div class="chat-list-item" onclick="openChatWith('${c.otherUser.deviceId}', '${(c.otherUser.userName || '').replace(/'/g, "")}', '${c.conversationId}')"><div class="chat-list-avatar">${initial}</div><div class="chat-list-info"><div class="chat-list-name">${c.otherUser.userName}</div><div class="chat-list-last">${lastText}</div></div><div class="chat-list-time">${timeStr}</div></div>`;
     }).join('');
   } catch (e) {}
 }
@@ -1410,11 +1153,9 @@ async function openChatWith(otherDeviceId, otherName, convId) {
   currentUser.currentChatWith = otherDeviceId;
   document.getElementById('chatWithName').textContent = otherName;
   document.getElementById('chatWithCode').textContent = otherDeviceId;
-
   switchTab('chat');
   const bar = document.getElementById('chatInputBar');
   if (bar) bar.classList.add('active');
-
   if (socket) socket.emit('join_conversation', { conversationId: convId });
   document.getElementById('chatMessages').innerHTML = '';
   try {
@@ -1437,57 +1178,23 @@ function addChatMessage(msg, direction, scroll = true) {
   const container = document.getElementById('chatMessages');
   const div = document.createElement('div');
   div.className = 'msg msg-' + direction;
-
   const time = msg.time ? new Date(msg.time).toLocaleTimeString('ar', { hour: '2-digit', minute: '2-digit' }) : '';
   const senderName = direction === 'out' ? (currentUser.name || 'أنا') : (msg.senderName || '');
-
   let bodyHtml = '';
-
   if (msg.type === 'voice' && msg.url) {
-    bodyHtml = `
-      <div class="voice-msg">
-        <button class="play-btn">▶</button>
-        <div class="waveform">
-          <audio src="${msg.url}" preload="auto"></audio>
-          <span style="height:10px"></span><span style="height:18px"></span>
-          <span style="height:14px"></span><span style="height:22px"></span>
-          <span style="height:12px"></span>
-        </div>
-      </div>
-      <div class="voice-meta"><span>${(msg.duration || 0).toFixed(1)}s</span><span>${time}</span></div>`;
+    bodyHtml = `<div class="voice-msg"><button class="play-btn">▶</button><div class="waveform"><audio src="${msg.url}" preload="auto"></audio><span style="height:10px"></span><span style="height:18px"></span><span style="height:14px"></span><span style="height:22px"></span><span style="height:12px"></span></div></div><div class="voice-meta"><span>${(msg.duration || 0).toFixed(1)}s</span><span>${time}</span></div>`;
   } else if (msg.type === 'image' && msg.url) {
     bodyHtml = `<img src="${msg.url}" class="attachment-preview-img" onclick="window.open('${msg.url}','_blank')"><div class="voice-meta"><span>${time}</span></div>`;
   } else if (msg.type === 'video' && msg.url) {
     bodyHtml = `<video src="${msg.url}" class="attachment-preview-video" controls></video><div class="voice-meta"><span>${time}</span></div>`;
   } else if (msg.type === 'file' && msg.url) {
-    bodyHtml = `
-      <div class="attach-msg">
-        <span class="attach-msg-icon">📄</span>
-        <div class="attach-msg-info">
-          <div class="attach-msg-name">${msg.fileName || 'ملف'}</div>
-          <div class="attach-msg-type">اضغط للتحميل</div>
-        </div>
-      </div>
-      <div class="voice-meta"><span><a href="${msg.url}" download="${msg.fileName || ''}" style="color:var(--cyan)">تحميل</a></span><span>${time}</span></div>`;
+    bodyHtml = `<div class="attach-msg"><span class="attach-msg-icon">📄</span><div class="attach-msg-info"><div class="attach-msg-name">${msg.fileName || 'ملف'}</div><div class="attach-msg-type">اضغط للتحميل</div></div></div><div class="voice-meta"><span><a href="${msg.url}" download="${msg.fileName || ''}" style="color:var(--cyan)">تحميل</a></span><span>${time}</span></div>`;
   } else if (msg.type === 'contact') {
-    bodyHtml = `
-      <div class="attach-msg">
-        <span class="attach-msg-icon">👥</span>
-        <div class="attach-msg-info">
-          <div class="attach-msg-name">${msg.contactName || ''}</div>
-          <div class="attach-msg-type">${msg.contactPhone || ''}</div>
-        </div>
-      </div>
-      <div class="voice-meta"><span>${time}</span></div>`;
+    bodyHtml = `<div class="attach-msg"><span class="attach-msg-icon">👥</span><div class="attach-msg-info"><div class="attach-msg-name">${msg.contactName || ''}</div><div class="attach-msg-type">${msg.contactPhone || ''}</div></div></div><div class="voice-meta"><span>${time}</span></div>`;
   } else {
     bodyHtml = `<div class="text-msg">${msg.text || ''}</div><div class="voice-meta"><span>${time}</span><span>${direction === 'out' ? '✓✓' : ''}</span></div>`;
   }
-
-  div.innerHTML = `
-    <div class="msg-header">${senderName}</div>
-    <div class="msg-body" data-msgid="${msg.id || ''}">${bodyHtml}</div>
-  `;
-
+  div.innerHTML = `<div class="msg-header">${senderName}</div><div class="msg-body" data-msgid="${msg.id || ''}">${bodyHtml}</div>`;
   const playBtn = div.querySelector('.play-btn');
   if (playBtn) {
     playBtn.addEventListener('click', () => {
@@ -1499,7 +1206,6 @@ function addChatMessage(msg, direction, scroll = true) {
       }
     });
   }
-
   let pressTimer;
   const body = div.querySelector('.msg-body');
   body.addEventListener('pointerdown', () => {
@@ -1509,39 +1215,16 @@ function addChatMessage(msg, direction, scroll = true) {
   });
   body.addEventListener('pointerup', () => clearTimeout(pressTimer));
   body.addEventListener('pointerleave', () => clearTimeout(pressTimer));
-
   container.appendChild(div);
   if (scroll) container.scrollTop = container.scrollHeight;
 }
 
 function sendTextMessage(text) {
   if (!text.trim()) return;
-  if (!currentUser.currentConvId) {
-    toast('⚠️ ادخل الغرفة أولاً', 'error');
-    return;
-  }
-  
-  const msg = {
-    id: 'msg_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
-    sender: currentUser.id,
-    senderName: currentUser.name,
-    type: 'text',
-    text: text.trim(),
-    time: Date.now()
-  };
-  
-  if (currentUser.currentConvId.startsWith('conv_self_')) {
-    addChatMessage(msg, 'out');
-    toast('✅ تم إرسال الرسالة', 'success');
-    return;
-  }
-  
-  if (socket) {
-    socket.emit('send_direct_message', {
-      conversationId: currentUser.currentConvId,
-      message: msg
-    });
-  }
+  if (!currentUser.currentConvId) { toast('⚠️ ادخل الغرفة أولاً', 'error'); return; }
+  const msg = { id: 'msg_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6), sender: currentUser.id, senderName: currentUser.name, type: 'text', text: text.trim(), time: Date.now() };
+  if (currentUser.currentConvId.startsWith('conv_self_')) { addChatMessage(msg, 'out'); toast('✅ تم إرسال الرسالة', 'success'); return; }
+  if (socket) socket.emit('send_direct_message', { conversationId: currentUser.currentConvId, message: msg });
   addChatMessage(msg, 'out');
 }
 
@@ -1564,14 +1247,8 @@ chatInput.addEventListener('input', () => {
 
 chatPrimaryBtn.addEventListener('click', async () => {
   const hasText = chatInput.value.trim().length > 0;
-  if (hasText) {
-    sendTextMessage(chatInput.value);
-    chatInput.value = '';
-    chatPrimaryBtn.textContent = '🎙️';
-  } else {
-    if (!isRecordingVoice) await startVoiceRecording();
-    else await stopVoiceRecordingAndSend();
-  }
+  if (hasText) { sendTextMessage(chatInput.value); chatInput.value = ''; chatPrimaryBtn.textContent = '🎙️'; }
+  else { if (!isRecordingVoice) await startVoiceRecording(); else await stopVoiceRecordingAndSend(); }
 });
 
 async function startVoiceRecording() {
@@ -1602,23 +1279,13 @@ async function stopVoiceRecordingAndSend() {
   chatPrimaryBtn.textContent = '🎙️';
   chatInput.placeholder = 'اكتب رسالة...';
   clearInterval(voiceTimerInt);
-
   voiceRecorder.onstop = async () => {
     const blob = new Blob(voiceChunks, { type: 'audio/webm' });
     const reader = new FileReader();
     reader.onload = () => {
       const base64 = reader.result;
-      const msg = {
-        id: 'msg_' + Date.now(), sender: currentUser.id, senderName: currentUser.name,
-        type: 'voice', url: base64, duration: duration, time: Date.now()
-      };
-      
-      if (currentUser.currentConvId.startsWith('conv_self_')) {
-        addChatMessage(msg, 'out');
-        toast('✅ تم إرسال الرسالة الصوتية', 'success');
-        return;
-      }
-      
+      const msg = { id: 'msg_' + Date.now(), sender: currentUser.id, senderName: currentUser.name, type: 'voice', url: base64, duration: duration, time: Date.now() };
+      if (currentUser.currentConvId.startsWith('conv_self_')) { addChatMessage(msg, 'out'); toast('✅ تم إرسال الرسالة الصوتية', 'success'); return; }
       if (socket) socket.emit('send_direct_message', { conversationId: currentUser.currentConvId, message: msg });
       addChatMessage(msg, 'out');
       toast('✅ تم إرسال الرسالة الصوتية', 'success');
@@ -1638,7 +1305,6 @@ emojiBtn.addEventListener('click', (ev) => {
   picker.style.cssText = 'position:fixed;bottom:130px;left:12px;right:12px;max-width:476px;margin:0 auto;background:var(--card-2);border:1px solid var(--cyan);border-radius:14px;padding:10px;z-index:600;display:grid;grid-template-columns:repeat(10,1fr);gap:6px;';
   picker.innerHTML = EMOJIS.map(e => `<button style="font-size:22px;background:none;border:none;cursor:pointer;padding:4px;" data-emoji="${e}">${e}</button>`).join('');
   document.body.appendChild(picker);
-
   picker.addEventListener('click', (ev2) => {
     if (ev2.target.dataset.emoji) {
       chatInput.value += ev2.target.dataset.emoji;
@@ -1646,7 +1312,6 @@ emojiBtn.addEventListener('click', (ev) => {
       picker.remove();
     }
   });
-
   setTimeout(() => {
     const closePicker = (e2) => {
       if (!picker.contains(e2.target)) { picker.remove(); document.removeEventListener('click', closePicker); }
@@ -1681,9 +1346,7 @@ function pickContact() {
   closeModal('modalAttach');
   if ('contacts' in navigator && 'ContactsManager' in window) {
     navigator.contacts.select(['name', 'tel'], { multiple: false })
-      .then(contacts => {
-        if (contacts.length) sendContactMessage(contacts[0].name[0], contacts[0].tel[0] || '');
-      })
+      .then(contacts => { if (contacts.length) sendContactMessage(contacts[0].name[0], contacts[0].tel[0] || ''); })
       .catch(() => openModal('modalContactPick'));
   } else openModal('modalContactPick');
 }
@@ -1697,17 +1360,8 @@ function sendContact() {
 }
 
 function sendContactMessage(name, phone) {
-  const msg = {
-    id: 'msg_' + Date.now(), sender: currentUser.id, senderName: currentUser.name,
-    type: 'contact', contactName: name, contactPhone: phone, time: Date.now()
-  };
-  
-  if (currentUser.currentConvId.startsWith('conv_self_')) {
-    addChatMessage(msg, 'out');
-    toast('✅ تم إرسال جهة الاتصال', 'success');
-    return;
-  }
-  
+  const msg = { id: 'msg_' + Date.now(), sender: currentUser.id, senderName: currentUser.name, type: 'contact', contactName: name, contactPhone: phone, time: Date.now() };
+  if (currentUser.currentConvId.startsWith('conv_self_')) { addChatMessage(msg, 'out'); toast('✅ تم إرسال جهة الاتصال', 'success'); return; }
   if (socket) socket.emit('send_direct_message', { conversationId: currentUser.currentConvId, message: msg });
   addChatMessage(msg, 'out');
   toast('✅ تم إرسال جهة الاتصال', 'success');
@@ -1722,18 +1376,8 @@ document.getElementById('hiddenFileInput').addEventListener('change', (e) => {
     if (file.type.startsWith('image/')) type = 'image';
     else if (file.type.startsWith('video/')) type = 'video';
     else if (file.type.startsWith('audio/')) type = 'voice';
-
-    const msg = {
-      id: 'msg_' + Date.now(), sender: currentUser.id, senderName: currentUser.name,
-      type: type, url: reader.result, fileName: file.name, duration: 0, time: Date.now()
-    };
-    
-    if (currentUser.currentConvId.startsWith('conv_self_')) {
-      addChatMessage(msg, 'out');
-      toast('✅ تم إرسال الملف', 'success');
-      return;
-    }
-    
+    const msg = { id: 'msg_' + Date.now(), sender: currentUser.id, senderName: currentUser.name, type: type, url: reader.result, fileName: file.name, duration: 0, time: Date.now() };
+    if (currentUser.currentConvId.startsWith('conv_self_')) { addChatMessage(msg, 'out'); toast('✅ تم إرسال الملف', 'success'); return; }
     if (socket) socket.emit('send_direct_message', { conversationId: currentUser.currentConvId, message: msg });
     addChatMessage(msg, 'out');
     toast('✅ تم إرسال الملف', 'success');
@@ -1743,10 +1387,7 @@ document.getElementById('hiddenFileInput').addEventListener('change', (e) => {
 });
 
 function openCreateRoom() { openModal('modalCreate'); }
-function openEditRoomName() {
-  document.getElementById('newRoomName').value = currentUser.roomName || '';
-  openModal('modalEditName');
-}
+function openEditRoomName() { document.getElementById('newRoomName').value = currentUser.roomName || ''; openModal('modalEditName'); }
 function openEditRoomIcon() {
   closeModal('modalRoomMenu');
   openModal('modalEditIcon');
@@ -1765,43 +1406,28 @@ function openEditRoomIcon() {
 async function createRoom() {
   const name = document.getElementById('roomName').value.trim();
   if (!name) { toast('⚠️ أدخل اسم الغرفة', 'error'); return; }
-
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   let roomCode = "G";
-  for (let i = 0; i < 5; i++) {
-    roomCode += chars[Math.floor(Math.random() * chars.length)];
-  }
-
+  for (let i = 0; i < 5; i++) roomCode += chars[Math.floor(Math.random() * chars.length)];
   currentUser.roomName = name;
   currentUser.roomCode = roomCode;
-
   localStorage.setItem('rc_saved_room_code', roomCode);
   localStorage.setItem('rc_saved_room_name', name);
-
+  localStorage.setItem('rc_is_room_owner', 'true');
+  addRoomToHistory(roomCode, name);
   document.getElementById('createdRoomCode').textContent = roomCode;
   document.getElementById('roomNameLabel').textContent = name;
   document.getElementById('roomName').value = '';
-
   closeModal('modalCreate');
   openModal('modalRoomCreated');
   toast('✅ تم إنشاء الغرفة "' + name + '"', 'success');
-
   const selfConvId = 'conv_self_' + roomCode;
   currentUser.currentConvId = selfConvId;
   currentUser.currentChatWith = 'self';
-
   document.getElementById('chatWithName').textContent = name + ' (غرفتك)';
   document.getElementById('chatWithCode').textContent = roomCode;
-
   switchTab('chat');
-  
-  document.getElementById('chatMessages').innerHTML = `
-    <div style="padding:20px;text-align:center;color:var(--text-dim);font-size:12px;">
-      💬 هذه غرفتك "${name}"<br>
-      شارك رقم الغرفة: <strong style="color:var(--cyan);">${roomCode}</strong><br>
-      يمكنك تجربة كل الميزات هنا.
-    </div>
-  `;
+  document.getElementById('chatMessages').innerHTML = `<div style="padding:20px;text-align:center;color:var(--text-dim);font-size:12px;">💬 هذه غرفتك "${name}"<br>شارك رقم الغرفة: <strong style="color:var(--cyan);">${roomCode}</strong><br>يمكنك تجربة كل الميزات هنا.</div>`;
 }
 
 function saveRoomName() {
@@ -1824,14 +1450,14 @@ function saveMyWave() {
   if (!currentUser.waveId) { toast('⚠️ لا توجد فرقة', 'error'); return; }
   localStorage.setItem('rc_saved_wave_id', currentUser.waveId);
   localStorage.setItem('rc_saved_wave_name', currentUser.waveName || '');
-  toast('✅ تم حفظ الفرقة — ستسترجع تلقائياً', 'success');
+  toast('✅ تم حفظ الفرقة', 'success');
 }
 
 function saveMyRoom() {
   if (!currentUser.roomCode) { toast('⚠️ لا توجد غرفة', 'error'); return; }
   localStorage.setItem('rc_saved_room_code', currentUser.roomCode);
   localStorage.setItem('rc_saved_room_name', currentUser.roomName || '');
-  toast('✅ تم حفظ الغرفة — ستسترجع تلقائياً', 'success');
+  toast('✅ تم حفظ الغرفة', 'success');
 }
 
 function copyRoomCode() {
@@ -1847,6 +1473,20 @@ function doClearChat() {
   if (container) container.innerHTML = '';
   closeModal('modalClearChat');
   toast('✅ تم مسح الدردشة', 'success');
+}
+
+function deleteRoomPermanently() {
+  if (!currentUser.roomCode) { toast('⚠️ لا توجد غرفة لحذفها', 'error'); return; }
+  if (!confirm('هل أنت متأكد من حذف هذه الغرفة نهائياً؟')) return;
+  localStorage.removeItem('rc_saved_room_code');
+  localStorage.removeItem('rc_saved_room_name');
+  localStorage.removeItem('rc_is_room_owner');
+  currentUser.roomCode = null; currentUser.roomName = null;
+  currentUser.currentConvId = null; currentUser.currentChatWith = null;
+  document.getElementById('roomNameLabel').textContent = 'الغرفة';
+  document.getElementById('chatMessages').innerHTML = '';
+  toast('✅ تم حذف الغرفة نهائياً', 'success');
+  switchTab('log');
 }
 
 document.getElementById('roomMenuBtn').addEventListener('click', openSideMenu);
@@ -1901,7 +1541,7 @@ function updateConnectionIcon() {
 
 function testCall() {
   PTTEngine.init().then(() => PTTEngine.playRealBeep());
-  toast('🔔 تجربة walkie_beep.mp3', 'success');
+  toast('🔔 تجربة صوت النداء', 'success');
 }
 
 document.getElementById('waveNameChip').addEventListener('click', () => {
@@ -1913,15 +1553,7 @@ document.getElementById('waveNameChip').addEventListener('click', () => {
       .then(r => r.json())
       .then(data => {
         if (data.members) {
-          dd.innerHTML = `
-            <div class="members-dropdown-title">👥 المشتركون (${data.members.length})</div>
-            ${data.members.map(m => `
-              <div class="members-dropdown-item">
-                <span>${m.name} ${m.id === currentUser.id ? '(أنت)' : ''} ${m.isOwner ? '👑' : ''}</span>
-                <span class="${m.online ? 'status-active' : 'status-inactive'}">${m.online ? '🟢 نشط' : '🔴 غير نشط'}</span>
-              </div>
-            `).join('')}
-          `;
+          dd.innerHTML = `<div class="members-dropdown-title">👥 المشتركون (${data.members.length})</div>${data.members.map(m => `<div class="members-dropdown-item"><span>${m.name} ${m.id === currentUser.id ? '(أنت)' : ''} ${m.isOwner ? '👑' : ''}</span><span class="${m.online ? 'status-active' : 'status-inactive'}">${m.online ? '🟢 نشط' : '🔴 غير نشط'}</span></div>`).join('')}`;
         } else dd.innerHTML = '<div class="operations-empty">لا يوجد مشتركون</div>';
         dd.classList.add('show');
       });
@@ -1931,30 +1563,308 @@ document.getElementById('waveNameChip').addEventListener('click', () => {
   }
 });
 
+/* =========================================================
+   نظام طلبات الصداقة
+   ========================================================= */
+
+let friendRequests = {
+  incoming: JSON.parse(localStorage.getItem('rc_fr_incoming') || '[]'),
+  outgoing: JSON.parse(localStorage.getItem('rc_fr_outgoing') || '[]'),
+  friends: JSON.parse(localStorage.getItem('rc_fr_friends') || '[]')
+};
+
+let currentFriendTab = 'incoming';
+let pendingFriendIncoming = null;
+let friendSearchResult = null;
+
+function saveFriendRequests() {
+  localStorage.setItem('rc_fr_incoming', JSON.stringify(friendRequests.incoming));
+  localStorage.setItem('rc_fr_outgoing', JSON.stringify(friendRequests.outgoing));
+  localStorage.setItem('rc_fr_friends', JSON.stringify(friendRequests.friends));
+}
+
+function updateFriendBadge() {
+  const count = friendRequests.incoming.length;
+  ['friendReqBadge', 'friendReqBadge2'].forEach(id => {
+    const badge = document.getElementById(id);
+    if (!badge) return;
+    if (count > 0) { badge.textContent = count; badge.style.display = 'flex'; }
+    else { badge.style.display = 'none'; }
+  });
+}
+
+function openFriendRequests() {
+  renderFriendList();
+  updateFriendBadge();
+  openModal('modalFriendRequests');
+}
+
+function switchFriendTab(tab) {
+  currentFriendTab = tab;
+  const tabIn = document.getElementById('tabIncoming');
+  const tabOut = document.getElementById('tabOutgoing');
+  if (tab === 'incoming') { tabIn.className = 'modal-btn confirm'; tabOut.className = 'modal-btn cancel'; }
+  else { tabIn.className = 'modal-btn cancel'; tabOut.className = 'modal-btn confirm'; }
+  renderFriendList();
+}
+
+function renderFriendList() {
+  const list = document.getElementById('friendRequestsList');
+  if (!list) return;
+  const items = currentFriendTab === 'incoming' ? friendRequests.incoming : friendRequests.outgoing;
+  if (!items || items.length === 0) {
+    list.innerHTML = `<div class="no-results"><span class="no-results-icon">📭</span>${currentFriendTab === 'incoming' ? 'لا توجد طلبات واردة' : 'لا توجد طلبات صادرة'}</div>`;
+    return;
+  }
+  list.innerHTML = items.map((req, idx) => `
+    <div class="search-result-card" style="margin-bottom:8px; cursor:default;">
+      <div class="search-result-icon">👤</div>
+      <div class="search-result-info">
+        <div class="search-result-name">${req.name || 'مستخدم'}</div>
+        <div class="search-result-code">${req.code || '—'}</div>
+      </div>
+      ${currentFriendTab === 'incoming' ? `<div style="display:flex; gap:6px;"><button class="modal-btn confirm" style="padding:6px 10px; font-size:12px;" onclick="quickAccept(${idx})">✅</button><button class="modal-btn danger" style="padding:6px 10px; font-size:12px;" onclick="quickReject(${idx})">❌</button></div>` : `<span style="color:var(--text-dim); font-size:11px;">⏳ منتظر</span>`}
+    </div>
+  `).join('');
+}
+
+function quickAccept(idx) {
+  const req = friendRequests.incoming[idx];
+  if (!req) return;
+  if (!friendRequests.friends.find(f => f.code === req.code)) {
+    friendRequests.friends.push({ name: req.name, code: req.code, deviceId: req.deviceId, addedAt: Date.now() });
+  }
+  friendRequests.incoming.splice(idx, 1);
+  saveFriendRequests();
+  updateFriendBadge();
+  renderFriendList();
+  toast('✅ تم قبول الصداقة مع ' + req.name, 'success');
+  if (socket) socket.emit('friend_accept', { fromDeviceId: req.deviceId, toDeviceId: currentUser.id });
+}
+
+function quickReject(idx) {
+  const req = friendRequests.incoming[idx];
+  if (!req) return;
+  friendRequests.incoming.splice(idx, 1);
+  saveFriendRequests();
+  updateFriendBadge();
+  renderFriendList();
+  toast('❌ تم رفض الطلب', 'error');
+  if (socket) socket.emit('friend_reject', { fromDeviceId: req.deviceId, toDeviceId: currentUser.id });
+}
+
+function showIncomingFriendRequest(req) {
+  pendingFriendIncoming = req;
+  document.getElementById('frIncomingName').textContent = req.name || 'مستخدم';
+  document.getElementById('frIncomingCode').textContent = req.code || '—';
+  openModal('modalFriendIncoming');
+  PTTEngine.playRealBeep();
+}
+
+function acceptFriendRequest() {
+  if (!pendingFriendIncoming) return;
+  const req = pendingFriendIncoming;
+  if (!friendRequests.friends.find(f => f.code === req.code)) {
+    friendRequests.friends.push({ name: req.name, code: req.code, deviceId: req.deviceId, addedAt: Date.now() });
+  }
+  friendRequests.incoming = friendRequests.incoming.filter(r => r.code !== req.code);
+  saveFriendRequests();
+  updateFriendBadge();
+  closeModal('modalFriendIncoming');
+  pendingFriendIncoming = null;
+  toast('✅ أصبحت صديقاً لـ ' + req.name, 'success');
+  if (socket) socket.emit('friend_accept', { fromDeviceId: req.deviceId, toDeviceId: currentUser.id });
+  refreshChatList();
+}
+
+function rejectFriendRequest() {
+  if (!pendingFriendIncoming) return;
+  const req = pendingFriendIncoming;
+  friendRequests.incoming = friendRequests.incoming.filter(r => r.code !== req.code);
+  saveFriendRequests();
+  updateFriendBadge();
+  closeModal('modalFriendIncoming');
+  pendingFriendIncoming = null;
+  toast('❌ تم رفض الطلب', 'error');
+  if (socket) socket.emit('friend_reject', { fromDeviceId: req.deviceId, toDeviceId: currentUser.id });
+}
+
+function openSendFriendRequest() {
+  document.getElementById('friendSearchCode').value = '';
+  document.getElementById('friendSearchResults').innerHTML = '';
+  friendSearchResult = null;
+  openModal('modalFriendSend');
+}
+
+async function searchFriend() {
+  const code = document.getElementById('friendSearchCode').value.trim().toUpperCase();
+  const res = document.getElementById('friendSearchResults');
+  if (!code) { res.innerHTML = '<div class="no-results"><span class="no-results-icon">⚠️</span>أدخل الرقم</div>'; return; }
+  res.innerHTML = '<div class="no-results">⏳ جاري البحث...</div>';
+  try {
+    const r = await fetch(SERVER_URL + '/api/users/search/' + code);
+    const user = await r.json();
+    if (user.deviceId) {
+      if (user.deviceId === currentUser.id) { res.innerHTML = '<div class="no-results"><span class="no-results-icon">🙃</span>هذا أنت!</div>'; return; }
+      if (friendRequests.friends.find(f => f.deviceId === user.deviceId)) { res.innerHTML = '<div class="no-results"><span class="no-results-icon">✅</span>أنتما صديقان بالفعل</div>'; return; }
+      friendSearchResult = user;
+      res.innerHTML = `<div class="search-result-card" onclick="sendFriendRequest()"><div class="search-result-icon">👤</div><div class="search-result-info"><div class="search-result-name">${user.userName || 'مستخدم'}</div><div class="search-result-code">${user.radCode || code}</div></div><div style="color:var(--cyan); font-size:20px;">➕</div></div>`;
+    } else {
+      res.innerHTML = '<div class="no-results"><span class="no-results-icon">❌</span>لا يوجد مستخدم بهذا الرقم</div>';
+    }
+  } catch (e) {
+    res.innerHTML = '<div class="no-results"><span class="no-results-icon">❌</span>خطأ في البحث</div>';
+  }
+}
+
+function sendFriendRequest() {
+  if (!friendSearchResult) return;
+  const user = friendSearchResult;
+  if (friendRequests.outgoing.find(r => r.deviceId === user.deviceId)) { toast('⚠️ أرسلت طلباً بالفعل', 'error'); return; }
+  const req = { name: user.userName || 'مستخدم', code: user.radCode, deviceId: user.deviceId, sentAt: Date.now() };
+  friendRequests.outgoing.push(req);
+  saveFriendRequests();
+  if (socket) socket.emit('friend_request', { fromDeviceId: currentUser.id, fromUserName: currentUser.name, fromCode: currentUser.radCode, toDeviceId: user.deviceId });
+  closeModal('modalFriendSend');
+  toast('📤 تم إرسال طلب الصداقة', 'success');
+}
+
+function handleIncomingFriendRequest(data) {
+  if (friendRequests.friends.find(f => f.deviceId === data.fromDeviceId)) return;
+  if (friendRequests.incoming.find(r => r.deviceId === data.fromDeviceId)) return;
+  const req = { name: data.fromUserName || 'مستخدم', code: data.fromCode || '—', deviceId: data.fromDeviceId, receivedAt: Date.now() };
+  friendRequests.incoming.push(req);
+  saveFriendRequests();
+  updateFriendBadge();
+  showIncomingFriendRequest(req);
+}
+
+/* =========================================================
+   قائمة العمليات
+   ========================================================= */
+
+async function openOperationsList() {
+  const title = document.getElementById('sideMenuTitle');
+  const content = document.getElementById('sideMenuContent');
+  let allWaves = JSON.parse(localStorage.getItem('rc_user_waves_list') || '[]');
+  let allRooms = JSON.parse(localStorage.getItem('rc_user_rooms_list') || '[]');
+  if (currentUser.waveId && !allWaves.find(w => w.id === currentUser.waveId)) allWaves.push({ id: currentUser.waveId, name: currentUser.waveName || 'فرقة حالية' });
+  if (currentUser.roomCode && !allRooms.find(r => r.code === currentUser.roomCode)) allRooms.push({ code: currentUser.roomCode, name: currentUser.roomName || 'غرفة حالية' });
+
+  title.textContent = '📋 سجل العمليات';
+  let html = '';
+  html += `<div style="font-size:13px; color:var(--cyan); font-weight:800; margin-bottom:8px; margin-top:4px;">📡 الفرق:</div>`;
+  if (allWaves.length === 0) {
+    html += `<div style="font-size:11px; color:var(--text-dim); margin-bottom:15px;">لا توجد فرق مسجلة بعد.</div>`;
+  } else {
+    for (const w of allWaves) {
+      let isActive = currentUser.waveId === w.id;
+      let isOwner = false, activeCount = 0;
+      try {
+        const res = await fetch(SERVER_URL + '/api/waves/' + w.id);
+        const data = await res.json();
+        if (data.members) {
+          activeCount = data.members.filter(m => m.online).length;
+          isOwner = data.members.some(m => m.id === currentUser.id && m.isOwner);
+        }
+      } catch (e) {}
+      let badgeHtml = '';
+      if (isOwner) badgeHtml += `<span style="background:var(--yellow); color:#000; border-radius:4px; padding:2px 6px; font-size:9px; font-weight:900; margin-right:4px;">👑 المالك</span>`;
+      if (isActive) badgeHtml += `<span style="background:var(--green); color:#000; border-radius:4px; padding:2px 6px; font-size:9px; font-weight:900; margin-right:4px;">🟢 نشط</span>`;
+      let countText = `<span style="color:var(--green); font-size:10px;">● ${activeCount} نشط</span>`;
+      html += `<button class="menu-item ${isActive ? 'primary' : ''}" onclick="switchToWave('${w.id}')"><span class="menu-icon">${isActive ? '🟢' : '📡'}</span><span class="menu-text"><span class="menu-label">${w.name} ${badgeHtml}</span><span class="menu-desc">${w.id} • ${countText}</span></span></button>`;
+    }
+  }
+  html += `<div style="border-top:1px solid var(--border); margin:10px 0;"></div>`;
+  html += `<div style="font-size:13px; color:var(--cyan); font-weight:800; margin-bottom:8px;">💬 الغرف:</div>`;
+  if (allRooms.length === 0) {
+    html += `<div style="font-size:11px; color:var(--text-dim); margin-bottom:15px;">لا توجد غرف مسجلة بعد.</div>`;
+  } else {
+    for (const r of allRooms) {
+      let isActive = currentUser.roomCode === r.code;
+      let isOwner = localStorage.getItem('rc_is_room_owner') === 'true' && currentUser.roomCode === r.code;
+      let badgeHtml = '';
+      if (isOwner) badgeHtml += `<span style="background:var(--yellow); color:#000; border-radius:4px; padding:2px 6px; font-size:9px; font-weight:900; margin-right:4px;">👑 المالك</span>`;
+      if (isActive) badgeHtml += `<span style="background:var(--green); color:#000; border-radius:4px; padding:2px 6px; font-size:9px; font-weight:900; margin-right:4px;">🟢 نشط</span>`;
+      html += `<button class="menu-item ${isActive ? 'primary' : ''}" onclick="switchToRoom('${r.code}', '${r.name}')"><span class="menu-icon">${isActive ? '🟢' : '💬'}</span><span class="menu-text"><span class="menu-label">${r.name} ${badgeHtml}</span><span class="menu-desc">${r.code}</span></span></button>`;
+    }
+  }
+  content.innerHTML = html;
+  sideMenu.classList.add('open');
+  menuBackdrop.classList.add('show');
+  menuToggle.classList.add('open');
+}
+
+async function switchToWave(waveId) {
+  closeSideMenu();
+  if (currentUser.waveId === waveId) return;
+  let allWaves = JSON.parse(localStorage.getItem('rc_user_waves_list') || '[]');
+  let targetWave = allWaves.find(w => w.id === waveId);
+  let name = targetWave ? targetWave.name : (currentUser.waveName || 'فرقة');
+  toast('⏳ جاري التبديل...', 'success');
+  stopTalking();
+  await disconnectWaveRoom();
+  await LiveVoice.disconnect();
+  if (socket) socket.emit('wave_leave', { waveId: currentUser.waveId, deviceId: currentUser.id });
+  currentUser.waveId = waveId;
+  currentUser.waveName = name;
+  currentUser.waveCode = waveId;
+  localStorage.setItem('rc_saved_wave_id', waveId);
+  localStorage.setItem('rc_saved_wave_name', name);
+  document.getElementById('waveNameLabel').textContent = name;
+  document.getElementById('waveNameValue').textContent = name;
+  document.getElementById('waveCodeValue').textContent = waveId;
+  document.getElementById('waveCodeChip').innerHTML = waveId + ' <span style="font-size:12px;">🔑</span>';
+  document.getElementById('lcdLine3').textContent = waveId + ' • RX';
+  await joinWaveAsMember(waveId);
+  toast('✅ تم الانتقال إلى ' + name, 'success');
+}
+
+function switchToRoom(roomCode, roomName) {
+  closeSideMenu();
+  if (currentUser.roomCode === roomCode) return;
+  currentUser.roomCode = roomCode;
+  currentUser.roomName = roomName;
+  currentUser.currentConvId = 'conv_self_' + roomCode;
+  currentUser.currentChatWith = 'self';
+  localStorage.setItem('rc_saved_room_code', roomCode);
+  localStorage.setItem('rc_saved_room_name', roomName);
+  document.getElementById('roomNameLabel').textContent = roomName;
+  document.getElementById('chatWithName').textContent = roomName + ' (غرفتك)';
+  document.getElementById('chatWithCode').textContent = roomCode;
+  switchTab('chat');
+  toast('✅ تم الانتقال إلى الغرفة', 'success');
+}
+
+document.getElementById('operationsChip').addEventListener('click', openOperationsList);
+document.getElementById('friendRequestsChip').addEventListener('click', openFriendRequests);
+document.getElementById('friendRequestsChip2').addEventListener('click', openFriendRequests);
+document.getElementById('sendFriendChip').addEventListener('click', openSendFriendRequest);
+document.getElementById('sendFriendChip2').addEventListener('click', openSendFriendRequest);
+
+setTimeout(updateFriendBadge, 500);
+
 window.addEventListener('DOMContentLoaded', async () => {
   const bar = document.getElementById('chatInputBar');
   if (bar) bar.classList.remove('active');
-
   await initBattery();
   await PTTEngine.init();
   updateBatteryVisual();
   updateConnectionIcon();
-
   window.addEventListener('online', updateConnectionIcon);
   window.addEventListener('offline', updateConnectionIcon);
-
   askUserNameIfNeeded();
   await registerUser();
   initSocket();
   refreshChatList();
-
-  // استرجاع الموجة
   const savedWaveId = localStorage.getItem('rc_saved_wave_id');
   const savedWaveName = localStorage.getItem('rc_saved_wave_name');
+  const isWaveOwner = localStorage.getItem('rc_is_wave_owner') === 'true';
   if (savedWaveId) {
     currentUser.waveId = savedWaveId;
     currentUser.waveCode = savedWaveId;
     currentUser.waveName = savedWaveName;
+    currentUser.isWaveOwner = isWaveOwner;
     const el1 = document.getElementById('waveCodeChip');
     if (el1) el1.innerHTML = savedWaveId + ' <span style="font-size:12px;">🔑</span>';
     const el2 = document.getElementById('waveNameLabel');
@@ -1963,8 +1873,6 @@ window.addEventListener('DOMContentLoaded', async () => {
     if (el3) el3.textContent = savedWaveId + ' • RX';
     setTimeout(() => joinWaveAsMember(savedWaveId), 1500);
   }
-
-  // استرجاع الغرفة
   const savedRoomCode = localStorage.getItem('rc_saved_room_code');
   const savedRoomName = localStorage.getItem('rc_saved_room_name');
   if (savedRoomCode) {
@@ -1973,11 +1881,12 @@ window.addEventListener('DOMContentLoaded', async () => {
     const el4 = document.getElementById('roomNameLabel');
     if (el4 && savedRoomName) el4.textContent = savedRoomName;
   }
+  updateFriendBadge();
 });
 
 document.addEventListener('keydown', (e) => {
   if (e.code === 'Space' && !e.repeat && !document.querySelector('.modal-overlay.show')) {
-    e.preventDefault(); 
+    e.preventDefault();
     if (isTalking) stopTalking(); else onPTTStart();
   }
 });
@@ -1991,4 +1900,4 @@ document.addEventListener('click', (e) => {
 });
   </script>
 </body>
-</html>
+  </html>
