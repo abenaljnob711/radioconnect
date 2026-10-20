@@ -577,7 +577,7 @@ async function onPTTStart() {
   await PTTEngine.init();
   PTTEngine.playStartBeep();
   try {
-    rawMicStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
+    rawMicStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } });
     if (!waveRoom || waveRoom.participants.size === 0) {
       localTestAudio = new Audio();
       localTestAudio.srcObject = rawMicStream;
