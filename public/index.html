@@ -626,11 +626,11 @@ const PTTEngine = {
       const closeEl = document.getElementById('walkieClose');
       [openEl, closeEl].forEach(el => {
         if (el) {
-          el.volume = 1.0; // رفع الصوت لأقصى درجة
+          el.volume = 0;
           el.play().then(() => {
-            el.pause(); el.currentTime = 0; el.volume = 1.0;
+            el.pause(); el.currentTime = 0; el.volume = 0.9;
             this.beepReady = true;
-          }).catch(() => { el.volume = 1.0; });
+          }).catch(() => { el.volume = 0.9; });
         }
       });
       return true;
@@ -639,13 +639,13 @@ const PTTEngine = {
   playOpenBeep() {
     const el = document.getElementById('walkieOpen');
     if (!el) return;
-    try { el.currentTime = 0; el.volume = 1.0; el.play().catch(() => {}); } catch (e) {}
+    try { el.currentTime = 0; el.volume = 0.9; el.play().catch(() => {}); } catch (e) {}
     if (navigator.vibrate) navigator.vibrate([30, 40, 30]);
   },
   playCloseBeep() {
     const el = document.getElementById('walkieClose');
     if (!el) return;
-    try { el.currentTime = 0; el.volume = 1.0; el.play().catch(() => {}); } catch (e) {}
+    try { el.currentTime = 0; el.volume = 0.9; el.play().catch(() => {}); } catch (e) {}
     if (navigator.vibrate) navigator.vibrate([30, 40, 30]);
   },
   playRealBeep() { this.playCloseBeep(); },
@@ -742,13 +742,10 @@ function stopTalking() {
     try { waveRoom.localParticipant.unpublishTrack(waveLocalAudioTrack); waveLocalAudioTrack.stop(); } catch (e) {}
     waveLocalAudioTrack = null;
   }
-  
-  // إغلاق المايك قسرياً لمنع التعليق
   if (rawMicStream) {
     rawMicStream.getTracks().forEach(t => t.stop());
     rawMicStream = null;
   }
-  
   isTalking = false;
   
   const pttMain = document.getElementById('pttMain');
@@ -949,34 +946,11 @@ async function joinWaveAsMember(waveId) {
   toast('✅ انضممت إلى الفرقة', 'success');
 }
 
-async function doSearch() {
+function doSearch() {
   const q = document.getElementById('searchQuery').value.trim().toUpperCase();
   const res = document.getElementById('searchResults');
   if (!q) { res.innerHTML = '<div class="no-results"><span class="no-results-icon">⚠️</span>أدخل الرقم</div>'; return; }
 
-  res.innerHTML = '<div class="no-results">⏳ جاري البحث...</div>';
-
-  // 1. البحث عن غرفة (G)
-  if (q.startsWith('G')) {
-    try {
-      const roomRes = await fetch(SERVER_URL + '/api/rooms/' + q);
-      if (roomRes.ok) {
-        const roomData = await roomRes.json();
-        res.innerHTML = `
-          <div class="search-result-card" onclick="joinRoomFromSearch('${roomData.roomCode}', '${roomData.roomName}')">
-            <div class="search-result-icon">💬</div>
-            <div class="search-result-info">
-              <div class="search-result-name">${roomData.roomName}</div>
-              <div class="search-result-code">${roomData.roomCode} • اضغط للدخول</div>
-            </div>
-            <div style="color:var(--cyan)">←</div>
-          </div>`;
-        return;
-      }
-    } catch (e) { /* تجاهل الخطأ */ }
-  }
-
-  // 2. البحث عن فرقة أو مستخدم (Q)
   fetch(SERVER_URL + '/api/waves/' + q)
     .then(r => r.json())
     .then(data => {
@@ -986,14 +960,13 @@ async function doSearch() {
           <div class="search-result-card" onclick="askJoinWave()">
             <div class="search-result-icon">📡</div>
             <div class="search-result-info">
-              <div class="search-result-name">${data.waveName}</div>
+              <div class="search-result-name">${searchResultUser.name}</div>
               <div class="search-result-code">${searchResultUser.code} • ${data.totalMembers || 0} أعضاء</div>
             </div>
             <div style="color:var(--cyan)">←</div>
           </div>`;
         return;
       }
-      
       return fetch(SERVER_URL + '/api/users/search/' + q)
         .then(r => r.json())
         .then(user => {
@@ -1014,11 +987,6 @@ async function doSearch() {
         });
     })
     .catch(() => { res.innerHTML = '<div class="no-results"><span class="no-results-icon">❌</span>خطأ في البحث</div>'; });
-}
-
-function joinRoomFromSearch(roomCode, roomName) {
-  closeModal('modalSearch');
-  switchToRoom(roomCode, roomName);
 }
 
 function askJoinWave() {
@@ -1177,7 +1145,7 @@ function openSideMenu() {
         <span class="menu-icon">✏️</span>
         <span class="menu-text"><span class="menu-label">تعديل اسم الفرقة</span><span class="menu-desc">غيّر اسم فرقتك</span></span>
       </button>
-      <button class="menu-item" onclick="closeSideMenu();leaveWave()">
+      <button class="menu-item danger" onclick="closeSideMenu();leaveWave()">
         <span class="menu-icon">🗑️</span>
         <span class="menu-text"><span class="menu-label">مسح الفرقة</span><span class="menu-desc">مغادرة الفرقة الحالية</span></span>
       </button>
@@ -1334,13 +1302,10 @@ function stopTalking() {
     try { waveRoom.localParticipant.unpublishTrack(waveLocalAudioTrack); waveLocalAudioTrack.stop(); } catch (e) {}
     waveLocalAudioTrack = null;
   }
-  
-  // إغلاق المايك قسرياً
   if (rawMicStream) {
     rawMicStream.getTracks().forEach(t => t.stop());
     rawMicStream = null;
   }
-  
   isTalking = false;
   
   const pttMain = document.getElementById('pttMain');
@@ -1379,9 +1344,9 @@ function openSearchWave() {
   openModal('modalSearch');
 }
 function openSearchUser() {
-  document.getElementById('searchSubTitle').textContent = 'ابحث برقم المستخدم أو الغرفة';
-  document.getElementById('searchFieldLabel').textContent = 'رقم المستخدم / الغرفة';
-  document.getElementById('searchQuery').placeholder = 'Q##### / G#####';
+  document.getElementById('searchSubTitle').textContent = 'ابحث برقم المستخدم';
+  document.getElementById('searchFieldLabel').textContent = 'رقم المستخدم';
+  document.getElementById('searchQuery').placeholder = 'Q#####';
   document.getElementById('searchQuery').value = '';
   document.getElementById('searchResults').innerHTML = `
     <div class="no-results">
@@ -1851,48 +1816,37 @@ async function createRoom() {
     roomCode += chars[Math.floor(Math.random() * chars.length)];
   }
 
-  try {
-    const res = await fetch(SERVER_URL + '/api/rooms/create', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ roomCode: roomCode, roomName: name, ownerDevice: currentUser.id })
-    });
-    const data = await res.json();
-    if (!data.success) throw new Error(data.error || 'فشل حفظ الغرفة');
+  currentUser.roomName = name;
+  currentUser.roomCode = roomCode;
 
-    currentUser.roomName = name;
-    currentUser.roomCode = roomCode;
+  localStorage.setItem('rc_saved_room_code', roomCode);
+  localStorage.setItem('rc_saved_room_name', name);
+  localStorage.setItem('rc_is_room_owner', 'true'); 
 
-    localStorage.setItem('rc_saved_room_code', roomCode);
-    localStorage.setItem('rc_saved_room_name', name);
-    localStorage.setItem('rc_is_room_owner', 'true'); 
+  document.getElementById('createdRoomCode').textContent = roomCode;
+  document.getElementById('roomNameLabel').textContent = name;
+  document.getElementById('roomName').value = '';
 
-    document.getElementById('createdRoomCode').textContent = roomCode;
-    document.getElementById('roomNameLabel').textContent = name;
-    document.getElementById('roomName').value = '';
+  closeModal('modalCreate');
+  openModal('modalRoomCreated');
+  toast('✅ تم إنشاء الغرفة "' + name + '"', 'success');
 
-    closeModal('modalCreate');
-    openModal('modalRoomCreated');
-    toast('✅ تم إنشاء الغرفة "' + name + '"', 'success');
+  const selfConvId = 'conv_self_' + roomCode;
+  currentUser.currentConvId = selfConvId;
+  currentUser.currentChatWith = 'self';
 
-    const selfConvId = 'conv_self_' + roomCode;
-    currentUser.currentConvId = selfConvId;
-    currentUser.currentChatWith = 'self';
+  document.getElementById('chatWithName').textContent = name + ' (غرفتك)';
+  document.getElementById('chatWithCode').textContent = roomCode;
 
-    document.getElementById('chatWithName').textContent = name + ' (غرفتك)';
-    document.getElementById('chatWithCode').textContent = roomCode;
-
-    switchTab('chat');
-    
-    document.getElementById('chatMessages').innerHTML = `
-      <div style="padding:20px;text-align:center;color:var(--text-dim);font-size:12px;">
-        💬 هذه غرفتك "${name}"<br>
-        شارك رقم الغرفة: <strong style="color:var(--cyan);">${roomCode}</strong><br>
-        يمكنك تجربة كل الميزات هنا.
-      </div>
-    `;
-  } catch (e) {
-      toast('❌ ' + e.message, 'error');
-  }
+  switchTab('chat');
+  
+  document.getElementById('chatMessages').innerHTML = `
+    <div style="padding:20px;text-align:center;color:var(--text-dim);font-size:12px;">
+      💬 هذه غرفتك "${name}"<br>
+      شارك رقم الغرفة: <strong style="color:var(--cyan);">${roomCode}</strong><br>
+      يمكنك تجربة كل الميزات هنا.
+    </div>
+  `;
 }
 
 function saveRoomName() {
