@@ -134,7 +134,17 @@ app.get("/", (req, res) => {
     });
   }
 });
-
+/* جلب طلبات الصداقة المعلقة */
+app.get("/api/friends/requests/:deviceId", (req, res) => {
+  try {
+    const requests = Object.values(db.friendRequests).filter(
+      r => r.toDeviceId === req.params.deviceId && r.status === "pending"
+    );
+    res.json({ requests: requests });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
 app.get("/status", (req, res) => {
   res.json({
     status: "ok",
