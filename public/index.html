@@ -384,7 +384,6 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
           <span class="setting-value">تجربة</span>
         </div>
         
-        <!-- زر استعادة ضبط المصنع المحدث -->
         <div class="setting-item" onclick="factoryReset()">
           <div class="setting-info">
             <span class="setting-title" style="color:var(--red);">⚠️ استعادة ضبط المصنع</span>
@@ -445,16 +444,6 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
   <div class="members-dropdown" id="membersDropdown"></div>
 
   <!-- Modals -->
-  <div class="modal-overlay" id="modalFactoryReset">
-    <div class="modal">
-      <div class="modal-title" style="color:var(--red);">⚠️ تحذير خطير</div>
-      <div class="modal-sub">سيتم مسح جميع البيانات (اسمك، رقمك، فرقك، وغرفك). هل أنت متأكد؟</div>
-      <div class="modal-actions">
-        <button class="modal-btn cancel" onclick="closeModal('modalFactoryReset')">إلغاء</button>
-        <button class="modal-btn danger" onclick="confirmFactoryReset()">حسناً، امسح</button>
-      </div>
-    </div>
-  </div>
   <div class="modal-overlay" id="modalRoomMenu">
     <div class="modal">
       <div class="modal-title">☰ خيارات الغرفة</div>
@@ -613,13 +602,14 @@ let rawMicStream = null;
 let localTestAudio = null;
 let isTalking = false;
 
-// دوال استعادة ضبط المصنع (بدون رسائل المتصفح)
+// دالة استعادة ضبط المصنع
 function factoryReset() {
-  openModal('modalFactoryReset');
-}
-
-function confirmFactoryReset() {
-  closeModal('modalFactoryReset');
+  if (!confirm('⚠️ تحذير خطير: سيتم مسح جميع البيانات (اسمك، رقمك، فرقك، وغرفك). هل أنت متأكد؟')) {
+    return;
+  }
+  if (!confirm('هل أنت متأكد 100%؟ لا يمكن التراجع عن هذه الخطوة.')) {
+    return;
+  }
   localStorage.clear();
   window.location.reload();
 }
@@ -636,11 +626,11 @@ const PTTEngine = {
       const closeEl = document.getElementById('walkieClose');
       [openEl, closeEl].forEach(el => {
         if (el) {
-          el.volume = 1.0; // أقصى صوت
+          el.volume = 0;
           el.play().then(() => {
-            el.pause(); el.currentTime = 0; el.volume = 1.0;
+            el.pause(); el.currentTime = 0; el.volume = 0.9;
             this.beepReady = true;
-          }).catch(() => { el.volume = 1.0; });
+          }).catch(() => { el.volume = 0.9; });
         }
       });
       return true;
@@ -649,13 +639,13 @@ const PTTEngine = {
   playOpenBeep() {
     const el = document.getElementById('walkieOpen');
     if (!el) return;
-    try { el.currentTime = 0; el.volume = 1.0; el.play().catch(() => {}); } catch (e) {}
+    try { el.currentTime = 0; el.volume = 0.9; el.play().catch(() => {}); } catch (e) {}
     if (navigator.vibrate) navigator.vibrate([30, 40, 30]);
   },
   playCloseBeep() {
     const el = document.getElementById('walkieClose');
     if (!el) return;
-    try { el.currentTime = 0; el.volume = 1.0; el.play().catch(() => {}); } catch (e) {}
+    try { el.currentTime = 0; el.volume = 0.9; el.play().catch(() => {}); } catch (e) {}
     if (navigator.vibrate) navigator.vibrate([30, 40, 30]);
   },
   playRealBeep() { this.playCloseBeep(); },
@@ -753,7 +743,7 @@ function stopTalking() {
     waveLocalAudioTrack = null;
   }
   
-  // إغلاق المايك قسرياً لمنع التعليق
+  // الحل النهائي لمشكلة تعليق المايك (إغلاق المسار قسرياً)
   if (rawMicStream) {
     rawMicStream.getTracks().forEach(t => t.stop());
     rawMicStream = null;
@@ -959,34 +949,27 @@ async function joinWaveAsMember(waveId) {
   toast('✅ انضممت إلى الفرقة', 'success');
 }
 
-async function doSearch() {
+function doSearch() {
   const q = document.getElementById('searchQuery').value.trim().toUpperCase();
   const res = document.getElementById('searchResults');
   if (!q) { res.innerHTML = '<div class="no-results"><span class="no-results-icon">⚠️</span>أدخل الرقم</div>'; return; }
 
-  res.innerHTML = '<div class="no-results">⏳ جاري البحث...</div>';
-
-  // 1. البحث عن غرفة (G)
+  // التعديل الجديد: إذا كان يبدأ بحرف G، اظهر الغرفة مباشرة
   if (q.startsWith('G')) {
-    try {
-      const roomRes = await fetch(SERVER_URL + '/api/rooms/' + q);
-      if (roomRes.ok) {
-        const roomData = await roomRes.json();
-        res.innerHTML = `
-          <div class="search-result-card" onclick="joinRoomFromSearch('${roomData.roomCode}', '${roomData.roomName}')">
-            <div class="search-result-icon">💬</div>
-            <div class="search-result-info">
-              <div class="search-result-name">${roomData.roomName}</div>
-              <div class="search-result-code">${roomData.roomCode} • اضغط للدخول</div>
-            </div>
-            <div style="color:var(--cyan)">←</div>
-          </div>`;
-        return;
-      }
-    } catch (e) { /* تجاهل الخطأ */ }
+    searchResultUser = { name: 'غرفة', code: q, type: 'room' };
+    res.innerHTML = `
+      <div class="search-result-card" onclick="askJoinRoom('${q}')">
+        <div class="search-result-icon">💬</div>
+        <div class="search-result-info">
+          <div class="search-result-name">غرفة ${q}</div>
+          <div class="search-result-code">اضغط للدخول</div>
+        </div>
+        <div style="color:var(--cyan)">←</div>
+      </div>`;
+    return;
   }
 
-  // 2. البحث عن فرقة أو مستخدم (Q)
+  // البحث عن الفرق والمستخدمين (للأرقام التي تبدأ بـ Q)
   fetch(SERVER_URL + '/api/waves/' + q)
     .then(r => r.json())
     .then(data => {
@@ -996,14 +979,13 @@ async function doSearch() {
           <div class="search-result-card" onclick="askJoinWave()">
             <div class="search-result-icon">📡</div>
             <div class="search-result-info">
-              <div class="search-result-name">${data.waveName}</div>
+              <div class="search-result-name">${searchResultUser.name}</div>
               <div class="search-result-code">${searchResultUser.code} • ${data.totalMembers || 0} أعضاء</div>
             </div>
             <div style="color:var(--cyan)">←</div>
           </div>`;
         return;
       }
-      
       return fetch(SERVER_URL + '/api/users/search/' + q)
         .then(r => r.json())
         .then(user => {
@@ -1026,9 +1008,11 @@ async function doSearch() {
     .catch(() => { res.innerHTML = '<div class="no-results"><span class="no-results-icon">❌</span>خطأ في البحث</div>'; });
 }
 
-function joinRoomFromSearch(roomCode, roomName) {
+function askJoinRoom(roomCode) {
+  if (!confirm('هل تريد الانضمام إلى هذه الغرفة؟')) return;
   closeModal('modalSearch');
-  switchToRoom(roomCode, roomName);
+  // تحويل المستخدم إلى الغرفة (محاكاة الدخول)
+  switchToRoom(roomCode, 'غرفة ' + roomCode);
 }
 
 function askJoinWave() {
@@ -1386,9 +1370,9 @@ function openSearchWave() {
   openModal('modalSearch');
 }
 function openSearchUser() {
-  document.getElementById('searchSubTitle').textContent = 'ابحث برقم المستخدم أو الغرفة';
-  document.getElementById('searchFieldLabel').textContent = 'رقم المستخدم / الغرفة';
-  document.getElementById('searchQuery').placeholder = 'Q##### / G#####';
+  document.getElementById('searchSubTitle').textContent = 'ابحث برقم المستخدم';
+  document.getElementById('searchFieldLabel').textContent = 'رقم المستخدم';
+  document.getElementById('searchQuery').placeholder = 'Q#####';
   document.getElementById('searchQuery').value = '';
   document.getElementById('searchResults').innerHTML = `
     <div class="no-results">
@@ -1858,48 +1842,37 @@ async function createRoom() {
     roomCode += chars[Math.floor(Math.random() * chars.length)];
   }
 
-  try {
-    const res = await fetch(SERVER_URL + '/api/rooms/create', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ roomCode: roomCode, roomName: name, ownerDevice: currentUser.id })
-    });
-    const data = await res.json();
-    if (!data.success) throw new Error(data.error || 'فشل حفظ الغرفة');
+  currentUser.roomName = name;
+  currentUser.roomCode = roomCode;
 
-    currentUser.roomName = name;
-    currentUser.roomCode = roomCode;
+  localStorage.setItem('rc_saved_room_code', roomCode);
+  localStorage.setItem('rc_saved_room_name', name);
+  localStorage.setItem('rc_is_room_owner', 'true'); 
 
-    localStorage.setItem('rc_saved_room_code', roomCode);
-    localStorage.setItem('rc_saved_room_name', name);
-    localStorage.setItem('rc_is_room_owner', 'true'); 
+  document.getElementById('createdRoomCode').textContent = roomCode;
+  document.getElementById('roomNameLabel').textContent = name;
+  document.getElementById('roomName').value = '';
 
-    document.getElementById('createdRoomCode').textContent = roomCode;
-    document.getElementById('roomNameLabel').textContent = name;
-    document.getElementById('roomName').value = '';
+  closeModal('modalCreate');
+  openModal('modalRoomCreated');
+  toast('✅ تم إنشاء الغرفة "' + name + '"', 'success');
 
-    closeModal('modalCreate');
-    openModal('modalRoomCreated');
-    toast('✅ تم إنشاء الغرفة "' + name + '"', 'success');
+  const selfConvId = 'conv_self_' + roomCode;
+  currentUser.currentConvId = selfConvId;
+  currentUser.currentChatWith = 'self';
 
-    const selfConvId = 'conv_self_' + roomCode;
-    currentUser.currentConvId = selfConvId;
-    currentUser.currentChatWith = 'self';
+  document.getElementById('chatWithName').textContent = name + ' (غرفتك)';
+  document.getElementById('chatWithCode').textContent = roomCode;
 
-    document.getElementById('chatWithName').textContent = name + ' (غرفتك)';
-    document.getElementById('chatWithCode').textContent = roomCode;
-
-    switchTab('chat');
-    
-    document.getElementById('chatMessages').innerHTML = `
-      <div style="padding:20px;text-align:center;color:var(--text-dim);font-size:12px;">
-        💬 هذه غرفتك "${name}"<br>
-        شارك رقم الغرفة: <strong style="color:var(--cyan);">${roomCode}</strong><br>
-        يمكنك تجربة كل الميزات هنا.
-      </div>
-    `;
-  } catch (e) {
-      toast('❌ ' + e.message, 'error');
-  }
+  switchTab('chat');
+  
+  document.getElementById('chatMessages').innerHTML = `
+    <div style="padding:20px;text-align:center;color:var(--text-dim);font-size:12px;">
+      💬 هذه غرفتك "${name}"<br>
+      شارك رقم الغرفة: <strong style="color:var(--cyan);">${roomCode}</strong><br>
+      يمكنك تجربة كل الميزات هنا.
+    </div>
+  `;
 }
 
 function saveRoomName() {
@@ -2124,7 +2097,8 @@ async function openOperationsList() {
     let allWaves = JSON.parse(localStorage.getItem('rc_user_waves_list') || '[]');
     let allRooms = JSON.parse(localStorage.getItem('rc_user_rooms_list') || '[]');
     
-    // إضافة الفرقة الحالية إن لم تكن في القائمة    if (currentUser.waveId && !allWaves.find(w => w.id === currentUser.waveId)) {
+    // إضافة الفرقة الحالية إن لم تكن في القائمة
+    if (currentUser.waveId && !allWaves.find(w => w.id === currentUser.waveId)) {
         allWaves.push({ id: currentUser.waveId, name: currentUser.waveName || 'فرقة حالية' });
     }
     if (currentUser.roomCode && !allRooms.find(r => r.code === currentUser.roomCode)) {
