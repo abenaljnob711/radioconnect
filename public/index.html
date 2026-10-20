@@ -1898,6 +1898,10 @@ document.addEventListener('click', (e) => {
     md.classList.remove('show');
   }
 });
+    setTimeout(() => {
+  const status = (socket && socket.connected) ? "متصل ✅" : "غير متصل ❌";
+  alert("📱 معرّفي:\n" + currentUser.id + "\n\n🌐 حالة السيرفر:\n" + status);
+}, 4000);  
   </script>
 </body>
   </html>
