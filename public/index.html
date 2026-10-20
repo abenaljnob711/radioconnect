@@ -2185,5 +2185,13 @@ function switchToRoom(roomCode, roomName) {
 // إضافة قائمة العمليات للزر
 document.getElementById('operationsChip').addEventListener('click', openOperationsList);
   </script>
+    <div class="modal-overlay" id="modalFriendRequests">
+    <div class="modal">
+      <div class="modal-title">📩 طلبات الصداقة <span id="frCountBadge" style="background:#ff2a4d;color:#fff;font-size:11px;padding:2px 8px;border-radius:10px;display:none">0</span></div>
+      <div class="modal-sub">من أرسل لك طلب صداقة</div>
+      <div id="friendRequestsList" style="max-height:50vh;overflow-y:auto;margin:14px 0"></div>
+      <div class="modal-actions" style="grid-template-columns:1fr"><button class="modal-btn cancel" onclick="closeModal('modalFriendRequests')">إغلاق</button></div>
+    </div>
+  </div>
 </body>
 </html>
