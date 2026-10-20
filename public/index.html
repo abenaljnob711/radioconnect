@@ -1608,7 +1608,20 @@ function updateFriendBadge() {
   });
 }
 
-function openFriendRequests() {
+async function openFriendRequests() {
+  try {
+    const res = await fetch(SERVER_URL + '/api/friends/requests/' + currentUser.id);
+    const data = await res.json();
+    if (data.requests) {
+      friendRequests.incoming = data.requests.map(r => ({
+        name: r.fromUserName,
+        code: r.fromCode,
+        deviceId: r.fromDeviceId
+      }));
+      saveFriendRequests();
+    }
+  } catch(e) {}
+  
   renderFriendList();
   updateFriendBadge();
   openModal('modalFriendRequests');
