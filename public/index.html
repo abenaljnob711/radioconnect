@@ -262,6 +262,10 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
           <div class="status-text" id="waveStatusText">🔴 غير متصل</div>
           <div class="wave-timer" id="waveTimer">00:00</div>
         </div>
+          <div class="chip" id="friendRequestsChip" style="cursor:pointer;position:relative;border-color:rgba(255,204,0,.4)" onclick="openFriendRequests()">
+          <div class="chip-value" style="font-size:13px;font-weight:800;">📩 الطلبات <span class="badge" style="position:absolute;top:-6px;left:-6px;background:#ff2a4d;color:#fff;font-size:10px;min-width:18px;height:18px;border-radius:9px;display:none;align-items:center;justify-content:center;padding:0 4px">0</span></div>
+          <div class="chip-label">طلبات الصداقة</div>
+        </div>
         <div class="chip" id="operationsChip" style="cursor:pointer;">
           <div class="chip-value" style="font-size:13px; font-weight:800;">📋 العمليات</div>
         </div>
