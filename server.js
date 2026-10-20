@@ -47,9 +47,7 @@ let db = {
   waves: {},
   waveRequests: {},
   conversations: {},
-  messages: {},
-  friendRequests: {},   // ✅ إضافة 1: طلبات الصداقة
-  friendships: {}       // ✅ إضافة 1: الصداقات المقبولة
+  messages: {}
 };
 
 /* ==========================================
@@ -98,8 +96,6 @@ function loadDb() {
       db.waveRequests = parsed.waveRequests || {};
       db.conversations = parsed.conversations || {};
       db.messages = parsed.messages || {};
-      db.friendRequests = parsed.friendRequests || {};   // ✅ إضافة 2
-      db.friendships = parsed.friendships || {};         // ✅ إضافة 2
     }
   } catch (e) {
     console.error("خطأ في تحميل قاعدة البيانات:", e.message);
@@ -725,115 +721,6 @@ io.on("connection", (socket) => {
   socket.on("wave_broadcast_stop", ({ waveId, deviceId }) => {
     socket.to("wave_" + waveId).emit("wave_broadcast_stop", { deviceId });
   });
-
-  /* ==========================================
-     🆕 نظام طلبات الصداقة — إضافة 3
-     ========================================== */
-
-  socket.on("friend_request", ({ fromDeviceId, fromUserName, fromCode, toDeviceId }) => {
-    try {
-      if (!fromDeviceId || !toDeviceId) return;
-      if (fromDeviceId === toDeviceId) return;
-
-      const friendshipKey = [fromDeviceId, toDeviceId].sort().join("_");
-      if (db.friendships[friendshipKey]) {
-        return socket.emit("friend_error", { error: "أنتما صديقان بالفعل" });
-      }
-
-      const existingReq = Object.values(db.friendRequests).find(
-        r => r.fromDeviceId === fromDeviceId && r.toDeviceId === toDeviceId && r.status === "pending"
-      );
-      if (existingReq) {
-        return socket.emit("friend_error", { error: "أرسلت طلباً بالفعل" });
-      }
-
-      const requestId = "fr_" + crypto.randomBytes(6).toString("hex");
-      db.friendRequests[requestId] = {
-        id: requestId,
-        fromDeviceId,
-        fromUserName: fromUserName || "مستخدم",
-        fromCode: fromCode || "—",
-        toDeviceId,
-        status: "pending",
-        createdAt: now()
-      };
-      saveDb();
-
-      const toSocketId = deviceSockets[toDeviceId];
-      if (toSocketId) {
-        io.to(toSocketId).emit("friend_request_received", {
-          requestId,
-          fromDeviceId,
-          fromUserName: fromUserName || "مستخدم",
-          fromCode: fromCode || "—"
-        });
-      }
-
-      socket.emit("friend_request_sent", { requestId, toDeviceId });
-    } catch (e) {
-      console.error("خطأ friend_request:", e);
-    }
-  });
-
-  socket.on("friend_accept", ({ fromDeviceId, toDeviceId }) => {
-    try {
-      const reqEntry = Object.entries(db.friendRequests).find(
-        ([id, r]) => r.fromDeviceId === fromDeviceId && r.toDeviceId === toDeviceId && r.status === "pending"
-      );
-      if (!reqEntry) return;
-
-      const [requestId, request] = reqEntry;
-      request.status = "accepted";
-      request.acceptedAt = now();
-
-      const friendshipKey = [fromDeviceId, toDeviceId].sort().join("_");
-      db.friendships[friendshipKey] = {
-        deviceA: fromDeviceId,
-        deviceB: toDeviceId,
-        since: now()
-      };
-      saveDb();
-
-      const fromSocketId = deviceSockets[fromDeviceId];
-      if (fromSocketId) {
-        const toUser = db.devices[toDeviceId];
-        io.to(fromSocketId).emit("friend_accepted", {
-          byDeviceId: toDeviceId,
-          byName: toUser ? toUser.name : "مستخدم",
-          byCode: toUser ? toUser.radCode : "—"
-        });
-      }
-
-      socket.emit("friend_accept_success", { withDeviceId: fromDeviceId });
-    } catch (e) {
-      console.error("خطأ friend_accept:", e);
-    }
-  });
-
-  socket.on("friend_reject", ({ fromDeviceId, toDeviceId }) => {
-    try {
-      const reqEntry = Object.entries(db.friendRequests).find(
-        ([id, r]) => r.fromDeviceId === fromDeviceId && r.toDeviceId === toDeviceId && r.status === "pending"
-      );
-      if (!reqEntry) return;
-
-      const [requestId, request] = reqEntry;
-      request.status = "rejected";
-      request.rejectedAt = now();
-      saveDb();
-
-      const fromSocketId = deviceSockets[fromDeviceId];
-      if (fromSocketId) {
-        io.to(fromSocketId).emit("friend_rejected", {
-          byDeviceId: toDeviceId
-        });
-      }
-    } catch (e) {
-      console.error("خطأ friend_reject:", e);
-    }
-  });
-
-  /* ========== نهاية نظام الصداقة ========== */
 
   socket.on("disconnect", () => {
     const { deviceId, waveId } = socket.data;
