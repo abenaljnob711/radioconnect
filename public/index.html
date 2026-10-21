@@ -568,107 +568,37 @@ async function onPTTStart() {
   const pttMain = document.getElementById('pttMain');
   pttMain.classList.add('holding');
   document.body.classList.add('ptt-active');
-  document.getElementById('waveStatusText').innerHTML = '🟢 يتحدث';
-  document.getElementById('waveStatusChip').classList.add('live');
-  document.getElementById('lcdLine3').textContent = (currentUser.radCode || '—') + ' • TX';
+  const statusChip = document.getElementById('waveStatusChip');
+  const statusText = document.getElementById('waveStatusText');
+  if (statusChip) { statusChip.classList.add('live'); statusChip.classList.remove('disconnected'); }
+  if (statusText) statusText.innerHTML = '🟢 يتحدث';
+  const lcd3 = document.getElementById('lcdLine3');
+  if (lcd3) lcd3.textContent = (currentUser.radCode || '—') + ' • TX';
   startWaveTimer();
   await PTTEngine.init();
   PTTEngine.playStartBeep();
-
   try {
-    // 1. اطلب المايك مرة واحدة فقط
-    rawMicStream = await navigator.mediaDevices.getUserMedia({ 
-      audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } 
-    });
-
-    // 2. اتصل بغرفة LiveKit أولاً
-    const connected = await connectWaveChannel();
-    if (!connected || !waveRoom) {
-      toast('❌ فشل الاتصال بالفرقة','error');
-      stopTalking();
-      return;
+    rawMicStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } });
+    if (!waveRoom || waveRoom.participants.size === 0) {
+      localTestAudio = new Audio();
+      localTestAudio.srcObject = rawMicStream;
+      localTestAudio.volume = 1.0;
+      localTestAudio.play().catch(()=>{});
     }
-
-    // 3. انشر المايك مباشرة
-    const audioTrack = rawMicStream.getAudioTracks()[0];
-    waveLocalAudioTrack = await window.LivekitClient.createLocalAudioTrack({ 
-      track: audioTrack,
-      echoCancellation: true,
-      noiseSuppression: true
+    connectWaveChannel().then(() => {
+      if (waveRoom && waveRoom.state === "connected" && rawMicStream) {
+        window.LivekitClient.LocalAudioTrack.createTrack(rawMicStream.getAudioTracks()[0]).then(track => {
+          waveLocalAudioTrack = track;
+          waveRoom.localParticipant.publishTrack(waveLocalAudioTrack);
+          waveLocalAudioTrack.enable();
+        });
+      }
     });
-    await waveRoom.localParticipant.publishTrack(waveLocalAudioTrack, {
-      source: window.LivekitClient.Track.Source.Microphone
-    });
-    await waveLocalAudioTrack.unmute();
-    
-    // 4. أرسل إشارة للسيرفر أنك تتحدث
-    if (socket) socket.emit('wave_broadcast_start', { waveId: currentUser.waveId, deviceId: currentUser.id });
-
   } catch (err) {
-    console.error(err);
     toast("⚠️ تعذر تشغيل الميكروفون");
     stopTalking();
   }
 }
-
-function stopTalking() {
-  if (isTalking) PTTEngine.playEndBeep();
-  
-  if (waveLocalAudioTrack && waveRoom) {
-    try { 
-      waveLocalAudioTrack.mute();
-      waveRoom.localParticipant.unpublishTrack(waveLocalAudioTrack); 
-      waveLocalAudioTrack.stop(); 
-    } catch (e) {}
-    waveLocalAudioTrack = null;
-  }
-  if (rawMicStream) {
-    rawMicStream.getTracks().forEach(t => t.stop());
-    rawMicStream = null;
-  }
-  if (localTestAudio) {
-    try { localTestAudio.pause(); localTestAudio.srcObject = null; } catch(e){}
-    localTestAudio = null;
-  }
-
-  isTalking = false;
-  document.getElementById('pttMain').classList.remove('holding');
-  document.body.classList.remove('ptt-active');
-  document.getElementById('waveStatusText').innerHTML = '🔴 غير متصل';
-  document.getElementById('waveStatusChip').classList.remove('live');
-  document.getElementById('lcdLine3').textContent = (currentUser.radCode || '—') + ' • RX';
-  stopWaveTimer();
-  if (socket && currentUser.waveId) {
-    socket.emit('wave_broadcast_stop', { waveId: currentUser.waveId, deviceId: currentUser.id });
-  }
-}
-
-// FIX استقبال الصوت - ضعه داخل connectWaveChannel بعد إنشاء waveRoom
-// استبدل هذا الجزء:
-/*
-waveRoom.on(window.LivekitClient.RoomEvent.TrackSubscribed, (track, pub, participant) => {
-  if (track.kind === "audio") {
-    const audioElement = track.attach();
-    audioElement.volume = 1.0;
-    audioElement.autoplay = true;
-    document.body.appendChild(audioElement);
-  }
-});
-*/
-// بهذا:
-waveRoom.on(window.LivekitClient.RoomEvent.TrackSubscribed, (track, pub, participant) => {
-  if (track.kind === "audio") {
-    const audioElement = track.attach();
-    audioElement.volume = 1.0;
-    audioElement.muted = false;
-    audioElement.autoplay = true;
-    audioElement.playsInline = true;
-    audioElement.setAttribute('playsinline','');
-    document.body.appendChild(audioElement);
-    audioElement.play().catch(()=>{});
-    console.log('🔊 صوت وارد من', participant.identity);
-  }
-});
 
 function stopTalking() {
   if (isTalking) PTTEngine.playEndBeep();
