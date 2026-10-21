@@ -630,29 +630,7 @@ function stopTalking() {
   }
 }
 
-const LiveVoice = {
-  room: null, connected: false,
-  async connect(waveId) {
-    if (this.connected) return true;
-    try {
-      const tokenRes = await fetch(SERVER_URL + '/api/livekit/token', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ roomId: waveId, deviceId: currentUser.id, userName: currentUser.name })
-      });
-      const data = await tokenRes.json();
-      if (!data.token) return false;
-      this.room = new window.LivekitClient.Room();
-      await this.room.connect(LIVEKIT_URL, data.token);
-      this.connected = true;
-      return true;
-    } catch (e) { return false; }
-  },
-  async disconnect() {
-    try { if (this.room) { await this.room.disconnect(); this.room = null; } } catch (e) {}
-    this.connected = false;
-  }
-};
+
 
 const pttMainBtn = document.getElementById('pttMain');
 pttMainBtn.addEventListener('pointerdown', (e) => { e.preventDefault(); onPTTStart(); });
