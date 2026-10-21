@@ -633,6 +633,46 @@ io.on("connection", (socket) => {
   });
 
   socket.on("wave_join_request", ({ waveId, fromDeviceId, fromUserName }) => {
+  const wave = db.waves[waveId];
+  if (!wave) return socket.emit("wave_join_error", { error: "الموجة غير موجودة" });
+  if (!wave.ownerDevice) return socket.emit("wave_join_error", { error: "لا يوجد صاحب" });
+
+  // إذا كان العضو موجوداً بالفعل
+  if (wave.members && wave.members[fromDeviceId]) {
+    socket.emit("wave_join_response_received", {
+      waveId: waveId,
+      accepted: true,
+      fromDeviceId: fromDeviceId,
+      fromUserName: fromUserName,
+      direct: true
+    });
+    return;
+  }
+
+  const requestId = "req_" + crypto.randomBytes(6).toString("hex");
+  db.waveRequests[requestId] = {
+    id: requestId,
+    waveId: waveId,
+    fromDeviceId: fromDeviceId,
+    fromUserName: fromUserName,
+    toDeviceId: wave.ownerDevice,
+    createdAt: now(),
+    status: "pending"
+  };
+  saveDb();
+
+  // ✅ التعديل هنا: نرسل الطلب إلى غرفة الموجة لضمان وصوله لصاحبها
+  io.to("wave_" + waveId).emit("wave_join_request_received", {
+    requestId,
+    waveId,
+    fromDeviceId,
+    fromUserName,
+    toDeviceId: wave.ownerDevice
+  });
+
+  // إشعار المرسل بأن الطلب تم إرساله
+  socket.emit("wave_join_request_sent", { requestId, waveId });
+});
     const wave = db.waves[waveId];
     if (!wave) return socket.emit("wave_join_error", { error: "الموجة غير موجودة" });
     if (!wave.ownerDevice) return socket.emit("wave_join_error", { error: "لا يوجد صاحب" });
@@ -660,18 +700,10 @@ io.on("connection", (socket) => {
     };
     saveDb();
 
-    const ownerSocketId = deviceSockets[wave.ownerDevice];
-    if (ownerSocketId) {
-      io.to(ownerSocketId).emit("wave_join_request_received", {
-        requestId,
-        waveId,
-        fromDeviceId,
-        fromUserName,
-        toDeviceId: wave.ownerDevice
-      });
-    } else {
-      return socket.emit("wave_join_error", { error: "صاحب الموجة غير متصل" });
-    }
+    // ✅ إرسال الطلب إلى الغرفة نفسها لضمان وصوله لصاحب الموجة
+io.to("wave_" + waveId).emit("wave_join_request_received", {
+  requestId, waveId, fromDeviceId, fromUserName, toDeviceId: wave.ownerDevice
+});
 
     socket.emit("wave_join_request_sent", { requestId, waveId });
   });
