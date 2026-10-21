@@ -48,8 +48,8 @@ let db = {
   waveRequests: {},
   conversations: {},
   messages: {},
-  friendRequests: {},   // ✅ إضافة 1: طلبات الصداقة
-  friendships: {}       // ✅ إضافة 1: الصداقات المقبولة
+  friendRequests: {},
+  friendships: {}
 };
 
 /* ==========================================
@@ -64,9 +64,14 @@ function generateRadCode() {
   return code;
 }
 
-/* توليد كود موجة (نفس الصيغة) */
+/* توليد كود موجة (يبدأ بـ M الآن حسب طلبك) */
 function generateWaveId() {
-  return generateRadCode();
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let code = "M"; // ✅ التعديل هنا
+  for (let i = 0; i < 5; i++) {
+    code += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return code;
 }
 
 /* توليد كود غرفة (يبدأ بـ G) */
@@ -98,8 +103,8 @@ function loadDb() {
       db.waveRequests = parsed.waveRequests || {};
       db.conversations = parsed.conversations || {};
       db.messages = parsed.messages || {};
-      db.friendRequests = parsed.friendRequests || {};   // ✅ إضافة 2
-      db.friendships = parsed.friendships || {};         // ✅ إضافة 2
+      db.friendRequests = parsed.friendRequests || {};
+      db.friendships = parsed.friendships || {};
     }
   } catch (e) {
     console.error("خطأ في تحميل قاعدة البيانات:", e.message);
@@ -134,6 +139,7 @@ app.get("/", (req, res) => {
     });
   }
 });
+
 /* جلب طلبات الصداقة المعلقة */
 app.get("/api/friends/requests/:deviceId", (req, res) => {
   try {
@@ -145,6 +151,7 @@ app.get("/api/friends/requests/:deviceId", (req, res) => {
     res.status(500).json({ error: e.message });
   }
 });
+
 app.get("/status", (req, res) => {
   res.json({
     status: "ok",
@@ -633,46 +640,6 @@ io.on("connection", (socket) => {
   });
 
   socket.on("wave_join_request", ({ waveId, fromDeviceId, fromUserName }) => {
-  const wave = db.waves[waveId];
-  if (!wave) return socket.emit("wave_join_error", { error: "الموجة غير موجودة" });
-  if (!wave.ownerDevice) return socket.emit("wave_join_error", { error: "لا يوجد صاحب" });
-
-  // إذا كان العضو موجوداً بالفعل
-  if (wave.members && wave.members[fromDeviceId]) {
-    socket.emit("wave_join_response_received", {
-      waveId: waveId,
-      accepted: true,
-      fromDeviceId: fromDeviceId,
-      fromUserName: fromUserName,
-      direct: true
-    });
-    return;
-  }
-
-  const requestId = "req_" + crypto.randomBytes(6).toString("hex");
-  db.waveRequests[requestId] = {
-    id: requestId,
-    waveId: waveId,
-    fromDeviceId: fromDeviceId,
-    fromUserName: fromUserName,
-    toDeviceId: wave.ownerDevice,
-    createdAt: now(),
-    status: "pending"
-  };
-  saveDb();
-
-  // ✅ التعديل هنا: نرسل الطلب إلى غرفة الموجة لضمان وصوله لصاحبها
-  io.to("wave_" + waveId).emit("wave_join_request_received", {
-    requestId,
-    waveId,
-    fromDeviceId,
-    fromUserName,
-    toDeviceId: wave.ownerDevice
-  });
-
-  // إشعار المرسل بأن الطلب تم إرساله
-  socket.emit("wave_join_request_sent", { requestId, waveId });
-});
     const wave = db.waves[waveId];
     if (!wave) return socket.emit("wave_join_error", { error: "الموجة غير موجودة" });
     if (!wave.ownerDevice) return socket.emit("wave_join_error", { error: "لا يوجد صاحب" });
@@ -700,10 +667,13 @@ io.on("connection", (socket) => {
     };
     saveDb();
 
-    // ✅ إرسال الطلب إلى الغرفة نفسها لضمان وصوله لصاحب الموجة
-io.to("wave_" + waveId).emit("wave_join_request_received", {
-  requestId, waveId, fromDeviceId, fromUserName, toDeviceId: wave.ownerDevice
-});
+    io.to("wave_" + waveId).emit("wave_join_request_received", {
+      requestId,
+      waveId,
+      fromDeviceId,
+      fromUserName,
+      toDeviceId: wave.ownerDevice
+    });
 
     socket.emit("wave_join_request_sent", { requestId, waveId });
   });
@@ -767,10 +737,6 @@ io.to("wave_" + waveId).emit("wave_join_request_received", {
   socket.on("wave_broadcast_stop", ({ waveId, deviceId }) => {
     socket.to("wave_" + waveId).emit("wave_broadcast_stop", { deviceId });
   });
-
-  /* ==========================================
-     🆕 نظام طلبات الصداقة — إضافة 3
-     ========================================== */
 
   socket.on("friend_request", ({ fromDeviceId, fromUserName, fromCode, toDeviceId }) => {
     try {
@@ -874,8 +840,6 @@ io.to("wave_" + waveId).emit("wave_join_request_received", {
       console.error("خطأ friend_reject:", e);
     }
   });
-
-  /* ========== نهاية نظام الصداقة ========== */
 
   socket.on("disconnect", () => {
     const { deviceId, waveId } = socket.data;
