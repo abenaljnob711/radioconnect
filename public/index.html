@@ -4,1979 +4,271 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#05080c">
-<title>Radio Connect — راديو كونكت</title>
+<title>Radio Connect - راديو كونكت</title>
 <audio id="walkieOpen" src="./walkie_open.mp3" preload="auto"></audio>
 <audio id="walkieClose" src="./walkie_close.mp3" preload="auto"></audio>
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/livekit-client@2.15.3/dist/livekit-client.umd.min.js"></script>
 <style>
-*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-:root { --bg: #05080c; --card: #0f1921; --card-2: #142028; --border: #1c2a36; --text: #e6f0f5; --text-dim: #6b8899; --cyan: #00e5ff; --cyan-dark: #008fa8; --green: #00ff88; --red: #ff2a4d; --red-dark: #b01530; --yellow: #ffcc00; --blue-msg: #1a4d6b; --blue-msg-2: #0f3550; --red-msg: #6b1220; --red-msg-2: #45080f; --radius: 14px; }
-html, body { height: 100%; overflow: hidden; background: var(--bg); }
-body { font-family: 'Segoe UI', 'Tahoma', system-ui, -apple-system, sans-serif; color: var(--text); user-select: none; -webkit-user-select: none; position: relative; }
-body::before { content: ''; position: fixed; inset: 0; background: radial-gradient(circle at 20% 20%, rgba(0,229,255,.06), transparent 45%), radial-gradient(circle at 80% 80%, rgba(0,255,136,.05), transparent 45%); pointer-events: none; z-index: 0; }
-.app { position: relative; z-index: 1; height: 100vh; display: flex; flex-direction: column; max-width: 500px; margin: 0 auto; }
-.screen { flex: 1; overflow-y: auto; overflow-x: hidden; display: none; padding: 14px 14px 160px; animation: fadeIn .3s ease; scrollbar-width: none; }
-.screen::-webkit-scrollbar { display: none; }
-.screen.active { display: block; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-.top-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 4px 14px; }
-.brand { display: flex; align-items: center; gap: 8px; }
-.brand-icon { font-size: 26px; line-height: 1; filter: drop-shadow(0 0 8px rgba(0,229,255,.7)); animation: iconPulse 2s ease-in-out infinite; }
-@keyframes iconPulse { 0%, 100% { opacity: 1; } 50% { opacity: .65; } }
-.brand-text { display: flex; flex-direction: column; line-height: 1.15; }
-.brand-title { font-size: 19px; font-weight: 800; color: var(--cyan); letter-spacing: .3px; text-shadow: 0 0 14px rgba(0,229,255,.5); }
-.brand-sub { font-size: 11px; color: var(--text-dim); font-weight: 500; }
-.menu-toggle { width: 42px; height: 42px; border-radius: 11px; background: linear-gradient(180deg, var(--card-2), var(--card)); border: 1px solid var(--border); color: var(--cyan); font-size: 22px; font-weight: 900; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all .2s; font-family: inherit; flex-shrink: 0; line-height: 1; }
-.menu-toggle:active { transform: scale(.94); border-color: var(--cyan); box-shadow: 0 0 14px rgba(0,229,255,.4); }
-.menu-toggle.open { background: linear-gradient(180deg, #00e5ff, #008fa8); color: #001418; border-color: var(--cyan); box-shadow: 0 0 18px rgba(0,229,255,.6); }
-.side-menu { position: fixed; top: 0; right: 0; height: 100vh; width: 280px; background: linear-gradient(180deg, var(--card-2), var(--bg)); border-left: 1px solid var(--cyan); box-shadow: -12px 0 40px rgba(0,229,255,.25); z-index: 300; transform: translateX(110%); transition: transform .32s cubic-bezier(.4,0,.2,1); display: flex; flex-direction: column; padding: 20px 16px; overflow-y: auto; scrollbar-width: none; }
-.side-menu::-webkit-scrollbar { display: none; }
-.side-menu.open { transform: translateX(0); }
-.side-menu-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.7); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); z-index: 299; opacity: 0; pointer-events: none; transition: opacity .3s; }
-.side-menu-backdrop.show { opacity: 1; pointer-events: auto; }
-.side-menu-header { display: flex; align-items: center; justify-content: space-between; padding-bottom: 16px; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
-.side-menu-title { display: flex; align-items: center; gap: 8px; font-size: 16px; font-weight: 800; color: var(--cyan); text-shadow: 0 0 10px rgba(0,229,255,.5); }
-.side-menu-close { width: 32px; height: 32px; border-radius: 8px; background: transparent; border: 1px solid var(--border); color: var(--text-dim); font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-family: inherit; }
-.side-menu-close:active { border-color: var(--red); color: var(--red); }
-.menu-item { display: flex; align-items: center; gap: 12px; padding: 14px 12px; background: linear-gradient(180deg, rgba(255,255,255,.02), transparent); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 10px; color: var(--text); font-size: 13.5px; font-weight: 700; cursor: pointer; transition: all .2s; font-family: inherit; text-align: right; width: 100%; }
-.menu-item:active { transform: scale(.97); border-color: var(--cyan); box-shadow: 0 0 16px rgba(0,229,255,.3); }
-.menu-item .menu-icon { width: 40px; height: 40px; border-radius: 11px; background: rgba(0,229,255,.1); border: 1px solid rgba(0,229,255,.25); display: flex; align-items: center; justify-content: center; font-size: 19px; flex-shrink: 0; }
-.menu-item .menu-text { display: flex; flex-direction: column; gap: 2px; flex: 1; }
-.menu-item .menu-label { font-size: 13.5px; font-weight: 800; color: var(--text); }
-.menu-item .menu-desc { font-size: 10.5px; color: var(--text-dim); font-weight: 500; }
-.menu-item.primary { background: linear-gradient(180deg, rgba(0,229,255,.08), rgba(0,229,255,.02)); border-color: rgba(0,229,255,.4); }
-.menu-item.primary .menu-icon { background: rgba(0,229,255,.2); }
-.menu-item.danger { background: linear-gradient(180deg, rgba(255,42,77,.08), rgba(255,42,77,.02)); border-color: rgba(255,42,77,.3); color: #ff5577; }
-.menu-item.danger .menu-icon { background: rgba(255,42,77,.1); border-color: rgba(255,42,77,.25); }
-.status-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 7px; margin-bottom: 8px; }
-.chip { background: linear-gradient(180deg, var(--card-2), var(--card)); border: 1px solid var(--border); border-radius: 10px; padding: 9px 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 10.5px; color: var(--text-dim); min-height: 54px; text-align: center; }
-.chip-value { font-size: 13px; font-weight: 800; color: var(--text); display: flex; align-items: center; justify-content: center; gap: 4px; line-height: 1.2; }
-.chip-label { font-size: 10px; color: var(--text-dim); line-height: 1.2; }
-.chip-value.code { color: var(--cyan); font-family: 'Courier New', monospace; letter-spacing: 1px; font-size: 13px; font-weight: 900; text-shadow: 0 0 8px rgba(0,229,255,.6); }
-#waveNameChip { cursor: pointer; transition: all .2s; }
-#waveNameChip:active { border-color: var(--cyan); box-shadow: 0 0 12px rgba(0,229,255,.3); }
-#networkChip .bars { display: inline-flex; align-items: flex-end; gap: 2px; height: 14px; flex-direction: row-reverse; }
-#networkChip .bars span { width: 3px; border-radius: 2px; background: #3a4048; }
-#networkChip .bars span:nth-child(1) { height: 4px; }
-#networkChip .bars span:nth-child(2) { height: 7px; }
-#networkChip .bars span:nth-child(3) { height: 10px; }
-#networkChip .bars span:nth-child(4) { height: 14px; }
-#networkChip.good .bars span { background: var(--green); box-shadow: 0 0 4px var(--green); }
-#networkChip.mid .bars span:nth-child(-n+3) { background: var(--yellow); box-shadow: 0 0 4px var(--yellow); }
-#networkChip.bad .bars span:nth-child(-n+2) { background: var(--red); box-shadow: 0 0 4px var(--red); }
-#networkChip.offline .bars span { background: #3a4048; }
-#batteryChip .battery-visual { display: inline-flex; align-items: center; gap: 4px; }
-#batteryChip .battery-bars { display: inline-flex; gap: 2px; align-items: flex-end; }
-#batteryChip .battery-bars span { width: 4px; height: 12px; border-radius: 1px; background: #3a4048; }
-#batteryChip .battery-pct { font-size: 11px; font-weight: 800; color: var(--text); }
-#batteryChip.level-high .battery-bars span { background: var(--green); box-shadow: 0 0 4px var(--green); }
-#batteryChip.level-mid .battery-bars span { background: var(--yellow); box-shadow: 0 0 4px var(--yellow); }
-#batteryChip.level-low .battery-bars span { background: var(--red); box-shadow: 0 0 4px var(--red); }
-#waveStatusChip { justify-content: center; gap: 2px; }
-#waveStatusChip .status-text { font-size: 11px; font-weight: 800; }
-#waveStatusChip.disconnected .status-text { color: var(--red); }
-#waveStatusChip.live .status-text { color: var(--green); }
-#waveStatusChip .wave-timer { font-family: 'Courier New', monospace; color: var(--text-dim); font-size: 11px; font-weight: 700; }
-#waveStatusChip.live .wave-timer { color: var(--green); }
-#friendRequestsChip, #friendRequestsChip2 { cursor: pointer; position: relative; }
-#friendRequestsChip:active, #friendRequestsChip2:active { border-color: var(--cyan); box-shadow: 0 0 12px rgba(0,229,255,.3); }
-#sendFriendChip, #sendFriendChip2 { cursor: pointer; }
-#friendReqBadge, #friendReqBadge2 { position: absolute; top: -4px; left: -4px; background: var(--red); color: #fff; border-radius: 50%; min-width: 18px; height: 18px; font-size: 10px; font-weight: 900; align-items: center; justify-content: center; padding: 0 4px; box-shadow: 0 0 8px var(--red); display: none; }
-.radio-stage { position: relative; height: 360px; display: flex; align-items: center; justify-content: center; margin: 8px 0 16px; }
-.radio-device { position: relative; width: 210px; height: 320px; filter: drop-shadow(0 20px 40px rgba(0,0,0,.8)) drop-shadow(0 0 30px rgba(0,229,255,.15)); }
-.antenna { position: absolute; top: 0; right: 58px; width: 20px; height: 95px; background: linear-gradient(90deg, #0a0a0a, #2b2b2b 40%, #0a0a0a); border-radius: 10px 10px 3px 3px; box-shadow: inset -2px 0 3px rgba(0,0,0,.8); }
-.antenna::before { content: ''; position: absolute; top: -8px; left: 50%; transform: translateX(-50%); width: 12px; height: 12px; background: var(--red); border-radius: 50%; box-shadow: 0 0 8px var(--red); transition: all .25s; }
-body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14px var(--green); }
-.knobs { position: absolute; top: 88px; right: 18px; display: flex; gap: 20px; }
-.knob { width: 28px; height: 28px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #4a4a4a, #0d0d0d); border: 2px solid #1c1c1c; box-shadow: 0 3px 6px rgba(0,0,0,.8), inset -2px -2px 4px rgba(0,0,0,.5); position: relative; }
-.knob::after { content: ''; position: absolute; top: 3px; left: 50%; transform: translateX(-50%); width: 3px; height: 9px; background: #888; border-radius: 2px; }
-.body-main { position: absolute; top: 110px; left: 0; right: 0; height: 210px; background: linear-gradient(180deg, #1e1e1e, #0a0a0a); border-radius: 18px; border: 2px solid #0a0a0a; box-shadow: inset 0 2px 4px rgba(255,255,255,.06), inset 0 -4px 8px rgba(0,0,0,.7), 0 10px 25px rgba(0,0,0,.7); overflow: hidden; }
-.body-main::before { content: ''; position: absolute; inset: 6px; border-radius: 13px; border: 1px solid rgba(0,229,255,.08); pointer-events: none; }
-.lcd { position: absolute; top: 16px; left: 20px; right: 20px; height: 65px; background: #0a1a0f; border: 2px solid #050505; border-radius: 6px; box-shadow: inset 0 0 14px rgba(0,255,136,.18), inset 0 2px 4px rgba(0,0,0,.9), 0 0 14px rgba(0,255,136,.15); display: flex; flex-direction: column; justify-content: center; padding: 6px 10px; font-family: 'Courier New', monospace; color: var(--green); text-shadow: 0 0 7px rgba(0,255,136,.9); font-size: 12px; font-weight: 700; letter-spacing: .5px; line-height: 1.6; }
-.lcd-row { display: flex; justify-content: space-between; font-size: 11.5px; }
-.lcd-row .lcd-label { color: #00cc70; }
-.side-btns { position: absolute; top: 92px; left: 12px; right: 12px; display: flex; justify-content: space-between; font-size: 8px; color: #666; letter-spacing: .5px; font-weight: 700; }
-.side-btn { padding: 2px 7px; background: #1a1a1a; border-radius: 4px; border: 1px solid #2a2a2a; }
-.speaker-grill { position: absolute; bottom: 14px; left: 24px; right: 24px; height: 46px; border-radius: 6px; background: repeating-linear-gradient(90deg, #050505 0, #050505 3px, #1a1a1a 3px, #1a1a1a 6px); box-shadow: inset 0 3px 6px rgba(0,0,0,.95); }
-.ptt-btn { position: absolute; top: 140px; left: 50%; transform: translateX(-50%); width: 105px; height: 62px; border-radius: 14px; background: linear-gradient(180deg, #0a2a3a, #041520); border: 2px solid var(--cyan); box-shadow: 0 0 22px rgba(0,229,255,.55), inset 0 0 18px rgba(0,229,255,.25), inset 0 2px 4px rgba(0,0,0,.7); display: flex; align-items: center; justify-content: center; color: var(--cyan); font-weight: 900; font-size: 23px; letter-spacing: 2px; text-shadow: 0 0 12px rgba(0,229,255,.95); cursor: pointer; transition: all .15s; z-index: 5; font-family: inherit; }
-.ptt-btn.holding { transform: translateX(-50%) scale(.95); background: linear-gradient(180deg, #00e5ff, #008fa8); color: #001418; text-shadow: none; box-shadow: 0 0 45px rgba(0,229,255,1), 0 0 90px rgba(0,229,255,.6), inset 0 0 22px rgba(255,255,255,.35); }
-.ptt-sub { position: absolute; top: 212px; left: 50%; transform: translateX(-50%); font-size: 8px; color: var(--cyan-dark); letter-spacing: 1.5px; font-weight: 700; white-space: nowrap; }
-.ab-indicator { position: absolute; top: 175px; right: 14px; font-size: 9px; color: #555; font-weight: 700; }
-.tab-bar { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 500px; background: linear-gradient(180deg, rgba(11,18,24,.85), rgba(5,8,12,1)); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-top: 1px solid var(--border); display: grid; grid-template-columns: 1fr 1fr 1fr; padding: 8px 0 10px; z-index: 100; }
-.tab { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px 0; color: var(--text-dim); font-size: 11px; font-weight: 600; cursor: pointer; transition: color .25s; position: relative; background: none; border: none; font-family: inherit; }
-.tab.active { color: var(--cyan); }
-.tab.active::after { content: ''; position: absolute; top: -8px; left: 50%; transform: translateX(-50%); width: 28px; height: 3px; background: var(--cyan); border-radius: 0 0 3px 3px; box-shadow: 0 0 12px var(--cyan); }
-.tab-icon { font-size: 22px; line-height: 1; }
-.bottom-info { position: fixed; bottom: 68px; left: 50%; transform: translateX(-50%); width: 100%; max-width: 500px; text-align: center; font-size: 11px; color: var(--text-dim); padding: 8px 0; pointer-events: none; z-index: 99; }
-.bottom-info .hl { color: var(--cyan); font-weight: 700; }
-.log-header { display: flex; align-items: center; justify-content: space-between; padding: 6px 4px 14px; border-bottom: 1px solid var(--border); margin-bottom: 14px; gap: 8px; }
-.log-title { display: flex; flex-direction: column; gap: 3px; text-align: right; flex: 1; }
-.log-title h2 { font-size: 17px; font-weight: 800; color: var(--cyan); display: flex; align-items: center; gap: 6px; }
-.log-title .sub { font-size: 11px; color: var(--text-dim); font-weight: 500; }
-.log-actions { display: flex; gap: 12px; color: var(--cyan); font-size: 20px; }
-.log-actions span { cursor: pointer; }
-.empty-room { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 20px; text-align: center; gap: 14px; color: var(--text-dim); }
-.empty-room-icon { font-size: 60px; opacity: .35; filter: drop-shadow(0 0 20px rgba(0,229,255,.3)); }
-.empty-room-title { font-size: 16px; font-weight: 800; color: var(--cyan); }
-.empty-room-text { font-size: 12.5px; line-height: 1.7; max-width: 260px; }
-.empty-room-btn { margin-top: 14px; padding: 14px 28px; background: linear-gradient(180deg, #00e5ff, #008fa8); border: 1px solid var(--cyan); border-radius: 12px; color: #001418; font-family: inherit; font-size: 14px; font-weight: 800; cursor: pointer; box-shadow: 0 0 20px rgba(0,229,255,.5); transition: all .2s; }
-.msg { margin-bottom: 12px; position: relative; max-width: 92%; animation: msgSlide .35s ease; }
-@keyframes msgSlide { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-.msg-in { margin-right: 0; margin-left: auto; }
-.msg-out { margin-left: 0; margin-right: auto; }
-.msg-header { display: flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 700; margin-bottom: 5px; padding: 0 8px; }
-.msg-in .msg-header { color: var(--cyan); justify-content: flex-end; }
-.msg-out .msg-header { color: #ff5577; }
-.msg-body { border-radius: 14px; padding: 12px 14px; position: relative; border: 1px solid; }
-.msg-in .msg-body { background: linear-gradient(135deg, var(--blue-msg), var(--blue-msg-2)); border-color: rgba(0,229,255,.3); border-top-right-radius: 4px; }
-.msg-out .msg-body { background: linear-gradient(135deg, var(--red-msg), var(--red-msg-2)); border-color: rgba(255,42,77,.35); border-top-left-radius: 4px; }
-.voice-msg { display: flex; align-items: center; gap: 10px; }
-.play-btn { width: 42px; height: 42px; border-radius: 50%; background: rgba(0,229,255,.2); border: 1.5px solid var(--cyan); display: flex; align-items: center; justify-content: center; color: var(--cyan); font-size: 16px; cursor: pointer; flex-shrink: 0; transition: all .2s; font-family: inherit; font-weight: 700; }
-.msg-out .play-btn { background: rgba(255,42,77,.2); border-color: #ff5577; color: #ff5577; }
-.waveform { flex: 1; height: 38px; display: flex; align-items: center; gap: 2px; overflow: hidden; }
-.waveform span { display: block; width: 2.5px; background: var(--cyan); border-radius: 2px; opacity: .9; }
-.msg-out .waveform span { background: #ff5577; }
-.voice-meta { display: flex; justify-content: space-between; font-size: 10px; color: rgba(255,255,255,.65); margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,.08); }
-.text-msg { font-size: 13.5px; line-height: 1.75; color: #fff; font-weight: 500; }
-.attach-msg { display: flex; align-items: center; gap: 10px; padding: 8px 4px; }
-.attach-msg-icon { font-size: 32px; }
-.attach-msg-info { display: flex; flex-direction: column; gap: 2px; }
-.attach-msg-name { font-size: 13px; font-weight: 700; color: #fff; }
-.attach-msg-type { font-size: 10px; color: rgba(255,255,255,.65); }
-.attachment-preview-img { max-width: 100%; max-height: 240px; border-radius: 10px; display: block; margin-bottom: 6px; cursor: pointer; }
-.attachment-preview-video { max-width: 100%; max-height: 240px; border-radius: 10px; display: block; margin-bottom: 6px; }
-.chat-input-bar { position: fixed; bottom: 68px; left: 50%; transform: translateX(-50%); width: 100%; max-width: 500px; background: linear-gradient(180deg, rgba(11,18,24,.9), rgba(5,8,12,1)); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-top: 1px solid var(--border); padding: 10px 12px 14px; display: none; align-items: center; gap: 8px; z-index: 98; }
-.chat-input-bar.active { display: flex; }
-.chat-primary { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(180deg, #00e5ff, #008fa8); border: 1.5px solid var(--cyan); display: flex; align-items: center; justify-content: center; color: #001418; font-size: 20px; cursor: pointer; flex-shrink: 0; box-shadow: 0 0 16px rgba(0,229,255,.55); transition: all .15s; font-family: inherit; font-weight: 900; }
-.chat-primary:active { transform: scale(.92); box-shadow: 0 0 28px rgba(0,229,255,.95); }
-.chat-primary.recording { background: linear-gradient(180deg, #ff2a4d, #b01530); color: #fff; animation: recPulse 1s ease-in-out infinite; }
-@keyframes recPulse { 0%, 100% { box-shadow: 0 0 16px rgba(255,42,77,.6); } 50% { box-shadow: 0 0 32px rgba(255,42,77,1); } }
-.chat-clip-btn { color: var(--text-dim); font-size: 22px; cursor: pointer; background: none; border: none; font-family: inherit; padding: 0; transition: color .2s; flex-shrink: 0; }
-.chat-clip-btn:active { color: var(--cyan); }
-.chat-input { flex: 1; background: var(--card-2); border: 1px solid var(--border); border-radius: 22px; padding: 10px 14px; outline: none; color: var(--text); font-family: inherit; font-size: 13.5px; text-align: right; min-height: 44px; }
-.chat-input::placeholder { color: var(--text-dim); }
-.chat-emoji-btn { color: var(--text-dim); font-size: 22px; cursor: pointer; background: none; border: none; font-family: inherit; padding: 0; transition: color .2s; flex-shrink: 0; }
-.chat-emoji-btn:active { color: var(--cyan); }
-.settings-list { display: flex; flex-direction: column; gap: 8px; }
-.setting-item { background: linear-gradient(180deg, var(--card-2), var(--card)); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; gap: 10px; cursor: pointer; transition: border-color .2s; }
-.setting-item:active { border-color: var(--cyan); }
-.setting-info { display: flex; flex-direction: column; gap: 3px; flex: 1; }
-.setting-title { font-size: 14px; font-weight: 700; color: var(--text); }
-.setting-desc { font-size: 11px; color: var(--text-dim); }
-.setting-value { font-size: 12px; color: var(--cyan); font-weight: 700; }
-.toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px); background: linear-gradient(180deg, var(--card-2), var(--card)); border: 1px solid var(--cyan); color: var(--text); padding: 10px 20px; border-radius: 10px; font-size: 13px; font-weight: 600; z-index: 999; transition: transform .35s ease; box-shadow: 0 8px 24px rgba(0,229,255,.3); max-width: 90vw; text-align: center; }
-.toast.show { transform: translateX(-50%) translateY(0); }
-.toast.success { border-color: var(--green); box-shadow: 0 8px 24px rgba(0,255,136,.3); }
-.toast.error { border-color: var(--red); box-shadow: 0 8px 24px rgba(255,42,77,.3); }
-.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.8); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); z-index: 500; display: none; align-items: center; justify-content: center; padding: 20px; }
-.modal-overlay.show { display: flex; animation: fadeIn .25s ease; }
-.modal { width: 100%; max-width: 400px; background: linear-gradient(180deg, var(--card-2), var(--bg)); border: 1px solid var(--cyan); border-radius: 18px; padding: 22px 18px; box-shadow: 0 20px 60px rgba(0,229,255,.3); animation: modalPop .3s ease; max-height: 90vh; overflow-y: auto; scrollbar-width: thin; }
-@keyframes modalPop { from { opacity: 0; transform: scale(.9); } to { opacity: 1; transform: scale(1); } }
-.modal-title { font-size: 18px; font-weight: 800; color: var(--cyan); text-align: center; margin-bottom: 6px; }
-.modal-sub { font-size: 12px; color: var(--text-dim); text-align: center; margin-bottom: 18px; line-height: 1.6; }
-.modal-field { margin-bottom: 14px; }
-.modal-field label { display: block; font-size: 12px; color: var(--text-dim); margin-bottom: 6px; font-weight: 600; }
-.modal-field input { width: 100%; padding: 12px 14px; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-family: inherit; font-size: 14px; outline: none; transition: border-color .2s; text-align: right; }
-.modal-field input:focus { border-color: var(--cyan); box-shadow: 0 0 0 3px rgba(0,229,255,.1); }
-.modal-field input.code-input { text-align: center; letter-spacing: 3px; font-family: 'Courier New', monospace; font-weight: 800; font-size: 16px; color: var(--cyan); }
-.modal-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 18px; }
-.modal-btn { padding: 13px; border-radius: 10px; border: 1px solid; font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer; transition: all .2s; }
-.modal-btn.cancel { background: transparent; border-color: var(--border); color: var(--text-dim); }
-.modal-btn.confirm { background: linear-gradient(180deg, #00e5ff, #008fa8); border-color: var(--cyan); color: #001418; box-shadow: 0 0 18px rgba(0,229,255,.4); }
-.modal-btn.danger { background: linear-gradient(180deg, #ff2a4d, #b01530); border-color: #ff5577; color: #fff; box-shadow: 0 0 18px rgba(255,42,77,.4); }
-.modal-btn:active { transform: scale(.97); }
-.search-result-card { display: flex; align-items: center; gap: 12px; padding: 14px; background: var(--bg); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 8px; cursor: pointer; transition: all .2s; }
-.search-result-card:active { border-color: var(--cyan); transform: scale(.98); }
-.search-result-icon { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, var(--cyan), var(--cyan-dark)); display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
-.search-result-info { flex: 1; display: flex; flex-direction: column; gap: 3px; }
-.search-result-name { font-size: 14px; font-weight: 800; color: var(--text); }
-.search-result-code { font-size: 12px; color: var(--cyan); font-family: 'Courier New', monospace; font-weight: 700; letter-spacing: 1px; }
-.no-results { text-align: center; padding: 24px 12px; color: var(--text-dim); font-size: 13px; line-height: 1.7; }
-.no-results-icon { font-size: 36px; display: block; margin-bottom: 10px; opacity: .4; }
-.attach-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 6px; }
-.attach-item { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 18px 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 12px; cursor: pointer; transition: all .2s; color: var(--text); font-family: inherit; font-size: 12.5px; font-weight: 700; }
-.attach-item:active { border-color: var(--cyan); transform: scale(.96); box-shadow: 0 0 16px rgba(0,229,255,.25); }
-.attach-icon { font-size: 28px; }
-.icon-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 6px; }
-.icon-option { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 26px; background: var(--bg); border: 1px solid var(--border); border-radius: 12px; cursor: pointer; transition: all .2s; }
-.icon-option.selected { border-color: var(--cyan); background: rgba(0,229,255,.1); box-shadow: 0 0 16px rgba(0,229,255,.4); }
-.modal-menu-item { display: flex; align-items: center; gap: 12px; padding: 14px 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 8px; color: var(--text); font-size: 13.5px; font-weight: 700; cursor: pointer; transition: all .2s; font-family: inherit; text-align: right; width: 100%; }
-.modal-menu-item:active { transform: scale(.97); border-color: var(--cyan); }
-.modal-menu-item .modal-menu-icon { width: 38px; height: 38px; border-radius: 10px; background: rgba(0,229,255,.1); border: 1px solid rgba(0,229,255,.25); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
-.modal-menu-item.danger { color: #ff5577; }
-.modal-menu-item.danger .modal-menu-icon { background: rgba(255,42,77,.1); border-color: rgba(255,42,77,.3); }
-.code-display { text-align: center; padding: 18px; background: rgba(0,229,255,.05); border: 1px dashed var(--cyan); border-radius: 12px; margin: 14px 0; }
-.code-display-label { font-size: 11px; color: var(--text-dim); margin-bottom: 8px; }
-.code-display-value { font-size: 26px; font-weight: 900; color: var(--cyan); font-family: 'Courier New', monospace; letter-spacing: 3px; text-shadow: 0 0 20px rgba(0,229,255,.7); }
-.code-display-hint { font-size: 11px; color: var(--text-dim); margin-top: 8px; line-height: 1.6; }
-.join-request-info { padding: 16px; background: rgba(0,229,255,.05); border: 1px solid rgba(0,229,255,.3); border-radius: 12px; margin-bottom: 14px; text-align: center; }
-.join-request-icon { font-size: 40px; margin-bottom: 8px; }
-.join-request-name { font-size: 16px; font-weight: 800; color: var(--cyan); margin-bottom: 4px; }
-.join-request-code { font-size: 13px; color: var(--text-dim); font-family: 'Courier New', monospace; letter-spacing: 1px; }
-.members-dropdown { position: fixed; top: 100px; right: 12px; width: 240px; max-height: 60vh; background: linear-gradient(180deg, var(--card-2), var(--bg)); border: 1px solid var(--cyan); border-radius: 14px; box-shadow: 0 12px 40px rgba(0,229,255,.3); padding: 12px; z-index: 400; display: none; overflow-y: auto; scrollbar-width: none; }
-.members-dropdown::-webkit-scrollbar { display: none; }
-.members-dropdown.show { display: block; }
-.members-dropdown-title { font-size: 13px; font-weight: 800; color: var(--cyan); padding-bottom: 8px; border-bottom: 1px solid var(--border); margin-bottom: 8px; text-align: center; }
-.members-dropdown-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 8px; background: rgba(0,229,255,.04); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 6px; font-size: 12.5px; font-weight: 700; }
-.members-dropdown-item .status-active { color: var(--green); font-size: 10px; }
-.members-dropdown-item .status-inactive { color: var(--red); font-size: 10px; }
-.operations-empty { text-align: center; color: var(--text-dim); font-size: 11.5px; padding: 20px 8px; }
-.chat-list-item { display: flex; align-items: center; gap: 12px; padding: 14px 10px; background: linear-gradient(180deg, rgba(255,255,255,.02), transparent); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 8px; cursor: pointer; transition: all .2s; }
-.chat-list-item:active { border-color: var(--cyan); transform: scale(.98); }
-.chat-list-avatar { width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(135deg, var(--cyan), var(--cyan-dark)); display: flex; align-items: center; justify-content: center; color: #001418; font-weight: 900; font-size: 20px; flex-shrink: 0; }
-.chat-list-info { flex: 1; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
-.chat-list-name { font-size: 14.5px; font-weight: 800; color: var(--text); }
-.chat-list-last { font-size: 12px; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.chat-list-time { font-size: 10.5px; color: var(--text-dim); flex-shrink: 0; }
-.chat-back { width: 32px; height: 32px; border-radius: 8px; background: transparent; border: 1px solid var(--border); color: var(--cyan); font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-family: inherit; flex-shrink: 0; }
-.chat-back:active { border-color: var(--cyan); background: rgba(0,229,255,.1); }
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{--bg:#05080c;--card:#0f1921;--card-2:#142028;--border:#1c2a36;--text:#e6f0f5;--text-dim:#6b8899;--cyan:#00e5ff;--green:#00ff88;--red:#ff2a4d}
+body{font-family:'Segoe UI',Tahoma,sans-serif;color:var(--text);background:var(--bg);user-select:none;position:relative;overflow:hidden;height:100vh}
+.app{max-width:500px;margin:0 auto;height:100vh;display:flex;flex-direction:column;position:relative}
+.screen{flex:1;overflow-y:auto;padding:14px 14px 160px;display:none}
+.screen.active{display:block}
+.top-header{display:flex;align-items:center;justify-content:space-between;padding:6px 4px 14px}
+.brand{display:flex;align-items:center;gap:8px}
+.brand-icon{font-size:26px;filter:drop-shadow(0 0 8px rgba(0,229,255,.7))}
+.brand-title{font-size:19px;font-weight:800;color:var(--cyan)}
+.brand-sub{font-size:11px;color:var(--text-dim)}
+.menu-toggle{width:42px;height:42px;border-radius:11px;background:linear-gradient(180deg,var(--card-2),var(--card));border:1px solid var(--border);color:var(--cyan);font-size:22px;font-weight:900;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.menu-toggle.open{background:linear-gradient(180deg,#00e5ff,#008fa8);color:#001418}
+.side-menu{position:fixed;top:0;right:0;height:100vh;width:280px;background:linear-gradient(180deg,var(--card-2),var(--bg));border-left:1px solid var(--cyan);z-index:300;transform:translateX(110%);transition:transform .32s ease;display:flex;flex-direction:column;padding:20px 16px}
+.side-menu.open{transform:translateX(0)}
+.side-menu-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(3px);z-index:299;opacity:0;pointer-events:none;transition:opacity .3s}
+.side-menu-backdrop.show{opacity:1;pointer-events:auto}
+.menu-item{display:flex;align-items:center;gap:12px;padding:14px 12px;border:1px solid var(--border);border-radius:12px;margin-bottom:10px;color:var(--text);font-weight:700;cursor:pointer;width:100%;background:linear-gradient(180deg,rgba(255,255,255,.02),transparent);font-family:inherit;text-align:right}
+.status-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-bottom:8px}
+.chip{background:linear-gradient(180deg,var(--card-2),var(--card));border:1px solid var(--border);border-radius:10px;padding:9px 8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:54px;text-align:center}
+.chip-value{font-size:13px;font-weight:800;color:var(--text)}
+.chip-value.code{color:var(--cyan);font-family:monospace;font-weight:900}
+#waveStatusChip.live .status-text{color:var(--green)}
+#waveStatusChip.disconnected .status-text{color:var(--red)}
+.radio-stage{position:relative;height:360px;display:flex;align-items:center;justify-content:center;margin:8px 0 16px}
+.radio-device{position:relative;width:210px;height:320px;filter:drop-shadow(0 20px 40px rgba(0,0,0,.8)) drop-shadow(0 0 30px rgba(0,229,255,.15))}
+.antenna{position:absolute;top:0;right:58px;width:20px;height:95px;background:linear-gradient(90deg,#0a0a0a,#2b2b2b 40%,#0a0a0a);border-radius:10px 10px 3px 3px}
+.antenna::before{content:'';position:absolute;top:-8px;left:50%;transform:translateX(-50%);width:12px;height:12px;background:var(--red);border-radius:50%;box-shadow:0 0 8px var(--red);transition:all .25s}
+body.ptt-active .antenna::before{background:var(--green);box-shadow:0 0 14px var(--green)}
+.body-main{position:absolute;top:110px;left:0;right:0;height:210px;background:linear-gradient(180deg,#1e1e1e,#0a0a0a);border-radius:18px;border:2px solid #0a0a0a;overflow:hidden}
+.lcd{position:absolute;top:16px;left:20px;right:20px;height:65px;background:#0a1a0f;border:2px solid #050505;border-radius:6px;display:flex;flex-direction:column;justify-content:center;padding:6px 10px;font-family:monospace;color:var(--green);font-size:12px;font-weight:700}
+.lcd-row{display:flex;justify-content:space-between}
+.speaker-grill{position:absolute;bottom:14px;left:24px;right:24px;height:46px;border-radius:6px;background:repeating-linear-gradient(90deg,#050505 0,#050505 3px,#1a1a1a 3px,#1a1a1a 6px)}
+.ptt-btn{position:absolute;top:140px;left:50%;transform:translateX(-50%);width:105px;height:62px;border-radius:14px;background:linear-gradient(180deg,#0a2a3a,#041520);border:2px solid var(--cyan);box-shadow:0 0 22px rgba(0,229,255,.55);display:flex;align-items:center;justify-content:center;color:var(--cyan);font-weight:900;font-size:23px;letter-spacing:2px;cursor:pointer;z-index:5;font-family:inherit;transition:all .15s}
+.ptt-btn.holding{transform:translateX(-50%) scale(.95);background:linear-gradient(180deg,#00e5ff,#008fa8);color:#001418;box-shadow:0 0 45px rgba(0,229,255,1)}
+.ptt-sub{position:absolute;top:212px;left:50%;transform:translateX(-50%);font-size:8px;color:#008fa8;letter-spacing:1.5px;font-weight:700;white-space:nowrap}
+.tab-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:500px;background:linear-gradient(180deg,rgba(11,18,24,.85),rgba(5,8,12,1));backdrop-filter:blur(12px);border-top:1px solid var(--border);display:grid;grid-template-columns:1fr 1fr 1fr;padding:8px 0 10px;z-index:100}
+.tab{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0;color:var(--text-dim);font-size:11px;font-weight:600;cursor:pointer;background:none;border:none;font-family:inherit}
+.tab.active{color:var(--cyan)}
+.bottom-info{position:fixed;bottom:68px;left:50%;transform:translateX(-50%);width:100%;max-width:500px;text-align:center;font-size:11px;color:var(--text-dim);padding:8px 0;z-index:99}
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-100px);background:linear-gradient(180deg,var(--card-2),var(--card));border:1px solid var(--cyan);color:var(--text);padding:10px 20px;border-radius:10px;font-size:13px;font-weight:600;z-index:999;transition:transform .35s ease;max-width:90vw;text-align:center}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast.success{border-color:var(--green)}
+.toast.error{border-color:var(--red)}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);backdrop-filter:blur(4px);z-index:500;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.show{display:flex}
+.modal{width:100%;max-width:400px;background:linear-gradient(180deg,var(--card-2),var(--bg));border:1px solid var(--cyan);border-radius:18px;padding:22px 18px}
+.modal-title{font-size:18px;font-weight:800;color:var(--cyan);text-align:center;margin-bottom:14px}
+.modal-field input{width:100%;padding:12px 14px;background:var(--bg);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:inherit;font-size:14px;text-align:right}
+.modal-field input.code-input{text-align:center;letter-spacing:3px;font-family:monospace;color:var(--cyan);font-weight:800}
+.modal-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:18px}
+.modal-btn{padding:13px;border-radius:10px;border:1px solid;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer}
+.modal-btn.cancel{background:transparent;border-color:var(--border);color:var(--text-dim)}
+.modal-btn.confirm{background:linear-gradient(180deg,#00e5ff,#008fa8);border-color:var(--cyan);color:#001418}
 </style>
 </head>
 <body>
-  <div class="app">
-    <section class="screen active" id="screen-radio">
-      <header class="top-header">
-        <button class="menu-toggle" id="menuToggle" title="القائمة">☰</button>
-        <div class="brand">
-          <div class="brand-text">
-            <span class="brand-title">Radio Connect</span>
-            <span class="brand-sub">راديو كونكت</span>
-          </div>
-          <span class="brand-icon">📻</span>
-        </div>
-      </header>
-      <div class="status-row">
-        <div class="chip" id="networkChip">
-          <div class="bars"><span></span><span></span><span></span><span></span></div>
-          <div class="chip-label">الشبكة</div>
-        </div>
-        <div class="chip" id="waveNameChip">
-          <div class="chip-value" id="waveNameLabel" style="font-size:11px;">لا توجد فرقة</div>
-          <div class="chip-label">الفرقة النشطة</div>
-        </div>
-        <div class="chip">
-          <div class="chip-value code" id="waveCodeChip">Q00000 <span style="font-size:12px;">🔑</span></div>
-          <div class="chip-label">رقم الموجة</div>
-        </div>
-      </div>
-      <div class="status-row">
-        <div class="chip" id="waveStatusChip" class="disconnected">
-          <div class="status-text" id="waveStatusText">🔴 غير متصل</div>
-          <div class="wave-timer" id="waveTimer">00:00</div>
-        </div>
-        <div class="chip" id="operationsChip" style="cursor:pointer;">
-          <div class="chip-value" style="font-size:13px; font-weight:800;">📋 العمليات</div>
-        </div>
-        <div class="chip" id="batteryChip">
-          <div class="chip-value">
-            <div class="battery-visual">
-              <div class="battery-bars"><span></span><span></span><span></span><span></span><span></span></div>
-              <span class="battery-pct" id="batteryValue">--%</span>
-            </div>
-          </div>
-          <div class="chip-label">البطارية</div>
-        </div>
-      </div>
-      <div class="status-row" style="grid-template-columns:1fr 1fr;">
-        <div class="chip" id="friendRequestsChip" style="cursor:pointer;">
-          <div class="chip-value" style="font-size:13px; font-weight:800;">👥 طلبات الصداقة</div>
-          <span id="friendReqBadge">0</span>
-        </div>
-        <div class="chip" id="sendFriendChip" style="cursor:pointer;">
-          <div class="chip-value" style="font-size:13px; font-weight:800;">➕ إرسال طلب</div>
-        </div>
-      </div>
-      <div class="radio-stage">
-        <div class="radio-device">
-          <div class="antenna"></div>
-          <div class="knobs">
-            <div class="knob" title="VOL"></div>
-            <div class="knob" title="CH"></div>
-          </div>
-          <div class="body-main">
-            <div class="lcd">
-              <div class="lcd-row">
-                <span class="lcd-label" id="lcdLine1">CH 07</span>
-                <span id="lcdLine2">S458</span>
-              </div>
-              <div class="lcd-row">
-                <span class="lcd-label" id="lcdLine3">Q00000 • RX</span>
-                <span id="lcdStatus">•</span>
-              </div>
-            </div>
-            <div class="side-btns">
-              <span class="side-btn">MENU</span>
-              <span class="side-btn">A/B</span>
-            </div>
-            <div class="speaker-grill"></div>
-          </div>
-          <button class="ptt-btn" id="pttMain">PTT</button>
-          <div class="ptt-sub">PRESS TO TALK</div>
-          <div class="ab-indicator">A/B</div>
-        </div>
-      </div>
-    </section>
-    <section class="screen" id="screen-log">
-      <div class="log-header">
-        <div class="log-actions">
-          <span id="roomMenuBtn">☰</span>
-          <span onclick="toast('معلومات الغرفة')">ⓘ</span>
-        </div>
-        <div class="log-title">
-          <h2><span id="roomIcon">💬</span> <span id="roomNameLabel">الغرفة</span></h2>
-          <span class="sub" id="roomSubLabel">محادثاتك الخاصة</span>
-        </div>
-      </div>
-      <div class="status-row" style="grid-template-columns:1fr 1fr;">
-        <div class="chip" id="friendRequestsChip2" style="cursor:pointer;">
-          <div class="chip-value" style="font-size:13px; font-weight:800;">👥 طلبات الصداقة</div>
-          <span id="friendReqBadge2">0</span>
-        </div>
-        <div class="chip" id="sendFriendChip2" style="cursor:pointer;">
-          <div class="chip-value" style="font-size:13px; font-weight:800;">➕ إرسال طلب</div>
-        </div>
-      </div>
-      <div id="chatListContainer" style="margin-top:14px;"></div>
-      <div class="empty-room" id="emptyRoom">
-        <div class="empty-room-icon">💬</div>
-        <div class="empty-room-title">لا توجد محادثات بعد</div>
-        <div class="empty-room-text">اضغط ☰ بالأعلى، ثم اختر "البحث" للعثور على مستخدم وبدء محادثة.</div>
-        <button class="empty-room-btn" onclick="openSearchUser()">🔍 البحث عن مستخدم</button>
-      </div>
-    </section>
-    <section class="screen" id="screen-chat">
-      <div class="log-header">
-        <div class="log-actions">
-          <button class="chat-back" id="chatBackBtn">→</button>
-        </div>
-        <div class="log-title">
-          <h2><span id="chatWithName">—</span></h2>
-          <span class="sub" id="chatWithCode">—</span>
-        </div>
-      </div>
-      <div id="chatMessages"></div>
-    </section>
-    <section class="screen" id="screen-settings">
-      <header class="top-header">
-        <div class="brand">
-          <span class="brand-icon">⚙️</span>
-          <div class="brand-text">
-            <span class="brand-title">الإعدادات</span>
-            <span class="brand-sub">Settings</span>
-          </div>
-        </div>
-      </header>
-      <div class="settings-list">
-        <div class="setting-item" onclick="toast('اسم الموجة: ' + (currentUser.waveName || '—'), 'success')">
-          <div class="setting-info"><span class="setting-title">📡 اسم الموجة</span><span class="setting-desc">اسم موجتك الحالية</span></div>
-          <span class="setting-value" id="waveNameValue">—</span>
-        </div>
-        <div class="setting-item" onclick="copyMyWaveCode()">
-          <div class="setting-info"><span class="setting-title">🔑 رقم الموجة</span><span class="setting-desc">اضغط للنسخ</span></div>
-          <span class="setting-value" id="waveCodeValue">—</span>
-        </div>
-        <div class="setting-item" onclick="toast('معرّفك: ' + (currentUser.radCode || '—'))">
-          <div class="setting-info"><span class="setting-title">👤 معرّف المستخدم</span><span class="setting-desc">هويتك في التطبيق</span></div>
-          <span class="setting-value" id="myRadCode">—</span>
-        </div>
-        <div class="setting-item" onclick="testCall()">
-          <div class="setting-info"><span class="setting-title">🔔 اختبار صوت النداء</span><span class="setting-desc">تأكد من أن الصوت يعمل</span></div>
-          <span class="setting-value">تجربة</span>
-        </div>
-        <div class="setting-item" onclick="factoryReset()">
-          <div class="setting-info"><span class="setting-title" style="color:var(--red);">⚠️ استعادة ضبط المصنع</span><span class="setting-desc" style="color:var(--red-dark);">مسح كل شيء</span></div>
-          <span class="setting-value" style="color:var(--red);">مسح شامل</span>
-        </div>
-        <div class="setting-item" onclick="toast('الإصدار 4.3.0')">
-          <div class="setting-info"><span class="setting-title">ℹ️ حول التطبيق</span><span class="setting-desc">Radio Connect</span></div>
-          <span class="setting-value">v4.3</span>
-        </div>
-      </div>
-    </section>
-    <nav class="tab-bar">
-      <button class="tab" data-tab="log" onclick="switchTab('log')"><span class="tab-icon">💬</span><span>الغرفة</span></button>
-      <button class="tab active" data-tab="radio" onclick="switchTab('radio')"><span class="tab-icon">📡</span><span>النداء اللاسلكي</span></button>
-      <button class="tab" data-tab="settings" onclick="switchTab('settings')"><span class="tab-icon">⚙️</span><span>الإعدادات</span></button>
-    </nav>
-    <div class="bottom-info" id="bottomInfo">إشارة: <span class="hl">قوي</span> • بطارية الراديو: <span class="hl" id="bottomBattery">--%</span></div>
-    <div class="chat-input-bar" id="chatInputBar">
-      <button class="chat-primary" id="chatPrimaryBtn" title="التسجيل أو الإرسال">🎙️</button>
-      <button class="chat-clip-btn" id="chatClip" title="إرفاق">📎</button>
-      <input type="text" class="chat-input" id="chatInput" placeholder="اكتب رسالة...">
-      <button class="chat-emoji-btn" id="emojiBtn" title="إيموجي">😊</button>
-    </div>
-  </div>
-  <div class="side-menu-backdrop" id="menuBackdrop"></div>
-  <aside class="side-menu" id="sideMenu">
-    <div class="side-menu-header">
-      <div class="side-menu-title"><span class="icon">⚙️</span><span id="sideMenuTitle">الإعدادات السريعة</span></div>
-      <button class="side-menu-close" onclick="closeSideMenu()">✕</button>
-    </div>
-    <div id="sideMenuContent"></div>
-  </aside>
-  <div class="members-dropdown" id="membersDropdown"></div>
+<div class="app">
+<section class="screen active" id="screen-radio">
+<header class="top-header"><button class="menu-toggle" id="menuToggle">☰</button><div class="brand"><div><span class="brand-title">Radio Connect</span><div class="brand-sub">راديو كونكت</div></div><span class="brand-icon">📻</span></div></header>
+<div class="status-row"><div class="chip"><div class="chip-value">📶</div><div class="chip-label">الشبكة</div></div><div class="chip" id="waveNameChip"><div class="chip-value" id="waveNameLabel" style="font-size:11px">لا توجد فرقة</div><div class="chip-label">الفرقة</div></div><div class="chip"><div class="chip-value code" id="waveCodeChip">Q00000</div><div class="chip-label">رقمك</div></div></div>
+<div class="status-row"><div class="chip" id="waveStatusChip" class="disconnected"><div class="status-text" id="waveStatusText">🔴 غير متصل</div><div class="chip-label" id="waveTimer">00:00</div></div><div class="chip" id="operationsChip"><div class="chip-value" style="font-size:13px">📋 العمليات</div></div><div class="chip"><div class="chip-value" id="batteryValue">--%</div><div class="chip-label">البطارية</div></div></div>
+<div class="radio-stage"><div class="radio-device"><div class="antenna"></div><div class="body-main"><div class="lcd"><div class="lcd-row"><span id="lcdLine1">CH 07</span><span id="lcdLine2">S458</span></div><div class="lcd-row"><span id="lcdLine3">Q00000 • RX</span><span>●</span></div></div><div class="speaker-grill"></div></div><button class="ptt-btn" id="pttMain">PTT</button><div class="ptt-sub">PRESS TO TALK - اضغط وتحدث</div></div></div>
+</section>
+<nav class="tab-bar"><button class="tab" data-tab="log" onclick="switchTab('log')"><span>💬</span><span>الغرفة</span></button><button class="tab active" data-tab="radio" onclick="switchTab('radio')"><span>📡</span><span>النداء</span></button><button class="tab" data-tab="settings" onclick="switchTab('settings')"><span>⚙️</span><span>الإعدادات</span></button></nav>
+<div class="bottom-info">إشارة: قوي • بطارية: <span id="bottomBattery">--%</span></div>
+</div>
+<div class="side-menu-backdrop" id="menuBackdrop"></div>
+<aside class="side-menu" id="sideMenu"><div style="display:flex;justify-content:space-between;padding-bottom:16px;border-bottom:1px solid var(--border);margin-bottom:16px"><span style="color:var(--cyan);font-weight:800">⚙️ القائمة</span><button onclick="closeSideMenu()" style="width:32px;height:32px;border-radius:8px;background:transparent;border:1px solid var(--border);color:var(--text-dim)">✕</button></div><div id="sideMenuContent"></div></aside>
+<div class="modal-overlay" id="modalWave"><div class="modal"><div class="modal-title">📡 إنشاء فرقة</div><div class="modal-field"><input type="text" id="waveName" placeholder="اسم الفرقة مثلا: فريق العمل"></div><div class="modal-actions"><button class="modal-btn cancel" onclick="closeModal('modalWave')">إلغاء</button><button class="modal-btn confirm" onclick="createWave()">إنشاء</button></div></div></div>
+<div class="modal-overlay" id="modalWaveCreated"><div class="modal"><div class="modal-title">✅ تم إنشاء الفرقة</div><div style="text-align:center;padding:18px;background:rgba(0,229,255,.05);border:1px dashed var(--cyan);border-radius:12px;margin:14px 0"><div id="createdWaveCode" style="font-size:26px;font-weight:900;color:var(--cyan);font-family:monospace;letter-spacing:3px">Q00000</div><div style="font-size:11px;color:var(--text-dim);margin-top:8px">شارك هذا الرقم مع فريقك</div></div><div class="modal-actions"><button class="modal-btn cancel" onclick="copyWaveCode()">📋 نسخ</button><button class="modal-btn confirm" onclick="closeModal('modalWaveCreated')">تمام</button></div></div></div>
+<div class="modal-overlay" id="modalSearch"><div class="modal"><div class="modal-title">🔍 البحث</div><div class="modal-field"><input type="text" id="searchQuery" class="code-input" placeholder="Q##### او W#####"></div><div class="modal-actions" style="grid-template-columns:1fr"><button class="modal-btn confirm" onclick="doSearch()">🔍 بحث</button></div><div id="searchResults" style="margin-top:12px"></div><div class="modal-actions" style="grid-template-columns:1fr;margin-top:12px"><button class="modal-btn cancel" onclick="closeModal('modalSearch')">إغلاق</button></div></div></div>
+<div class="modal-overlay" id="modalJoinConfirm"><div class="modal"><div class="modal-title">📩 انضمام</div><div style="text-align:center;padding:10px"><div id="joinTargetName" style="font-weight:800;color:var(--cyan)"></div><div id="joinTargetCode" style="font-family:monospace"></div></div><div class="modal-actions"><button class="modal-btn cancel" onclick="closeModal('modalJoinConfirm')">إلغاء</button><button class="modal-btn confirm" onclick="confirmJoin()">انضمام</button></div></div></div>
+<div class="modal-overlay" id="modalUserName"><div class="modal"><div class="modal-title">👤 ما اسمك؟</div><div class="modal-field"><input type="text" id="userNameInput" placeholder="اسمك"></div><div class="modal-actions" style="grid-template-columns:1fr"><button class="modal-btn confirm" onclick="saveUserName()">حفظ</button></div></div></div>
 
-  <div class="modal-overlay" id="modalRoomMenu"><div class="modal"><div class="modal-title">☰ خيارات الغرفة</div><div class="modal-sub">إدارة الغرفة والدردشة</div><button class="modal-menu-item" onclick="openEditRoomName()"><span class="modal-menu-icon">✏️</span><span>تعديل اسم الغرفة</span></button><button class="modal-menu-item" onclick="openEditRoomIcon()"><span class="modal-menu-icon">🎨</span><span>تغيير أيقونة الغرفة</span></button><button class="modal-menu-item danger" onclick="confirmClearChat()"><span class="modal-menu-icon">🗑️</span><span>مسح الدردشة كاملة</span></button><div class="modal-actions" style="grid-template-columns:1fr;margin-top:14px;"><button class="modal-btn cancel" onclick="closeModal('modalRoomMenu')">إغلاق</button></div></div></div>
-  <div class="modal-overlay" id="modalEditWave"><div class="modal"><div class="modal-title">✏️ تعديل اسم الفرقة</div><div class="modal-sub">اكتب الاسم الجديد</div><div class="modal-field"><label>اسم الفرقة</label><input type="text" id="newWaveName" maxlength="30"></div><div class="modal-actions"><button class="modal-btn cancel" onclick="closeModal('modalEditWave')">إلغاء</button><button class="modal-btn confirm" onclick="saveWaveName()">حفظ</button></div></div></div>
-  <div class="modal-overlay" id="modalEditName"><div class="modal"><div class="modal-title">✏️ تعديل اسم الغرفة</div><div class="modal-sub">اكتب الاسم الجديد</div><div class="modal-field"><label>اسم الغرفة</label><input type="text" id="newRoomName" maxlength="30"></div><div class="modal-actions"><button class="modal-btn cancel" onclick="closeModal('modalEditName')">إلغاء</button><button class="modal-btn confirm" onclick="saveRoomName()">حفظ</button></div></div></div>
-  <div class="modal-overlay" id="modalEditIcon"><div class="modal"><div class="modal-title">🎨 تغيير أيقونة الغرفة</div><div class="icon-grid" id="iconGrid"><div class="icon-option" data-icon="💬">💬</div><div class="icon-option" data-icon="📻">📻</div><div class="icon-option" data-icon="📡">📡</div><div class="icon-option" data-icon="🎙️">🎙️</div><div class="icon-option" data-icon="🔊">🔊</div><div class="icon-option" data-icon="📞">📞</div><div class="icon-option" data-icon="🛡️">🛡️</div><div class="icon-option" data-icon="⚡">⚡</div></div><div class="modal-actions" style="grid-template-columns:1fr;margin-top:14px;"><button class="modal-btn cancel" onclick="closeModal('modalEditIcon')">إغلاق</button></div></div></div>
-  <div class="modal-overlay" id="modalClearChat"><div class="modal"><div class="modal-title">🗑️ مسح الدردشة</div><div class="modal-sub">هل أنت متأكد؟ لا يمكن التراجع.</div><div class="modal-actions"><button class="modal-btn cancel" onclick="closeModal('modalClearChat')">إلغاء</button><button class="modal-btn danger" onclick="doClearChat()">مسح</button></div></div></div>
-  <div class="modal-overlay" id="modalAttach"><div class="modal"><div class="modal-title">📎 إرفاق</div><div class="modal-sub">اختر نوع المحتوى</div><div class="attach-grid"><button class="attach-item" onclick="pickCamera()"><span class="attach-icon">📷</span><span>كاميرا</span></button><button class="attach-item" onclick="pickFile('image')"><span class="attach-icon">🖼️</span><span>صورة</span></button><button class="attach-item" onclick="pickFile('video')"><span class="attach-icon">🎬</span><span>فيديو</span></button><button class="attach-item" onclick="pickFile('document')"><span class="attach-icon">📄</span><span>مستند</span></button><button class="attach-item" onclick="pickContact()"><span class="attach-icon">👥</span><span>جهة اتصال</span></button><button class="attach-item" onclick="pickFile('audio')"><span class="attach-icon">🎵</span><span>موسيقى</span></button></div><div class="modal-actions" style="grid-template-columns:1fr;margin-top:14px;"><button class="modal-btn cancel" onclick="closeModal('modalAttach')">إلغاء</button></div></div></div>
-  <div class="modal-overlay" id="modalCreate"><div class="modal"><div class="modal-title">➕ إنشاء غرفة جديدة</div><div class="modal-sub">سيُولَّد رقم غرفة خاص بك تلقائياً</div><div class="modal-field"><label>اسم الغرفة</label><input type="text" id="roomName" maxlength="30"></div><div class="modal-actions"><button class="modal-btn cancel" onclick="closeModal('modalCreate')">إلغاء</button><button class="modal-btn confirm" onclick="createRoom()">إنشاء</button></div></div></div>
-  <div class="modal-overlay" id="modalWave"><div class="modal"><div class="modal-title">📡 إنشاء فرقة</div><div class="modal-sub">سيُولَّد رقم فرقتك الخاص</div><div class="modal-field"><label>اسم الفرقة</label><input type="text" id="waveName" maxlength="30"></div><div class="modal-actions"><button class="modal-btn cancel" onclick="closeModal('modalWave')">إلغاء</button><button class="modal-btn confirm" onclick="createWave()">إنشاء</button></div></div></div>
-  <div class="modal-overlay" id="modalWaveCreated"><div class="modal"><div class="modal-title">✅ تم إنشاء الفرقة</div><div class="code-display"><div class="code-display-label">رقم الفرقة</div><div class="code-display-value" id="createdWaveCode">Q00000</div></div><div class="modal-actions"><button class="modal-btn cancel" onclick="copyWaveCode()">📋 نسخ</button><button class="modal-btn confirm" onclick="closeModal('modalWaveCreated')">تمام</button></div></div></div>
-  <div class="modal-overlay" id="modalRoomCreated"><div class="modal"><div class="modal-title">✅ تم إنشاء الغرفة</div><div class="code-display"><div class="code-display-label">رقم الغرفة</div><div class="code-display-value" id="createdRoomCode">G00000</div></div><div class="modal-actions"><button class="modal-btn cancel" onclick="copyRoomCode()">📋 نسخ</button><button class="modal-btn confirm" onclick="closeModal('modalRoomCreated')">تمام</button></div></div></div>
-  <div class="modal-overlay" id="modalSearch"><div class="modal"><div class="modal-title">🔍 البحث</div><div class="modal-sub" id="searchSubTitle">ابحث برقم</div><div class="modal-field"><label id="searchFieldLabel">الرقم</label><input type="text" id="searchQuery" class="code-input" maxlength="10"></div><div class="modal-actions" style="grid-template-columns:1fr;margin-bottom:14px;"><button class="modal-btn confirm" onclick="doSearch()">🔍 بحث</button></div><div id="searchResults"><div class="no-results"><span class="no-results-icon">🔎</span>اكتب الرقم</div></div><div class="modal-actions" style="grid-template-columns:1fr;margin-top:14px;"><button class="modal-btn cancel" onclick="closeModal('modalSearch')">إغلاق</button></div></div></div>
-  <div class="modal-overlay" id="modalJoinConfirm"><div class="modal"><div class="modal-title">📩 طلب انضمام</div><div class="join-request-info"><div class="join-request-icon">📡</div><div class="join-request-name" id="joinTargetName">—</div><div class="join-request-code" id="joinTargetCode">Q00000</div></div><div class="modal-actions"><button class="modal-btn cancel" onclick="cancelJoin()">إلغاء</button><button class="modal-btn confirm" onclick="confirmJoin()">موافق</button></div></div></div>
-  <div class="modal-overlay" id="modalIncomingRequest"><div class="modal"><div class="modal-title">🔔 طلب انضمام</div><div class="join-request-info"><div class="join-request-icon">👤</div><div class="join-request-name" id="incomingName">—</div><div class="join-request-code" id="incomingCode">—</div></div><div class="modal-actions"><button class="modal-btn danger" onclick="rejectIncoming()">رفض</button><button class="modal-btn confirm" onclick="acceptIncoming()">قبول</button></div></div></div>
-  <div class="modal-overlay" id="modalUserName"><div class="modal"><div class="modal-title">👤 ما اسمك؟</div><div class="modal-field"><label>الاسم</label><input type="text" id="userNameInput" maxlength="20"></div><div class="modal-actions" style="grid-template-columns:1fr;"><button class="modal-btn confirm" onclick="saveUserName()">حفظ</button></div></div></div>
-  <div class="modal-overlay" id="modalContactPick"><div class="modal"><div class="modal-title">👥 جهة الاتصال</div><div class="modal-field"><label>الاسم</label><input type="text" id="contactName"></div><div class="modal-field"><label>رقم الهاتف</label><input type="tel" id="contactPhone"></div><div class="modal-actions"><button class="modal-btn cancel" onclick="closeModal('modalContactPick')">إلغاء</button><button class="modal-btn confirm" onclick="sendContact()">إرسال</button></div></div></div>
-
-  <div class="modal-overlay" id="modalFriendRequests"><div class="modal"><div class="modal-title">👥 طلبات الصداقة</div><div class="modal-sub">الطلبات الواردة والصادرة</div><div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:12px;"><button id="tabIncoming" class="modal-btn confirm" onclick="switchFriendTab('incoming')" style="padding:10px;">📥 واردة</button><button id="tabOutgoing" class="modal-btn cancel" onclick="switchFriendTab('outgoing')" style="padding:10px;">📤 صادرة</button></div><div id="friendRequestsList" style="max-height:320px; overflow-y:auto;"><div class="no-results"><span class="no-results-icon">📭</span>لا توجد طلبات</div></div><div class="modal-actions" style="grid-template-columns:1fr; margin-top:14px;"><button class="modal-btn cancel" onclick="closeModal('modalFriendRequests')">إغلاق</button></div></div></div>
-  <div class="modal-overlay" id="modalFriendIncoming"><div class="modal"><div class="modal-title">👋 طلب صداقة</div><div class="join-request-info"><div class="join-request-icon">👤</div><div class="join-request-name" id="frIncomingName">—</div><div class="join-request-code" id="frIncomingCode">—</div></div><div class="modal-actions"><button class="modal-btn danger" onclick="rejectFriendRequest()">❌ إلغاء</button><button class="modal-btn confirm" onclick="acceptFriendRequest()">✅ موافق</button></div></div></div>
-  <div class="modal-overlay" id="modalFriendSend"><div class="modal"><div class="modal-title">➕ إرسال طلب صداقة</div><div class="modal-sub">ابحث برقم المستخدم</div><div class="modal-field"><label>رقم المستخدم</label><input type="text" id="friendSearchCode" class="code-input" maxlength="10" placeholder="Q#####"></div><div id="friendSearchResults"></div><div class="modal-actions"><button class="modal-btn cancel" onclick="closeModal('modalFriendSend')">إلغاء</button><button class="modal-btn confirm" onclick="searchFriend()">🔍 بحث</button></div></div></div>
-
-  <input type="file" id="hiddenFileInput" style="display:none;">
-    <script>
-      // تم تشفير الروابط لحمايتها من العبث
-const SERVER_URL = atob('aHR0cHM6Ly9yYWRpby1jb25uZWN0LXNlcnZlci5vbnJlbmRlci5jb20=');
-const LIVEKIT_URL = atob('d3NzOi8vcmFkaW9jb25uZWN0LTh1eWg1M3FjLmxpdmVraXQuY2xvdWQ=');
-
+<script>
+const SERVER_URL = 'https://radio-connect-server.onrender.com';
+const LIVEKIT_URL = 'wss://radioconnect-8uyh53qc.livekit.cloud';
 let DEVICE_ID = localStorage.getItem('rc_device_id');
-if (!DEVICE_ID) {
-  DEVICE_ID = 'dev_' + (crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2) + Date.now());
-  localStorage.setItem('rc_device_id', DEVICE_ID);
+if(!DEVICE_ID){DEVICE_ID='dev_'+Math.random().toString(36).slice(2)+Date.now();localStorage.setItem('rc_device_id',DEVICE_ID);}
+let currentUser = {id:DEVICE_ID, name:localStorage.getItem('rc_user_name')||'', radCode:'Q00000', waveId:localStorage.getItem('rc_saved_wave_id')||null, waveName:localStorage.getItem('rc_saved_wave_name')||null};
+let socket=null, waveRoom=null, waveLocalAudioTrack=null, rawMicStream=null, audioContext=null, isTalking=false, timerInterval=null, timerSec=0;
+let joinTarget=null;
+function toast(msg,type=''){let t=document.createElement('div');t.className='toast '+(type||'');t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.classList.add('show'),10);setTimeout(()=>{t.classList.remove('show');setTimeout(()=>t.remove(),400);},3000);}
+function openModal(id){document.getElementById(id).classList.add('show');}
+function closeModal(id){document.getElementById(id).classList.remove('show');}
+function switchTab(tab){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));let el=document.getElementById('screen-'+tab);if(el)el.classList.add('active');}
+function closeSideMenu(){document.getElementById('sideMenu').classList.remove('open');document.getElementById('menuBackdrop').classList.remove('show');document.getElementById('menuToggle').classList.remove('open');}
+function openSideMenu(){renderSideMenu();document.getElementById('sideMenu').classList.add('open');document.getElementById('menuBackdrop').classList.add('show');document.getElementById('menuToggle').classList.add('open');}
+document.getElementById('menuToggle').onclick=openSideMenu;
+document.getElementById('menuBackdrop').onclick=closeSideMenu;
+document.getElementById('operationsChip').onclick=openSideMenu;
+document.getElementById('waveNameChip').onclick=openSideMenu;
+function renderSideMenu(){
+ let c=document.getElementById('sideMenuContent');
+ c.innerHTML=`<button class="menu-item" onclick="openModal('modalWave');closeSideMenu();">📡 إنشاء فرقة جديدة</button>
+ <button class="menu-item" onclick="openModal('modalSearch');closeSideMenu();">🔍 البحث وانضمام لفرقة</button>
+ <button class="menu-item" onclick="leaveWave()">🚪 الخروج من الفرقة</button>
+ <div style="margin-top:14px;padding:10px;background:rgba(0,229,255,.05);border:1px dashed var(--cyan);border-radius:10px;text-align:center">
+ <div style="font-size:11px;color:var(--text-dim)">رقمك</div><div style="font-size:18px;font-weight:900;color:var(--cyan);font-family:monospace">${currentUser.radCode}</div>
+ <div style="font-size:11px;color:var(--text-dim);margin-top:6px">فرقتك: ${currentUser.waveId||'لا توجد'}<br>${currentUser.waveName||''}</div></div>
+ <div style="margin-top:10px;font-size:10px;color:var(--text-dim);text-align:center">💡 بعد الانضمام لنفس الفرقة<br>اضغط PTT وتحدث - الصوت يصل فوراً</div>`;
 }
-
-let currentUser = {
-  id: DEVICE_ID, name: localStorage.getItem('rc_user_name') || '',
-  radCode: null, waveCode: null, waveName: null, waveId: null,
-  isWaveOwner: false, roomCode: null, roomName: null, roomIcon: '💬',
-  currentConvId: null, currentChatWith: null
-};
-
-let batteryPercent = null;
-let menuBusy = false;
-let searchResultUser = null;
-let socket = null;
-
-let livekitRoom = null;
-let waveRoom = null;
-let waveLocalAudioTrack = null;
-let rawMicStream = null;
-let localTestAudio = null;
-let isTalking = false;
-
-function factoryReset() {
-  if (!confirm('⚠️ تحذير: سيتم مسح جميع البيانات. متأكد؟')) return;
-  if (!confirm('متأكد 100%؟ لا يمكن التراجع.')) return;
-  localStorage.clear();
-  window.location.reload();
+async function registerUser(){
+ try{
+  let res=await fetch(SERVER_URL+'/api/users/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({deviceId:currentUser.id,userName:currentUser.name||'مستخدم'})});
+  let data=await res.json();
+  if(data.radCode){currentUser.radCode=data.radCode;document.getElementById('waveCodeChip').textContent=data.radCode;document.getElementById('lcdLine3').textContent=data.radCode+' • RX';}
+  return data;
+ }catch(e){return null;}
 }
-
-const PTTEngine = {
-  audioCtx: null, beepReady: false,
-  async init() {
-    if (this.audioCtx) return true;
-    try {
-      const AC = window.AudioContext || window.webkitAudioContext;
-      this.audioCtx = new AC();
-      if (this.audioCtx.state === 'suspended') await this.audioCtx.resume();
-      const openEl = document.getElementById('walkieOpen');
-      const closeEl = document.getElementById('walkieClose');
-      [openEl, closeEl].forEach(el => {
-        if (el) {
-          el.volume = 0;
-          el.play().then(() => {
-            el.pause(); el.currentTime = 0; el.volume = 0.9;
-            this.beepReady = true;
-          }).catch(() => { el.volume = 0.9; });
-        }
-      });
-      return true;
-    } catch (e) { return false; }
-  },
-  playOpenBeep() {
-    const el = document.getElementById('walkieOpen');
-    if (!el) return;
-    try { el.currentTime = 0; el.volume = 0.9; el.play().catch(() => {}); } catch (e) {}
-    if (navigator.vibrate) navigator.vibrate([30, 40, 30]);
-  },
-  playCloseBeep() {
-    const el = document.getElementById('walkieClose');
-    if (!el) return;
-    try { el.currentTime = 0; el.volume = 0.9; el.play().catch(() => {}); } catch (e) {}
-    if (navigator.vibrate) navigator.vibrate([30, 40, 30]);
-  },
-  playRealBeep() { this.playCloseBeep(); },
-  playStartBeep() { this.playCloseBeep(); },
-  playEndBeep() { this.playOpenBeep(); }
-};
-
-async function disconnectWaveRoom() {
-  try {
-    if (waveLocalAudioTrack && waveRoom) {
-      try { waveRoom.localParticipant.unpublishTrack(waveLocalAudioTrack); waveLocalAudioTrack.stop(); } catch(e){}
-      waveLocalAudioTrack = null;
-    }
-    if (waveRoom) { await waveRoom.disconnect(); waveRoom = null; }
-    document.querySelectorAll('audio[data-lk-track]').forEach(el => el.remove());
-  } catch(e) {}
+function saveUserName(){let v=document.getElementById('userNameInput').value.trim();if(!v){toast('أدخل اسم','error');return;}currentUser.name=v;localStorage.setItem('rc_user_name',v);closeModal('modalUserName');registerUser().then(()=>{if(socket)socket.emit('register_device',{deviceId:currentUser.id,userName:v});toast('مرحبا '+v,'success');updateUI();});}
+function updateUI(){
+ if(currentUser.waveId){document.getElementById('waveNameLabel').textContent=currentUser.waveName||currentUser.waveId;document.getElementById('waveStatusText').textContent='🟢 متصل';document.getElementById('waveStatusChip').classList.add('live');document.getElementById('waveStatusChip').classList.remove('disconnected');}else{document.getElementById('waveNameLabel').textContent='لا توجد فرقة';document.getElementById('waveStatusText').textContent='🔴 غير متصل';document.getElementById('waveStatusChip').classList.remove('live');document.getElementById('waveStatusChip').classList.add('disconnected');}
 }
-
-async function connectWaveChannel() {
-  try {
-    if (!window.LivekitClient || !currentUser.radCode) return false;
-    if (waveRoom && waveRoom.state === "connected") return true;
-    const tokenRes = await fetch(SERVER_URL + '/api/livekit/token', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ roomId: currentUser.waveId, deviceId: currentUser.id, userName: currentUser.name })
-    });
-    const tokenData = await tokenRes.json();
-    if (!tokenData.token) return false;
-    waveRoom = new window.LivekitClient.Room();
-    waveRoom.on(window.LivekitClient.RoomEvent.TrackSubscribed, (track, pub, participant) => {
-  if (track.kind === "audio") {
-    const audioElement = track.attach();
-    audioElement.volume = 1.0; // ✅ رفع صوت المتحدث الآخر لأقصى حد
-    audioElement.autoplay = true;
+async function createWave(){
+ let name=document.getElementById('waveName').value.trim();if(!name){toast('أدخل اسم الفرقة','error');return;}
+ try{
+  let res=await fetch(SERVER_URL+'/api/waves/create',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({deviceId:currentUser.id,waveName:name})});
+  let data=await res.json();if(!data.success && !data.waveId) throw Error(data.error||'فشل');
+  let waveId=data.waveId||data.id;currentUser.waveId=waveId;currentUser.waveName=name;localStorage.setItem('rc_saved_wave_id',waveId);localStorage.setItem('rc_saved_wave_name',name);
+  document.getElementById('createdWaveCode').textContent=waveId;document.getElementById('waveName').value='';closeModal('modalWave');openModal('modalWaveCreated');updateUI();
+  if(socket)socket.emit('wave_join',{waveId:waveId,deviceId:currentUser.id,userName:currentUser.name});toast('✅ تم إنشاء الفرقة','success');
+ }catch(e){toast('فشل: '+e.message,'error');}
+}
+function copyWaveCode(){navigator.clipboard.writeText(document.getElementById('createdWaveCode').textContent);toast('تم النسخ','success');}
+function leaveWave(){currentUser.waveId=null;currentUser.waveName=null;localStorage.removeItem('rc_saved_wave_id');localStorage.removeItem('rc_saved_wave_name');disconnectWaveRoom();updateUI();closeSideMenu();toast('تم الخروج','success');}
+async function doSearch(){
+ let q=document.getElementById('searchQuery').value.trim().toUpperCase();if(!q){toast('أدخل الرقم','error');return;}
+ let box=document.getElementById('searchResults');box.innerHTML='جاري البحث...';
+ try{
+  let res=await fetch(SERVER_URL+'/api/users/search?code='+encodeURIComponent(q)+'&deviceId='+currentUser.id);
+  let data=await res.json();box.innerHTML='';
+  if(data.user){
+   let d=document.createElement('div');d.style.cssText='display:flex;align-items:center;gap:12px;padding:14px;background:#05080c;border:1px solid #1c2a36;border-radius:12px;margin-bottom:8px;cursor:pointer';
+   d.innerHTML=`<div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#00e5ff,#008fa8);display:flex;align-items:center;justify-content:center">👤</div><div style="flex:1"><div style="font-weight:800">${data.user.name||'مستخدم'}</div><div style="font-family:monospace;color:#00e5ff">${data.user.radCode||data.user.code}</div></div>`;
+   box.appendChild(d);
+  }
+  if(data.wave){
+   let d=document.createElement('div');d.style.cssText='display:flex;align-items:center;gap:12px;padding:14px;background:#05080c;border:1px solid #1c2a36;border-radius:12px;margin-bottom:8px;cursor:pointer';
+   d.innerHTML=`<div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#00ff88,#00cc70);display:flex;align-items:center;justify-content:center">📡</div><div style="flex:1"><div style="font-weight:800">${data.wave.name||'فرقة'}</div><div style="font-family:monospace;color:#00ff88">${data.wave.id||data.wave.code}</div></div>`;
+   d.onclick=()=>{joinTarget={waveId:data.wave.id||data.wave.code,name:data.wave.name};document.getElementById('joinTargetName').textContent=joinTarget.name;document.getElementById('joinTargetCode').textContent=joinTarget.waveId;openModal('modalJoinConfirm');};
+   box.appendChild(d);
+  }
+  if(!data.user && !data.wave) box.innerHTML='<div style="text-align:center;color:#6b8899;padding:20px">لم يتم العثور على نتائج</div>';
+ }catch(e){box.innerHTML='خطأ في البحث';}
+}
+async function confirmJoin(){
+ closeModal('modalJoinConfirm');closeModal('modalSearch');
+ if(joinTarget){
+  try{
+   let res=await fetch(SERVER_URL+'/api/waves/join',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({waveId:joinTarget.waveId,deviceId:currentUser.id,userName:currentUser.name})});
+   let data=await res.json();
+   currentUser.waveId=joinTarget.waveId;currentUser.waveName=joinTarget.name;localStorage.setItem('rc_saved_wave_id',joinTarget.waveId);localStorage.setItem('rc_saved_wave_name',joinTarget.name);updateUI();if(socket)socket.emit('wave_join',{waveId:joinTarget.waveId,deviceId:currentUser.id,userName:currentUser.name});toast('✅ انضممت إلى '+joinTarget.name,'success');
+  }catch(e){if(socket)socket.emit('wave_join_request',{waveId:joinTarget.waveId,fromDeviceId:currentUser.id,fromName:currentUser.name});toast('📤 تم إرسال طلب انضمام','success');}
+ }
+}
+async function disconnectWaveRoom(){try{if(waveLocalAudioTrack&&waveRoom){try{waveRoom.localParticipant.unpublishTrack(waveLocalAudioTrack);waveLocalAudioTrack.stop();}catch(e){}waveLocalAudioTrack=null;}if(waveRoom){await waveRoom.disconnect();waveRoom=null;}document.querySelectorAll('audio[data-lk]').forEach(el=>el.remove());}catch(e){}}
+async function connectWaveChannel(){
+ try{
+  if(!window.LivekitClient||!currentUser.waveId) return false;
+  if(waveRoom&&waveRoom.state==='connected') return true;
+  let tokenRes=await fetch(SERVER_URL+'/api/livekit/token',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({roomId:currentUser.waveId,deviceId:currentUser.id,userName:currentUser.name})});
+  let tokenData=await tokenRes.json();if(!tokenData.token) return false;
+  waveRoom=new window.LivekitClient.Room({adaptiveStream:true,dynacast:true});
+  waveRoom.on(window.LivekitClient.RoomEvent.TrackSubscribed,(track,pub,participant)=>{
+   if(track.kind==='audio'){
+    let audioElement=track.attach();
+    audioElement.setAttribute('data-lk','true');
+    audioElement.volume=1.0;
+    audioElement.muted=false;
+    audioElement.autoplay=true;
+    audioElement.playsInline=true;
+    audioElement.style.display='none';
     document.body.appendChild(audioElement);
-  }
-});
-    waveRoom.on(window.LivekitClient.RoomEvent.TrackUnsubscribed, (track) => {
-      track.detach().forEach(el => el.remove());
-    });
-    waveRoom.on(window.LivekitClient.RoomEvent.Disconnected, () => {
-      waveRoom = null;
-      if (isTalking) stopTalking();
-    });
-    await waveRoom.connect(LIVEKIT_URL, tokenData.token);
-    return true;
-  } catch (e) {
-    console.error("Wave Connect Error:", e);
-    waveRoom = null;
-    return false;
-  }
-}
-
-async function onPTTStart() {
-  if (isTalking) return;
-  if (!currentUser.waveId) { toast('⚠️ انضم إلى فرقة أولاً', 'error'); return; }
-  isTalking = true;
-  const pttMain = document.getElementById('pttMain');
-  pttMain.classList.add('holding');
-  document.body.classList.add('ptt-active');
-  const statusChip = document.getElementById('waveStatusChip');
-  const statusText = document.getElementById('waveStatusText');
-  if (statusChip) { statusChip.classList.add('live'); statusChip.classList.remove('disconnected'); }
-  if (statusText) statusText.innerHTML = '🟢 يتحدث';
-  const lcd3 = document.getElementById('lcdLine3');
-  if (lcd3) lcd3.textContent = (currentUser.radCode || '—') + ' • TX';
-  startWaveTimer();
-  await PTTEngine.init();
-  PTTEngine.playStartBeep();
-  try {
-    rawMicStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } });
-    if (!waveRoom || waveRoom.participants.size === 0) {
-      localTestAudio = new Audio();
-      localTestAudio.srcObject = rawMicStream;
-      localTestAudio.volume = 1.0;
-      localTestAudio.play().catch(()=>{});
-    }
-    connectWaveChannel().then(() => {
-      if (waveRoom && waveRoom.state === "connected" && rawMicStream) {
-        window.LivekitClient.LocalAudioTrack.createTrack(rawMicStream.getAudioTracks()[0]).then(track => {
-          waveLocalAudioTrack = track;
-          waveRoom.localParticipant.publishTrack(waveLocalAudioTrack);
-          waveLocalAudioTrack.enable();
-        });
-      }
-    });
-  } catch (err) {
-    toast("⚠️ تعذر تشغيل الميكروفون");
-    stopTalking();
-  }
-}
-
-function stopTalking() {
-  if (isTalking) PTTEngine.playEndBeep();
-  if (localTestAudio) {
-    try { localTestAudio.pause(); localTestAudio.srcObject = null; } catch (e) {}
-    localTestAudio = null;
-  }
-  if (waveLocalAudioTrack && waveRoom) {
-    try { waveRoom.localParticipant.unpublishTrack(waveLocalAudioTrack); waveLocalAudioTrack.stop(); } catch (e) {}
-    waveLocalAudioTrack = null;
-  }
-  if (rawMicStream) {
-    rawMicStream.getTracks().forEach(t => t.stop());
-    rawMicStream = null;
-  }
-  isTalking = false;
-  const pttMain = document.getElementById('pttMain');
-  if (pttMain) pttMain.classList.remove('holding');
-  document.body.classList.remove('ptt-active');
-  const statusChip = document.getElementById('waveStatusChip');
-  const statusText = document.getElementById('waveStatusText');
-  if (statusChip) { statusChip.classList.remove('live'); statusChip.classList.add('disconnected'); }
-  if (statusText) statusText.innerHTML = '🔴 غير متصل';
-  const lcd3 = document.getElementById('lcdLine3');
-  if (lcd3) lcd3.textContent = (currentUser.radCode || '—') + ' • RX';
-  stopWaveTimer();
-  if (socket && currentUser.waveId) {
-    socket.emit('wave_broadcast_stop', { waveId: currentUser.waveId, deviceId: currentUser.id });
-  }
-}
-
-const LiveVoice = {
-  room: null, connected: false,
-  async connect(waveId) {
-    if (this.connected) return true;
-    try {
-      const tokenRes = await fetch(SERVER_URL + '/api/livekit/token', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ roomId: waveId, deviceId: currentUser.id, userName: currentUser.name })
-      });
-      const data = await tokenRes.json();
-      if (!data.token) return false;
-      this.room = new window.LivekitClient.Room();
-      await this.room.connect(LIVEKIT_URL, data.token);
-      this.connected = true;
-      return true;
-    } catch (e) { return false; }
-  },
-  async disconnect() {
-    try { if (this.room) { await this.room.disconnect(); this.room = null; } } catch (e) {}
-    this.connected = false;
-  }
-};
-
-const pttMainBtn = document.getElementById('pttMain');
-pttMainBtn.addEventListener('pointerdown', (e) => { e.preventDefault(); onPTTStart(); });
-pttMainBtn.addEventListener('pointerup', (e) => { e.preventDefault(); stopTalking(); });
-pttMainBtn.addEventListener('pointercancel', (e) => { e.preventDefault(); stopTalking(); });
-
-function initSocket() {
-  if (typeof io === 'undefined') return;
-  socket = io(SERVER_URL, { transports: ['websocket', 'polling'], reconnection: true });
-
-  socket.on('connect', () => {
-    socket.emit('register_device', { deviceId: currentUser.id, userName: currentUser.name });
-    if (currentUser.waveId) {
-      socket.emit('wave_join', { waveId: currentUser.waveId, deviceId: currentUser.id, userName: currentUser.name });
-    }
-  });
-
-  socket.on('wave_members_updated', ({ members }) => renderWaveMembers(members));
-
-  socket.on('wave_removed', () => {
-    toast('⚠️ تم إخراجك من الفرقة', 'error');
-    currentUser.waveId = null; LiveVoice.disconnect();
-    const statusChip = document.getElementById('waveStatusChip');
-    const statusText = document.getElementById('waveStatusText');
-    if (statusChip) { statusChip.classList.add('disconnected'); statusChip.classList.remove('live'); }
-    if (statusText) statusText.innerHTML = '🔴 غير متصل';
-  });
-
-  socket.on('wave_join_request_received', (data) => {
-    document.getElementById('incomingName').textContent = data.fromUserName || 'مستخدم';
-    document.getElementById('incomingCode').textContent = data.waveId;
-    openModal('modalIncomingRequest');
-    window._incomingRequest = data;
-    PTTEngine.playRealBeep();
-  });
-
-  socket.on('wave_join_request_sent', () => toast('📤 تم إرسال طلب الانضمام', 'success'));
-
-  socket.on('wave_join_response_received', (data) => {
-    if (data.accepted) { toast('✅ تم قبول طلبك!', 'success'); joinWaveAsMember(data.waveId); }
-    else toast('❌ تم رفض طلب الانضمام', 'error');
-  });
-
-  socket.on('wave_join_error', ({ error }) => toast('❌ ' + error, 'error'));
-
-  socket.on('new_direct_message', ({ conversationId, message }) => {
-    if (currentUser.currentConvId === conversationId) {
-      addChatMessage(message, message.sender === currentUser.id ? 'out' : 'in');
-    } else toast('💬 رسالة جديدة', 'success');
-    refreshChatList();
-  });
-
-  socket.on('conversation_history', ({ messages }) => {
-    const container = document.getElementById('chatMessages');
-    container.innerHTML = '';
-    messages.forEach(m => addChatMessage(m, m.sender === currentUser.id ? 'out' : 'in', false));
-    container.scrollTop = container.scrollHeight;
-  });
-
-  socket.on('conversation_updated', () => refreshChatList());
-
-  socket.on('friend_request_received', (data) => handleIncomingFriendRequest(data));
-
-  socket.on('friend_accepted', (data) => {
-    toast('✅ ' + (data.byName || 'مستخدم') + ' قبل طلب صداقتك', 'success');
-    friendRequests.outgoing = friendRequests.outgoing.filter(r => r.deviceId !== data.byDeviceId);
-    if (!friendRequests.friends.find(f => f.deviceId === data.byDeviceId)) {
-      friendRequests.friends.push({ name: data.byName, code: data.byCode, deviceId: data.byDeviceId, addedAt: Date.now() });
-    }
-    saveFriendRequests(); updateFriendBadge();
-  });
-
-  socket.on('friend_rejected', (data) => {
-    toast('❌ تم رفض طلب الصداقة', 'error');
-    friendRequests.outgoing = friendRequests.outgoing.filter(r => r.deviceId !== data.byDeviceId);
-    saveFriendRequests();
-  });
-}
-
-async function registerUser() {
-  try {
-    const res = await fetch(SERVER_URL + '/api/users/register', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ deviceId: currentUser.id, userName: currentUser.name || 'مستخدم' })
-    });
-    const data = await res.json();
-    if (data.radCode) {
-      currentUser.radCode = data.radCode;
-      const el1 = document.getElementById('myRadCode'); if (el1) el1.textContent = data.radCode;
-      const el2 = document.getElementById('waveCodeChip'); if (el2) el2.innerHTML = data.radCode + ' <span style="font-size:12px;">🔑</span>';
-      const el3 = document.getElementById('waveCodeValue'); if (el3) el3.textContent = data.radCode;
-      const el4 = document.getElementById('lcdLine3'); if (el4) el4.textContent = data.radCode + ' • RX';
-    }
-    if (data.waveId) { currentUser.waveId = data.waveId; currentUser.waveCode = data.waveId; }
-    return data;
-  } catch (e) { return null; }
-}
-
-function askUserNameIfNeeded() { if (!currentUser.name) openModal('modalUserName'); }
-
-function saveUserName() {
-  const v = document.getElementById('userNameInput').value.trim();
-  if (!v) { toast('⚠️ أدخل اسماً', 'error'); return; }
-  currentUser.name = v;
-  localStorage.setItem('rc_user_name', v);
-  closeModal('modalUserName');
-  registerUser().then(() => {
-    if (socket) socket.emit('register_device', { deviceId: currentUser.id, userName: v });
-    toast('✅ مرحباً ' + v, 'success');
-  });
-}
-
-function addWaveToHistory(waveId, waveName) {
-  let list = JSON.parse(localStorage.getItem('rc_user_waves_list') || '[]');
-  if (!list.find(w => w.id === waveId)) {
-    list.push({ id: waveId, name: waveName });
-    localStorage.setItem('rc_user_waves_list', JSON.stringify(list));
-  }
-}
-
-function addRoomToHistory(roomCode, roomName) {
-  let list = JSON.parse(localStorage.getItem('rc_user_rooms_list') || '[]');
-  if (!list.find(r => r.code === roomCode)) {
-    list.push({ code: roomCode, name: roomName });
-    localStorage.setItem('rc_user_rooms_list', JSON.stringify(list));
-  }
-}
-
-async function createWave() {
-  const name = document.getElementById('waveName').value.trim();
-  if (!name) { toast('⚠️ أدخل اسم الفرقة', 'error'); return; }
-  try {
-    const res = await fetch(SERVER_URL + '/api/waves/create', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ deviceId: currentUser.id, waveName: name })
-    });
-    const data = await res.json();
-    if (!data.success) throw new Error(data.error);
-    currentUser.waveId = data.waveId; currentUser.waveCode = data.waveId;
-    currentUser.waveName = data.waveName; currentUser.isWaveOwner = true;
-    document.getElementById('createdWaveCode').textContent = data.waveId;
-    document.getElementById('waveName').value = '';
-    closeModal('modalWave'); openModal('modalWaveCreated');
-    const el1 = document.getElementById('waveCodeChip'); if (el1) el1.innerHTML = data.waveId + ' <span style="font-size:12px;">🔑</span>';
-    const el2 = document.getElementById('waveCodeValue'); if (el2) el2.textContent = data.waveId;
-    const el3 = document.getElementById('waveNameValue'); if (el3) el3.textContent = name;
-    const el4 = document.getElementById('waveNameLabel'); if (el4) el4.textContent = name;
-    const el5 = document.getElementById('lcdLine3'); if (el5) el5.textContent = data.waveId + ' • TX';
-    localStorage.setItem('rc_saved_wave_id', data.waveId);
-    localStorage.setItem('rc_saved_wave_name', name);
-    localStorage.setItem('rc_is_wave_owner', 'true');
-    addWaveToHistory(data.waveId, name);
-    await PTTEngine.init(); PTTEngine.playStartBeep();
-    await LiveVoice.connect(data.waveId);
-    if (socket) socket.emit('wave_join', { waveId: data.waveId, deviceId: currentUser.id, userName: currentUser.name });
-    toast('✅ تم إنشاء الفرقة "' + name + '"', 'success');
-  } catch (e) { toast('❌ ' + e.message, 'error'); }
-}
-
-async function joinWaveAsMember(waveId) {
-  currentUser.waveId = waveId; currentUser.waveCode = waveId;
-  currentUser.isWaveOwner = false;
-  localStorage.setItem('rc_is_wave_owner', 'false');
-  try {
-    const res = await fetch(SERVER_URL + '/api/waves/' + waveId);
-    const data = await res.json();
-    if (data.waveName) {
-      currentUser.waveName = data.waveName;
-      const el1 = document.getElementById('waveNameValue'); if (el1) el1.textContent = data.waveName;
-      const el2 = document.getElementById('waveNameLabel'); if (el2) el2.textContent = data.waveName;
-      addWaveToHistory(waveId, data.waveName);
-    }
-    if (data.members) renderWaveMembers(data.members);
-  } catch (e) {}
-  const el1 = document.getElementById('waveCodeChip'); if (el1) el1.innerHTML = waveId + ' <span style="font-size:12px;">🔑</span>';
-  const el2 = document.getElementById('waveCodeValue'); if (el2) el2.textContent = waveId;
-  const el3 = document.getElementById('lcdLine3'); if (el3) el3.textContent = waveId + ' • RX';
-  localStorage.setItem('rc_saved_wave_id', waveId);
-  localStorage.setItem('rc_saved_wave_name', currentUser.waveName || '');
-  await LiveVoice.connect(waveId);
-  if (socket) socket.emit('wave_join', { waveId, deviceId: currentUser.id, userName: currentUser.name });
-  toast('✅ انضممت إلى الفرقة', 'success');
-}
-
-function doSearch() {
-  const q = document.getElementById('searchQuery').value.trim().toUpperCase();
-  const res = document.getElementById('searchResults');
-  if (!q) { res.innerHTML = '<div class="no-results"><span class="no-results-icon">⚠️</span>أدخل الرقم</div>'; return; }
-  fetch(SERVER_URL + '/api/waves/' + q)
-    .then(r => r.json())
-    .then(data => {
-      if (data.waveId) {
-        searchResultUser = { name: data.waveName || 'فرقة', code: data.waveId, type: 'wave' };
-        res.innerHTML = `<div class="search-result-card" onclick="askJoinWave()"><div class="search-result-icon">📡</div><div class="search-result-info"><div class="search-result-name">${searchResultUser.name}</div><div class="search-result-code">${searchResultUser.code} • ${data.totalMembers || 0} أعضاء</div></div><div style="color:var(--cyan)">←</div></div>`;
-        return;
-      }
-      return fetch(SERVER_URL + '/api/users/search/' + q)
-        .then(r => r.json())
-        .then(user => {
-          if (user.deviceId) {
-            searchResultUser = { name: user.userName, code: user.radCode, deviceId: user.deviceId, type: 'user' };
-            res.innerHTML = `<div class="search-result-card" onclick="startUserChat()"><div class="search-result-icon">👤</div><div class="search-result-info"><div class="search-result-name">${searchResultUser.name}</div><div class="search-result-code">${searchResultUser.code}</div></div><div style="color:var(--cyan)">←</div></div>`;
-          } else {
-            res.innerHTML = '<div class="no-results"><span class="no-results-icon">❌</span>لا نتائج</div>';
-          }
-        });
-    })
-    .catch(() => { res.innerHTML = '<div class="no-results"><span class="no-results-icon">❌</span>خطأ في البحث</div>'; });
-}
-
-function askJoinWave() {
-  if (!searchResultUser) return;
-  document.getElementById('joinTargetName').textContent = searchResultUser.name;
-  document.getElementById('joinTargetCode').textContent = searchResultUser.code;
-  closeModal('modalSearch'); openModal('modalJoinConfirm');
-}
-
-function confirmJoin() {
-  if (!searchResultUser) return;
-  closeModal('modalJoinConfirm');
-  if (socket) socket.emit('wave_join_request', { waveId: searchResultUser.code, fromDeviceId: currentUser.id, fromUserName: currentUser.name });
-}
-
-function cancelJoin() { closeModal('modalJoinConfirm'); openModal('modalSearch'); }
-
-function rejectIncoming() {
-  closeModal('modalIncomingRequest');
-  if (window._incomingRequest && socket) socket.emit('wave_join_response', { requestId: window._incomingRequest.requestId, accepted: false });
-  toast('تم رفض الطلب', 'error');
-}
-
-function acceptIncoming() {
-  closeModal('modalIncomingRequest');
-  if (window._incomingRequest && socket) socket.emit('wave_join_response', { requestId: window._incomingRequest.requestId, accepted: true });
-  PTTEngine.playRealBeep();
-  toast('✅ تم قبول الطلب', 'success');
-}
-
-function renderWaveMembers(members) {
-  if (!members) return;
-  const dd = document.getElementById('membersDropdown');
-  if (dd && dd.classList.contains('show')) {
-    dd.innerHTML = `<div class="members-dropdown-title">👥 المشتركون (${members.length})</div>${members.map(m => `<div class="members-dropdown-item"><span>${m.name} ${m.id === currentUser.id ? '(أنت)' : ''} ${m.isOwner ? '👑' : ''}</span><span class="${m.online ? 'status-active' : 'status-inactive'}">${m.online ? '🟢 نشط' : '🔴 غير نشط'}</span></div>`).join('')}`;
-  }
-}
-
-async function removeMember(memberId) {
-  if (!currentUser.isWaveOwner) return;
-  try {
-    await fetch(SERVER_URL + '/api/waves/remove-member', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ waveId: currentUser.waveId, memberId, ownerDevice: currentUser.id })
-    });
-    toast('✅ تم إخراج العضو', 'success');
-  } catch (e) { toast('❌ فشل الإخراج', 'error'); }
-}
-
-function switchTab(tabName) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  const screen = document.getElementById('screen-' + tabName);
-  if (screen) screen.classList.add('active');
-  const tabBtn = document.querySelector(`.tab[data-tab="${tabName}"]`);
-  if (tabBtn) tabBtn.classList.add('active');
-  const chatBar = document.getElementById('chatInputBar');
-  const bottomInfo = document.getElementById('bottomInfo');
-  if (tabName === 'chat') {
-    chatBar.classList.add('active'); bottomInfo.style.display = 'none';
-  } else if (tabName === 'log') {
-    chatBar.classList.add('active'); bottomInfo.style.display = 'none'; refreshChatList();
-  } else {
-    chatBar.classList.remove('active'); bottomInfo.style.display = 'block';
-  }
-  if (sideMenu && sideMenu.classList.contains('open')) closeSideMenu();
-  window.scrollTo(0, 0);
-}
-
-let toastTimer;
-function toast(msg, type = '') {
-  let el = document.getElementById('toast');
-  if (!el) { el = document.createElement('div'); el.className = 'toast'; el.id = 'toast'; document.body.appendChild(el); }
-  el.textContent = msg;
-  el.className = 'toast ' + type;
-  el.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.remove('show'), 2400);
-}
-
-function openModal(id) { const el = document.getElementById(id); if (el) el.classList.add('show'); closeSideMenu(); }
-function closeModal(id) { const el = document.getElementById(id); if (el) el.classList.remove('show'); }
-
-document.querySelectorAll('.modal-overlay').forEach(overlay => {
-  overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.classList.remove('show'); });
-});
-
-const sideMenu = document.getElementById('sideMenu');
-const menuBackdrop = document.getElementById('menuBackdrop');
-const menuToggle = document.getElementById('menuToggle');
-
-function openSideMenu() {
-  const active = document.querySelector('.screen.active');
-  const activeId = active ? active.id : '';
-  const title = document.getElementById('sideMenuTitle');
-  const content = document.getElementById('sideMenuContent');
-
-  if (activeId === 'screen-radio') {
-    title.textContent = '📡 قائمة الفرقة';
-    content.innerHTML = `
-      <div style="background:rgba(0,229,255,.05); border:1px solid rgba(0,229,255,.3); border-radius:12px; padding:12px; margin-bottom:12px; text-align:center;">
-        <div style="font-size:11px; color:var(--text-dim); margin-bottom:4px;">📛 اسم الفرقة</div>
-        <div style="font-size:14px; font-weight:800; color:var(--text); margin-bottom:10px;">${currentUser.waveName || '—'}</div>
-        <div style="font-size:11px; color:var(--text-dim); margin-bottom:4px;">🔑 رقم الفرقة</div>
-        <div onclick="copyMyWaveCode()" style="font-size:16px; font-weight:900; color:var(--cyan); font-family:'Courier New',monospace; letter-spacing:2px; cursor:pointer; padding:6px; border-radius:8px; background:rgba(0,229,255,.1); border:1px solid rgba(0,229,255,.4);">${currentUser.waveCode || '—'} 📋</div>
-      </div>
-      <button class="menu-item primary" onclick="closeSideMenu();openCreateWave()"><span class="menu-icon">➕</span><span class="menu-text"><span class="menu-label">إنشاء فرقة</span><span class="menu-desc">إنشاء موجة لاسلكية جديدة</span></span></button>
-      <button class="menu-item" onclick="closeSideMenu();openSearchWave()"><span class="menu-icon">🔍</span><span class="menu-text"><span class="menu-label">البحث عن فرقة</span><span class="menu-desc">ابحث برقم الفرقة</span></span></button>
-      <button class="menu-item" onclick="closeSideMenu();openOperationsList()"><span class="menu-icon">📋</span><span class="menu-text"><span class="menu-label">قائمة العمليات</span><span class="menu-desc">الفرق التي أنت مشترك فيها</span></span></button>
-      <button class="menu-item" onclick="closeSideMenu();openFriendRequests()"><span class="menu-icon">👥</span><span class="menu-text"><span class="menu-label">طلبات الصداقة</span><span class="menu-desc">الواردة والصادرة</span></span></button>
-      <button class="menu-item" onclick="closeSideMenu();openSendFriendRequest()"><span class="menu-icon">➕</span><span class="menu-text"><span class="menu-label">إرسال طلب صداقة</span><span class="menu-desc">ابحث برقم المستخدم</span></span></button>
-      <button class="menu-item" onclick="closeSideMenu();saveMyWave()"><span class="menu-icon">💾</span><span class="menu-text"><span class="menu-label">حفظ الفرقة</span><span class="menu-desc">استرجعها تلقائياً عند الدخول</span></span></button>
-      <button class="menu-item" onclick="closeSideMenu();openEditWaveName()"><span class="menu-icon">✏️</span><span class="menu-text"><span class="menu-label">تعديل اسم الفرقة</span><span class="menu-desc">غيّر اسم فرقتك</span></span></button>
-      <button class="menu-item" onclick="closeSideMenu();leaveWave()"><span class="menu-icon">🗑️</span><span class="menu-text"><span class="menu-label">مسح الفرقة</span><span class="menu-desc">مغادرة الفرقة الحالية</span></span></button>
-    `;
-  } else if (activeId === 'screen-log' || activeId === 'screen-chat') {
-    title.textContent = '💬 قائمة الغرفة';
-    content.innerHTML = `
-      <div style="background:rgba(0,229,255,.05); border:1px solid rgba(0,229,255,.3); border-radius:12px; padding:12px; margin-bottom:12px; text-align:center;">
-        <div style="font-size:11px; color:var(--text-dim); margin-bottom:4px;">📛 اسم الغرفة</div>
-        <div style="font-size:14px; font-weight:800; color:var(--text); margin-bottom:10px;">${currentUser.roomName || '—'}</div>
-        <div style="font-size:11px; color:var(--text-dim); margin-bottom:4px;">🔑 رقم الغرفة</div>
-        <div onclick="copyMyRoomCode()" style="font-size:16px; font-weight:900; color:var(--cyan); font-family:'Courier New',monospace; letter-spacing:2px; cursor:pointer; padding:6px; border-radius:8px; background:rgba(0,229,255,.1); border:1px solid rgba(0,229,255,.4);">${currentUser.roomCode || '—'} 📋</div>
-      </div>
-      <button class="menu-item primary" onclick="closeSideMenu();openCreateRoom()"><span class="menu-icon">➕</span><span class="menu-text"><span class="menu-label">إنشاء غرفة</span><span class="menu-desc">إنشاء غرفة دردشة جديدة</span></span></button>
-      <button class="menu-item" onclick="closeSideMenu();openSearchUser()"><span class="menu-icon">🔍</span><span class="menu-text"><span class="menu-label">البحث عن مستخدم</span><span class="menu-desc">ابحث برقم المستخدم لبدء محادثة</span></span></button>
-      <button class="menu-item" onclick="closeSideMenu();openOperationsList()"><span class="menu-icon">📋</span><span class="menu-text"><span class="menu-label">قائمة العمليات</span><span class="menu-desc">الغرف التي أنت مشترك فيها</span></span></button>
-      <button class="menu-item" onclick="closeSideMenu();openFriendRequests()"><span class="menu-icon">👥</span><span class="menu-text"><span class="menu-label">طلبات الصداقة</span><span class="menu-desc">الواردة والصادرة</span></span></button>
-      <button class="menu-item" onclick="closeSideMenu();openSendFriendRequest()"><span class="menu-icon">➕</span><span class="menu-text"><span class="menu-label">إرسال طلب صداقة</span><span class="menu-desc">ابحث برقم المستخدم</span></span></button>
-      <button class="menu-item" onclick="closeSideMenu();saveMyRoom()"><span class="menu-icon">💾</span><span class="menu-text"><span class="menu-label">حفظ الغرفة</span><span class="menu-desc">استرجعها تلقائياً عند الدخول</span></span></button>
-      <button class="menu-item" onclick="closeSideMenu();openEditRoomName()"><span class="menu-icon">✏️</span><span class="menu-text"><span class="menu-label">تعديل اسم الغرفة</span><span class="menu-desc">غيّر اسم غرفتك</span></span></button>
-      <button class="menu-item" onclick="closeSideMenu();confirmClearChat()"><span class="menu-icon">🧹</span><span class="menu-text"><span class="menu-label">مسح المحادثة</span><span class="menu-desc">حذف الرسائل فقط</span></span></button>
-      <button class="menu-item danger" onclick="closeSideMenu();deleteRoomPermanently()"><span class="menu-icon">🗑️</span><span class="menu-text"><span class="menu-label">حذف الغرفة نهائياً</span><span class="menu-desc">مسح الغرفة من السجل</span></span></button>
-    `;
-  } else {
-    title.textContent = '⚙️ الإعدادات السريعة';
-    content.innerHTML = `
-      <button class="menu-item" onclick="closeSideMenu();openSearchUser()"><span class="menu-icon">🔍</span><span class="menu-text"><span class="menu-label">البحث</span><span class="menu-desc">ابحث عن مستخدم</span></span></button>
-      <button class="menu-item" onclick="closeSideMenu();openFriendRequests()"><span class="menu-icon">👥</span><span class="menu-text"><span class="menu-label">طلبات الصداقة</span><span class="menu-desc">الواردة والصادرة</span></span></button>
-      <button class="menu-item" onclick="closeSideMenu();openSendFriendRequest()"><span class="menu-icon">➕</span><span class="menu-text"><span class="menu-label">إرسال طلب صداقة</span><span class="menu-desc">ابحث برقم المستخدم</span></span></button>
-      <button class="menu-item" onclick="closeSideMenu();testCall()"><span class="menu-icon">🔔</span><span class="menu-text"><span class="menu-label">اختبار النداء</span><span class="menu-desc">تجربة صوت البيب</span></span></button>
-    `;
-  }
-  sideMenu.classList.add('open');
-  menuBackdrop.classList.add('show');
-  menuToggle.classList.add('open');
-}
-
-function closeSideMenu() {
-  sideMenu.classList.remove('open');
-  menuBackdrop.classList.remove('show');
-  menuToggle.classList.remove('open');
-}
-
-menuToggle.addEventListener('click', (e) => {
-  e.stopPropagation();
-  if (menuBusy) return;
-  menuBusy = true;
-  setTimeout(() => menuBusy = false, 300);
-  if (sideMenu.classList.contains('open')) closeSideMenu();
-  else openSideMenu();
-});
-menuBackdrop.addEventListener('click', closeSideMenu);
-
-let waveTimerInterval = null;
-let waveStartTime = 0;
-
-function startWaveTimer() {
-  waveStartTime = Date.now();
-  const el = document.getElementById('waveTimer');
-  clearInterval(waveTimerInterval);
-  waveTimerInterval = setInterval(() => {
-    const s = Math.floor((Date.now() - waveStartTime) / 1000);
-    const m = Math.floor(s / 60);
-    const ss = s % 60;
-    if (el) el.textContent = String(m).padStart(2, '0') + ':' + String(ss).padStart(2, '0');
-  }, 250);
-}
-
-function stopWaveTimer() {
-  clearInterval(waveTimerInterval);
-  waveTimerInterval = null;
-  const el = document.getElementById('waveTimer');
-  if (el) el.textContent = '00:00';
-}
-
-function openCreateWave() { openModal('modalWave'); }
-function openEditWaveName() { document.getElementById('newWaveName').value = currentUser.waveName || ''; openModal('modalEditWave'); }
-
-function openSearchWave() {
-  document.getElementById('searchSubTitle').textContent = 'ابحث برقم الفرقة (Q#####)';
-  document.getElementById('searchFieldLabel').textContent = 'رقم الفرقة';
-  document.getElementById('searchQuery').placeholder = 'Q#####';
-  document.getElementById('searchQuery').value = '';
-  document.getElementById('searchResults').innerHTML = '<div class="no-results"><span class="no-results-icon">🔎</span>اكتب رقم الفرقة واضغط بحث</div>';
-  openModal('modalSearch');
-}
-
-function openSearchUser() {
-  document.getElementById('searchSubTitle').textContent = 'ابحث برقم المستخدم';
-  document.getElementById('searchFieldLabel').textContent = 'رقم المستخدم';
-  document.getElementById('searchQuery').placeholder = 'Q#####';
-  document.getElementById('searchQuery').value = '';
-  document.getElementById('searchResults').innerHTML = '<div class="no-results"><span class="no-results-icon">🔎</span>اكتب الرقم واضغط بحث</div>';
-  openModal('modalSearch');
-}
-
-function copyWaveCode() {
-  if (!currentUser.waveCode) return;
-  navigator.clipboard.writeText(currentUser.waveCode)
-    .then(() => toast('📋 تم نسخ رقم الفرقة', 'success'))
-    .catch(() => toast('رقم الفرقة: ' + currentUser.waveCode, 'success'));
-}
-function copyMyWaveCode() {
-  if (!currentUser.radCode) { toast('⚠️ لم يتم توليد الرقم بعد', 'error'); return; }
-  navigator.clipboard.writeText(currentUser.radCode)
-    .then(() => toast('📋 تم نسخ رقمك', 'success'))
-    .catch(() => toast('رقمك: ' + currentUser.radCode, 'success'));
-}
-
-async function saveWaveName() {
-  const name = document.getElementById('newWaveName').value.trim();
-  if (!name) { toast('⚠️ أدخل اسماً', 'error'); return; }
-  if (!currentUser.waveId) { toast('⚠️ لا توجد فرقة', 'error'); return; }
-  try {
-    await fetch(SERVER_URL + '/api/waves/rename', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ waveId: currentUser.waveId, newName: name, deviceId: currentUser.id })
-    });
-    currentUser.waveName = name;
-    const el1 = document.getElementById('waveNameValue'); if (el1) el1.textContent = name;
-    const el2 = document.getElementById('waveNameLabel'); if (el2) el2.textContent = name;
-    toast('✅ تم تحديث اسم الفرقة', 'success');
-    closeModal('modalEditWave');
-  } catch (e) { toast('❌ فشل التحديث', 'error'); }
-}
-
-async function leaveWave() {
-  if (!currentUser.waveId) { toast('⚠️ لا توجد فرقة', 'error'); return; }
-  if (!confirm('هل تريد مغادرة الفرقة؟')) return;
-  if (socket) socket.emit('wave_leave', { waveId: currentUser.waveId, deviceId: currentUser.id });
-  await disconnectWaveRoom();
-  await LiveVoice.disconnect();
-  currentUser.waveId = null; currentUser.waveCode = null; currentUser.isWaveOwner = false;
-  localStorage.removeItem('rc_saved_wave_id');
-  localStorage.removeItem('rc_saved_wave_name');
-  localStorage.removeItem('rc_is_wave_owner');
-  const el1 = document.getElementById('waveCodeChip');
-  if (el1) el1.innerHTML = (currentUser.radCode || 'Q00000') + ' <span style="font-size:12px;">🔑</span>';
-  const statusText = document.getElementById('waveStatusText');
-  if (statusText) statusText.innerHTML = '🔴 غير متصل';
-  const el3 = document.getElementById('waveNameLabel'); if (el3) el3.textContent = 'لا توجد فرقة';
-  const el4 = document.getElementById('waveNameValue'); if (el4) el4.textContent = '—';
-  toast('✅ غادرت الفرقة', 'success');
-}
-
-async function refreshChatList() {
-  try {
-    const res = await fetch(SERVER_URL + '/api/conversations/list/' + currentUser.id);
-    const data = await res.json();
-    const list = document.getElementById('chatListContainer');
-    const empty = document.getElementById('emptyRoom');
-    if (!data.conversations || data.conversations.length === 0) {
-      list.innerHTML = ''; empty.style.display = 'flex'; return;
-    }
-    empty.style.display = 'none';
-    list.innerHTML = data.conversations.map(c => {
-      const initial = (c.otherUser.userName || '?').charAt(0);
-      const lastText = c.lastMessage ? (c.lastMessage.text || '') : 'لا رسائل';
-      const timeStr = c.lastMessageAt ? new Date(c.lastMessageAt).toLocaleTimeString('ar', { hour: '2-digit', minute: '2-digit' }) : '';
-      return `<div class="chat-list-item" onclick="openChatWith('${c.otherUser.deviceId}', '${(c.otherUser.userName || '').replace(/'/g, "")}', '${c.conversationId}')"><div class="chat-list-avatar">${initial}</div><div class="chat-list-info"><div class="chat-list-name">${c.otherUser.userName}</div><div class="chat-list-last">${lastText}</div></div><div class="chat-list-time">${timeStr}</div></div>`;
-    }).join('');
-  } catch (e) {}
-}
-
-async function startUserChat() {
-  if (!searchResultUser || !searchResultUser.deviceId) return;
-  try {
-    const res = await fetch(SERVER_URL + '/api/conversations/start', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ myDeviceId: currentUser.id, otherDeviceId: searchResultUser.deviceId })
-    });
-    const data = await res.json();
-    if (!data.success) throw new Error(data.error);
-    closeModal('modalSearch');
-    openChatWith(searchResultUser.deviceId, searchResultUser.name, data.conversationId);
-  } catch (e) { toast('❌ ' + e.message, 'error'); }
-}
-
-async function openChatWith(otherDeviceId, otherName, convId) {
-  currentUser.currentConvId = convId;
-  currentUser.currentChatWith = otherDeviceId;
-  document.getElementById('chatWithName').textContent = otherName;
-  document.getElementById('chatWithCode').textContent = otherDeviceId;
-  switchTab('chat');
-  const bar = document.getElementById('chatInputBar');
-  if (bar) bar.classList.add('active');
-  if (socket) socket.emit('join_conversation', { conversationId: convId });
-  document.getElementById('chatMessages').innerHTML = '';
-  try {
-    const res = await fetch(SERVER_URL + '/api/conversations/' + convId + '/messages');
-    const data = await res.json();
-    (data.messages || []).forEach(m => addChatMessage(m, m.sender === currentUser.id ? 'out' : 'in', false));
-    const c = document.getElementById('chatMessages');
-    c.scrollTop = c.scrollHeight;
-  } catch (e) {}
-}
-
-document.getElementById('chatBackBtn').addEventListener('click', () => {
-  if (socket && currentUser.currentConvId) socket.emit('leave_conversation', { conversationId: currentUser.currentConvId });
-  currentUser.currentConvId = null;
-  currentUser.currentChatWith = null;
-  switchTab('log');
-});
-
-function addChatMessage(msg, direction, scroll = true) {
-  const container = document.getElementById('chatMessages');
-  const div = document.createElement('div');
-  div.className = 'msg msg-' + direction;
-  const time = msg.time ? new Date(msg.time).toLocaleTimeString('ar', { hour: '2-digit', minute: '2-digit' }) : '';
-  const senderName = direction === 'out' ? (currentUser.name || 'أنا') : (msg.senderName || '');
-  let bodyHtml = '';
-  if (msg.type === 'voice' && msg.url) {
-    bodyHtml = `<div class="voice-msg"><button class="play-btn">▶</button><div class="waveform"><audio src="${msg.url}" preload="auto"></audio><span style="height:10px"></span><span style="height:18px"></span><span style="height:14px"></span><span style="height:22px"></span><span style="height:12px"></span></div></div><div class="voice-meta"><span>${(msg.duration || 0).toFixed(1)}s</span><span>${time}</span></div>`;
-  } else if (msg.type === 'image' && msg.url) {
-    bodyHtml = `<img src="${msg.url}" class="attachment-preview-img" onclick="window.open('${msg.url}','_blank')"><div class="voice-meta"><span>${time}</span></div>`;
-  } else if (msg.type === 'video' && msg.url) {
-    bodyHtml = `<video src="${msg.url}" class="attachment-preview-video" controls></video><div class="voice-meta"><span>${time}</span></div>`;
-  } else if (msg.type === 'file' && msg.url) {
-    bodyHtml = `<div class="attach-msg"><span class="attach-msg-icon">📄</span><div class="attach-msg-info"><div class="attach-msg-name">${msg.fileName || 'ملف'}</div><div class="attach-msg-type">اضغط للتحميل</div></div></div><div class="voice-meta"><span><a href="${msg.url}" download="${msg.fileName || ''}" style="color:var(--cyan)">تحميل</a></span><span>${time}</span></div>`;
-  } else if (msg.type === 'contact') {
-    bodyHtml = `<div class="attach-msg"><span class="attach-msg-icon">👥</span><div class="attach-msg-info"><div class="attach-msg-name">${msg.contactName || ''}</div><div class="attach-msg-type">${msg.contactPhone || ''}</div></div></div><div class="voice-meta"><span>${time}</span></div>`;
-  } else {
-    bodyHtml = `<div class="text-msg">${msg.text || ''}</div><div class="voice-meta"><span>${time}</span><span>${direction === 'out' ? '✓✓' : ''}</span></div>`;
-  }
-  div.innerHTML = `<div class="msg-header">${senderName}</div><div class="msg-body" data-msgid="${msg.id || ''}">${bodyHtml}</div>`;
-  const playBtn = div.querySelector('.play-btn');
-  if (playBtn) {
-    playBtn.addEventListener('click', () => {
-      const audio = playBtn.nextElementSibling.querySelector('audio');
-      if (audio) {
-        if (audio.paused) { audio.play(); playBtn.textContent = '⏸'; }
-        else { audio.pause(); playBtn.textContent = '▶'; }
-        audio.onended = () => playBtn.textContent = '▶';
-      }
-    });
-  }
-  let pressTimer;
-  const body = div.querySelector('.msg-body');
-  body.addEventListener('pointerdown', () => {
-    pressTimer = setTimeout(() => {
-      if (confirm('هل تريد مسح هذه الرسالة؟')) { div.remove(); toast('🗑️ تم مسح الرسالة', 'success'); }
-    }, 700);
-  });
-  body.addEventListener('pointerup', () => clearTimeout(pressTimer));
-  body.addEventListener('pointerleave', () => clearTimeout(pressTimer));
-  container.appendChild(div);
-  if (scroll) container.scrollTop = container.scrollHeight;
-}
-
-function sendTextMessage(text) {
-  if (!text.trim()) return;
-  if (!currentUser.currentConvId) { toast('⚠️ ادخل الغرفة أولاً', 'error'); return; }
-  const msg = { id: 'msg_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6), sender: currentUser.id, senderName: currentUser.name, type: 'text', text: text.trim(), time: Date.now() };
-  if (currentUser.currentConvId.startsWith('conv_self_')) { addChatMessage(msg, 'out'); toast('✅ تم إرسال الرسالة', 'success'); return; }
-  if (socket) socket.emit('send_direct_message', { conversationId: currentUser.currentConvId, message: msg });
-  addChatMessage(msg, 'out');
-}
-
-const chatInput = document.getElementById('chatInput');
-const chatPrimaryBtn = document.getElementById('chatPrimaryBtn');
-const chatClip = document.getElementById('chatClip');
-const emojiBtn = document.getElementById('emojiBtn');
-
-let isRecordingVoice = false;
-let voiceRecorder = null;
-let voiceChunks = [];
-let voiceStartTime = 0;
-let voiceTimerInt = null;
-
-chatInput.addEventListener('input', () => {
-  const hasText = chatInput.value.trim().length > 0;
-  if (hasText) { chatPrimaryBtn.textContent = '➤'; chatPrimaryBtn.title = 'إرسال'; }
-  else { chatPrimaryBtn.textContent = '🎙️'; chatPrimaryBtn.title = 'تسجيل صوتي'; }
-});
-
-chatPrimaryBtn.addEventListener('click', async () => {
-  const hasText = chatInput.value.trim().length > 0;
-  if (hasText) { sendTextMessage(chatInput.value); chatInput.value = ''; chatPrimaryBtn.textContent = '🎙️'; }
-  else { if (!isRecordingVoice) await startVoiceRecording(); else await stopVoiceRecordingAndSend(); }
-});
-
-async function startVoiceRecording() {
-  if (!currentUser.currentConvId) { toast('⚠️ اختر محادثة أولاً', 'error'); return; }
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    voiceChunks = [];
-    voiceRecorder = new MediaRecorder(stream);
-    voiceRecorder.ondataavailable = (e) => { if (e.data.size > 0) voiceChunks.push(e.data); };
-    voiceRecorder.start(100);
-    isRecordingVoice = true;
-    voiceStartTime = Date.now();
-    chatPrimaryBtn.classList.add('recording');
-    chatPrimaryBtn.textContent = '⏹';
-    clearInterval(voiceTimerInt);
-    voiceTimerInt = setInterval(() => {
-      const s = Math.floor((Date.now() - voiceStartTime) / 1000);
-      chatInput.placeholder = 'جاري التسجيل... ' + s + 's';
-    }, 250);
-    toast('🎙️ جاري التسجيل...', 'success');
-  } catch (e) { toast('❌ تعذّر الوصول للمايك', 'error'); }
-}
-
-async function stopVoiceRecordingAndSend() {
-  if (!voiceRecorder) return;
-  const duration = (Date.now() - voiceStartTime) / 1000;
-  chatPrimaryBtn.classList.remove('recording');
-  chatPrimaryBtn.textContent = '🎙️';
-  chatInput.placeholder = 'اكتب رسالة...';
-  clearInterval(voiceTimerInt);
-  voiceRecorder.onstop = async () => {
-    const blob = new Blob(voiceChunks, { type: 'audio/webm' });
-    const reader = new FileReader();
-    reader.onload = () => {
-      const base64 = reader.result;
-      const msg = { id: 'msg_' + Date.now(), sender: currentUser.id, senderName: currentUser.name, type: 'voice', url: base64, duration: duration, time: Date.now() };
-      if (currentUser.currentConvId.startsWith('conv_self_')) { addChatMessage(msg, 'out'); toast('✅ تم إرسال الرسالة الصوتية', 'success'); return; }
-      if (socket) socket.emit('send_direct_message', { conversationId: currentUser.currentConvId, message: msg });
-      addChatMessage(msg, 'out');
-      toast('✅ تم إرسال الرسالة الصوتية', 'success');
-    };
-    reader.readAsDataURL(blob);
-    voiceRecorder.stream.getTracks().forEach(t => t.stop());
-    isRecordingVoice = false;
-    voiceRecorder = null;
-  };
-  voiceRecorder.stop();
-}
-
-const EMOJIS = ['😀','😂','🥰','😎','🤔','😢','😡','👍','👏','🙏','❤️','🔥','⭐','🎉','📻','📡','🎙️','✅','❌','⚠️'];
-emojiBtn.addEventListener('click', (ev) => {
-  ev.stopPropagation();
-  const picker = document.createElement('div');
-  picker.style.cssText = 'position:fixed;bottom:130px;left:12px;right:12px;max-width:476px;margin:0 auto;background:var(--card-2);border:1px solid var(--cyan);border-radius:14px;padding:10px;z-index:600;display:grid;grid-template-columns:repeat(10,1fr);gap:6px;';
-  picker.innerHTML = EMOJIS.map(e => `<button style="font-size:22px;background:none;border:none;cursor:pointer;padding:4px;" data-emoji="${e}">${e}</button>`).join('');
-  document.body.appendChild(picker);
-  picker.addEventListener('click', (ev2) => {
-    if (ev2.target.dataset.emoji) {
-      chatInput.value += ev2.target.dataset.emoji;
-      chatInput.dispatchEvent(new Event('input'));
-      picker.remove();
-    }
-  });
-  setTimeout(() => {
-    const closePicker = (e2) => {
-      if (!picker.contains(e2.target)) { picker.remove(); document.removeEventListener('click', closePicker); }
-    };
-    document.addEventListener('click', closePicker);
-  }, 100);
-});
-
-chatClip.addEventListener('click', () => {
-  if (!currentUser.currentConvId) { toast('⚠️ اختر محادثة أولاً', 'error'); return; }
-  openModal('modalAttach');
-});
-
-function pickCamera() {
-  const inp = document.getElementById('hiddenFileInput');
-  inp.accept = 'image/*'; inp.setAttribute('capture', 'environment');
-  inp.click(); closeModal('modalAttach');
-}
-
-function pickFile(type) {
-  const inp = document.getElementById('hiddenFileInput');
-  if (type === 'image') inp.accept = 'image/*';
-  else if (type === 'video') inp.accept = 'video/*';
-  else if (type === 'audio') inp.accept = 'audio/*';
-  else if (type === 'document') inp.accept = '.pdf,.doc,.docx,.txt,.xls,.xlsx,.ppt,.pptx,application/*';
-  else inp.accept = '*/*';
-  inp.removeAttribute('capture');
-  inp.click(); closeModal('modalAttach');
-}
-
-function pickContact() {
-  closeModal('modalAttach');
-  if ('contacts' in navigator && 'ContactsManager' in window) {
-    navigator.contacts.select(['name', 'tel'], { multiple: false })
-      .then(contacts => { if (contacts.length) sendContactMessage(contacts[0].name[0], contacts[0].tel[0] || ''); })
-      .catch(() => openModal('modalContactPick'));
-  } else openModal('modalContactPick');
-}
-
-function sendContact() {
-  const name = document.getElementById('contactName').value.trim();
-  const phone = document.getElementById('contactPhone').value.trim();
-  if (!name) { toast('⚠️ أدخل الاسم', 'error'); return; }
-  closeModal('modalContactPick');
-  sendContactMessage(name, phone);
-}
-
-function sendContactMessage(name, phone) {
-  const msg = { id: 'msg_' + Date.now(), sender: currentUser.id, senderName: currentUser.name, type: 'contact', contactName: name, contactPhone: phone, time: Date.now() };
-  if (currentUser.currentConvId.startsWith('conv_self_')) { addChatMessage(msg, 'out'); toast('✅ تم إرسال جهة الاتصال', 'success'); return; }
-  if (socket) socket.emit('send_direct_message', { conversationId: currentUser.currentConvId, message: msg });
-  addChatMessage(msg, 'out');
-  toast('✅ تم إرسال جهة الاتصال', 'success');
-}
-
-document.getElementById('hiddenFileInput').addEventListener('change', (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = () => {
-    let type = 'file';
-    if (file.type.startsWith('image/')) type = 'image';
-    else if (file.type.startsWith('video/')) type = 'video';
-    else if (file.type.startsWith('audio/')) type = 'voice';
-    const msg = { id: 'msg_' + Date.now(), sender: currentUser.id, senderName: currentUser.name, type: type, url: reader.result, fileName: file.name, duration: 0, time: Date.now() };
-    if (currentUser.currentConvId.startsWith('conv_self_')) { addChatMessage(msg, 'out'); toast('✅ تم إرسال الملف', 'success'); return; }
-    if (socket) socket.emit('send_direct_message', { conversationId: currentUser.currentConvId, message: msg });
-    addChatMessage(msg, 'out');
-    toast('✅ تم إرسال الملف', 'success');
-  };
-  reader.readAsDataURL(file);
-  e.target.value = '';
-});
-
-function openCreateRoom() { openModal('modalCreate'); }
-function openEditRoomName() { document.getElementById('newRoomName').value = currentUser.roomName || ''; openModal('modalEditName'); }
-function openEditRoomIcon() {
-  closeModal('modalRoomMenu');
-  openModal('modalEditIcon');
-  document.querySelectorAll('.icon-option').forEach(o => {
-    o.onclick = () => {
-      currentUser.roomIcon = o.dataset.icon;
-      document.getElementById('roomIcon').textContent = o.dataset.icon;
-      document.querySelectorAll('.icon-option').forEach(x => x.classList.remove('selected'));
-      o.classList.add('selected');
-      toast('تم تغيير الأيقونة', 'success');
-      closeModal('modalEditIcon');
-    };
-  });
-}
-async function createRoom() {
-  const name = document.getElementById('roomName').value.trim();
-  if (!name) { toast('⚠️ أدخل اسم الغرفة', 'error'); return; }
-
-  // ✅ رقم الغرفة أصبح هو نفسه معرف المستخدم (Q)
-  const roomCode = currentUser.radCode;
-  if (!roomCode) { toast('⚠️ انتظر ثانية، لم يتم تحميل رقمك بعد', 'error'); return; }
-
-  currentUser.roomName = name;
-  currentUser.roomCode = roomCode;
-  
-  localStorage.setItem('rc_saved_room_code', roomCode);
-  localStorage.setItem('rc_saved_room_name', name);
-  localStorage.setItem('rc_is_room_owner', 'true');
-  
-  document.getElementById('createdRoomCode').textContent = roomCode;
-  document.getElementById('roomNameLabel').textContent = name;
-  document.getElementById('roomName').value = '';
-  
-  closeModal('modalCreate');
-  openModal('modalRoomCreated');
-  toast('✅ تم إنشاء الغرفة "' + name + '"', 'success');
-  
-  const selfConvId = 'conv_self_' + roomCode;
-  currentUser.currentConvId = selfConvId;
-  currentUser.currentChatWith = 'self';
-
-  document.getElementById('chatWithName').textContent = name + ' (غرفتك)';
-  document.getElementById('chatWithCode').textContent = roomCode;
-
-  switchTab('chat');
-  
-  document.getElementById('chatMessages').innerHTML = `
-    <div style="padding:20px;text-align:center;color:var(--text-dim);font-size:12px;">
-      💬 هذه غرفتك "${name}"<br>
-      رقمك: <strong style="color:var(--cyan);">${roomCode}</strong><br>
-      يمكنك مشاركة هذا الرقم مع أصدقائك للبحث عنه.
-    </div>
-  `;
-}
-
-function saveRoomName() {
-  const name = document.getElementById('newRoomName').value.trim();
-  if (!name) { toast('⚠️ أدخل اسماً', 'error'); return; }
-  currentUser.roomName = name;
-  document.getElementById('roomNameLabel').textContent = name;
-  toast('✅ تم تحديث اسم الغرفة', 'success');
-  closeModal('modalEditName');
-}
-
-function copyMyRoomCode() {
-  if (!currentUser.roomCode) { toast('⚠️ لا يوجد رقم غرفة', 'error'); return; }
-  navigator.clipboard.writeText(currentUser.roomCode)
-    .then(() => toast('📋 تم نسخ رقم الغرفة', 'success'))
-    .catch(() => toast('رقم الغرفة: ' + currentUser.roomCode, 'success'));
-}
-
-function saveMyWave() {
-  if (!currentUser.waveId) { toast('⚠️ لا توجد فرقة', 'error'); return; }
-  localStorage.setItem('rc_saved_wave_id', currentUser.waveId);
-  localStorage.setItem('rc_saved_wave_name', currentUser.waveName || '');
-  toast('✅ تم حفظ الفرقة', 'success');
-}
-
-function saveMyRoom() {
-  if (!currentUser.roomCode) { toast('⚠️ لا توجد غرفة', 'error'); return; }
-  localStorage.setItem('rc_saved_room_code', currentUser.roomCode);
-  localStorage.setItem('rc_saved_room_name', currentUser.roomName || '');
-  toast('✅ تم حفظ الغرفة', 'success');
-}
-
-function copyRoomCode() {
-  if (!currentUser.roomCode) return;
-  navigator.clipboard.writeText(currentUser.roomCode)
-    .then(() => toast('📋 تم نسخ الرقم', 'success'))
-    .catch(() => toast('رقم الغرفة: ' + currentUser.roomCode, 'success'));
-}
-
-function confirmClearChat() { closeModal('modalRoomMenu'); openModal('modalClearChat'); }
-function doClearChat() {
-  const container = document.getElementById('chatMessages');
-  if (container) container.innerHTML = '';
-  closeModal('modalClearChat');
-  toast('✅ تم مسح الدردشة', 'success');
-}
-
-function deleteRoomPermanently() {
-  if (!currentUser.roomCode) { toast('⚠️ لا توجد غرفة لحذفها', 'error'); return; }
-  if (!confirm('هل أنت متأكد من حذف هذه الغرفة نهائياً؟')) return;
-  localStorage.removeItem('rc_saved_room_code');
-  localStorage.removeItem('rc_saved_room_name');
-  localStorage.removeItem('rc_is_room_owner');
-  currentUser.roomCode = null; currentUser.roomName = null;
-  currentUser.currentConvId = null; currentUser.currentChatWith = null;
-  document.getElementById('roomNameLabel').textContent = 'الغرفة';
-  document.getElementById('chatMessages').innerHTML = '';
-  toast('✅ تم حذف الغرفة نهائياً', 'success');
-  switchTab('log');
-}
-
-document.getElementById('roomMenuBtn').addEventListener('click', openSideMenu);
-
-async function initBattery() {
-  if (!navigator.getBattery) {
-    const el1 = document.getElementById('batteryValue'); if (el1) el1.textContent = '—';
-    const el2 = document.getElementById('bottomBattery'); if (el2) el2.textContent = '—';
-    return;
-  }
-  try {
-    const battery = await navigator.getBattery();
-    const update = () => {
-      batteryPercent = Math.round(battery.level * 100);
-      const el1 = document.getElementById('batteryValue'); if (el1) el1.textContent = batteryPercent + '%';
-      const el2 = document.getElementById('bottomBattery'); if (el2) el2.textContent = batteryPercent + '%';
-      updateBatteryVisual();
-    };
-    update();
-    battery.addEventListener('levelchange', update);
-  } catch (e) {}
-}
-
-function updateBatteryVisual() {
-  const chip = document.getElementById('batteryChip');
-  if (!chip) return;
-  const bars = chip.querySelectorAll('.battery-bars span');
-  const pct = batteryPercent == null ? 0 : batteryPercent;
-  const filled = Math.ceil((pct / 100) * 5);
-  chip.classList.remove('level-high', 'level-mid', 'level-low');
-  if (pct >= 60) chip.classList.add('level-high');
-  else if (pct >= 21) chip.classList.add('level-mid');
-  else chip.classList.add('level-low');
-  bars.forEach((b, i) => {
-    b.style.background = i < filled ? '' : '#3a4048';
-    b.style.boxShadow = i < filled ? '' : 'none';
-  });
-}
-
-function updateConnectionIcon() {
-  const chip = document.getElementById('networkChip');
-  if (!chip) return;
-  chip.classList.remove('good', 'mid', 'bad', 'offline');
-  if (!navigator.onLine) { chip.classList.add('offline'); return; }
-  if (navigator.connection && navigator.connection.downlink) {
-    const speed = navigator.connection.downlink;
-    if (speed >= 5) chip.classList.add('good');
-    else if (speed >= 1.5) chip.classList.add('mid');
-    else chip.classList.add('bad');
-  } else chip.classList.add('good');
-}
-
-function testCall() {
-  PTTEngine.init().then(() => PTTEngine.playRealBeep());
-  toast('🔔 تجربة صوت النداء', 'success');
-}
-
-document.getElementById('waveNameChip').addEventListener('click', () => {
-  const dd = document.getElementById('membersDropdown');
-  if (!dd) return;
-  if (dd.classList.contains('show')) { dd.classList.remove('show'); return; }
-  if (currentUser.waveId) {
-    fetch(SERVER_URL + '/api/waves/' + currentUser.waveId)
-      .then(r => r.json())
-      .then(data => {
-        if (data.members) {
-          dd.innerHTML = `<div class="members-dropdown-title">👥 المشتركون (${data.members.length})</div>${data.members.map(m => `<div class="members-dropdown-item"><span>${m.name} ${m.id === currentUser.id ? '(أنت)' : ''} ${m.isOwner ? '👑' : ''}</span><span class="${m.online ? 'status-active' : 'status-inactive'}">${m.online ? '🟢 نشط' : '🔴 غير نشط'}</span></div>`).join('')}`;
-        } else dd.innerHTML = '<div class="operations-empty">لا يوجد مشتركون</div>';
-        dd.classList.add('show');
-      });
-  } else {
-    dd.innerHTML = '<div class="operations-empty">لا توجد فرقة نشطة</div>';
-    dd.classList.add('show');
-  }
-});
-
-/* =========================================================
-   نظام طلبات الصداقة
-   ========================================================= */
-
-let friendRequests = {
-  incoming: JSON.parse(localStorage.getItem('rc_fr_incoming') || '[]'),
-  outgoing: JSON.parse(localStorage.getItem('rc_fr_outgoing') || '[]'),
-  friends: JSON.parse(localStorage.getItem('rc_fr_friends') || '[]')
-};
-
-let currentFriendTab = 'incoming';
-let pendingFriendIncoming = null;
-let friendSearchResult = null;
-
-function saveFriendRequests() {
-  localStorage.setItem('rc_fr_incoming', JSON.stringify(friendRequests.incoming));
-  localStorage.setItem('rc_fr_outgoing', JSON.stringify(friendRequests.outgoing));
-  localStorage.setItem('rc_fr_friends', JSON.stringify(friendRequests.friends));
-}
-
-function updateFriendBadge() {
-  const count = friendRequests.incoming.length;
-  ['friendReqBadge', 'friendReqBadge2'].forEach(id => {
-    const badge = document.getElementById(id);
-    if (!badge) return;
-    if (count > 0) { badge.textContent = count; badge.style.display = 'flex'; }
-    else { badge.style.display = 'none'; }
-  });
-}
-
-async function openFriendRequests() {
-  try {
-    const res = await fetch(SERVER_URL + '/api/friends/requests/' + currentUser.id);
-    const data = await res.json();
-    if (data.requests) {
-      friendRequests.incoming = data.requests.map(r => ({
-        name: r.fromUserName,
-        code: r.fromCode,
-        deviceId: r.fromDeviceId
-      }));
-      saveFriendRequests();
-    }
-  } catch(e) {}
-  
-  renderFriendList();
-  updateFriendBadge();
-  openModal('modalFriendRequests');
-}
-
-function switchFriendTab(tab) {
-  currentFriendTab = tab;
-  const tabIn = document.getElementById('tabIncoming');
-  const tabOut = document.getElementById('tabOutgoing');
-  if (tab === 'incoming') { tabIn.className = 'modal-btn confirm'; tabOut.className = 'modal-btn cancel'; }
-  else { tabIn.className = 'modal-btn cancel'; tabOut.className = 'modal-btn confirm'; }
-  renderFriendList();
-}
-
-function renderFriendList() {
-  const list = document.getElementById('friendRequestsList');
-  if (!list) return;
-  const items = currentFriendTab === 'incoming' ? friendRequests.incoming : friendRequests.outgoing;
-  if (!items || items.length === 0) {
-    list.innerHTML = `<div class="no-results"><span class="no-results-icon">📭</span>${currentFriendTab === 'incoming' ? 'لا توجد طلبات واردة' : 'لا توجد طلبات صادرة'}</div>`;
-    return;
-  }
-  list.innerHTML = items.map((req, idx) => `
-    <div class="search-result-card" style="margin-bottom:8px; cursor:default;">
-      <div class="search-result-icon">👤</div>
-      <div class="search-result-info">
-        <div class="search-result-name">${req.name || 'مستخدم'}</div>
-        <div class="search-result-code">${req.code || '—'}</div>
-      </div>
-      ${currentFriendTab === 'incoming' ? `<div style="display:flex; gap:6px;"><button class="modal-btn confirm" style="padding:6px 10px; font-size:12px;" onclick="quickAccept(${idx})">✅</button><button class="modal-btn danger" style="padding:6px 10px; font-size:12px;" onclick="quickReject(${idx})">❌</button></div>` : `<span style="color:var(--text-dim); font-size:11px;">⏳ منتظر</span>`}
-    </div>
-  `).join('');
-}
-
-function quickAccept(idx) {
-  const req = friendRequests.incoming[idx];
-  if (!req) return;
-  if (!friendRequests.friends.find(f => f.code === req.code)) {
-    friendRequests.friends.push({ name: req.name, code: req.code, deviceId: req.deviceId, addedAt: Date.now() });
-  }
-  friendRequests.incoming.splice(idx, 1);
-  saveFriendRequests();
-  updateFriendBadge();
-  renderFriendList();
-  toast('✅ تم قبول الصداقة مع ' + req.name, 'success');
-  if (socket) socket.emit('friend_accept', { fromDeviceId: req.deviceId, toDeviceId: currentUser.id });
-}
-
-function quickReject(idx) {
-  const req = friendRequests.incoming[idx];
-  if (!req) return;
-  friendRequests.incoming.splice(idx, 1);
-  saveFriendRequests();
-  updateFriendBadge();
-  renderFriendList();
-  toast('❌ تم رفض الطلب', 'error');
-  if (socket) socket.emit('friend_reject', { fromDeviceId: req.deviceId, toDeviceId: currentUser.id });
-}
-
-function showIncomingFriendRequest(req) {
-  pendingFriendIncoming = req;
-  document.getElementById('frIncomingName').textContent = req.name || 'مستخدم';
-  document.getElementById('frIncomingCode').textContent = req.code || '—';
-  openModal('modalFriendIncoming');
-  PTTEngine.playRealBeep();
-}
-
-function acceptFriendRequest() {
-  if (!pendingFriendIncoming) return;
-  const req = pendingFriendIncoming;
-  if (!friendRequests.friends.find(f => f.code === req.code)) {
-    friendRequests.friends.push({ name: req.name, code: req.code, deviceId: req.deviceId, addedAt: Date.now() });
-  }
-  friendRequests.incoming = friendRequests.incoming.filter(r => r.code !== req.code);
-  saveFriendRequests();
-  updateFriendBadge();
-  closeModal('modalFriendIncoming');
-  pendingFriendIncoming = null;
-  toast('✅ أصبحت صديقاً لـ ' + req.name, 'success');
-  if (socket) socket.emit('friend_accept', { fromDeviceId: req.deviceId, toDeviceId: currentUser.id });
-  refreshChatList();
-}
-
-function rejectFriendRequest() {
-  if (!pendingFriendIncoming) return;
-  const req = pendingFriendIncoming;
-  friendRequests.incoming = friendRequests.incoming.filter(r => r.code !== req.code);
-  saveFriendRequests();
-  updateFriendBadge();
-  closeModal('modalFriendIncoming');
-  pendingFriendIncoming = null;
-  toast('❌ تم رفض الطلب', 'error');
-  if (socket) socket.emit('friend_reject', { fromDeviceId: req.deviceId, toDeviceId: currentUser.id });
-}
-
-function openSendFriendRequest() {
-  document.getElementById('friendSearchCode').value = '';
-  document.getElementById('friendSearchResults').innerHTML = '';
-  friendSearchResult = null;
-  openModal('modalFriendSend');
-}
-
-async function searchFriend() {
-  const code = document.getElementById('friendSearchCode').value.trim().toUpperCase();
-  const res = document.getElementById('friendSearchResults');
-  if (!code) { res.innerHTML = '<div class="no-results"><span class="no-results-icon">⚠️</span>أدخل الرقم</div>'; return; }
-  res.innerHTML = '<div class="no-results">⏳ جاري البحث...</div>';
-  try {
-    const r = await fetch(SERVER_URL + '/api/users/search/' + code);
-    const user = await r.json();
-    if (user.deviceId) {
-      if (user.deviceId === currentUser.id) { res.innerHTML = '<div class="no-results"><span class="no-results-icon">🙃</span>هذا أنت!</div>'; return; }
-      if (friendRequests.friends.find(f => f.deviceId === user.deviceId)) { res.innerHTML = '<div class="no-results"><span class="no-results-icon">✅</span>أنتما صديقان بالفعل</div>'; return; }
-      friendSearchResult = user;
-      res.innerHTML = `<div class="search-result-card" onclick="sendFriendRequest()"><div class="search-result-icon">👤</div><div class="search-result-info"><div class="search-result-name">${user.userName || 'مستخدم'}</div><div class="search-result-code">${user.radCode || code}</div></div><div style="color:var(--cyan); font-size:20px;">➕</div></div>`;
-    } else {
-      res.innerHTML = '<div class="no-results"><span class="no-results-icon">❌</span>لا يوجد مستخدم بهذا الرقم</div>';
-    }
-  } catch (e) {
-    res.innerHTML = '<div class="no-results"><span class="no-results-icon">❌</span>خطأ في البحث</div>';
-  }
-}
-
-function sendFriendRequest() {
-  if (!friendSearchResult) return;
-  const user = friendSearchResult;
-  if (friendRequests.outgoing.find(r => r.deviceId === user.deviceId)) { toast('⚠️ أرسلت طلباً بالفعل', 'error'); return; }
-  const req = { name: user.userName || 'مستخدم', code: user.radCode, deviceId: user.deviceId, sentAt: Date.now() };
-  friendRequests.outgoing.push(req);
-  saveFriendRequests();
-  if (socket) socket.emit('friend_request', { fromDeviceId: currentUser.id, fromUserName: currentUser.name, fromCode: currentUser.radCode, toDeviceId: user.deviceId });
-  closeModal('modalFriendSend');
-  toast('📤 تم إرسال طلب الصداقة', 'success');
-}
-
-function handleIncomingFriendRequest(data) {
-  if (friendRequests.friends.find(f => f.deviceId === data.fromDeviceId)) return;
-  if (friendRequests.incoming.find(r => r.deviceId === data.fromDeviceId)) return;
-  const req = { name: data.fromUserName || 'مستخدم', code: data.fromCode || '—', deviceId: data.fromDeviceId, receivedAt: Date.now() };
-  friendRequests.incoming.push(req);
-  saveFriendRequests();
-  updateFriendBadge();
-  showIncomingFriendRequest(req);
-}
-
-/* =========================================================
-   قائمة العمليات
-   ========================================================= */
-
-async function openOperationsList() {
-  const title = document.getElementById('sideMenuTitle');
-  const content = document.getElementById('sideMenuContent');
-  let allWaves = JSON.parse(localStorage.getItem('rc_user_waves_list') || '[]');
-  let allRooms = JSON.parse(localStorage.getItem('rc_user_rooms_list') || '[]');
-  if (currentUser.waveId && !allWaves.find(w => w.id === currentUser.waveId)) allWaves.push({ id: currentUser.waveId, name: currentUser.waveName || 'فرقة حالية' });
-  if (currentUser.roomCode && !allRooms.find(r => r.code === currentUser.roomCode)) allRooms.push({ code: currentUser.roomCode, name: currentUser.roomName || 'غرفة حالية' });
-
-  title.textContent = '📋 سجل العمليات';
-  let html = '';
-  html += `<div style="font-size:13px; color:var(--cyan); font-weight:800; margin-bottom:8px; margin-top:4px;">📡 الفرق:</div>`;
-  if (allWaves.length === 0) {
-    html += `<div style="font-size:11px; color:var(--text-dim); margin-bottom:15px;">لا توجد فرق مسجلة بعد.</div>`;
-  } else {
-    for (const w of allWaves) {
-      let isActive = currentUser.waveId === w.id;
-      let isOwner = false, activeCount = 0;
-      try {
-        const res = await fetch(SERVER_URL + '/api/waves/' + w.id);
-        const data = await res.json();
-        if (data.members) {
-          activeCount = data.members.filter(m => m.online).length;
-          isOwner = data.members.some(m => m.id === currentUser.id && m.isOwner);
-        }
-      } catch (e) {}
-      let badgeHtml = '';
-      if (isOwner) badgeHtml += `<span style="background:var(--yellow); color:#000; border-radius:4px; padding:2px 6px; font-size:9px; font-weight:900; margin-right:4px;">👑 المالك</span>`;
-      if (isActive) badgeHtml += `<span style="background:var(--green); color:#000; border-radius:4px; padding:2px 6px; font-size:9px; font-weight:900; margin-right:4px;">🟢 نشط</span>`;
-      let countText = `<span style="color:var(--green); font-size:10px;">● ${activeCount} نشط</span>`;
-      html += `<button class="menu-item ${isActive ? 'primary' : ''}" onclick="switchToWave('${w.id}')"><span class="menu-icon">${isActive ? '🟢' : '📡'}</span><span class="menu-text"><span class="menu-label">${w.name} ${badgeHtml}</span><span class="menu-desc">${w.id} • ${countText}</span></span></button>`;
-    }
-  }
-  html += `<div style="border-top:1px solid var(--border); margin:10px 0;"></div>`;
-  html += `<div style="font-size:13px; color:var(--cyan); font-weight:800; margin-bottom:8px;">💬 الغرف:</div>`;
-  if (allRooms.length === 0) {
-    html += `<div style="font-size:11px; color:var(--text-dim); margin-bottom:15px;">لا توجد غرف مسجلة بعد.</div>`;
-  } else {
-    for (const r of allRooms) {
-      let isActive = currentUser.roomCode === r.code;
-      let isOwner = localStorage.getItem('rc_is_room_owner') === 'true' && currentUser.roomCode === r.code;
-      let badgeHtml = '';
-      if (isOwner) badgeHtml += `<span style="background:var(--yellow); color:#000; border-radius:4px; padding:2px 6px; font-size:9px; font-weight:900; margin-right:4px;">👑 المالك</span>`;
-      if (isActive) badgeHtml += `<span style="background:var(--green); color:#000; border-radius:4px; padding:2px 6px; font-size:9px; font-weight:900; margin-right:4px;">🟢 نشط</span>`;
-      html += `<button class="menu-item ${isActive ? 'primary' : ''}" onclick="switchToRoom('${r.code}', '${r.name}')"><span class="menu-icon">${isActive ? '🟢' : '💬'}</span><span class="menu-text"><span class="menu-label">${r.name} ${badgeHtml}</span><span class="menu-desc">${r.code}</span></span></button>`;
-    }
-  }
-  content.innerHTML = html;
-  sideMenu.classList.add('open');
-  menuBackdrop.classList.add('show');
-  menuToggle.classList.add('open');
-}
-
-async function switchToWave(waveId) {
-  closeSideMenu();
-  if (currentUser.waveId === waveId) return;
-  let allWaves = JSON.parse(localStorage.getItem('rc_user_waves_list') || '[]');
-  let targetWave = allWaves.find(w => w.id === waveId);
-  let name = targetWave ? targetWave.name : (currentUser.waveName || 'فرقة');
-  toast('⏳ جاري التبديل...', 'success');
-  stopTalking();
-  await disconnectWaveRoom();
-  await LiveVoice.disconnect();
-  if (socket) socket.emit('wave_leave', { waveId: currentUser.waveId, deviceId: currentUser.id });
-  currentUser.waveId = waveId;
-  currentUser.waveName = name;
-  currentUser.waveCode = waveId;
-  localStorage.setItem('rc_saved_wave_id', waveId);
-  localStorage.setItem('rc_saved_wave_name', name);
-  document.getElementById('waveNameLabel').textContent = name;
-  document.getElementById('waveNameValue').textContent = name;
-  document.getElementById('waveCodeValue').textContent = waveId;
-  document.getElementById('waveCodeChip').innerHTML = waveId + ' <span style="font-size:12px;">🔑</span>';
-  document.getElementById('lcdLine3').textContent = waveId + ' • RX';
-  await joinWaveAsMember(waveId);
-  toast('✅ تم الانتقال إلى ' + name, 'success');
-}
-
-function switchToRoom(roomCode, roomName) {
-  closeSideMenu();
-  if (currentUser.roomCode === roomCode) return;
-  currentUser.roomCode = roomCode;
-  currentUser.roomName = roomName;
-  currentUser.currentConvId = 'conv_self_' + roomCode;
-  currentUser.currentChatWith = 'self';
-  localStorage.setItem('rc_saved_room_code', roomCode);
-  localStorage.setItem('rc_saved_room_name', roomName);
-  document.getElementById('roomNameLabel').textContent = roomName;
-  document.getElementById('chatWithName').textContent = roomName + ' (غرفتك)';
-  document.getElementById('chatWithCode').textContent = roomCode;
-  switchTab('chat');
-  toast('✅ تم الانتقال إلى الغرفة', 'success');
-}
-
-document.getElementById('operationsChip').addEventListener('click', openOperationsList);
-document.getElementById('friendRequestsChip').addEventListener('click', openFriendRequests);
-document.getElementById('friendRequestsChip2').addEventListener('click', openFriendRequests);
-document.getElementById('sendFriendChip').addEventListener('click', openSendFriendRequest);
-document.getElementById('sendFriendChip2').addEventListener('click', openSendFriendRequest);
-
-setTimeout(updateFriendBadge, 500);
-
-window.addEventListener('DOMContentLoaded', async () => {
-  const bar = document.getElementById('chatInputBar');
-  if (bar) bar.classList.remove('active');
-  await initBattery();
-  await PTTEngine.init();
-  updateBatteryVisual();
-  updateConnectionIcon();
-  window.addEventListener('online', updateConnectionIcon);
-  window.addEventListener('offline', updateConnectionIcon);
-  askUserNameIfNeeded();
-  await registerUser();
-  initSocket();
-  refreshChatList();
-  const savedWaveId = localStorage.getItem('rc_saved_wave_id');
-  const savedWaveName = localStorage.getItem('rc_saved_wave_name');
-  const isWaveOwner = localStorage.getItem('rc_is_wave_owner') === 'true';
-  if (savedWaveId) {
-    currentUser.waveId = savedWaveId;
-    currentUser.waveCode = savedWaveId;
-    currentUser.waveName = savedWaveName;
-    currentUser.isWaveOwner = isWaveOwner;
-    const el1 = document.getElementById('waveCodeChip');
-    if (el1) el1.innerHTML = savedWaveId + ' <span style="font-size:12px;">🔑</span>';
-    const el2 = document.getElementById('waveNameLabel');
-    if (el2) el2.textContent = savedWaveName || 'لا توجد فرقة';
-    const el3 = document.getElementById('lcdLine3');
-    if (el3) el3.textContent = savedWaveId + ' • RX';
-    setTimeout(() => joinWaveAsMember(savedWaveId), 1500);
-  }
-  const savedRoomCode = localStorage.getItem('rc_saved_room_code');
-  const savedRoomName = localStorage.getItem('rc_saved_room_name');
-  if (savedRoomCode) {
-    currentUser.roomCode = savedRoomCode;
-    currentUser.roomName = savedRoomName;
-    const el4 = document.getElementById('roomNameLabel');
-    if (el4 && savedRoomName) el4.textContent = savedRoomName;
-  }
-  updateFriendBadge();
-});
-
-document.addEventListener('keydown', (e) => {
-  if (e.code === 'Space' && !e.repeat && !document.querySelector('.modal-overlay.show')) {
-    e.preventDefault();
-    if (isTalking) stopTalking(); else onPTTStart();
-  }
-});
-
-document.addEventListener('click', (e) => {
-  const md = document.getElementById('membersDropdown');
-  const wnc = document.getElementById('waveNameChip');
-  if (md && md.classList.contains('show') && !md.contains(e.target) && wnc && !wnc.contains(e.target)) {
-    md.classList.remove('show');
-  }
-});
-    setTimeout(() => {
-  const status = (socket && socket.connected) ? "متصل ✅" : "غير متصل ❌";
-  alert("📱 معرّفي:\n" + currentUser.id + "\n\n🌐 حالة السيرفر:\n" + status);
-}, 4000);  
-     // ===== FIX: إصلاح وصول طلب الصداقة فقط - لا يمس أي كود آخر =====
-(function(){
-  window.sendFriendRequestSignal = function(toDeviceId, payload){
-    if(!socket){ toast('❌ غير متصل','error'); return; }
-    const txt = JSON.stringify(payload);
-    socket.emit('friend_request_send', {toDeviceId: toDeviceId, fromDeviceId: currentUser.id, fromName: currentUser.name, fromCode: currentUser.radCode});
-    socket.emit('send_direct_message', {toDeviceId: toDeviceId, fromDeviceId: currentUser.id, fromName: currentUser.name, fromCode: currentUser.radCode, text: txt, message: {text: txt}});
-    socket.emit('direct_message', {toDeviceId: toDeviceId, text: txt, fromDeviceId: currentUser.id, fromName: currentUser.name});
-    socket.emit('private_message', {to: toDeviceId, text: txt});
-  };
-
-  // Override الإرسال ليضمن الوصول
-  const origSend = window.sendFriendRequestToUser;
-  window.sendFriendRequestToUser = function(){
-    if(!searchResultUser || searchResultUser.type!=='user'){ if(origSend) origSend(); return; }
     try{
-      let sent = JSON.parse(localStorage.getItem('rc_sent_requests')||'[]');
-      if(!sent.find(r=>r.deviceId===searchResultUser.deviceId)){
-        sent.push({deviceId:searchResultUser.deviceId,name:searchResultUser.name,code:searchResultUser.code,time:new Date().toLocaleString('ar-SA')});
-        localStorage.setItem('rc_sent_requests', JSON.stringify(sent));
-      }
+      let ctx = new (window.AudioContext||window.webkitAudioContext)();
+      if(ctx.state==='suspended') ctx.resume();
+      let src = ctx.createMediaElementSource(audioElement);
+      let gain = ctx.createGain();
+      gain.gain.value = 4.0;
+      let comp = ctx.createDynamicsCompressor();
+      comp.threshold.value = -24;
+      comp.knee.value = 10;
+      comp.ratio.value = 20;
+      comp.attack.value = 0.003;
+      comp.release.value = 0.25;
+      src.connect(gain);
+      gain.connect(comp);
+      comp.connect(ctx.destination);
     }catch(e){}
-    window.sendFriendRequestSignal(searchResultUser.deviceId, {type:'friend_request', fromDeviceId: currentUser.id, fromName: currentUser.name, fromCode: currentUser.radCode});
-    if(window.updateFriendBadge) updateFriendBadge();
-    toast('📤 تم إرسال طلب الصداقة إلى '+searchResultUser.name,'success');
-    closeModal('modalSearch');
-    closeModal('modalFriendSend');
-  };
-
-  // تأكد أن الاستقبال شغال
-  setTimeout(()=>{
-    if(!socket) return;
-    socket.on('friend_request_received', (data)=>{ if(window.handleIncomingFriendRequest) handleIncomingFriendRequest(data); });
-    socket.on('new_direct_message', (payload)=>{
-      try{
-        let txt = payload?.message?.text || payload?.text || '';
-        if(typeof txt === 'string' && txt.includes('friend_request')){
-          let obj = JSON.parse(txt);
-          if(obj.type==='friend_request' && window.handleIncomingFriendRequest){
-            handleIncomingFriendRequest({fromDeviceId: obj.fromDeviceId, fromName: obj.fromName, fromCode: obj.fromCode});
-          }
-        }
-      }catch(e){}
-    });
-  }, 1500);
-  console.log('✅ FIX: Friend request delivery patched - only this changed');
-})(); 
-  </script>
+    audioElement.play().then(()=>{}).catch(()=>{document.body.addEventListener('click',()=>audioElement.play(),{once:true});});
+    toast('🔊 '+participant.identity+' يتحدث','success');
+   }
+  });
+  waveRoom.on(window.LivekitClient.RoomEvent.TrackUnsubscribed,(track)=>{track.detach().forEach(el=>el.remove());});
+  waveRoom.on(window.LivekitClient.RoomEvent.Disconnected,()=>{waveRoom=null;if(isTalking)stopTalking();});
+  await waveRoom.connect(LIVEKIT_URL,tokenData.token);
+  return true;
+ }catch(e){waveRoom=null;return false;}
+}
+function startWaveTimer(){timerSec=0;clearInterval(timerInterval);timerInterval=setInterval(()=>{timerSec++;let m=String(Math.floor(timerSec/60)).padStart(2,'0');let s=String(timerSec%60).padStart(2,'0');document.getElementById('waveTimer').textContent=m+':'+s;},1000);}
+function stopWaveTimer(){clearInterval(timerInterval);document.getElementById('waveTimer').textContent='00:00';}
+async function onPTTStart(){
+ if(isTalking) return;
+ if(!currentUser.waveId){toast('⚠️ أنشئ فرقة أولاً ☰','error');openSideMenu();return;}
+ isTalking=true;document.getElementById('pttMain').classList.add('holding');document.body.classList.add('ptt-active');document.getElementById('waveStatusText').textContent='🟢 يتحدث';document.getElementById('waveStatusChip').classList.add('live');document.getElementById('lcdLine3').textContent=(currentUser.radCode||'--')+' • TX';startWaveTimer();
+ try{let ac=new (window.AudioContext||window.webkitAudioContext)();let o=ac.createOscillator();let g=ac.createGain();o.frequency.value=800;g.gain.value=0.12;o.connect(g);g.connect(ac.destination);o.start();setTimeout(()=>{o.stop();ac.close();},120);}catch(e){}
+ try{
+  rawMicStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:true,channelCount:1,sampleRate:48000,sampleSize:16,volume:1.0}});
+  let ok=await connectWaveChannel();if(!ok){toast('فشل الاتصال بالفرقة','error');stopTalking();return;}
+  audioContext = new (window.AudioContext||window.webkitAudioContext)();
+  if(audioContext.state==='suspended') await audioContext.resume();
+  let micSource = audioContext.createMediaStreamSource(rawMicStream);
+  let gainNode = audioContext.createGain();
+  gainNode.gain.value = 3.5;
+  let filter = audioContext.createBiquadFilter();
+  filter.type = 'highpass';
+  filter.frequency.value = 80;
+  let comp = audioContext.createDynamicsCompressor();
+  comp.threshold.value = -30;
+  comp.knee.value = 20;
+  comp.ratio.value = 12;
+  let dest = audioContext.createMediaStreamDestination();
+  micSource.connect(filter);
+  filter.connect(gainNode);
+  gainNode.connect(comp);
+  comp.connect(dest);
+  let boostedTrack = dest.stream.getAudioTracks()[0];
+  boostedTrack.enabled = true;
+  waveLocalAudioTrack=await window.LivekitClient.createLocalAudioTrack({track:boostedTrack});
+  await waveRoom.localParticipant.publishTrack(waveLocalAudioTrack,{source: window.LivekitClient.Track.Source.Microphone, dtx:false, red:true});
+  if(socket)socket.emit('wave_broadcast_start',{waveId:currentUser.waveId,deviceId:currentUser.id});
+ }catch(err){toast('تعذر تشغيل المايك: '+err.message,'error');stopTalking();}
+}
+function stopTalking(){
+ try{let ac=new (window.AudioContext||window.webkitAudioContext)();let o=ac.createOscillator();let g=ac.createGain();o.frequency.value=400;g.gain.value=0.12;o.connect(g);g.connect(ac.destination);o.start();setTimeout(()=>{o.stop();ac.close();},120);}catch(e){}
+ if(waveLocalAudioTrack&&waveRoom){try{waveRoom.localParticipant.unpublishTrack(waveLocalAudioTrack);waveLocalAudioTrack.stop();}catch(e){}waveLocalAudioTrack=null;}
+ if(rawMicStream){rawMicStream.getTracks().forEach(t=>t.stop());rawMicStream=null;}
+ if(audioContext){try{audioContext.close();}catch(e){}audioContext=null;}
+ isTalking=false;document.getElementById('pttMain').classList.remove('holding');document.body.classList.remove('ptt-active');document.getElementById('waveStatusText').textContent=currentUser.waveId?'🟢 متصل':'🔴 غير متصل';document.getElementById('waveStatusChip').classList.remove('live');document.getElementById('lcdLine3').textContent=(currentUser.radCode||'--')+' • RX';stopWaveTimer();
+ if(socket&&currentUser.waveId)socket.emit('wave_broadcast_stop',{waveId:currentUser.waveId,deviceId:currentUser.id});
+}
+const pttBtn=document.getElementById('pttMain');
+pttBtn.addEventListener('pointerdown',e=>{e.preventDefault();onPTTStart();});
+pttBtn.addEventListener('pointerup',e=>{e.preventDefault();stopTalking();});
+pttBtn.addEventListener('pointercancel',e=>{e.preventDefault();stopTalking();});
+pttBtn.addEventListener('touchstart',e=>{e.preventDefault();onPTTStart();},{passive:false});
+pttBtn.addEventListener('touchend',e=>{e.preventDefault();stopTalking();},{passive:false});
+function initSocket(){
+ if(typeof io==='undefined') return;
+ socket=io(SERVER_URL,{transports:['websocket','polling'],reconnection:true});
+ socket.on('connect',()=>{socket.emit('register_device',{deviceId:currentUser.id,userName:currentUser.name});if(currentUser.waveId)socket.emit('wave_join',{waveId:currentUser.waveId,deviceId:currentUser.id,userName:currentUser.name});});
+}
+document.addEventListener('DOMContentLoaded',async()=>{
+ if(!currentUser.name) openModal('modalUserName'); else {await registerUser();updateUI();}
+ initSocket();
+ try{if(navigator.getBattery){let b=await navigator.getBattery();let update=()=>{let p=Math.round(b.level*100);document.getElementById('batteryValue').textContent=p+'%';document.getElementById('bottomBattery').textContent=p+'%';};update();b.addEventListener('levelchange',update);}}catch(e){}
+});
+</script>
 </body>
-  </html>
+</html>
