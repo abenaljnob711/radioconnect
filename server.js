@@ -1,8 +1,8 @@
 "use strict";
 
 /* ==========================================
-   Radio Connect Server - v4.3
-   RadCode format: Q#####
+   Radio Connect Server - v4.3 (Final)
+   RadCode format: Q##### (Users) / M##### (Waves)
    ========================================== */
 
 const express = require("express");
@@ -48,12 +48,12 @@ let db = {
   waveRequests: {},
   conversations: {},
   messages: {},
-  friendRequests: {},
-  friendships: {}
+  friendRequests: {}, // ✅ قاعدة بيانات طلبات الصداقة
+  friendships: {}     // ✅ قاعدة بيانات الأصدقاء
 };
 
 /* ==========================================
-   ✅ توليد كود RadCode بصيغة Q#####
+   ✅ توليد الأكواد
    ========================================== */
 function generateRadCode() {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -64,10 +64,10 @@ function generateRadCode() {
   return code;
 }
 
-/* توليد كود موجة (يبدأ بـ M الآن حسب طلبك) */
+/* توليد كود موجة (يبدأ بـ M) */
 function generateWaveId() {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  let code = "M"; // ✅ التعديل هنا
+  let code = "M";
   for (let i = 0; i < 5; i++) {
     code += chars[Math.floor(Math.random() * chars.length)];
   }
@@ -130,25 +130,7 @@ app.get("/", (req, res) => {
   if (fs.existsSync(indexPath)) {
     res.sendFile(indexPath);
   } else {
-    res.json({
-      status: "ok",
-      name: "Radio Connect Server",
-      version: "4.3",
-      livekit: LIVEKIT_URL ? "configured" : "not configured",
-      uptime: process.uptime()
-    });
-  }
-});
-
-/* جلب طلبات الصداقة المعلقة */
-app.get("/api/friends/requests/:deviceId", (req, res) => {
-  try {
-    const requests = Object.values(db.friendRequests).filter(
-      r => r.toDeviceId === req.params.deviceId && r.status === "pending"
-    );
-    res.json({ requests: requests });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
+    res.json({ status: "ok", name: "Radio Connect Server", version: "4.3", uptime: process.uptime() });
   }
 });
 
@@ -214,6 +196,18 @@ app.get("/api/users/search/:radCode", (req, res) => {
   });
 });
 
+/* جلب طلبات الصداقة المعلقة */
+app.get("/api/friends/requests/:deviceId", (req, res) => {
+  try {
+    const requests = Object.values(db.friendRequests).filter(
+      r => r.toDeviceId === req.params.deviceId && r.status === "pending"
+    );
+    res.json({ requests: requests });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 /* ==========================================
    المحادثات (Conversations)
    ========================================== */
@@ -262,7 +256,6 @@ app.post("/api/conversations/start", (req, res) => {
   }
 });
 
-/* قائمة محادثات المستخدم */
 app.get("/api/conversations/list/:deviceId", (req, res) => {
   try {
     const deviceId = req.params.deviceId;
@@ -305,7 +298,6 @@ app.get("/api/conversations/list/:deviceId", (req, res) => {
   }
 });
 
-/* رسائل محادثة معينة */
 app.get("/api/conversations/:convId/messages", (req, res) => {
   try {
     const convId = req.params.convId;
@@ -508,6 +500,8 @@ io.on("connection", (socket) => {
 
       const waveId = db.devices[deviceId].waveId;
       if (waveId && db.waves[waveId]) {
+        // ✅ إجبار الجوال على دخول غرفة الموجة فور الاتصال
+        socket.join("wave_" + waveId); 
         db.waves[waveId].onlineNow = db.waves[waveId].onlineNow || {};
         db.waves[waveId].onlineNow[deviceId] = true;
         saveDb();
@@ -639,10 +633,17 @@ io.on("connection", (socket) => {
     socket.leave("wave_" + waveId);
   });
 
+  /* ✅ إصلاح طلبات الانضمام للموجة */
   socket.on("wave_join_request", ({ waveId, fromDeviceId, fromUserName }) => {
     const wave = db.waves[waveId];
-    if (!wave) return socket.emit("wave_join_error", { error: "الموجة غير موجودة" });
-    if (!wave.ownerDevice) return socket.emit("wave_join_error", { error: "لا يوجد صاحب" });
+    if (!wave) {
+      socket.emit("wave_join_error", { error: "الموجة غير موجودة" });
+      return;
+    }
+    if (!wave.ownerDevice) {
+      socket.emit("wave_join_error", { error: "لا يوجد صاحب" });
+      return;
+    }
 
     if (wave.members && wave.members[fromDeviceId]) {
       socket.emit("wave_join_response_received", {
@@ -667,14 +668,18 @@ io.on("connection", (socket) => {
     };
     saveDb();
 
-    io.to("wave_" + waveId).emit("wave_join_request_received", {
-      requestId,
-      waveId,
-      fromDeviceId,
-      fromUserName,
-      toDeviceId: wave.ownerDevice
-    });
+    const payload = { requestId, waveId, fromDeviceId, fromUserName, toDeviceId: wave.ownerDevice };
 
+    // 1. الإرسال لغرفة الموجة
+    io.to("wave_" + waveId).emit("wave_join_request_received", payload);
+
+    // 2. الإرسال المباشر لصاحب الموجة
+    const ownerSocketId = deviceSockets[wave.ownerDevice];
+    if (ownerSocketId) {
+      io.to(ownerSocketId).emit("wave_join_request_received", payload);
+    }
+
+    // 3. إشعار المرسل دائماً
     socket.emit("wave_join_request_sent", { requestId, waveId });
   });
 
@@ -737,6 +742,10 @@ io.on("connection", (socket) => {
   socket.on("wave_broadcast_stop", ({ waveId, deviceId }) => {
     socket.to("wave_" + waveId).emit("wave_broadcast_stop", { deviceId });
   });
+
+  /* ==========================================
+     ✅ نظام طلبات الصداقة
+     ========================================== */
 
   socket.on("friend_request", ({ fromDeviceId, fromUserName, fromCode, toDeviceId }) => {
     try {
