@@ -784,7 +784,7 @@ async function createWave() {
     localStorage.setItem('rc_is_wave_owner', 'true');
     addWaveToHistory(data.waveId, name);
     await PTTEngine.init(); PTTEngine.playStartBeep();
-    await LiveVoice.connect(data.waveId);
+    await connectWaveChannel();
     if (socket) socket.emit('wave_join', { waveId: data.waveId, deviceId: currentUser.id, userName: currentUser.name });
     toast('✅ تم إنشاء الفرقة "' + name + '"', 'success');
   } catch (e) { toast('❌ ' + e.message, 'error'); }
@@ -810,7 +810,7 @@ async function joinWaveAsMember(waveId) {
   const el3 = document.getElementById('lcdLine3'); if (el3) el3.textContent = waveId + ' • RX';
   localStorage.setItem('rc_saved_wave_id', waveId);
   localStorage.setItem('rc_saved_wave_name', currentUser.waveName || '');
-  await LiveVoice.connect(waveId);
+  await connectWaveChannel();
   if (socket) socket.emit('wave_join', { waveId, deviceId: currentUser.id, userName: currentUser.name });
   toast('✅ انضممت إلى الفرقة', 'success');
 }
