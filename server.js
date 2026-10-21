@@ -2,7 +2,7 @@
 
 /* ==========================================
    Radio Connect Server - v4.3 (Final)
-   RadCode format: Q##### (Users) / M##### (Waves)
+   RadCode: Q##### (Users) / M##### (Waves)
    ========================================== */
 
 const express = require("express");
@@ -48,8 +48,8 @@ let db = {
   waveRequests: {},
   conversations: {},
   messages: {},
-  friendRequests: {}, // ✅ قاعدة بيانات طلبات الصداقة
-  friendships: {}     // ✅ قاعدة بيانات الأصدقاء
+  friendRequests: {},
+  friendships: {}
 };
 
 /* ==========================================
@@ -74,7 +74,7 @@ function generateWaveId() {
   return code;
 }
 
-/* توليد كود غرفة (يبدأ بـ G) */
+/* توليد كود غرفة (يبدأ بـ G - لم يعد مستخدماً لكن نتركه للاحتياط) */
 function generateRoomCode() {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   let code = "G";
@@ -200,6 +200,18 @@ app.get("/api/users/search/:radCode", (req, res) => {
 app.get("/api/friends/requests/:deviceId", (req, res) => {
   try {
     const requests = Object.values(db.friendRequests).filter(
+      r => r.toDeviceId === req.params.deviceId && r.status === "pending"
+    );
+    res.json({ requests: requests });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+/* ✅ جلب طلبات الانضمام المعلقة للموجات (تمت إضافته لحل مشكلة عدم الوصول) */
+app.get("/api/waves/pending-requests/:deviceId", (req, res) => {
+  try {
+    const requests = Object.values(db.waveRequests).filter(
       r => r.toDeviceId === req.params.deviceId && r.status === "pending"
     );
     res.json({ requests: requests });
@@ -500,7 +512,6 @@ io.on("connection", (socket) => {
 
       const waveId = db.devices[deviceId].waveId;
       if (waveId && db.waves[waveId]) {
-        // ✅ إجبار الجوال على دخول غرفة الموجة فور الاتصال
         socket.join("wave_" + waveId); 
         db.waves[waveId].onlineNow = db.waves[waveId].onlineNow || {};
         db.waves[waveId].onlineNow[deviceId] = true;
@@ -633,7 +644,6 @@ io.on("connection", (socket) => {
     socket.leave("wave_" + waveId);
   });
 
-  /* ✅ إصلاح طلبات الانضمام للموجة */
   socket.on("wave_join_request", ({ waveId, fromDeviceId, fromUserName }) => {
     const wave = db.waves[waveId];
     if (!wave) {
@@ -670,7 +680,7 @@ io.on("connection", (socket) => {
 
     const payload = { requestId, waveId, fromDeviceId, fromUserName, toDeviceId: wave.ownerDevice };
 
-    // 1. الإرسال لغرفة الموجة
+    // 1. الإرسال لغرفة الموجة (لضمان الوصول المباشر)
     io.to("wave_" + waveId).emit("wave_join_request_received", payload);
 
     // 2. الإرسال المباشر لصاحب الموجة
