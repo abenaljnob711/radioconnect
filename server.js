@@ -1,7 +1,7 @@
 "use strict";
 
 /* ==========================================
-   Radio Connect Server - v4.3 (Final)
+   Radio Connect Server - v4.3 (Ultimate)
    RadCode format: Q##### (Users) / M##### (Waves)
    ========================================== */
 
@@ -48,8 +48,8 @@ let db = {
   waveRequests: {},
   conversations: {},
   messages: {},
-  friendRequests: {}, // ✅ قاعدة بيانات طلبات الصداقة
-  friendships: {}     // ✅ قاعدة بيانات الأصدقاء
+  friendRequests: {},
+  friendships: {}
 };
 
 /* ==========================================
@@ -74,7 +74,6 @@ function generateWaveId() {
   return code;
 }
 
-/* توليد كود غرفة (يبدأ بـ G) */
 function generateRoomCode() {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   let code = "G";
@@ -200,6 +199,18 @@ app.get("/api/users/search/:radCode", (req, res) => {
 app.get("/api/friends/requests/:deviceId", (req, res) => {
   try {
     const requests = Object.values(db.friendRequests).filter(
+      r => r.toDeviceId === req.params.deviceId && r.status === "pending"
+    );
+    res.json({ requests: requests });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+/* ✅ جلب طلبات الانضمام المعلقة للموجات (هذا هو الرابط الناقص الذي يضمن وصول الطلب) */
+app.get("/api/waves/pending-requests/:deviceId", (req, res) => {
+  try {
+    const requests = Object.values(db.waveRequests).filter(
       r => r.toDeviceId === req.params.deviceId && r.status === "pending"
     );
     res.json({ requests: requests });
@@ -498,6 +509,12 @@ io.on("connection", (socket) => {
         saveDb();
       }
 
+      // ✅ إرسال أي طلبات انضمام معلقة لصاحب الموجة فور اتصاله
+      const pendingReqs = Object.values(db.waveRequests).filter(r => r.toDeviceId === deviceId && r.status === "pending");
+      pendingReqs.forEach(req => {
+        socket.emit("wave_join_request_received", req);
+      });
+
       const waveId = db.devices[deviceId].waveId;
       if (waveId && db.waves[waveId]) {
         // ✅ إجبار الجوال على دخول غرفة الموجة فور الاتصال
@@ -633,7 +650,7 @@ io.on("connection", (socket) => {
     socket.leave("wave_" + waveId);
   });
 
-  /* ✅ إصلاح طلبات الانضمام للموجة */
+  /* ✅ إصلاح طلبات الانضمام للموجة (إرسال مزدوج) */
   socket.on("wave_join_request", ({ waveId, fromDeviceId, fromUserName }) => {
     const wave = db.waves[waveId];
     if (!wave) {
