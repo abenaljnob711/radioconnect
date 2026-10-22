@@ -30,7 +30,25 @@ body::before { content: ''; position: fixed; inset: 0; background: radial-gradie
 .menu-toggle { width: 42px; height: 42px; border-radius: 11px; background: linear-gradient(180deg, var(--card-2), var(--card)); border: 1px solid var(--border); color: var(--cyan); font-size: 22px; font-weight: 900; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all .2s; font-family: inherit; flex-shrink: 0; line-height: 1; }
 .menu-toggle:active { transform: scale(.94); border-color: var(--cyan); box-shadow: 0 0 14px rgba(0,229,255,.4); }
 .menu-toggle.open { background: linear-gradient(180deg, #00e5ff, #008fa8); color: #001418; border-color: var(--cyan); box-shadow: 0 0 18px rgba(0,229,255,.6); }
-.side-menu { position: fixed; top: 0; right: 0; height: 100vh; width: 280px; background: linear-gradient(180deg, var(--card-2), var(--bg)); border-left: 1px solid var(--cyan); box-shadow: -12px 0 40px rgba(0,229,255,.25); z-index: 300; transform: translateX(110%); transition: transform .32s cubic-bezier(.4,0,.2,1); display: flex; flex-direction: column; padding: 20px 16px; overflow-y: auto; scrollbar-width: none; }
+
+/* ✅ إصلاح التمرير في القائمة الجانبية */
+.side-menu { 
+  position: fixed; top: 0; right: 0; 
+  height: 100vh; height: 100dvh; /* يدعم الشاشات الحديثة */
+  width: 280px; 
+  background: linear-gradient(180deg, var(--card-2), var(--bg)); 
+  border-left: 1px solid var(--cyan); 
+  box-shadow: -12px 0 40px rgba(0,229,255,.25); 
+  z-index: 300; 
+  transform: translateX(110%); 
+  transition: transform .32s cubic-bezier(.4,0,.2,1); 
+  display: flex; flex-direction: column; 
+  padding: 20px 16px; 
+  overflow-y: auto; /* يسمح بالتمرير */
+  -webkit-overflow-scrolling: touch; /* سلاسة التمرير على الجوال */
+  touch-action: pan-y; /* يسمح باللمس والتمرير */
+  scrollbar-width: none; 
+}
 .side-menu::-webkit-scrollbar { display: none; }
 .side-menu.open { transform: translateX(0); }
 .side-menu-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.7); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); z-index: 299; opacity: 0; pointer-events: none; transition: opacity .3s; }
@@ -49,6 +67,7 @@ body::before { content: ''; position: fixed; inset: 0; background: radial-gradie
 .menu-item.primary .menu-icon { background: rgba(0,229,255,.2); }
 .menu-item.danger { background: linear-gradient(180deg, rgba(255,42,77,.08), rgba(255,42,77,.02)); border-color: rgba(255,42,77,.3); color: #ff5577; }
 .menu-item.danger .menu-icon { background: rgba(255,42,77,.1); border-color: rgba(255,42,77,.25); }
+
 .status-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 7px; margin-bottom: 8px; }
 .chip { background: linear-gradient(180deg, var(--card-2), var(--card)); border: 1px solid var(--border); border-radius: 10px; padding: 9px 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 10.5px; color: var(--text-dim); min-height: 54px; text-align: center; }
 .chip-value { font-size: 13px; font-weight: 800; color: var(--text); display: flex; align-items: center; justify-content: center; gap: 4px; line-height: 1.2; }
@@ -79,10 +98,7 @@ body::before { content: ''; position: fixed; inset: 0; background: radial-gradie
 #waveStatusChip.live .status-text { color: var(--green); }
 #waveStatusChip .wave-timer { font-family: 'Courier New', monospace; color: var(--text-dim); font-size: 11px; font-weight: 700; }
 #waveStatusChip.live .wave-timer { color: var(--green); }
-#friendRequestsChip, #friendRequestsChip2 { cursor: pointer; position: relative; }
-#friendRequestsChip:active, #friendRequestsChip2:active { border-color: var(--cyan); box-shadow: 0 0 12px rgba(0,229,255,.3); }
-#sendFriendChip, #sendFriendChip2 { cursor: pointer; }
-#friendReqBadge, #friendReqBadge2 { position: absolute; top: -4px; left: -4px; background: var(--red); color: #fff; border-radius: 50%; min-width: 18px; height: 18px; font-size: 10px; font-weight: 900; align-items: center; justify-content: center; padding: 0 4px; box-shadow: 0 0 8px var(--red); display: none; }
+
 .radio-stage { position: relative; height: 360px; display: flex; align-items: center; justify-content: center; margin: 8px 0 16px; }
 .radio-device { position: relative; width: 210px; height: 320px; filter: drop-shadow(0 20px 40px rgba(0,0,0,.8)) drop-shadow(0 0 30px rgba(0,229,255,.15)); }
 .antenna { position: absolute; top: 0; right: 58px; width: 20px; height: 95px; background: linear-gradient(90deg, #0a0a0a, #2b2b2b 40%, #0a0a0a); border-radius: 10px 10px 3px 3px; box-shadow: inset -2px 0 3px rgba(0,0,0,.8); }
@@ -99,7 +115,7 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
 .side-btns { position: absolute; top: 92px; left: 12px; right: 12px; display: flex; justify-content: space-between; font-size: 8px; color: #666; letter-spacing: .5px; font-weight: 700; }
 .side-btn { padding: 2px 7px; background: #1a1a1a; border-radius: 4px; border: 1px solid #2a2a2a; }
 .speaker-grill { position: absolute; bottom: 14px; left: 24px; right: 24px; height: 46px; border-radius: 6px; background: repeating-linear-gradient(90deg, #050505 0, #050505 3px, #1a1a1a 3px, #1a1a1a 6px); box-shadow: inset 0 3px 6px rgba(0,0,0,.95); }
-.ptt-btn { position: absolute; top: 140px; left: 50%; transform: translateX(-50%); width: 105px; height: 62px; border-radius: 14px; background: linear-gradient(180deg, #0a2a3a, #041520); border: 2px solid var(--cyan); box-shadow: 0 0 22px rgba(0,229,255,.55), inset 0 0 18px rgba(0,229,255,.25), inset 0 2px 4px rgba(0,0,0,.7); display: flex; align-items: center; justify-content: center; color: var(--cyan); font-weight: 900; font-size: 23px; letter-spacing: 2px; text-shadow: 0 0 12px rgba(0,229,255,.95); cursor: pointer; transition: all .15s; z-index: 5; font-family: inherit; }
+.ptt-btn { position: absolute; top: 140px; left: 50%; transform: translateX(-50%); width: 105px; height: 62px; border-radius: 14px; background: linear-gradient(180deg, #0a2a3a, #041520); border: 2px solid var(--cyan); box-shadow: 0 0 22px rgba(0,229,255,.55), inset 0 0 18px rgba(0,229,255,.25), inset 0 2px 4px rgba(0,0,0,.7); display: flex; align-items: center; justify-content: center; color: var(--cyan); font-weight: 900; font-size: 23px; letter-spacing: 2px; text-shadow: 0 0 12px rgba(0,229,255,.95); cursor: pointer; transition: all .15s; z-index: 5; font-family: inherit; touch-action: none; user-select: none; -webkit-user-select: none; }
 .ptt-btn.holding { transform: translateX(-50%) scale(.95); background: linear-gradient(180deg, #00e5ff, #008fa8); color: #001418; text-shadow: none; box-shadow: 0 0 45px rgba(0,229,255,1), 0 0 90px rgba(0,229,255,.6), inset 0 0 22px rgba(255,255,255,.35); }
 .ptt-sub { position: absolute; top: 212px; left: 50%; transform: translateX(-50%); font-size: 8px; color: var(--cyan-dark); letter-spacing: 1.5px; font-weight: 700; white-space: nowrap; }
 .ab-indicator { position: absolute; top: 175px; right: 14px; font-size: 9px; color: #555; font-weight: 700; }
@@ -260,7 +276,7 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
           <div class="chip-label">رقم الموجة</div>
         </div>
       </div>
-      <div class="status-row">
+      <div class="status-row" style="grid-template-columns:1fr 1fr;">
         <div class="chip" id="waveStatusChip" class="disconnected">
           <div class="status-text" id="waveStatusText">🔴 غير متصل</div>
           <div class="wave-timer" id="waveTimer">00:00</div>
@@ -268,6 +284,8 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
         <div class="chip" id="operationsChip" style="cursor:pointer;">
           <div class="chip-value" style="font-size:13px; font-weight:800;">📋 العمليات</div>
         </div>
+      </div>
+      <div class="status-row" style="grid-template-columns:1fr;">
         <div class="chip" id="batteryChip">
           <div class="chip-value">
             <div class="battery-visual">
@@ -278,15 +296,7 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
           <div class="chip-label">البطارية</div>
         </div>
       </div>
-      <div class="status-row" style="grid-template-columns:1fr 1fr;">
-        <div class="chip" id="friendRequestsChip" style="cursor:pointer;">
-          <div class="chip-value" style="font-size:13px; font-weight:800;">👥 طلبات الصداقة</div>
-          <span id="friendReqBadge">0</span>
-        </div>
-        <div class="chip" id="sendFriendChip" style="cursor:pointer;">
-          <div class="chip-value" style="font-size:13px; font-weight:800;">➕ إرسال طلب</div>
-        </div>
-      </div>
+      
       <div class="radio-stage">
         <div class="radio-device">
           <div class="antenna"></div>
@@ -326,15 +336,6 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
         <div class="log-title">
           <h2><span id="roomIcon">💬</span> <span id="roomNameLabel">الغرفة</span></h2>
           <span class="sub" id="roomSubLabel">محادثاتك الخاصة</span>
-        </div>
-      </div>
-      <div class="status-row" style="grid-template-columns:1fr 1fr;">
-        <div class="chip" id="friendRequestsChip2" style="cursor:pointer;">
-          <div class="chip-value" style="font-size:13px; font-weight:800;">👥 طلبات الصداقة</div>
-          <span id="friendReqBadge2">0</span>
-        </div>
-        <div class="chip" id="sendFriendChip2" style="cursor:pointer;">
-          <div class="chip-value" style="font-size:13px; font-weight:800;">➕ إرسال طلب</div>
         </div>
       </div>
       <div id="chatListContainer" style="margin-top:14px;"></div>
@@ -538,13 +539,13 @@ async function connectWaveChannel() {
     if (!tokenData.token) return false;
     waveRoom = new window.LivekitClient.Room();
     waveRoom.on(window.LivekitClient.RoomEvent.TrackSubscribed, (track, pub, participant) => {
-  if (track.kind === "audio") {
-    const audioElement = track.attach();
-    audioElement.volume = 1.0; // ✅ رفع صوت المتحدث الآخر لأقصى حد
-    audioElement.autoplay = true;
-    document.body.appendChild(audioElement);
-  }
-});
+      if (track.kind === "audio") {
+        const audioElement = track.attach();
+        audioElement.volume = 1.0;
+        audioElement.autoplay = true;
+        document.body.appendChild(audioElement);
+      }
+    });
     waveRoom.on(window.LivekitClient.RoomEvent.TrackUnsubscribed, (track) => {
       track.detach().forEach(el => el.remove());
     });
@@ -630,12 +631,11 @@ function stopTalking() {
   }
 }
 
-
-
 const pttMainBtn = document.getElementById('pttMain');
-pttMainBtn.addEventListener('pointerdown', (e) => { e.preventDefault(); onPTTStart(); });
-pttMainBtn.addEventListener('pointerup', (e) => { e.preventDefault(); stopTalking(); });
-pttMainBtn.addEventListener('pointercancel', (e) => { e.preventDefault(); stopTalking(); });
+pttMainBtn.addEventListener('touchstart', (e) => { e.preventDefault(); onPTTStart(); }, { passive: false });
+pttMainBtn.addEventListener('touchend', (e) => { e.preventDefault(); stopTalking(); }, { passive: false });
+pttMainBtn.addEventListener('mousedown', (e) => { e.preventDefault(); onPTTStart(); });
+pttMainBtn.addEventListener('mouseup', (e) => { e.preventDefault(); stopTalking(); });
 
 function initSocket() {
   if (typeof io === 'undefined') return;
@@ -652,7 +652,8 @@ function initSocket() {
 
   socket.on('wave_removed', () => {
     toast('⚠️ تم إخراجك من الفرقة', 'error');
-    currentUser.waveId = null; LiveVoice.disconnect();
+    currentUser.waveId = null; 
+    disconnectWaveRoom();
     const statusChip = document.getElementById('waveStatusChip');
     const statusText = document.getElementById('waveStatusText');
     if (statusChip) { statusChip.classList.add('disconnected'); statusChip.classList.remove('live'); }
@@ -859,12 +860,14 @@ function cancelJoin() { closeModal('modalJoinConfirm'); openModal('modalSearch')
 function rejectIncoming() {
   closeModal('modalIncomingRequest');
   if (window._incomingRequest && socket) socket.emit('wave_join_response', { requestId: window._incomingRequest.requestId, accepted: false });
+  window._incomingRequest = null;
   toast('تم رفض الطلب', 'error');
 }
 
 function acceptIncoming() {
   closeModal('modalIncomingRequest');
   if (window._incomingRequest && socket) socket.emit('wave_join_response', { requestId: window._incomingRequest.requestId, accepted: true });
+  window._incomingRequest = null;
   PTTEngine.playRealBeep();
   toast('✅ تم قبول الطلب', 'success');
 }
@@ -1029,9 +1032,9 @@ function openCreateWave() { openModal('modalWave'); }
 function openEditWaveName() { document.getElementById('newWaveName').value = currentUser.waveName || ''; openModal('modalEditWave'); }
 
 function openSearchWave() {
-  document.getElementById('searchSubTitle').textContent = 'ابحث برقم الفرقة (Q#####)';
+  document.getElementById('searchSubTitle').textContent = 'ابحث برقم الفرقة (M#####)';
   document.getElementById('searchFieldLabel').textContent = 'رقم الفرقة';
-  document.getElementById('searchQuery').placeholder = 'Q#####';
+  document.getElementById('searchQuery').placeholder = 'M#####';
   document.getElementById('searchQuery').value = '';
   document.getElementById('searchResults').innerHTML = '<div class="no-results"><span class="no-results-icon">🔎</span>اكتب رقم الفرقة واضغط بحث</div>';
   openModal('modalSearch');
@@ -1081,7 +1084,6 @@ async function leaveWave() {
   if (!confirm('هل تريد مغادرة الفرقة؟')) return;
   if (socket) socket.emit('wave_leave', { waveId: currentUser.waveId, deviceId: currentUser.id });
   await disconnectWaveRoom();
-  await LiveVoice.disconnect();
   currentUser.waveId = null; currentUser.waveCode = null; currentUser.isWaveOwner = false;
   localStorage.removeItem('rc_saved_wave_id');
   localStorage.removeItem('rc_saved_wave_name');
@@ -1386,7 +1388,6 @@ async function createRoom() {
   const name = document.getElementById('roomName').value.trim();
   if (!name) { toast('⚠️ أدخل اسم الغرفة', 'error'); return; }
 
-  // ✅ رقم الغرفة أصبح هو نفسه معرف المستخدم (Q)
   const roomCode = currentUser.radCode;
   if (!roomCode) { toast('⚠️ انتظر ثانية، لم يتم تحميل رقمك بعد', 'error'); return; }
 
@@ -1810,7 +1811,6 @@ async function switchToWave(waveId) {
   toast('⏳ جاري التبديل...', 'success');
   stopTalking();
   await disconnectWaveRoom();
-  await LiveVoice.disconnect();
   if (socket) socket.emit('wave_leave', { waveId: currentUser.waveId, deviceId: currentUser.id });
   currentUser.waveId = waveId;
   currentUser.waveName = name;
@@ -1843,10 +1843,8 @@ function switchToRoom(roomCode, roomName) {
 }
 
 document.getElementById('operationsChip').addEventListener('click', openOperationsList);
-document.getElementById('friendRequestsChip').addEventListener('click', openFriendRequests);
-document.getElementById('friendRequestsChip2').addEventListener('click', openFriendRequests);
-document.getElementById('sendFriendChip').addEventListener('click', openSendFriendRequest);
-document.getElementById('sendFriendChip2').addEventListener('click', openSendFriendRequest);
+
+// ملاحظة: تم حذف مستمعي الأحداث القديمة للأزرار المحذوفة من الشاشة الرئيسية
 
 setTimeout(updateFriendBadge, 500);
 
@@ -1863,6 +1861,26 @@ window.addEventListener('DOMContentLoaded', async () => {
   await registerUser();
   initSocket();
   refreshChatList();
+  
+  // ✅ الفحص الدوري لطلبات الانضمام (مضمون 100%)
+  setInterval(async () => {
+    if (!currentUser.id) return;
+    if (window._incomingRequest) return; // لا تفتح نافذة إذا كانت هناك نافذة أخرى مفتوحة
+    
+    try {
+      const res = await fetch(SERVER_URL + '/api/waves/pending-requests/' + currentUser.id);
+      const data = await res.json();
+      if (data.requests && data.requests.length > 0) {
+        const req = data.requests[0]; 
+        window._incomingRequest = req;
+        document.getElementById('incomingName').textContent = req.fromUserName || 'مستخدم';
+        document.getElementById('incomingCode').textContent = req.waveId;
+        openModal('modalIncomingRequest');
+        if (typeof PTTEngine !== 'undefined' && PTTEngine.playRealBeep) PTTEngine.playRealBeep();
+      }
+    } catch (e) {}
+  }, 3000); // يفحص كل 3 ثواني
+
   const savedWaveId = localStorage.getItem('rc_saved_wave_id');
   const savedWaveName = localStorage.getItem('rc_saved_wave_name');
   const isWaveOwner = localStorage.getItem('rc_is_wave_owner') === 'true';
@@ -1904,57 +1922,6 @@ document.addEventListener('click', (e) => {
     md.classList.remove('show');
   }
 });
-    setTimeout(() => {
-  const status = (socket && socket.connected) ? "متصل ✅" : "غير متصل ❌";
-  alert("📱 معرّفي:\n" + currentUser.id + "\n\n🌐 حالة السيرفر:\n" + status);
-}, 4000);  
-     // ===== FIX: إصلاح وصول طلب الصداقة فقط - لا يمس أي كود آخر =====
-(function(){
-  window.sendFriendRequestSignal = function(toDeviceId, payload){
-    if(!socket){ toast('❌ غير متصل','error'); return; }
-    const txt = JSON.stringify(payload);
-    socket.emit('friend_request_send', {toDeviceId: toDeviceId, fromDeviceId: currentUser.id, fromName: currentUser.name, fromCode: currentUser.radCode});
-    socket.emit('send_direct_message', {toDeviceId: toDeviceId, fromDeviceId: currentUser.id, fromName: currentUser.name, fromCode: currentUser.radCode, text: txt, message: {text: txt}});
-    socket.emit('direct_message', {toDeviceId: toDeviceId, text: txt, fromDeviceId: currentUser.id, fromName: currentUser.name});
-    socket.emit('private_message', {to: toDeviceId, text: txt});
-  };
-
-  // Override الإرسال ليضمن الوصول
-  const origSend = window.sendFriendRequestToUser;
-  window.sendFriendRequestToUser = function(){
-    if(!searchResultUser || searchResultUser.type!=='user'){ if(origSend) origSend(); return; }
-    try{
-      let sent = JSON.parse(localStorage.getItem('rc_sent_requests')||'[]');
-      if(!sent.find(r=>r.deviceId===searchResultUser.deviceId)){
-        sent.push({deviceId:searchResultUser.deviceId,name:searchResultUser.name,code:searchResultUser.code,time:new Date().toLocaleString('ar-SA')});
-        localStorage.setItem('rc_sent_requests', JSON.stringify(sent));
-      }
-    }catch(e){}
-    window.sendFriendRequestSignal(searchResultUser.deviceId, {type:'friend_request', fromDeviceId: currentUser.id, fromName: currentUser.name, fromCode: currentUser.radCode});
-    if(window.updateFriendBadge) updateFriendBadge();
-    toast('📤 تم إرسال طلب الصداقة إلى '+searchResultUser.name,'success');
-    closeModal('modalSearch');
-    closeModal('modalFriendSend');
-  };
-
-  // تأكد أن الاستقبال شغال
-  setTimeout(()=>{
-    if(!socket) return;
-    socket.on('friend_request_received', (data)=>{ if(window.handleIncomingFriendRequest) handleIncomingFriendRequest(data); });
-    socket.on('new_direct_message', (payload)=>{
-      try{
-        let txt = payload?.message?.text || payload?.text || '';
-        if(typeof txt === 'string' && txt.includes('friend_request')){
-          let obj = JSON.parse(txt);
-          if(obj.type==='friend_request' && window.handleIncomingFriendRequest){
-            handleIncomingFriendRequest({fromDeviceId: obj.fromDeviceId, fromName: obj.fromName, fromCode: obj.fromCode});
-          }
-        }
-      }catch(e){}
-    });
-  }, 1500);
-  console.log('✅ FIX: Friend request delivery patched - only this changed');
-})(); 
   </script>
 </body>
-  </html>
+</html>
