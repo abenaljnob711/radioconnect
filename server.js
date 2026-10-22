@@ -194,7 +194,19 @@ app.get("/api/users/search/:radCode", (req, res) => {
     waveId: user.waveId
   });
 });
-
+app.delete("/api/users/delete/:deviceId", (req, res) => {
+  try {
+    const id = req.params.deviceId;
+    delete db.devices[id];
+    Object.keys(db.waves).forEach(k => { if (db.waves[k].ownerDevice === id) delete db.waves[k]; else if(db.waves[k].members) delete db.waves[k].members[id]; });
+    Object.keys(db.conversations).forEach(k => { if (db.conversations[k].participants.includes(id)) { delete db.conversations[k]; delete db.messages[k]; } });
+    Object.keys(db.friendships).forEach(k => { if (db.friendships[k].deviceA === id || db.friendships[k].deviceB === id) delete db.friendships[k]; });
+    Object.keys(db.friendRequests).forEach(k => { if (db.friendRequests[k].fromDeviceId === id || db.friendRequests[k].toDeviceId === id) delete db.friendRequests[k]; });
+    Object.keys(db.waveRequests).forEach(k => { if (db.waveRequests[k].fromDeviceId === id || db.waveRequests[k].toDeviceId === id) delete db.waveRequests[k]; });
+    saveDb();
+    res.json({ success: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
 /* جلب طلبات الصداقة المعلقة */
 app.get("/api/friends/requests/:deviceId", (req, res) => {
   try {
