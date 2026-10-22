@@ -116,7 +116,7 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
 .side-btn { padding: 2px 7px; background: #1a1a1a; border-radius: 4px; border: 1px solid #2a2a2a; }
 .speaker-grill { position: absolute; bottom: 14px; left: 24px; right: 24px; height: 46px; border-radius: 6px; background: repeating-linear-gradient(90deg, #050505 0, #050505 3px, #1a1a1a 3px, #1a1a1a 6px); box-shadow: inset 0 3px 6px rgba(0,0,0,.95); }
 
-/* ✅ حماية زر PTT من تدخل الجوال */
+/* ✅ منع المتصفح من إلغاء الضغط عند تحريك الإصبع */
 .ptt-btn { 
   position: absolute; top: 140px; left: 50%; transform: translateX(-50%); 
   width: 105px; height: 62px; border-radius: 14px; 
@@ -127,7 +127,7 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
   color: var(--cyan); font-weight: 900; font-size: 23px; letter-spacing: 2px; 
   text-shadow: 0 0 12px rgba(0,229,255,.95); cursor: pointer; transition: all .15s; 
   z-index: 5; font-family: inherit; 
-  touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; 
+  touch-action: none !important; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; 
 }
 .ptt-btn.holding { transform: translateX(-50%) scale(.95); background: linear-gradient(180deg, #00e5ff, #008fa8); color: #001418; text-shadow: none; box-shadow: 0 0 45px rgba(0,229,255,1), 0 0 90px rgba(0,229,255,.6), inset 0 0 22px rgba(255,255,255,.35); }
 .ptt-sub { position: absolute; top: 212px; left: 50%; transform: translateX(-50%); font-size: 8px; color: var(--cyan-dark); letter-spacing: 1.5px; font-weight: 700; white-space: nowrap; }
@@ -332,7 +332,6 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
             </div>
             <div class="speaker-grill"></div>
           </div>
-          <!-- ✅ تمت إضافة oncontextmenu لمنع قائمة اللمس الطويل -->
           <button class="ptt-btn" id="pttMain" oncontextmenu="return false;">PTT</button>
           <div class="ptt-sub">PRESS TO TALK</div>
           <div class="ab-indicator">A/B</div>
@@ -396,10 +395,6 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
         <div class="setting-item" onclick="testCall()">
           <div class="setting-info"><span class="setting-title">🔔 اختبار صوت النداء</span><span class="setting-desc">تأكد من أن الصوت يعمل</span></div>
           <span class="setting-value">تجربة</span>
-        </div>
-        <div class="setting-item" onclick="factoryReset()">
-          <div class="setting-info"><span class="setting-title" style="color:var(--red);">⚠️ استعادة ضبط المصنع</span><span class="setting-desc" style="color:var(--red-dark);">مسح كل شيء</span></div>
-          <span class="setting-value" style="color:var(--red);">مسح شامل</span>
         </div>
         <div class="setting-item" onclick="toast('الإصدار 4.3.0')">
           <div class="setting-info"><span class="setting-title">ℹ️ حول التطبيق</span><span class="setting-desc">Radio Connect</span></div>
@@ -480,12 +475,20 @@ let waveLocalAudioTrack = null;
 let rawMicStream = null;
 let localTestAudio = null;
 let isTalking = false;
+let isPttActive = false; // ✅ متغير جديد لمنع المتصفح من التدخل
 
-function factoryReset() {
-  if (!confirm('⚠️ تحذير: سيتم مسح جميع البيانات. متأكد؟')) return;
-  if (!confirm('متأكد 100%؟ لا يمكن التراجع.')) return;
-  localStorage.clear();
-  window.location.reload();
+function permanentDelete() {
+  if (!confirm('⚠️ تحذير: سيتم حذف حسابك وبياناتك نهائياً من الخادم. هل أنت متأكد؟')) return;
+  if (!confirm('هل أنت متأكد 100%؟ لا يمكن التراجع عن هذه الخطوة.')) return;
+  
+  fetch(SERVER_URL + '/api/users/delete/' + currentUser.id, { method: 'DELETE' })
+    .then(() => {
+      localStorage.clear();
+      window.location.reload();
+    })
+    .catch(() => {
+      toast('❌ حدث خطأ أثناء الاتصال بالسيرفر للحذف', 'error');
+    });
 }
 
 const PTTEngine = {
@@ -643,13 +646,38 @@ function stopTalking() {
   }
 }
 
+// ✅ الحل السحري لمشكلة تحريك الإصبع:
+// نستمع للضغط على الزر، ونستمع لرفع الإصبع من على الشاشة بالكامل (window)
 const pttMainBtn = document.getElementById('pttMain');
-// ✅ منع المتصفح من التدخل أثناء الضغط الطويل على الجوال
-pttMainBtn.addEventListener('touchstart', (e) => { e.preventDefault(); onPTTStart(); }, { passive: false });
-pttMainBtn.addEventListener('touchend', (e) => { e.preventDefault(); stopTalking(); }, { passive: false });
-pttMainBtn.addEventListener('touchmove', (e) => { e.preventDefault(); }, { passive: false });
-pttMainBtn.addEventListener('mousedown', (e) => { e.preventDefault(); onPTTStart(); });
-pttMainBtn.addEventListener('mouseup', (e) => { e.preventDefault(); stopTalking(); });
+
+pttMainBtn.addEventListener('pointerdown', (e) => {
+  e.preventDefault();
+  if (!isPttActive) {
+    isPttActive = true;
+    onPTTStart();
+  }
+});
+
+window.addEventListener('pointerup', (e) => {
+  if (isPttActive) {
+    isPttActive = false;
+    stopTalking();
+  }
+});
+
+window.addEventListener('pointercancel', (e) => {
+  if (isPttActive) {
+    isPttActive = false;
+    stopTalking();
+  }
+});
+
+// منع المتصفح من التدخل إذا حركت إصبعك قليلاً أثناء التحدث
+document.body.addEventListener('touchmove', function(e) {
+    if (isPttActive) {
+        e.preventDefault(); 
+    }
+}, { passive: false });
 
 function initSocket() {
   if (typeof io === 'undefined') return;
@@ -970,6 +998,7 @@ function openSideMenu() {
       <button class="menu-item" onclick="closeSideMenu();saveMyWave()"><span class="menu-icon">💾</span><span class="menu-text"><span class="menu-label">حفظ الفرقة</span><span class="menu-desc">استرجعها تلقائياً عند الدخول</span></span></button>
       <button class="menu-item" onclick="closeSideMenu();openEditWaveName()"><span class="menu-icon">✏️</span><span class="menu-text"><span class="menu-label">تعديل اسم الفرقة</span><span class="menu-desc">غيّر اسم فرقتك</span></span></button>
       <button class="menu-item" onclick="closeSideMenu();leaveWave()"><span class="menu-icon">🗑️</span><span class="menu-text"><span class="menu-label">مسح الفرقة</span><span class="menu-desc">مغادرة الفرقة الحالية</span></span></button>
+      <button class="menu-item danger" onclick="closeSideMenu();permanentDelete()"><span class="menu-icon">🛑</span><span class="menu-text"><span class="menu-label">حذف الحساب نهائياً</span><span class="menu-desc">مسح بياناتك من الخادم</span></span></button>
     `;
   } else if (activeId === 'screen-log' || activeId === 'screen-chat') {
     title.textContent = '💬 قائمة الغرفة';
@@ -988,7 +1017,7 @@ function openSideMenu() {
       <button class="menu-item" onclick="closeSideMenu();saveMyRoom()"><span class="menu-icon">💾</span><span class="menu-text"><span class="menu-label">حفظ الغرفة</span><span class="menu-desc">استرجعها تلقائياً عند الدخول</span></span></button>
       <button class="menu-item" onclick="closeSideMenu();openEditRoomName()"><span class="menu-icon">✏️</span><span class="menu-text"><span class="menu-label">تعديل اسم الغرفة</span><span class="menu-desc">غيّر اسم غرفتك</span></span></button>
       <button class="menu-item" onclick="closeSideMenu();confirmClearChat()"><span class="menu-icon">🧹</span><span class="menu-text"><span class="menu-label">مسح المحادثة</span><span class="menu-desc">حذف الرسائل فقط</span></span></button>
-      <button class="menu-item danger" onclick="closeSideMenu();deleteRoomPermanently()"><span class="menu-icon">🗑️</span><span class="menu-text"><span class="menu-label">حذف الغرفة نهائياً</span><span class="menu-desc">مسح الغرفة من السجل</span></span></button>
+      <button class="menu-item danger" onclick="closeSideMenu();permanentDelete()"><span class="menu-icon">🛑</span><span class="menu-text"><span class="menu-label">حذف الحساب نهائياً</span><span class="menu-desc">مسح بياناتك من الخادم</span></span></button>
     `;
   } else {
     title.textContent = '⚙️ الإعدادات السريعة';
@@ -997,6 +1026,7 @@ function openSideMenu() {
       <button class="menu-item" onclick="closeSideMenu();openFriendRequests()"><span class="menu-icon">👥</span><span class="menu-text"><span class="menu-label">طلبات الصداقة</span><span class="menu-desc">الواردة والصادرة</span></span></button>
       <button class="menu-item" onclick="closeSideMenu();openSendFriendRequest()"><span class="menu-icon">➕</span><span class="menu-text"><span class="menu-label">إرسال طلب صداقة</span><span class="menu-desc">ابحث برقم المستخدم</span></span></button>
       <button class="menu-item" onclick="closeSideMenu();testCall()"><span class="menu-icon">🔔</span><span class="menu-text"><span class="menu-label">اختبار النداء</span><span class="menu-desc">تجربة صوت البيب</span></span></button>
+      <button class="menu-item danger" onclick="closeSideMenu();permanentDelete()"><span class="menu-icon">🛑</span><span class="menu-text"><span class="menu-label">حذف الحساب نهائياً</span><span class="menu-desc">مسح بياناتك من الخادم</span></span></button>
     `;
   }
   sideMenu.classList.add('open');
@@ -1481,20 +1511,6 @@ function doClearChat() {
   if (container) container.innerHTML = '';
   closeModal('modalClearChat');
   toast('✅ تم مسح الدردشة', 'success');
-}
-
-function deleteRoomPermanently() {
-  if (!currentUser.roomCode) { toast('⚠️ لا توجد غرفة لحذفها', 'error'); return; }
-  if (!confirm('هل أنت متأكد من حذف هذه الغرفة نهائياً؟')) return;
-  localStorage.removeItem('rc_saved_room_code');
-  localStorage.removeItem('rc_saved_room_name');
-  localStorage.removeItem('rc_is_room_owner');
-  currentUser.roomCode = null; currentUser.roomName = null;
-  currentUser.currentConvId = null; currentUser.currentChatWith = null;
-  document.getElementById('roomNameLabel').textContent = 'الغرفة';
-  document.getElementById('chatMessages').innerHTML = '';
-  toast('✅ تم حذف الغرفة نهائياً', 'success');
-  switchTab('log');
 }
 
 document.getElementById('roomMenuBtn').addEventListener('click', openSideMenu);
