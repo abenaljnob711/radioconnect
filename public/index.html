@@ -650,38 +650,43 @@ function stopTalking() {
   }
 }
 
-// ✅ حل مشكلة تحريك الإصبع لزر PTT
+// ✅ الحل السحري والمضمون 100% لمشكلة تحريك الإصبع
 const pttMainBtn = document.getElementById('pttMain');
 
-pttMainBtn.addEventListener('touchstart', (e) => {
+pttMainBtn.addEventListener('pointerdown', (e) => {
   e.preventDefault();
-  if (!isPttActive) {
-    isPttActive = true;
-    onPTTStart();
+  if (isPttActive) return;
+  isPttActive = true;
+  // تثبيت المؤشر على الزر لضمان عدم انقطاع الحدث
+  if (pttMainBtn.setPointerCapture) {
+    pttMainBtn.setPointerCapture(e.pointerId);
   }
-}, { passive: false });
+  onPTTStart();
+});
 
-window.addEventListener('touchend', (e) => {
-  if (isPttActive) {
-    isPttActive = false;
-    stopTalking();
+pttMainBtn.addEventListener('pointerup', (e) => {
+  e.preventDefault();
+  if (!isPttActive) return;
+  isPttActive = false;
+  if (pttMainBtn.releasePointerCapture && e.pointerId) {
+    try { pttMainBtn.releasePointerCapture(e.pointerId); } catch(ex){}
   }
-}, { passive: false });
+  stopTalking();
+});
 
-window.addEventListener('touchcancel', (e) => {
-  if (isPttActive) {
-    isPttActive = false;
-    stopTalking();
-  }
-}, { passive: false });
-
-pttMainBtn.addEventListener('mousedown', (e) => { e.preventDefault(); if (!isPttActive) { isPttActive = true; onPTTStart(); } });
-window.addEventListener('mouseup', (e) => { if (isPttActive) { isPttActive = false; stopTalking(); } });
+pttMainBtn.addEventListener('pointercancel', (e) => {
+  if (!isPttActive) return;
+  isPttActive = false;
+  stopTalking();
+});
 
 // منع المتصفح من التمرير أثناء التحدث
 document.body.addEventListener('touchmove', function(e) {
     if (isPttActive) e.preventDefault(); 
 }, { passive: false });
+
+// منع قائمة اللمس الطويل
+pttMainBtn.addEventListener('contextmenu', (e) => e.preventDefault());
 
 function initSocket() {
   if (typeof io === 'undefined') return;
