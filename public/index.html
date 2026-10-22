@@ -34,7 +34,7 @@ body::before { content: ''; position: fixed; inset: 0; background: radial-gradie
 /* ✅ إصلاح التمرير في القائمة الجانبية */
 .side-menu { 
   position: fixed; top: 0; right: 0; 
-  height: 100vh; height: 100dvh; /* يدعم الشاشات الحديثة */
+  height: 100vh; height: 100dvh; 
   width: 280px; 
   background: linear-gradient(180deg, var(--card-2), var(--bg)); 
   border-left: 1px solid var(--cyan); 
@@ -44,9 +44,9 @@ body::before { content: ''; position: fixed; inset: 0; background: radial-gradie
   transition: transform .32s cubic-bezier(.4,0,.2,1); 
   display: flex; flex-direction: column; 
   padding: 20px 16px; 
-  overflow-y: auto; /* يسمح بالتمرير */
-  -webkit-overflow-scrolling: touch; /* سلاسة التمرير على الجوال */
-  touch-action: pan-y; /* يسمح باللمس والتمرير */
+  overflow-y: auto; 
+  -webkit-overflow-scrolling: touch; 
+  touch-action: pan-y; 
   scrollbar-width: none; 
 }
 .side-menu::-webkit-scrollbar { display: none; }
@@ -115,7 +115,20 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
 .side-btns { position: absolute; top: 92px; left: 12px; right: 12px; display: flex; justify-content: space-between; font-size: 8px; color: #666; letter-spacing: .5px; font-weight: 700; }
 .side-btn { padding: 2px 7px; background: #1a1a1a; border-radius: 4px; border: 1px solid #2a2a2a; }
 .speaker-grill { position: absolute; bottom: 14px; left: 24px; right: 24px; height: 46px; border-radius: 6px; background: repeating-linear-gradient(90deg, #050505 0, #050505 3px, #1a1a1a 3px, #1a1a1a 6px); box-shadow: inset 0 3px 6px rgba(0,0,0,.95); }
-.ptt-btn { position: absolute; top: 140px; left: 50%; transform: translateX(-50%); width: 105px; height: 62px; border-radius: 14px; background: linear-gradient(180deg, #0a2a3a, #041520); border: 2px solid var(--cyan); box-shadow: 0 0 22px rgba(0,229,255,.55), inset 0 0 18px rgba(0,229,255,.25), inset 0 2px 4px rgba(0,0,0,.7); display: flex; align-items: center; justify-content: center; color: var(--cyan); font-weight: 900; font-size: 23px; letter-spacing: 2px; text-shadow: 0 0 12px rgba(0,229,255,.95); cursor: pointer; transition: all .15s; z-index: 5; font-family: inherit; touch-action: none; user-select: none; -webkit-user-select: none; }
+
+/* ✅ حماية زر PTT من تدخل الجوال */
+.ptt-btn { 
+  position: absolute; top: 140px; left: 50%; transform: translateX(-50%); 
+  width: 105px; height: 62px; border-radius: 14px; 
+  background: linear-gradient(180deg, #0a2a3a, #041520); 
+  border: 2px solid var(--cyan); 
+  box-shadow: 0 0 22px rgba(0,229,255,.55), inset 0 0 18px rgba(0,229,255,.25), inset 0 2px 4px rgba(0,0,0,.7); 
+  display: flex; align-items: center; justify-content: center; 
+  color: var(--cyan); font-weight: 900; font-size: 23px; letter-spacing: 2px; 
+  text-shadow: 0 0 12px rgba(0,229,255,.95); cursor: pointer; transition: all .15s; 
+  z-index: 5; font-family: inherit; 
+  touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; 
+}
 .ptt-btn.holding { transform: translateX(-50%) scale(.95); background: linear-gradient(180deg, #00e5ff, #008fa8); color: #001418; text-shadow: none; box-shadow: 0 0 45px rgba(0,229,255,1), 0 0 90px rgba(0,229,255,.6), inset 0 0 22px rgba(255,255,255,.35); }
 .ptt-sub { position: absolute; top: 212px; left: 50%; transform: translateX(-50%); font-size: 8px; color: var(--cyan-dark); letter-spacing: 1.5px; font-weight: 700; white-space: nowrap; }
 .ab-indicator { position: absolute; top: 175px; right: 14px; font-size: 9px; color: #555; font-weight: 700; }
@@ -276,7 +289,7 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
           <div class="chip-label">رقم الموجة</div>
         </div>
       </div>
-      <div class="status-row" style="grid-template-columns:1fr 1fr;">
+      <div class="status-row">
         <div class="chip" id="waveStatusChip" class="disconnected">
           <div class="status-text" id="waveStatusText">🔴 غير متصل</div>
           <div class="wave-timer" id="waveTimer">00:00</div>
@@ -284,8 +297,6 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
         <div class="chip" id="operationsChip" style="cursor:pointer;">
           <div class="chip-value" style="font-size:13px; font-weight:800;">📋 العمليات</div>
         </div>
-      </div>
-      <div class="status-row" style="grid-template-columns:1fr;">
         <div class="chip" id="batteryChip">
           <div class="chip-value">
             <div class="battery-visual">
@@ -321,7 +332,8 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
             </div>
             <div class="speaker-grill"></div>
           </div>
-          <button class="ptt-btn" id="pttMain">PTT</button>
+          <!-- ✅ تمت إضافة oncontextmenu لمنع قائمة اللمس الطويل -->
+          <button class="ptt-btn" id="pttMain" oncontextmenu="return false;">PTT</button>
           <div class="ptt-sub">PRESS TO TALK</div>
           <div class="ab-indicator">A/B</div>
         </div>
@@ -632,8 +644,10 @@ function stopTalking() {
 }
 
 const pttMainBtn = document.getElementById('pttMain');
+// ✅ منع المتصفح من التدخل أثناء الضغط الطويل على الجوال
 pttMainBtn.addEventListener('touchstart', (e) => { e.preventDefault(); onPTTStart(); }, { passive: false });
 pttMainBtn.addEventListener('touchend', (e) => { e.preventDefault(); stopTalking(); }, { passive: false });
+pttMainBtn.addEventListener('touchmove', (e) => { e.preventDefault(); }, { passive: false });
 pttMainBtn.addEventListener('mousedown', (e) => { e.preventDefault(); onPTTStart(); });
 pttMainBtn.addEventListener('mouseup', (e) => { e.preventDefault(); stopTalking(); });
 
@@ -1843,8 +1857,6 @@ function switchToRoom(roomCode, roomName) {
 }
 
 document.getElementById('operationsChip').addEventListener('click', openOperationsList);
-
-// ملاحظة: تم حذف مستمعي الأحداث القديمة للأزرار المحذوفة من الشاشة الرئيسية
 
 setTimeout(updateFriendBadge, 500);
 
