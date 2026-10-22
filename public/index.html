@@ -15,11 +15,17 @@
 html, body { height: 100%; overflow: hidden; background: var(--bg); }
 body { font-family: 'Segoe UI', 'Tahoma', system-ui, -apple-system, sans-serif; color: var(--text); user-select: none; -webkit-user-select: none; position: relative; }
 body::before { content: ''; position: fixed; inset: 0; background: radial-gradient(circle at 20% 20%, rgba(0,229,255,.06), transparent 45%), radial-gradient(circle at 80% 80%, rgba(0,255,136,.05), transparent 45%); pointer-events: none; z-index: 0; }
-.app { position: relative; z-index: 1; height: 100vh; display: flex; flex-direction: column; max-width: 500px; margin: 0 auto; }
+.app { position: relative; z-index: 1; height: 100vh; display: flex; flex-direction: column; max-width: 500px; margin: 0 auto; overflow: hidden; }
 .screen { flex: 1; overflow-y: auto; overflow-x: hidden; display: none; padding: 14px 14px 160px; animation: fadeIn .3s ease; scrollbar-width: none; }
 .screen::-webkit-scrollbar { display: none; }
 .screen.active { display: block; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ✅ إصلاح شاشة الدردشة لتعمل كصفحة محادثة حقيقية */
+#screen-chat.active { display: flex; flex-direction: column; padding: 0; overflow: hidden; height: 100vh; }
+#chatMessages { flex: 1; overflow-y: auto; padding: 14px 14px 100px; scroll-behavior: smooth; }
+#chatMessages::-webkit-scrollbar { display: none; }
+
 .top-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 4px 14px; }
 .brand { display: flex; align-items: center; gap: 8px; }
 .brand-icon { font-size: 26px; line-height: 1; filter: drop-shadow(0 0 8px rgba(0,229,255,.7)); animation: iconPulse 2s ease-in-out infinite; }
@@ -31,24 +37,7 @@ body::before { content: ''; position: fixed; inset: 0; background: radial-gradie
 .menu-toggle:active { transform: scale(.94); border-color: var(--cyan); box-shadow: 0 0 14px rgba(0,229,255,.4); }
 .menu-toggle.open { background: linear-gradient(180deg, #00e5ff, #008fa8); color: #001418; border-color: var(--cyan); box-shadow: 0 0 18px rgba(0,229,255,.6); }
 
-/* ✅ إصلاح التمرير في القائمة الجانبية */
-.side-menu { 
-  position: fixed; top: 0; right: 0; 
-  height: 100vh; height: 100dvh; 
-  width: 280px; 
-  background: linear-gradient(180deg, var(--card-2), var(--bg)); 
-  border-left: 1px solid var(--cyan); 
-  box-shadow: -12px 0 40px rgba(0,229,255,.25); 
-  z-index: 300; 
-  transform: translateX(110%); 
-  transition: transform .32s cubic-bezier(.4,0,.2,1); 
-  display: flex; flex-direction: column; 
-  padding: 20px 16px; 
-  overflow-y: auto; 
-  -webkit-overflow-scrolling: touch; 
-  touch-action: pan-y; 
-  scrollbar-width: none; 
-}
+.side-menu { position: fixed; top: 0; right: 0; height: 100vh; height: 100dvh; width: 280px; background: linear-gradient(180deg, var(--card-2), var(--bg)); border-left: 1px solid var(--cyan); box-shadow: -12px 0 40px rgba(0,229,255,.25); z-index: 300; transform: translateX(110%); transition: transform .32s cubic-bezier(.4,0,.2,1); display: flex; flex-direction: column; padding: 20px 16px; overflow-y: auto; -webkit-overflow-scrolling: touch; touch-action: pan-y; scrollbar-width: none; }
 .side-menu::-webkit-scrollbar { display: none; }
 .side-menu.open { transform: translateX(0); }
 .side-menu-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.7); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); z-index: 299; opacity: 0; pointer-events: none; transition: opacity .3s; }
@@ -117,18 +106,7 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
 .speaker-grill { position: absolute; bottom: 14px; left: 24px; right: 24px; height: 46px; border-radius: 6px; background: repeating-linear-gradient(90deg, #050505 0, #050505 3px, #1a1a1a 3px, #1a1a1a 6px); box-shadow: inset 0 3px 6px rgba(0,0,0,.95); }
 
 /* ✅ منع المتصفح من إلغاء الضغط عند تحريك الإصبع */
-.ptt-btn { 
-  position: absolute; top: 140px; left: 50%; transform: translateX(-50%); 
-  width: 105px; height: 62px; border-radius: 14px; 
-  background: linear-gradient(180deg, #0a2a3a, #041520); 
-  border: 2px solid var(--cyan); 
-  box-shadow: 0 0 22px rgba(0,229,255,.55), inset 0 0 18px rgba(0,229,255,.25), inset 0 2px 4px rgba(0,0,0,.7); 
-  display: flex; align-items: center; justify-content: center; 
-  color: var(--cyan); font-weight: 900; font-size: 23px; letter-spacing: 2px; 
-  text-shadow: 0 0 12px rgba(0,229,255,.95); cursor: pointer; transition: all .15s; 
-  z-index: 5; font-family: inherit; 
-  touch-action: none !important; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; 
-}
+.ptt-btn { position: absolute; top: 140px; left: 50%; transform: translateX(-50%); width: 105px; height: 62px; border-radius: 14px; background: linear-gradient(180deg, #0a2a3a, #041520); border: 2px solid var(--cyan); box-shadow: 0 0 22px rgba(0,229,255,.55), inset 0 0 18px rgba(0,229,255,.25), inset 0 2px 4px rgba(0,0,0,.7); display: flex; align-items: center; justify-content: center; color: var(--cyan); font-weight: 900; font-size: 23px; letter-spacing: 2px; text-shadow: 0 0 12px rgba(0,229,255,.95); cursor: pointer; transition: all .15s; z-index: 5; font-family: inherit; touch-action: none !important; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
 .ptt-btn.holding { transform: translateX(-50%) scale(.95); background: linear-gradient(180deg, #00e5ff, #008fa8); color: #001418; text-shadow: none; box-shadow: 0 0 45px rgba(0,229,255,1), 0 0 90px rgba(0,229,255,.6), inset 0 0 22px rgba(255,255,255,.35); }
 .ptt-sub { position: absolute; top: 212px; left: 50%; transform: translateX(-50%); font-size: 8px; color: var(--cyan-dark); letter-spacing: 1.5px; font-weight: 700; white-space: nowrap; }
 .ab-indicator { position: absolute; top: 175px; right: 14px; font-size: 9px; color: #555; font-weight: 700; }
@@ -139,7 +117,7 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
 .tab-icon { font-size: 22px; line-height: 1; }
 .bottom-info { position: fixed; bottom: 68px; left: 50%; transform: translateX(-50%); width: 100%; max-width: 500px; text-align: center; font-size: 11px; color: var(--text-dim); padding: 8px 0; pointer-events: none; z-index: 99; }
 .bottom-info .hl { color: var(--cyan); font-weight: 700; }
-.log-header { display: flex; align-items: center; justify-content: space-between; padding: 6px 4px 14px; border-bottom: 1px solid var(--border); margin-bottom: 14px; gap: 8px; }
+.log-header { display: flex; align-items: center; justify-content: space-between; padding: 6px 4px 14px; border-bottom: 1px solid var(--border); margin-bottom: 14px; gap: 8px; flex-shrink: 0; }
 .log-title { display: flex; flex-direction: column; gap: 3px; text-align: right; flex: 1; }
 .log-title h2 { font-size: 17px; font-weight: 800; color: var(--cyan); display: flex; align-items: center; gap: 6px; }
 .log-title .sub { font-size: 11px; color: var(--text-dim); font-weight: 500; }
@@ -175,18 +153,34 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
 .attach-msg-type { font-size: 10px; color: rgba(255,255,255,.65); }
 .attachment-preview-img { max-width: 100%; max-height: 240px; border-radius: 10px; display: block; margin-bottom: 6px; cursor: pointer; }
 .attachment-preview-video { max-width: 100%; max-height: 240px; border-radius: 10px; display: block; margin-bottom: 6px; }
-.chat-input-bar { position: fixed; bottom: 68px; left: 50%; transform: translateX(-50%); width: 100%; max-width: 500px; background: linear-gradient(180deg, rgba(11,18,24,.9), rgba(5,8,12,1)); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-top: 1px solid var(--border); padding: 10px 12px 14px; display: none; align-items: center; gap: 8px; z-index: 98; }
+
+/* ✅ تصغير شريط الإدخال والأيقونات */
+.chat-input-bar { position: fixed; bottom: 68px; left: 50%; transform: translateX(-50%); width: 100%; max-width: 500px; background: linear-gradient(180deg, rgba(11,18,24,.9), rgba(5,8,12,1)); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-top: 1px solid var(--border); padding: 8px 10px 10px; display: none; align-items: center; gap: 6px; z-index: 98; }
 .chat-input-bar.active { display: flex; }
-.chat-primary { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(180deg, #00e5ff, #008fa8); border: 1.5px solid var(--cyan); display: flex; align-items: center; justify-content: center; color: #001418; font-size: 20px; cursor: pointer; flex-shrink: 0; box-shadow: 0 0 16px rgba(0,229,255,.55); transition: all .15s; font-family: inherit; font-weight: 900; }
-.chat-primary:active { transform: scale(.92); box-shadow: 0 0 28px rgba(0,229,255,.95); }
+.chat-primary { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(180deg, #00e5ff, #008fa8); border: 1.5px solid var(--cyan); display: flex; align-items: center; justify-content: center; color: #001418; font-size: 16px; cursor: pointer; flex-shrink: 0; box-shadow: 0 0 10px rgba(0,229,255,.4); transition: all .15s; font-family: inherit; font-weight: 900; }
+.chat-primary:active { transform: scale(.92); box-shadow: 0 0 20px rgba(0,229,255,.95); }
 .chat-primary.recording { background: linear-gradient(180deg, #ff2a4d, #b01530); color: #fff; animation: recPulse 1s ease-in-out infinite; }
-@keyframes recPulse { 0%, 100% { box-shadow: 0 0 16px rgba(255,42,77,.6); } 50% { box-shadow: 0 0 32px rgba(255,42,77,1); } }
-.chat-clip-btn { color: var(--text-dim); font-size: 22px; cursor: pointer; background: none; border: none; font-family: inherit; padding: 0; transition: color .2s; flex-shrink: 0; }
+@keyframes recPulse { 0%, 100% { box-shadow: 0 0 10px rgba(255,42,77,.6); } 50% { box-shadow: 0 0 24px rgba(255,42,77,1); } }
+.chat-clip-btn { color: var(--text-dim); font-size: 18px; cursor: pointer; background: none; border: none; font-family: inherit; padding: 0 4px; transition: color .2s; flex-shrink: 0; }
 .chat-clip-btn:active { color: var(--cyan); }
-.chat-input { flex: 1; background: var(--card-2); border: 1px solid var(--border); border-radius: 22px; padding: 10px 14px; outline: none; color: var(--text); font-family: inherit; font-size: 13.5px; text-align: right; min-height: 44px; }
+.chat-input { flex: 1; background: var(--card-2); border: 1px solid var(--border); border-radius: 18px; padding: 8px 12px; outline: none; color: var(--text); font-family: inherit; font-size: 13px; text-align: right; min-height: 36px; }
 .chat-input::placeholder { color: var(--text-dim); }
-.chat-emoji-btn { color: var(--text-dim); font-size: 22px; cursor: pointer; background: none; border: none; font-family: inherit; padding: 0; transition: color .2s; flex-shrink: 0; }
+.chat-emoji-btn { color: var(--text-dim); font-size: 18px; cursor: pointer; background: none; border: none; font-family: inherit; padding: 0 4px; transition: color .2s; flex-shrink: 0; }
 .chat-emoji-btn:active { color: var(--cyan); }
+
+/* ✅ موجة التسجيل */
+.recording-wave { display: none; flex: 1; height: 30px; align-items: center; gap: 3px; justify-content: center; overflow: hidden; }
+.recording-wave.active { display: flex; }
+.recording-wave span { width: 3px; background: var(--red); border-radius: 3px; animation: waveAnim 1s infinite ease-in-out alternate; }
+.recording-wave span:nth-child(1) { animation-delay: 0.1s; height: 10px; }
+.recording-wave span:nth-child(2) { animation-delay: 0.2s; height: 20px; }
+.recording-wave span:nth-child(3) { animation-delay: 0.3s; height: 15px; }
+.recording-wave span:nth-child(4) { animation-delay: 0.4s; height: 25px; }
+.recording-wave span:nth-child(5) { animation-delay: 0.5s; height: 12px; }
+.recording-wave span:nth-child(6) { animation-delay: 0.6s; height: 18px; }
+.recording-wave span:nth-child(7) { animation-delay: 0.7s; height: 8px; }
+@keyframes waveAnim { 0% { transform: scaleY(0.5); opacity: 0.5; } 100% { transform: scaleY(1.5); opacity: 1; } }
+
 .settings-list { display: flex; flex-direction: column; gap: 8px; }
 .setting-item { background: linear-gradient(180deg, var(--card-2), var(--card)); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; gap: 10px; cursor: pointer; transition: border-color .2s; }
 .setting-item:active { border-color: var(--cyan); }
@@ -338,6 +332,7 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
         </div>
       </div>
     </section>
+    
     <section class="screen" id="screen-log">
       <div class="log-header">
         <div class="log-actions">
@@ -357,8 +352,9 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
         <button class="empty-room-btn" onclick="openSearchUser()">🔍 البحث عن مستخدم</button>
       </div>
     </section>
+    
     <section class="screen" id="screen-chat">
-      <div class="log-header">
+      <div class="log-header" style="padding: 14px 14px 14px 14px; margin-bottom: 0;">
         <div class="log-actions">
           <button class="chat-back" id="chatBackBtn">→</button>
         </div>
@@ -369,6 +365,7 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
       </div>
       <div id="chatMessages"></div>
     </section>
+    
     <section class="screen" id="screen-settings">
       <header class="top-header">
         <div class="brand">
@@ -402,19 +399,26 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
         </div>
       </div>
     </section>
+    
     <nav class="tab-bar">
       <button class="tab" data-tab="log" onclick="switchTab('log')"><span class="tab-icon">💬</span><span>الغرفة</span></button>
       <button class="tab active" data-tab="radio" onclick="switchTab('radio')"><span class="tab-icon">📡</span><span>النداء اللاسلكي</span></button>
       <button class="tab" data-tab="settings" onclick="switchTab('settings')"><span class="tab-icon">⚙️</span><span>الإعدادات</span></button>
     </nav>
     <div class="bottom-info" id="bottomInfo">إشارة: <span class="hl">قوي</span> • بطارية الراديو: <span class="hl" id="bottomBattery">--%</span></div>
+    
     <div class="chat-input-bar" id="chatInputBar">
       <button class="chat-primary" id="chatPrimaryBtn" title="التسجيل أو الإرسال">🎙️</button>
       <button class="chat-clip-btn" id="chatClip" title="إرفاق">📎</button>
-      <input type="text" class="chat-input" id="chatInput" placeholder="اكتب رسالة...">
+      <div class="chat-input" id="chatInputDisplay" style="display:flex; align-items:center; color:var(--text-dim);">اكتب رسالة...</div>
+      <input type="text" class="chat-input" id="chatInput" placeholder="اكتب رسالة..." style="display:none;">
+      <div class="recording-wave" id="recordingWave">
+        <span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+      </div>
       <button class="chat-emoji-btn" id="emojiBtn" title="إيموجي">😊</button>
     </div>
   </div>
+  
   <div class="side-menu-backdrop" id="menuBackdrop"></div>
   <aside class="side-menu" id="sideMenu">
     <div class="side-menu-header">
@@ -475,7 +479,7 @@ let waveLocalAudioTrack = null;
 let rawMicStream = null;
 let localTestAudio = null;
 let isTalking = false;
-let isPttActive = false; // ✅ متغير جديد لمنع المتصفح من التدخل
+let isPttActive = false; 
 
 function permanentDelete() {
   if (!confirm('⚠️ تحذير: سيتم حذف حسابك وبياناتك نهائياً من الخادم. هل أنت متأكد؟')) return;
@@ -646,37 +650,37 @@ function stopTalking() {
   }
 }
 
-// ✅ الحل السحري لمشكلة تحريك الإصبع:
-// نستمع للضغط على الزر، ونستمع لرفع الإصبع من على الشاشة بالكامل (window)
+// ✅ حل مشكلة تحريك الإصبع لزر PTT
 const pttMainBtn = document.getElementById('pttMain');
 
-pttMainBtn.addEventListener('pointerdown', (e) => {
+pttMainBtn.addEventListener('touchstart', (e) => {
   e.preventDefault();
   if (!isPttActive) {
     isPttActive = true;
     onPTTStart();
   }
-});
+}, { passive: false });
 
-window.addEventListener('pointerup', (e) => {
+window.addEventListener('touchend', (e) => {
   if (isPttActive) {
     isPttActive = false;
     stopTalking();
   }
-});
+}, { passive: false });
 
-window.addEventListener('pointercancel', (e) => {
+window.addEventListener('touchcancel', (e) => {
   if (isPttActive) {
     isPttActive = false;
     stopTalking();
   }
-});
+}, { passive: false });
 
-// منع المتصفح من التدخل إذا حركت إصبعك قليلاً أثناء التحدث
+pttMainBtn.addEventListener('mousedown', (e) => { e.preventDefault(); if (!isPttActive) { isPttActive = true; onPTTStart(); } });
+window.addEventListener('mouseup', (e) => { if (isPttActive) { isPttActive = false; stopTalking(); } });
+
+// منع المتصفح من التمرير أثناء التحدث
 document.body.addEventListener('touchmove', function(e) {
-    if (isPttActive) {
-        e.preventDefault(); 
-    }
+    if (isPttActive) e.preventDefault(); 
 }, { passive: false });
 
 function initSocket() {
@@ -942,12 +946,21 @@ function switchTab(tabName) {
   if (tabBtn) tabBtn.classList.add('active');
   const chatBar = document.getElementById('chatInputBar');
   const bottomInfo = document.getElementById('bottomInfo');
+  
   if (tabName === 'chat') {
-    chatBar.classList.add('active'); bottomInfo.style.display = 'none';
+    chatBar.classList.add('active'); 
+    bottomInfo.style.display = 'none';
+    setTimeout(() => {
+        const c = document.getElementById('chatMessages');
+        if(c) c.scrollTop = c.scrollHeight;
+    }, 100);
   } else if (tabName === 'log') {
-    chatBar.classList.add('active'); bottomInfo.style.display = 'none'; refreshChatList();
+    chatBar.classList.add('active'); 
+    bottomInfo.style.display = 'none'; 
+    refreshChatList();
   } else {
-    chatBar.classList.remove('active'); bottomInfo.style.display = 'block';
+    chatBar.classList.remove('active'); 
+    bottomInfo.style.display = 'block';
   }
   if (sideMenu && sideMenu.classList.contains('open')) closeSideMenu();
   window.scrollTo(0, 0);
@@ -1242,7 +1255,11 @@ function addChatMessage(msg, direction, scroll = true) {
   body.addEventListener('pointerup', () => clearTimeout(pressTimer));
   body.addEventListener('pointerleave', () => clearTimeout(pressTimer));
   container.appendChild(div);
-  if (scroll) container.scrollTop = container.scrollHeight;
+  
+  // ✅ التمرير التلقائي لأسفل عند إضافة رسالة جديدة
+  if (scroll) {
+      container.scrollTop = container.scrollHeight;
+  }
 }
 
 function sendTextMessage(text) {
@@ -1255,15 +1272,29 @@ function sendTextMessage(text) {
 }
 
 const chatInput = document.getElementById('chatInput');
+const chatInputDisplay = document.getElementById('chatInputDisplay');
 const chatPrimaryBtn = document.getElementById('chatPrimaryBtn');
 const chatClip = document.getElementById('chatClip');
 const emojiBtn = document.getElementById('emojiBtn');
+const recordingWave = document.getElementById('recordingWave');
 
 let isRecordingVoice = false;
 let voiceRecorder = null;
 let voiceChunks = [];
 let voiceStartTime = 0;
 let voiceTimerInt = null;
+
+chatInputDisplay.addEventListener('click', () => {
+    chatInputDisplay.style.display = 'none';
+    chatInput.style.display = 'flex';
+    chatInput.focus();
+});
+chatInput.addEventListener('blur', () => {
+    if(chatInput.value.trim() === '') {
+        chatInput.style.display = 'none';
+        chatInputDisplay.style.display = 'flex';
+    }
+});
 
 chatInput.addEventListener('input', () => {
   const hasText = chatInput.value.trim().length > 0;
@@ -1273,8 +1304,17 @@ chatInput.addEventListener('input', () => {
 
 chatPrimaryBtn.addEventListener('click', async () => {
   const hasText = chatInput.value.trim().length > 0;
-  if (hasText) { sendTextMessage(chatInput.value); chatInput.value = ''; chatPrimaryBtn.textContent = '🎙️'; }
-  else { if (!isRecordingVoice) await startVoiceRecording(); else await stopVoiceRecordingAndSend(); }
+  if (hasText) { 
+      sendTextMessage(chatInput.value); 
+      chatInput.value = ''; 
+      chatPrimaryBtn.textContent = '🎙️'; 
+      chatInput.style.display = 'none';
+      chatInputDisplay.style.display = 'flex';
+  }
+  else { 
+      if (!isRecordingVoice) await startVoiceRecording(); 
+      else await stopVoiceRecordingAndSend(); 
+  }
 });
 
 async function startVoiceRecording() {
@@ -1289,10 +1329,16 @@ async function startVoiceRecording() {
     voiceStartTime = Date.now();
     chatPrimaryBtn.classList.add('recording');
     chatPrimaryBtn.textContent = '⏹';
+    
+    // إظهار موجة التسجيل
+    chatInputDisplay.style.display = 'none';
+    chatInput.style.display = 'none';
+    recordingWave.classList.add('active');
+
     clearInterval(voiceTimerInt);
     voiceTimerInt = setInterval(() => {
       const s = Math.floor((Date.now() - voiceStartTime) / 1000);
-      chatInput.placeholder = 'جاري التسجيل... ' + s + 's';
+      chatInputDisplay.textContent = 'جاري التسجيل... ' + s + 's';
     }, 250);
     toast('🎙️ جاري التسجيل...', 'success');
   } catch (e) { toast('❌ تعذّر الوصول للمايك', 'error'); }
@@ -1303,7 +1349,11 @@ async function stopVoiceRecordingAndSend() {
   const duration = (Date.now() - voiceStartTime) / 1000;
   chatPrimaryBtn.classList.remove('recording');
   chatPrimaryBtn.textContent = '🎙️';
-  chatInput.placeholder = 'اكتب رسالة...';
+  
+  recordingWave.classList.remove('active');
+  chatInputDisplay.style.display = 'flex';
+  chatInputDisplay.textContent = 'اكتب رسالة...';
+
   clearInterval(voiceTimerInt);
   voiceRecorder.onstop = async () => {
     const blob = new Blob(voiceChunks, { type: 'audio/webm' });
@@ -1333,6 +1383,10 @@ emojiBtn.addEventListener('click', (ev) => {
   document.body.appendChild(picker);
   picker.addEventListener('click', (ev2) => {
     if (ev2.target.dataset.emoji) {
+      if(chatInput.style.display === 'none') {
+          chatInputDisplay.style.display = 'none';
+          chatInput.style.display = 'flex';
+      }
       chatInput.value += ev2.target.dataset.emoji;
       chatInput.dispatchEvent(new Event('input'));
       picker.remove();
