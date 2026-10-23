@@ -523,7 +523,6 @@ let isPttActive = false;
 let currentPttSession = 0;   
 let waveRoomPromise = null;  
 
-// ✅ إضافة دالة استعادة ضبط المصنع المفقودة
 function factoryReset() {
   if (!confirm('⚠️ تحذير: سيتم مسح جميع بياناتك المحلية (الاسم، الفرق، الغرف، الإعدادات) وإعادة تشغيل التطبيق. هل أنت متأكد؟')) return;
   localStorage.clear();
@@ -661,7 +660,6 @@ async function onPTTStart() {
   PTTEngine.playStartBeep();
   
   try {
-    // ✅ إعدادات وضوح الصوت
     rawMicStream = await navigator.mediaDevices.getUserMedia({ 
         audio: { 
             echoCancellation: true, 
@@ -857,7 +855,9 @@ function initSocket() {
     const container = document.getElementById('chatMessages');
     container.innerHTML = '';
     messages.forEach(m => addChatMessage(m, m.sender === currentUser.id ? 'out' : 'in', false));
-    container.scrollTop = container.scrollHeight;
+    setTimeout(() => {
+        container.scrollTop = container.scrollHeight;
+    }, 100);
   });
 
   socket.on('conversation_updated', () => refreshChatList());
@@ -891,7 +891,6 @@ async function registerUser() {
       currentUser.radCode = data.radCode;
       const el1 = document.getElementById('myRadCode'); if (el1) el1.textContent = data.radCode;
       
-      // ✅ إصلاح: عدم وضع رقم المستخدم (Q) في خانة رقم الموجة (M) إذا لم يكن هناك فرقة
       const el2 = document.getElementById('waveCodeChip'); 
       if (el2 && !currentUser.waveId) el2.innerHTML = '--- <span style="font-size:12px;">🔑</span>';
       
@@ -1085,9 +1084,9 @@ function switchTab(tabName) {
     setTimeout(() => {
         const c = document.getElementById('chatMessages');
         if(c) c.scrollTop = c.scrollHeight;
-    }, 100);
+    }, 150);
   } else if (tabName === 'log') {
-    chatBar.classList.remove('active'); // ✅ إخفاء شريط الإدخال في قائمة الغرف
+    chatBar.classList.remove('active');
     bottomInfo.style.display = 'none'; 
     refreshChatList();
   } else {
@@ -1287,7 +1286,6 @@ async function leaveWave() {
   localStorage.removeItem('rc_saved_wave_name');
   localStorage.removeItem('rc_is_wave_owner');
   
-  // ✅ إصلاح: مسح رقم الفرقة وعرض (---) بدلاً من رقم المستخدم
   const el1 = document.getElementById('waveCodeChip');
   if (el1) el1.innerHTML = '--- <span style="font-size:12px;">🔑</span>'; 
   
@@ -1308,19 +1306,9 @@ async function refreshChatList() {
     
     let htmlContent = '';
 
-    // ✅ إضافة غرفتك الخاصة لتظهر في القائمة
-    if (currentUser.roomCode) {
-      htmlContent += `
-        <div class="chat-list-item" onclick="openChatWith('self', '${currentUser.roomName || 'غرفتي'}', 'conv_self_${currentUser.roomCode}')">
-          <div class="chat-list-avatar">💬</div>
-          <div class="chat-list-info">
-            <div class="chat-list-name">${currentUser.roomName || 'غرفتي'}</div>
-            <div class="chat-list-last">اضغط للدخول وتجربة الصوت</div>
-          </div>
-        </div>`;
-    }
+    // ✅ تم إزالة غرفتك الخاصة من هذه القائمة بناءً على طلبك
 
-    // إضافة محادثات الأصدقاء
+    // إضافة محادثات الأصدقاء فقط
     if (data.conversations && data.conversations.length > 0) {
       data.conversations.forEach(c => {
         const initial = (c.otherUser.userName || '?').charAt(0);
@@ -1383,8 +1371,13 @@ async function openChatWith(otherDeviceId, otherName, convId) {
     const res = await fetch(SERVER_URL + '/api/conversations/' + convId + '/messages');
     const data = await res.json();
     (data.messages || []).forEach(m => addChatMessage(m, m.sender === currentUser.id ? 'out' : 'in', false));
-    const c = document.getElementById('chatMessages');
-    c.scrollTop = c.scrollHeight;
+    
+    // ✅ التعديل: تأخير بسيط لضمان نزول الشاشة لآخر رسالة
+    setTimeout(() => {
+        const c = document.getElementById('chatMessages');
+        if(c) c.scrollTop = c.scrollHeight;
+    }, 200);
+
   } catch (e) {}
 }
 
@@ -2086,7 +2079,6 @@ function sendFriendRequest() {
       fromCode: currentUser.radCode 
     });
 
-    // الطريقة 1: حدث الصداقة المباشر
     socket.emit('friend_request', { 
       fromDeviceId: currentUser.id, 
       fromUserName: currentUser.name, 
@@ -2094,7 +2086,6 @@ function sendFriendRequest() {
       toDeviceId: user.deviceId 
     });
     
-    // الطريقة 2 و 3 و 4: الإرسال المزدوج (الحيلة التي كانت في الكود القديم)
     socket.emit('send_direct_message', { toDeviceId: user.deviceId, fromDeviceId: currentUser.id, fromName: currentUser.name, fromCode: currentUser.radCode, text: txt, message: {text: txt} });
     socket.emit('direct_message', { toDeviceId: user.deviceId, text: txt, fromDeviceId: currentUser.id, fromName: currentUser.name });
     socket.emit('private_message', { to: user.deviceId, text: txt });
@@ -2213,8 +2204,8 @@ function switchToRoom(roomCode, roomName) {
 document.getElementById('operationsChip').addEventListener('click', openOperationsList);
 document.getElementById('friendRequestsChip').addEventListener('click', openFriendRequests);
 document.getElementById('friendRequestsChip2').addEventListener('click', openFriendRequests);
-document.getElementById('sendFriendChip').addEventListener('click', openSearchWave); // بحث عن فرقة M
-document.getElementById('sendFriendChip2').addEventListener('click', openSendFriendRequest); // بحث عن مستخدم Q
+document.getElementById('sendFriendChip').addEventListener('click', openSearchWave);
+document.getElementById('sendFriendChip2').addEventListener('click', openSendFriendRequest);
 
 setTimeout(updateFriendBadge, 500);
 
@@ -2232,10 +2223,9 @@ window.addEventListener('DOMContentLoaded', async () => {
   initSocket();
   refreshChatList();
   
-  // ✅ الفحص الدوري لطلبات الانضمام (مضمون 100%)
   setInterval(async () => {
     if (!currentUser.id) return;
-    if (window._incomingRequest) return; // لا تفتح نافذة إذا كانت هناك نافذة أخرى مفتوحة
+    if (window._incomingRequest) return;
     
     try {
       const res = await fetch(SERVER_URL + '/api/waves/pending-requests/' + currentUser.id);
@@ -2249,9 +2239,8 @@ window.addEventListener('DOMContentLoaded', async () => {
         if (typeof PTTEngine !== 'undefined' && PTTEngine.playRealBeep) PTTEngine.playRealBeep();
       }
     } catch (e) {}
-  }, 3000); // يفحص كل 3 ثواني
+  }, 3000);
 
-  // ✅ التعديل المطلوب: الفحص الدوري لطلبات الصداقة (لضمان وصولها)
   setInterval(async () => {
     if (!currentUser.id) return;
     
@@ -2280,7 +2269,7 @@ window.addEventListener('DOMContentLoaded', async () => {
         });
       }
     } catch (e) {}
-  }, 4000); // يفحص كل 4 ثوانٍ
+  }, 4000);
 
   const savedWaveId = localStorage.getItem('rc_saved_wave_id');
   const savedWaveName = localStorage.getItem('rc_saved_wave_name');
@@ -2297,7 +2286,6 @@ window.addEventListener('DOMContentLoaded', async () => {
     const el3 = document.getElementById('lcdLine3');
     if (el3) el3.textContent = savedWaveId + ' • RX';
     
-    // ✅ إصلاح: تحديث شاشة LCD والحالة عند استعادة الفرقة
     const statusChip = document.getElementById('waveStatusChip');
     const statusText = document.getElementById('waveStatusText');
     if (statusChip) { statusChip.classList.remove('disconnected'); statusChip.classList.add('live'); }
