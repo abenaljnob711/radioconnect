@@ -480,6 +480,8 @@ let rawMicStream = null;
 let localTestAudio = null;
 let isTalking = false;
 let isPttActive = false; 
+let currentPttSession = 0;   // ✅ جديد: لمعرفة الجلسة الحالية للضغط
+let waveRoomPromise = null;  // ✅ جديد: لمنع الاتصال المزدوج
 
 function permanentDelete() {
   if (!confirm('⚠️ تحذير: سيتم حذف حسابك وبياناتك نهائياً من الخادم. هل أنت متأكد؟')) return;
@@ -546,45 +548,56 @@ async function disconnectWaveRoom() {
 }
 
 async function connectWaveChannel() {
-  try {
-    if (!window.LivekitClient || !currentUser.radCode) return false;
-    if (waveRoom && waveRoom.state === "connected") return true;
-    const tokenRes = await fetch(SERVER_URL + '/api/livekit/token', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ roomId: currentUser.waveId, deviceId: currentUser.id, userName: currentUser.name })
-    });
-    const tokenData = await tokenRes.json();
-    if (!tokenData.token) return false;
-    waveRoom = new window.LivekitClient.Room();
-    waveRoom.on(window.LivekitClient.RoomEvent.TrackSubscribed, (track, pub, participant) => {
-      if (track.kind === "audio") {
-        const audioElement = track.attach();
-        audioElement.volume = 1.0;
-        audioElement.autoplay = true;
-        document.body.appendChild(audioElement);
-      }
-    });
-    waveRoom.on(window.LivekitClient.RoomEvent.TrackUnsubscribed, (track) => {
-      track.detach().forEach(el => el.remove());
-    });
-    waveRoom.on(window.LivekitClient.RoomEvent.Disconnected, () => {
+  if (waveRoom && waveRoom.state === "connected") return true;
+  if (waveRoomPromise) return waveRoomPromise; // منع الاتصال المزدوج نهائياً
+
+  waveRoomPromise = (async () => {
+    try {
+      if (!window.LivekitClient || !currentUser.radCode) return false;
+      const tokenRes = await fetch(SERVER_URL + '/api/livekit/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ roomId: currentUser.waveId, deviceId: currentUser.id, userName: currentUser.name })
+      });
+      const tokenData = await tokenRes.json();
+      if (!tokenData.token) return false;
+      
+      waveRoom = new window.LivekitClient.Room();
+      waveRoom.on(window.LivekitClient.RoomEvent.TrackSubscribed, (track, pub, participant) => {
+        if (track.kind === "audio") {
+          const audioElement = track.attach();
+          audioElement.volume = 1.0;
+          audioElement.autoplay = true;
+          document.body.appendChild(audioElement);
+        }
+      });
+      waveRoom.on(window.LivekitClient.RoomEvent.TrackUnsubscribed, (track) => {
+        track.detach().forEach(el => el.remove());
+      });
+      waveRoom.on(window.LivekitClient.RoomEvent.Disconnected, () => {
+        waveRoom = null;
+        if (isTalking) stopTalking();
+      });
+      await waveRoom.connect(LIVEKIT_URL, tokenData.token);
+      return true;
+    } catch (e) {
+      console.error("Wave Connect Error:", e);
       waveRoom = null;
-      if (isTalking) stopTalking();
-    });
-    await waveRoom.connect(LIVEKIT_URL, tokenData.token);
-    return true;
-  } catch (e) {
-    console.error("Wave Connect Error:", e);
-    waveRoom = null;
-    return false;
-  }
+      return false;
+    } finally {
+      waveRoomPromise = null; 
+    }
+  })();
+  return waveRoomPromise;
 }
 
 async function onPTTStart() {
   if (isTalking) return;
   if (!currentUser.waveId) { toast('⚠️ انضم إلى فرقة أولاً', 'error'); return; }
+  
+  const mySession = ++currentPttSession; // ✅ تحديد معرف فريد لهذه الضغطة
   isTalking = true;
+  
   const pttMain = document.getElementById('pttMain');
   pttMain.classList.add('holding');
   document.body.classList.add('ptt-active');
@@ -595,25 +608,48 @@ async function onPTTStart() {
   const lcd3 = document.getElementById('lcdLine3');
   if (lcd3) lcd3.textContent = (currentUser.radCode || '—') + ' • TX';
   startWaveTimer();
+  
   await PTTEngine.init();
   PTTEngine.playStartBeep();
+  
   try {
     rawMicStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } });
+    
+    // ✅ إذا تم إلغاء الجلسة (رفع الإصبع) أثناء طلب المايك
+    if (mySession !== currentPttSession) {
+      rawMicStream.getTracks().forEach(t => t.stop());
+      rawMicStream = null;
+      return;
+    }
+
     if (!waveRoom || waveRoom.participants.size === 0) {
       localTestAudio = new Audio();
       localTestAudio.srcObject = rawMicStream;
       localTestAudio.volume = 1.0;
       localTestAudio.play().catch(()=>{});
     }
-    connectWaveChannel().then(() => {
-      if (waveRoom && waveRoom.state === "connected" && rawMicStream) {
-        window.LivekitClient.LocalAudioTrack.createTrack(rawMicStream.getAudioTracks()[0]).then(track => {
-          waveLocalAudioTrack = track;
-          waveRoom.localParticipant.publishTrack(waveLocalAudioTrack);
-          waveLocalAudioTrack.enable();
-        });
+    
+    await connectWaveChannel();
+
+    // ✅ فحص إضافي بعد الاتصال بالسيرفر
+    if (mySession !== currentPttSession) {
+      if (rawMicStream) { rawMicStream.getTracks().forEach(t => t.stop()); rawMicStream = null; }
+      return;
+    }
+
+    if (waveRoom && waveRoom.state === "connected" && rawMicStream) {
+      const track = await window.LivekitClient.LocalAudioTrack.createTrack(rawMicStream.getAudioTracks()[0]);
+      
+      // ✅ فحص أخير قبل النشر
+      if (mySession !== currentPttSession) {
+        track.stop();
+        return;
       }
-    });
+
+      waveLocalAudioTrack = track;
+      waveRoom.localParticipant.publishTrack(waveLocalAudioTrack);
+      waveLocalAudioTrack.enable();
+    }
   } catch (err) {
     toast("⚠️ تعذر تشغيل الميكروفون");
     stopTalking();
@@ -621,30 +657,44 @@ async function onPTTStart() {
 }
 
 function stopTalking() {
+  currentPttSession++; // ✅ إلغاء أي عملية تشغيل قيد التنفيذ فوراً
+  
   if (isTalking) PTTEngine.playEndBeep();
+  
   if (localTestAudio) {
     try { localTestAudio.pause(); localTestAudio.srcObject = null; } catch (e) {}
     localTestAudio = null;
   }
+  
   if (waveLocalAudioTrack && waveRoom) {
-    try { waveRoom.localParticipant.unpublishTrack(waveLocalAudioTrack); waveLocalAudioTrack.stop(); } catch (e) {}
+    try { 
+        waveRoom.localParticipant.unpublishTrack(waveLocalAudioTrack); 
+        waveLocalAudioTrack.stop(); 
+    } catch (e) {}
     waveLocalAudioTrack = null;
   }
+  
   if (rawMicStream) {
     rawMicStream.getTracks().forEach(t => t.stop());
     rawMicStream = null;
   }
+  
   isTalking = false;
+  
   const pttMain = document.getElementById('pttMain');
   if (pttMain) pttMain.classList.remove('holding');
   document.body.classList.remove('ptt-active');
+  
   const statusChip = document.getElementById('waveStatusChip');
   const statusText = document.getElementById('waveStatusText');
   if (statusChip) { statusChip.classList.remove('live'); statusChip.classList.add('disconnected'); }
   if (statusText) statusText.innerHTML = '🔴 غير متصل';
+  
   const lcd3 = document.getElementById('lcdLine3');
   if (lcd3) lcd3.textContent = (currentUser.radCode || '—') + ' • RX';
+  
   stopWaveTimer();
+  
   if (socket && currentUser.waveId) {
     socket.emit('wave_broadcast_stop', { waveId: currentUser.waveId, deviceId: currentUser.id });
   }
@@ -657,9 +707,8 @@ pttMainBtn.addEventListener('pointerdown', (e) => {
   e.preventDefault();
   if (isPttActive) return;
   isPttActive = true;
-  // تثبيت المؤشر على الزر لضمان عدم انقطاع الحدث
   if (pttMainBtn.setPointerCapture) {
-    pttMainBtn.setPointerCapture(e.pointerId);
+    try { pttMainBtn.setPointerCapture(e.pointerId); } catch(ex){}
   }
   onPTTStart();
 });
@@ -675,6 +724,7 @@ pttMainBtn.addEventListener('pointerup', (e) => {
 });
 
 pttMainBtn.addEventListener('pointercancel', (e) => {
+  e.preventDefault();
   if (!isPttActive) return;
   isPttActive = false;
   stopTalking();
