@@ -1082,7 +1082,7 @@ function switchTab(tabName) {
         if(c) c.scrollTop = c.scrollHeight;
     }, 100);
   } else if (tabName === 'log') {
-    chatBar.classList.add('active'); 
+    chatBar.classList.remove('active'); // ✅ إخفاء شريط الإدخال في قائمة الغرف
     bottomInfo.style.display = 'none'; 
     refreshChatList();
   } else {
@@ -1300,17 +1300,41 @@ async function refreshChatList() {
     const data = await res.json();
     const list = document.getElementById('chatListContainer');
     const empty = document.getElementById('emptyRoom');
-    if (!data.conversations || data.conversations.length === 0) {
-      list.innerHTML = ''; empty.style.display = 'flex'; return;
+    
+    let htmlContent = '';
+
+    // ✅ إضافة غرفتك الخاصة لتظهر في القائمة
+    if (currentUser.roomCode) {
+      htmlContent += `
+        <div class="chat-list-item" onclick="openChatWith('self', '${currentUser.roomName || 'غرفتي'}', 'conv_self_${currentUser.roomCode}')">
+          <div class="chat-list-avatar">💬</div>
+          <div class="chat-list-info">
+            <div class="chat-list-name">${currentUser.roomName || 'غرفتي'}</div>
+            <div class="chat-list-last">اضغط للدخول وتجربة الصوت</div>
+          </div>
+        </div>`;
     }
-    empty.style.display = 'none';
-    list.innerHTML = data.conversations.map(c => {
-      const initial = (c.otherUser.userName || '?').charAt(0);
-      const lastText = c.lastMessage ? (c.lastMessage.text || '') : 'لا رسائل';
-      const timeStr = c.lastMessageAt ? new Date(c.lastMessageAt).toLocaleTimeString('ar', { hour: '2-digit', minute: '2-digit' }) : '';
-      return `<div class="chat-list-item" onclick="openChatWith('${c.otherUser.deviceId}', '${(c.otherUser.userName || '').replace(/'/g, "")}', '${c.conversationId}')"><div class="chat-list-avatar">${initial}</div><div class="chat-list-info"><div class="chat-list-name">${c.otherUser.userName}</div><div class="chat-list-last">${lastText}</div></div><div class="chat-list-time">${timeStr}</div></div>`;
-    }).join('');
-  } catch (e) {}
+
+    // إضافة محادثات الأصدقاء
+    if (data.conversations && data.conversations.length > 0) {
+      data.conversations.forEach(c => {
+        const initial = (c.otherUser.userName || '?').charAt(0);
+        const lastText = c.lastMessage ? (c.lastMessage.text || '') : 'لا رسائل';
+        const timeStr = c.lastMessageAt ? new Date(c.lastMessageAt).toLocaleTimeString('ar', { hour: '2-digit', minute: '2-digit' }) : '';
+        htmlContent += `<div class="chat-list-item" onclick="openChatWith('${c.otherUser.deviceId}', '${(c.otherUser.userName || '').replace(/'/g, "")}', '${c.conversationId}')"><div class="chat-list-avatar">${initial}</div><div class="chat-list-info"><div class="chat-list-name">${c.otherUser.userName}</div><div class="chat-list-last">${lastText}</div></div><div class="chat-list-time">${timeStr}</div></div>`;
+      });
+    }
+
+    if (htmlContent === '') {
+      list.innerHTML = ''; 
+      empty.style.display = 'flex'; 
+    } else {
+      empty.style.display = 'none';
+      list.innerHTML = htmlContent;
+    }
+  } catch (e) {
+    console.error(e);
+  }
 }
 
 async function startUserChat() {
@@ -1335,8 +1359,21 @@ async function openChatWith(otherDeviceId, otherName, convId) {
   switchTab('chat');
   const bar = document.getElementById('chatInputBar');
   if (bar) bar.classList.add('active');
-  if (socket) socket.emit('join_conversation', { conversationId: convId });
+  
   document.getElementById('chatMessages').innerHTML = '';
+
+  // ✅ إصلاح: إذا كانت غرفتك الخاصة، لا تبحث في السيرفر واعرض ترحيب
+  if (convId.startsWith('conv_self_')) {
+    document.getElementById('chatMessages').innerHTML = `
+      <div style="padding:20px;text-align:center;color:var(--text-dim);font-size:12px;">
+        💬 هذه غرفتك "${otherName}"<br>
+        يمكنك إرسال رسائل نصية أو صوتية هنا لتجربتها.
+      </div>`;
+    return; // إيقاف التنفيذ هنا
+  }
+
+  if (socket) socket.emit('join_conversation', { conversationId: convId });
+  
   try {
     const res = await fetch(SERVER_URL + '/api/conversations/' + convId + '/messages');
     const data = await res.json();
@@ -1512,11 +1549,24 @@ async function stopVoiceRecordingAndSend() {
   voiceRecorder.stop();
 }
 
-const EMOJIS = ['😀','😂','🥰','😎','🤔','😢','😡','👍','👏','🙏','❤️','🔥','⭐','🎉','📻','📡','🎙️','✅','❌','⚠️'];
+// ✅ زيادة قائمة الإيموجي إلى 100 إيموجي
+const EMOJIS = [
+  '😀','😃','😄','😁','😆','😅','😂','🤣','🥲','😊',
+  '😇','🙂','🙃','😉','😌','😍','🥰','😘','😗','😙',
+  '😚','😋','😛','😝','😜','🤪','🤨','🧐','🤓','😎',
+  '🥸','🤩','🥳','😏','😒','😞','😔','😟','😕','🙁',
+  '☹️','😣','😖','😫','😩','🥺','😢','😭','😤','😠',
+  '😡','🤬','🤯','😳','🥵','🥶','😱','😨','😰','😥',
+  '😓','🤗','🤔','🤭','🤫','🤥','😶','😐','😑','😬',
+  '🙄','😯','😦','😧','😮','😲','🥱','😴','🤤','😪',
+  '😵','🤐','🥴','🤢','🤮','🤧','😷','🤒','🤕','🤑',
+  '🤠','😈','👿','👹','👺','🤡','💩','👻','💀','👽'
+];
+
 emojiBtn.addEventListener('click', (ev) => {
   ev.stopPropagation();
   const picker = document.createElement('div');
-  picker.style.cssText = 'position:fixed;bottom:130px;left:12px;right:12px;max-width:476px;margin:0 auto;background:var(--card-2);border:1px solid var(--cyan);border-radius:14px;padding:10px;z-index:600;display:grid;grid-template-columns:repeat(10,1fr);gap:6px;';
+  picker.style.cssText = 'position:fixed;bottom:130px;left:12px;right:12px;max-width:476px;margin:0 auto;background:var(--card-2);border:1px solid var(--cyan);border-radius:14px;padding:10px;z-index:600;display:grid;grid-template-columns:repeat(10,1fr);gap:6px;max-height:200px;overflow-y:auto;';
   picker.innerHTML = EMOJIS.map(e => `<button style="font-size:22px;background:none;border:none;cursor:pointer;padding:4px;" data-emoji="${e}">${e}</button>`).join('');
   document.body.appendChild(picker);
   picker.addEventListener('click', (ev2) => {
