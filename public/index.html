@@ -807,6 +807,23 @@ function initSocket() {
     refreshChatList();
   });
 
+  // ✅ استقبال طلبات الصداقة القادمة كرسائل نصية (الحيلة القديمة)
+  socket.on('new_direct_message', (payload) => {
+    try {
+      let txt = payload?.message?.text || payload?.text || '';
+      if (typeof txt === 'string' && txt.includes('friend_request')) {
+        let obj = JSON.parse(txt);
+        if (obj.type === 'friend_request') {
+          handleIncomingFriendRequest({
+            fromDeviceId: obj.fromDeviceId,
+            fromUserName: obj.fromUserName || obj.fromName,
+            fromCode: obj.fromCode
+          });
+        }
+      }
+    } catch(e) {}
+  });
+
   socket.on('conversation_history', ({ messages }) => {
     const container = document.getElementById('chatMessages');
     container.innerHTML = '';
@@ -1088,7 +1105,6 @@ function openSideMenu() {
       <button class="menu-item primary" onclick="closeSideMenu();openCreateWave()"><span class="menu-icon">➕</span><span class="menu-text"><span class="menu-label">إنشاء فرقة</span><span class="menu-desc">إنشاء موجة لاسلكية جديدة</span></span></button>
       <button class="menu-item" onclick="closeSideMenu();openSearchWave()"><span class="menu-icon">🔍</span><span class="menu-text"><span class="menu-label">البحث عن فرقة</span><span class="menu-desc">ابحث برقم الفرقة</span></span></button>
       
-      <!-- ✅ زر تعديل الاسم هنا -->
       <button class="menu-item" onclick="closeSideMenu();openEditName()"><span class="menu-icon">👤</span><span class="menu-text"><span class="menu-label">تعديل الاسم</span><span class="menu-desc">تغيير اسمك الحالي</span></span></button>
 
       <button class="menu-item" onclick="closeSideMenu();openOperationsList()"><span class="menu-icon">📋</span><span class="menu-text"><span class="menu-label">قائمة العمليات</span><span class="menu-desc">الفرق التي أنت مشترك فيها</span></span></button>
@@ -1111,7 +1127,6 @@ function openSideMenu() {
       <button class="menu-item primary" onclick="closeSideMenu();openCreateRoom()"><span class="menu-icon">➕</span><span class="menu-text"><span class="menu-label">إنشاء غرفة</span><span class="menu-desc">إنشاء غرفة دردشة جديدة</span></span></button>
       <button class="menu-item" onclick="closeSideMenu();openSearchUser()"><span class="menu-icon">🔍</span><span class="menu-text"><span class="menu-label">البحث عن مستخدم</span><span class="menu-desc">ابحث برقم المستخدم لبدء محادثة</span></span></button>
       
-      <!-- ✅ زر تعديل الاسم هنا -->
       <button class="menu-item" onclick="closeSideMenu();openEditName()"><span class="menu-icon">👤</span><span class="menu-text"><span class="menu-label">تعديل الاسم</span><span class="menu-desc">تغيير اسمك الحالي</span></span></button>
 
       <button class="menu-item" onclick="closeSideMenu();openOperationsList()"><span class="menu-icon">📋</span><span class="menu-text"><span class="menu-label">قائمة العمليات</span><span class="menu-desc">الغرف التي أنت مشترك فيها</span></span></button>
@@ -1127,7 +1142,6 @@ function openSideMenu() {
     content.innerHTML = `
       <button class="menu-item" onclick="closeSideMenu();openSearchUser()"><span class="menu-icon">🔍</span><span class="menu-text"><span class="menu-label">البحث</span><span class="menu-desc">ابحث عن مستخدم</span></span></button>
       
-      <!-- ✅ زر تعديل الاسم هنا -->
       <button class="menu-item" onclick="closeSideMenu();openEditName()"><span class="menu-icon">👤</span><span class="menu-text"><span class="menu-label">تعديل الاسم</span><span class="menu-desc">تغيير اسمك الحالي</span></span></button>
 
       <button class="menu-item" onclick="closeSideMenu();openFriendRequests()"><span class="menu-icon">👥</span><span class="menu-text"><span class="menu-label">طلبات الصداقة</span><span class="menu-desc">الواردة والصادرة</span></span></button>
@@ -1903,11 +1917,38 @@ async function searchFriend() {
 function sendFriendRequest() {
   if (!friendSearchResult) return;
   const user = friendSearchResult;
-  if (friendRequests.outgoing.find(r => r.deviceId === user.deviceId)) { toast('⚠️ أرسلت طلباً بالفعل', 'error'); return; }
+  
+  if (friendRequests.outgoing.find(r => r.deviceId === user.deviceId)) { 
+    toast('⚠️ أرسلت طلباً بالفعل', 'error'); 
+    return; 
+  }
+  
   const req = { name: user.userName || 'مستخدم', code: user.radCode, deviceId: user.deviceId, sentAt: Date.now() };
   friendRequests.outgoing.push(req);
   saveFriendRequests();
-  if (socket) socket.emit('friend_request', { fromDeviceId: currentUser.id, fromUserName: currentUser.name, fromCode: currentUser.radCode, toDeviceId: user.deviceId });
+  
+  if (socket) {
+    const txt = JSON.stringify({ 
+      type: 'friend_request', 
+      fromDeviceId: currentUser.id, 
+      fromUserName: currentUser.name, 
+      fromCode: currentUser.radCode 
+    });
+
+    // الطريقة 1: حدث الصداقة المباشر
+    socket.emit('friend_request', { 
+      fromDeviceId: currentUser.id, 
+      fromUserName: currentUser.name, 
+      fromCode: currentUser.radCode, 
+      toDeviceId: user.deviceId 
+    });
+    
+    // الطريقة 2 و 3 و 4: الإرسال المزدوج (الحيلة التي كانت في الكود القديم)
+    socket.emit('send_direct_message', { toDeviceId: user.deviceId, fromDeviceId: currentUser.id, fromName: currentUser.name, fromCode: currentUser.radCode, text: txt, message: {text: txt} });
+    socket.emit('direct_message', { toDeviceId: user.deviceId, text: txt, fromDeviceId: currentUser.id, fromName: currentUser.name });
+    socket.emit('private_message', { to: user.deviceId, text: txt });
+  }
+  
   closeModal('modalFriendSend');
   toast('📤 تم إرسال طلب الصداقة', 'success');
 }
@@ -2021,8 +2062,8 @@ function switchToRoom(roomCode, roomName) {
 document.getElementById('operationsChip').addEventListener('click', openOperationsList);
 document.getElementById('friendRequestsChip').addEventListener('click', openFriendRequests);
 document.getElementById('friendRequestsChip2').addEventListener('click', openFriendRequests);
-document.getElementById('sendFriendChip').addEventListener('click', openSearchWave); // ✅ هنا تم التعديل ليبحث عن M
-document.getElementById('sendFriendChip2').addEventListener('click', openSendFriendRequest);
+document.getElementById('sendFriendChip').addEventListener('click', openSearchWave); // بحث عن فرقة M
+document.getElementById('sendFriendChip2').addEventListener('click', openSendFriendRequest); // بحث عن مستخدم Q
 
 setTimeout(updateFriendBadge, 500);
 
@@ -2100,72 +2141,6 @@ document.addEventListener('click', (e) => {
     md.classList.remove('show');
   }
 });
-    /* =========================================================
-   ✅ استخراج دالة استلام وإرسال الصداقة من الكود القديم
-   ========================================================= */
-(function(){
-  window.sendFriendRequestSignal = function(toDeviceId, payload){
-    if(!socket){ toast('❌ غير متصل','error'); return; }
-    const txt = JSON.stringify(payload);
-    
-    // إرسال الطلب عبر 4 طرق مختلفة لضمان الوصول
-    socket.emit('friend_request_send', {toDeviceId: toDeviceId, fromDeviceId: currentUser.id, fromName: currentUser.name, fromCode: currentUser.radCode});
-    socket.emit('send_direct_message', {toDeviceId: toDeviceId, fromDeviceId: currentUser.id, fromName: currentUser.name, fromCode: currentUser.radCode, text: txt, message: {text: txt}});
-    socket.emit('direct_message', {toDeviceId: toDeviceId, text: txt, fromDeviceId: currentUser.id, fromName: currentUser.name});
-    socket.emit('private_message', {to: toDeviceId, text: txt});
-  };
-
-  // اعتراض دالة الإرسال الحالية لتستخدم الطريقة المضمونة
-  const originalSend = window.sendFriendRequest;
-  window.sendFriendRequest = function(){
-    if(!friendSearchResult || friendSearchResult.type !== 'user'){ if(originalSend) originalSend(); return; }
-    
-    window.sendFriendRequestSignal(friendSearchResult.deviceId, {
-      type: 'friend_request', 
-      fromDeviceId: currentUser.id, 
-      fromName: currentUser.name, 
-      fromCode: currentUser.radCode
-    });
-    
-    // إضافة الطلب للذاكرة المحلية
-    if (!friendRequests.outgoing.find(r => r.deviceId === friendSearchResult.deviceId)) {
-        friendRequests.outgoing.push({ name: friendSearchResult.name, code: friendSearchResult.radCode, deviceId: friendSearchResult.deviceId, sentAt: Date.now() });
-        saveFriendRequests();
-    }
-    
-    if(window.updateFriendBadge) updateFriendBadge();
-    toast('📤 تم إرسال طلب الصداقة إلى ' + friendSearchResult.name, 'success');
-    closeModal('modalSearch');
-    closeModal('modalFriendSend');
-  };
-
-  // الاستماع لاستلام الطلبات (عبر السوكيت المباشر وعبر الرسائل الخاصة)
-  setTimeout(()=>{
-    if(!socket) return;
-    
-    // 1. الاستماع لحدث طلب الصداقة المباشر
-    socket.on('friend_request_received', (data)=>{ 
-        if(window.handleIncomingFriendRequest) handleIncomingFriendRequest(data); 
-    });
-    
-    // 2. الاستماع للرسائل الخاصة (لأن الكود القديم كان يرسل الطلب كرسالة نصية)
-    socket.on('new_direct_message', (payload)=>{
-      try{
-        let txt = payload?.message?.text || payload?.text || '';
-        if(typeof txt === 'string' && txt.includes('friend_request')){
-          let obj = JSON.parse(txt);
-          if(obj.type==='friend_request' && window.handleIncomingFriendRequest){
-            handleIncomingFriendRequest({
-                fromDeviceId: obj.fromDeviceId, 
-                fromUserName: obj.fromName, // توحيد الاسم
-                fromCode: obj.fromCode
-            });
-          }
-        }
-      }catch(e){}
-    });
-  }, 1500);
-})();   
   </script>
 </body>
 </html>
