@@ -21,7 +21,6 @@ body::before { content: ''; position: fixed; inset: 0; background: radial-gradie
 .screen.active { display: block; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
-/* ✅ إصلاح شاشة الدردشة لتعمل كصفحة محادثة حقيقية */
 #screen-chat.active { display: flex; flex-direction: column; padding: 0; overflow: hidden; height: 100vh; }
 #chatMessages { flex: 1; overflow-y: auto; padding: 14px 14px 100px; scroll-behavior: smooth; background-color: #0b141a; }
 #chatMessages::-webkit-scrollbar { display: none; }
@@ -110,7 +109,6 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
 .side-btn { padding: 2px 7px; background: #1a1a1a; border-radius: 4px; border: 1px solid #2a2a2a; }
 .speaker-grill { position: absolute; bottom: 14px; left: 24px; right: 24px; height: 46px; border-radius: 6px; background: repeating-linear-gradient(90deg, #050505 0, #050505 3px, #1a1a1a 3px, #1a1a1a 6px); box-shadow: inset 0 3px 6px rgba(0,0,0,.95); }
 
-/* ✅ منع المتصفح من إلغاء الضغط عند تحريك الإصبع */
 .ptt-btn { position: absolute; top: 140px; left: 50%; transform: translateX(-50%); width: 105px; height: 62px; border-radius: 14px; background: linear-gradient(180deg, #0a2a3a, #041520); border: 2px solid var(--cyan); box-shadow: 0 0 22px rgba(0,229,255,.55), inset 0 0 18px rgba(0,229,255,.25), inset 0 2px 4px rgba(0,0,0,.7); display: flex; align-items: center; justify-content: center; color: var(--cyan); font-weight: 900; font-size: 23px; letter-spacing: 2px; text-shadow: 0 0 12px rgba(0,229,255,.95); cursor: pointer; transition: all .15s; z-index: 5; font-family: inherit; touch-action: none !important; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
 .ptt-btn.holding { transform: translateX(-50%) scale(.95); background: linear-gradient(180deg, #00e5ff, #008fa8); color: #001418; text-shadow: none; box-shadow: 0 0 45px rgba(0,229,255,1), 0 0 90px rgba(0,229,255,.6), inset 0 0 22px rgba(255,255,255,.35); }
 .ptt-sub { position: absolute; top: 212px; left: 50%; transform: translateX(-50%); font-size: 8px; color: var(--cyan-dark); letter-spacing: 1.5px; font-weight: 700; white-space: nowrap; }
@@ -134,7 +132,6 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
 .empty-room-text { font-size: 12.5px; line-height: 1.7; max-width: 260px; }
 .empty-room-btn { margin-top: 14px; padding: 14px 28px; background: linear-gradient(180deg, #00e5ff, #008fa8); border: 1px solid var(--cyan); border-radius: 12px; color: #001418; font-family: inherit; font-size: 14px; font-weight: 800; cursor: pointer; box-shadow: 0 0 20px rgba(0,229,255,.5); transition: all .2s; }
 
-/* ✅ تنسيق دردشة الواتساب (مع ألوان التطبيق الأصلية) */
 .msg { margin-bottom: 8px; position: relative; max-width: 85%; width: fit-content; animation: msgSlide .2s ease; display: flex; flex-direction: column; }
 @keyframes msgSlide { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 .msg-in { margin-right: 0; margin-left: auto; align-items: flex-start; }
@@ -164,7 +161,6 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
 .wa-duration { font-size: 12px; color: rgba(233, 237, 239, 0.8); min-width: 35px; text-align: left; }
 .wa-voice-avatar { width: 34px; height: 34px; border-radius: 50%; background: #00a884; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 16px; flex-shrink: 0; }
 
-/* ✅ تصغير شريط الإدخال والأيقونات */
 .chat-input-bar { position: fixed; bottom: 68px; left: 50%; transform: translateX(-50%); width: 100%; max-width: 500px; background: linear-gradient(180deg, rgba(11,18,24,.9), rgba(5,8,12,1)); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-top: 1px solid var(--border); padding: 8px 10px 10px; display: none; align-items: center; gap: 6px; z-index: 98; }
 .chat-input-bar.active { display: flex; }
 .chat-primary { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(180deg, #00e5ff, #008fa8); border: 1.5px solid var(--cyan); display: flex; align-items: center; justify-content: center; color: #001418; font-size: 16px; cursor: pointer; flex-shrink: 0; box-shadow: 0 0 10px rgba(0,229,255,.4); transition: all .15s; font-family: inherit; font-weight: 900; }
@@ -178,7 +174,6 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
 .chat-emoji-btn { color: var(--text-dim); font-size: 18px; cursor: pointer; background: none; border: none; font-family: inherit; padding: 0 4px; transition: color .2s; flex-shrink: 0; }
 .chat-emoji-btn:active { color: var(--cyan); }
 
-/* ✅ موجة التسجيل */
 .recording-wave { display: none; flex: 1; height: 30px; align-items: center; gap: 3px; justify-content: center; overflow: hidden; }
 .recording-wave.active { display: flex; }
 .recording-wave span { width: 3px; background: var(--red); border-radius: 3px; animation: waveAnim 1s infinite ease-in-out alternate; }
@@ -222,9 +217,9 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
 .search-result-card { display: flex; align-items: center; gap: 12px; padding: 14px; background: var(--bg); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 8px; cursor: pointer; transition: all .2s; }
 .search-result-card:active { border-color: var(--cyan); transform: scale(.98); }
 .search-result-icon { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, var(--cyan), var(--cyan-dark)); display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
-.search-result-info { flex: 1; display: flex; flex-direction: column; gap: 3px; }
-.search-result-name { font-size: 14px; font-weight: 800; color: var(--text); }
-.search-result-code { font-size: 12px; color: var(--cyan); font-family: 'Courier New', monospace; font-weight: 700; letter-spacing: 1px; }
+.search-result-info { flex: 1; display: flex; flex-direction: column; gap: 3px; text-align: right; }
+.search-result-name { font-size: 15px; font-weight: 800; color: var(--cyan); }
+.search-result-code { font-size: 11px; color: var(--text-dim); font-family: 'Courier New', monospace; font-weight: 700; letter-spacing: 1px; }
 .no-results { text-align: center; padding: 24px 12px; color: var(--text-dim); font-size: 13px; line-height: 1.7; }
 .no-results-icon { font-size: 36px; display: block; margin-bottom: 10px; opacity: .4; }
 .attach-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 6px; }
@@ -408,16 +403,22 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
         </div>
       </header>
       <div class="settings-list">
+        <!-- ✅ إضافة اسم المستخدم -->
+        <div class="setting-item" onclick="openEditName()">
+          <div class="setting-info"><span class="setting-title">👤 اسمك</span><span class="setting-desc">الاسم الذي يظهر للآخرين</span></div>
+          <span class="setting-value" id="userNameValue">—</span>
+        </div>
+
         <div class="setting-item" onclick="toast('اسم الموجة: ' + (currentUser.waveName || '—'), 'success')">
-          <div class="setting-info"><span class="setting-title">📡 اسم الموجة</span><span class="setting-desc">اسم موجتك الحالية</span></div>
+          <div class="setting-info"><span class="setting-title">📡 اسم الفرقة</span><span class="setting-desc">اسم موجتك الحالية</span></div>
           <span class="setting-value" id="waveNameValue">—</span>
         </div>
         <div class="setting-item" onclick="copyMyWaveCode()">
-          <div class="setting-info"><span class="setting-title">🔑 رقم الموجة</span><span class="setting-desc">اضغط للنسخ</span></div>
+          <div class="setting-info"><span class="setting-title">🔑 رقم الفرقة</span><span class="setting-desc">اضغط للنسخ</span></div>
           <span class="setting-value" id="waveCodeValue">—</span>
         </div>
         <div class="setting-item" onclick="toast('معرّفك: ' + (currentUser.radCode || '—'))">
-          <div class="setting-info"><span class="setting-title">👤 معرّف المستخدم</span><span class="setting-desc">هويتك في التطبيق</span></div>
+          <div class="setting-info"><span class="setting-title">🆔 معرّف المستخدم</span><span class="setting-desc">هويتك في التطبيق</span></div>
           <span class="setting-value" id="myRadCode">—</span>
         </div>
         <div class="setting-item" onclick="testCall()">
@@ -519,7 +520,7 @@ let localTestAudio = null;
 let isTalking = false;
 let isPttActive = false; 
 let currentPttSession = 0;   
-let ignoredRequests = new Set(); // ✅ لحفظ الطلبات التي تم رفضها وتجاهلها
+let ignoredRequests = new Set(); 
 let waveRoomPromise = null;  
 
 function factoryReset() {
@@ -855,6 +856,14 @@ function initSocket() {
           window._incomingRequest = obj; 
           PTTEngine.playRealBeep();
         }
+      } 
+      // ✅ التعديل الجديد: استقبال رسالة "تمت الموافقة" والدخول للفرقة فوراً
+      else if (typeof txt === 'string' && txt.includes('wave_join_approved')) {
+        let obj = JSON.parse(txt);
+        if (obj.type === 'wave_join_approved') {
+          toast('✅ وافق المالك على انضمامك!', 'success');
+          joinWaveAsMember(obj.waveId);
+        }
       }
     } catch(e) {}
   });
@@ -905,6 +914,11 @@ async function registerUser() {
       const el3 = document.getElementById('waveCodeValue'); if (el3) el3.textContent = data.radCode;
       const el4 = document.getElementById('lcdLine3'); if (el4 && !currentUser.waveId) el4.textContent = '--- • RX';
     }
+    
+    // تحديث الاسم في الواجهة
+    const elName = document.getElementById('userNameValue'); 
+    if (elName) elName.textContent = currentUser.name || '—';
+
     if (data.waveId) { currentUser.waveId = data.waveId; currentUser.waveCode = data.waveId; }
     return data;
   } catch (e) { return null; }
@@ -923,6 +937,11 @@ function saveUserName() {
   currentUser.name = v;
   localStorage.setItem('rc_user_name', v);
   closeModal('modalUserName');
+  
+  // تحديث الاسم في شاشة الإعدادات
+  const elName = document.getElementById('userNameValue'); 
+  if (elName) elName.textContent = v;
+  
   registerUser().then(() => {
     if (socket) socket.emit('register_device', { deviceId: currentUser.id, userName: v });
     toast('✅ مرحباً ' + v, 'success');
@@ -1015,7 +1034,18 @@ function doSearch() {
             if (owner) ownerId = owner.id;
         }
         searchResultUser = { name: data.waveName || 'فرقة', code: data.waveId, ownerId: ownerId, type: 'wave' };
-        res.innerHTML = `<div class="search-result-card" onclick="askJoinWave()"><div class="search-result-icon">📡</div><div class="search-result-info"><div class="search-result-name">${searchResultUser.name}</div><div class="search-result-code">${searchResultUser.code} • ${data.totalMembers || 0} أعضاء</div></div><div style="color:var(--cyan)">←</div></div>`;
+        
+        // ✅ تعديل شكل نتيجة البحث لتوضيح الاسم والرقم
+        res.innerHTML = `
+        <div class="search-result-card" onclick="askJoinWave()">
+            <div class="search-result-icon">📡</div>
+            <div class="search-result-info">
+                <div class="search-result-name">${searchResultUser.name}</div>
+                <div style="font-size:10px; color:var(--text-dim); margin-bottom:2px;">اسم الفرقة</div>
+                <div class="search-result-code" style="font-size:11px;">رقم: ${searchResultUser.code} • ${data.totalMembers || 0} أعضاء</div>
+            </div>
+            <div style="color:var(--cyan)">←</div>
+        </div>`;
         return;
       }
       return fetch(SERVER_URL + '/api/users/search/' + q)
@@ -1023,7 +1053,16 @@ function doSearch() {
         .then(user => {
           if (user.deviceId) {
             searchResultUser = { name: user.userName, code: user.radCode, deviceId: user.deviceId, type: 'user' };
-            res.innerHTML = `<div class="search-result-card" onclick="startUserChat()"><div class="search-result-icon">👤</div><div class="search-result-info"><div class="search-result-name">${searchResultUser.name}</div><div class="search-result-code">${searchResultUser.code}</div></div><div style="color:var(--cyan)">←</div></div>`;
+            res.innerHTML = `
+            <div class="search-result-card" onclick="startUserChat()">
+                <div class="search-result-icon">👤</div>
+                <div class="search-result-info">
+                    <div class="search-result-name">${searchResultUser.name}</div>
+                    <div style="font-size:10px; color:var(--text-dim); margin-bottom:2px;">اسم المستخدم</div>
+                    <div class="search-result-code" style="font-size:11px;">معرف: ${searchResultUser.code}</div>
+                </div>
+                <div style="color:var(--cyan)">←</div>
+            </div>`;
           } else {
             res.innerHTML = '<div class="no-results"><span class="no-results-icon">❌</span>لا نتائج</div>';
           }
@@ -1065,37 +1104,43 @@ function confirmJoin() {
 
 function cancelJoin() { closeModal('modalJoinConfirm'); openModal('modalSearch'); }
 
-// ✅ تعديل دالة الرفض
 function rejectIncoming() {
   closeModal('modalIncomingRequest');
   if (window._incomingRequest && socket) {
+    const req = window._incomingRequest;
     socket.emit('wave_join_response', { 
-        requestId: window._incomingRequest.requestId, 
-        waveId: window._incomingRequest.waveId,
-        fromDeviceId: window._incomingRequest.fromDeviceId,
+        requestId: req.requestId || null, 
+        waveId: req.waveId,
+        fromDeviceId: req.fromDeviceId,
         accepted: false 
     });
-    if (window._incomingRequest.waveId) {
-        ignoredRequests.add(window._incomingRequest.waveId);
-    }
+    if (req.waveId) ignoredRequests.add(req.waveId);
   }
   window._incomingRequest = null;
   toast('تم رفض الطلب', 'error');
 }
 
-// ✅ تعديل دالة القبول
 function acceptIncoming() {
   closeModal('modalIncomingRequest');
   if (window._incomingRequest && socket) {
+    const req = window._incomingRequest;
+
     socket.emit('wave_join_response', { 
-        requestId: window._incomingRequest.requestId, 
-        waveId: window._incomingRequest.waveId,
-        fromDeviceId: window._incomingRequest.fromDeviceId,
+        requestId: req.requestId || null, 
+        waveId: req.waveId,
+        fromDeviceId: req.fromDeviceId,
         accepted: true 
     });
-    if (window._incomingRequest.waveId) {
-        ignoredRequests.add(window._incomingRequest.waveId);
+
+    if (req.fromDeviceId && req.waveId) {
+        const txt = JSON.stringify({ 
+          type: 'wave_join_approved', 
+          waveId: req.waveId 
+        });
+        socket.emit('send_direct_message', { toDeviceId: req.fromDeviceId, fromDeviceId: currentUser.id, fromName: currentUser.name, text: txt, message: {text: txt} });
     }
+
+    if (req.waveId) ignoredRequests.add(req.waveId);
   }
   window._incomingRequest = null;
   PTTEngine.playRealBeep();
@@ -1190,7 +1235,7 @@ function openSideMenu() {
       <button class="menu-item primary" onclick="closeSideMenu();openCreateWave()"><span class="menu-icon">➕</span><span class="menu-text"><span class="menu-label">إنشاء فرقة</span><span class="menu-desc">إنشاء موجة لاسلكية جديدة</span></span></button>
       <button class="menu-item" onclick="closeSideMenu();openSearchWave()"><span class="menu-icon">🔍</span><span class="menu-text"><span class="menu-label">البحث عن فرقة</span><span class="menu-desc">ابحث برقم الفرقة</span></span></button>
       
-      <button class="menu-item" onclick="closeSideMenu();openEditName()"><span class="menu-icon">👤</span><span class="menu-text"><span class="menu-label">تعديل الاسم</span><span class="menu-desc">تغيير اسمك الحالي</span></span></button>
+      <button class="menu-item" onclick="closeSideMenu();openEditName()"><span class="menu-icon">👤</span><span class="menu-text"><span class="menu-label">تعديل اسمك</span><span class="menu-desc">تغيير اسمك الحالي</span></span></button>
 
       <button class="menu-item" onclick="closeSideMenu();openOperationsList()"><span class="menu-icon">📋</span><span class="menu-text"><span class="menu-label">قائمة العمليات</span><span class="menu-desc">الفرق التي أنت مشترك فيها</span></span></button>
       <button class="menu-item" onclick="closeSideMenu();openFriendRequests()"><span class="menu-icon">👥</span><span class="menu-text"><span class="menu-label">طلبات الصداقة</span><span class="menu-desc">الواردة والصادرة</span></span></button>
@@ -1212,7 +1257,7 @@ function openSideMenu() {
       <button class="menu-item primary" onclick="closeSideMenu();openCreateRoom()"><span class="menu-icon">➕</span><span class="menu-text"><span class="menu-label">إنشاء غرفة</span><span class="menu-desc">إنشاء غرفة دردشة جديدة</span></span></button>
       <button class="menu-item" onclick="closeSideMenu();openSearchUser()"><span class="menu-icon">🔍</span><span class="menu-text"><span class="menu-label">البحث عن مستخدم</span><span class="menu-desc">ابحث برقم المستخدم لبدء محادثة</span></span></button>
       
-      <button class="menu-item" onclick="closeSideMenu();openEditName()"><span class="menu-icon">👤</span><span class="menu-text"><span class="menu-label">تعديل الاسم</span><span class="menu-desc">تغيير اسمك الحالي</span></span></button>
+      <button class="menu-item" onclick="closeSideMenu();openEditName()"><span class="menu-icon">👤</span><span class="menu-text"><span class="menu-label">تعديل اسمك</span><span class="menu-desc">تغيير اسمك الحالي</span></span></button>
 
       <button class="menu-item" onclick="closeSideMenu();openOperationsList()"><span class="menu-icon">📋</span><span class="menu-text"><span class="menu-label">قائمة العمليات</span><span class="menu-desc">الغرف التي أنت مشترك فيها</span></span></button>
       <button class="menu-item" onclick="closeSideMenu();openFriendRequests()"><span class="menu-icon">👥</span><span class="menu-text"><span class="menu-label">طلبات الصداقة</span><span class="menu-desc">الواردة والصادرة</span></span></button>
@@ -1227,7 +1272,7 @@ function openSideMenu() {
     content.innerHTML = `
       <button class="menu-item" onclick="closeSideMenu();openSearchUser()"><span class="menu-icon">🔍</span><span class="menu-text"><span class="menu-label">البحث</span><span class="menu-desc">ابحث عن مستخدم</span></span></button>
       
-      <button class="menu-item" onclick="closeSideMenu();openEditName()"><span class="menu-icon">👤</span><span class="menu-text"><span class="menu-label">تعديل الاسم</span><span class="menu-desc">تغيير اسمك الحالي</span></span></button>
+      <button class="menu-item" onclick="closeSideMenu();openEditName()"><span class="menu-icon">👤</span><span class="menu-text"><span class="menu-label">تعديل اسمك</span><span class="menu-desc">تغيير اسمك الحالي</span></span></button>
 
       <button class="menu-item" onclick="closeSideMenu();openFriendRequests()"><span class="menu-icon">👥</span><span class="menu-text"><span class="menu-label">طلبات الصداقة</span><span class="menu-desc">الواردة والصادرة</span></span></button>
       <button class="menu-item" onclick="closeSideMenu();openSendFriendRequest()"><span class="menu-icon">➕</span><span class="menu-text"><span class="menu-label">إرسال طلب صداقة</span><span class="menu-desc">ابحث برقم المستخدم</span></span></button>
@@ -1359,7 +1404,6 @@ async function refreshChatList() {
     
     let htmlContent = '';
 
-    // إضافة محادثات الأصدقاء فقط
     if (data.conversations && data.conversations.length > 0) {
       data.conversations.forEach(c => {
         const initial = (c.otherUser.userName || '?').charAt(0);
@@ -2350,6 +2394,11 @@ window.addEventListener('DOMContentLoaded', async () => {
     const el4 = document.getElementById('roomNameLabel');
     if (el4 && savedRoomName) el4.textContent = savedRoomName;
   }
+  
+  // تحديث الاسم في الإعدادات عند التحميل
+  const elName = document.getElementById('userNameValue');
+  if (elName) elName.textContent = currentUser.name || '—';
+
   updateFriendBadge();
 });
 
