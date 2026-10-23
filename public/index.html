@@ -284,7 +284,7 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
           <div class="chip-label">الفرقة النشطة</div>
         </div>
         <div class="chip">
-          <div class="chip-value code" id="waveCodeChip">Q00000 <span style="font-size:12px;">🔑</span></div>
+          <div class="chip-value code" id="waveCodeChip">--- <span style="font-size:12px;">🔑</span></div>
           <div class="chip-label">رقم الموجة</div>
         </div>
       </div>
@@ -332,7 +332,7 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
                 <span id="lcdLine2">S458</span>
               </div>
               <div class="lcd-row">
-                <span class="lcd-label" id="lcdLine3">Q00000 • RX</span>
+                <span class="lcd-label" id="lcdLine3">--- • RX</span>
                 <span id="lcdStatus">•</span>
               </div>
             </div>
@@ -422,12 +422,12 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
           <span class="setting-value">تجربة</span>
         </div>
         <div class="setting-item" onclick="factoryReset()">
-  <div class="setting-info">
-    <span class="setting-title" style="color:var(--red);">⚠️ استعادة ضبط المصنع</span>
-    <span class="setting-desc" style="color:var(--red-dark);">مسح كل شيء (الاسم، الفرق، الغرف)</span>
-  </div>
-  <span class="setting-value" style="color:var(--red);">مسح شامل</span>
-</div>
+          <div class="setting-info">
+            <span class="setting-title" style="color:var(--red);">⚠️ استعادة ضبط المصنع</span>
+            <span class="setting-desc" style="color:var(--red-dark);">مسح كل شيء (الاسم، الفرق، الغرف)</span>
+          </div>
+          <span class="setting-value" style="color:var(--red);">مسح شامل</span>
+        </div>
         <div class="setting-item" onclick="toast('الإصدار 4.3.0')">
           <div class="setting-info"><span class="setting-title">ℹ️ حول التطبيق</span><span class="setting-desc">Radio Connect</span></div>
           <span class="setting-value">v4.3</span>
@@ -517,6 +517,14 @@ let isTalking = false;
 let isPttActive = false; 
 let currentPttSession = 0;   
 let waveRoomPromise = null;  
+
+// ✅ إضافة دالة استعادة ضبط المصنع المفقودة
+function factoryReset() {
+  if (!confirm('⚠️ تحذير: سيتم مسح جميع بياناتك المحلية (الاسم، الفرق، الغرف، الإعدادات) وإعادة تشغيل التطبيق. هل أنت متأكد؟')) return;
+  localStorage.clear();
+  if (socket) socket.disconnect();
+  window.location.reload();
+}
 
 function permanentDelete() {
   if (!confirm('⚠️ تحذير: سيتم حذف حسابك وبياناتك نهائياً من الخادم. هل أنت متأكد؟')) return;
@@ -648,7 +656,7 @@ async function onPTTStart() {
   PTTEngine.playStartBeep();
   
   try {
-    // ✅ التعديل المطلوب: إعدادات وضوح الصوت (PTT)
+    // ✅ إعدادات وضوح الصوت
     rawMicStream = await navigator.mediaDevices.getUserMedia({ 
         audio: { 
             echoCancellation: true, 
@@ -823,7 +831,7 @@ function initSocket() {
     refreshChatList();
   });
 
-  // ✅ استقبال طلبات الصداقة القادمة كرسائل نصية (الحيلة القديمة)
+  // ✅ استقبال طلبات الصداقة القادمة كرسائل نصية
   socket.on('new_direct_message', (payload) => {
     try {
       let txt = payload?.message?.text || payload?.text || '';
@@ -877,9 +885,13 @@ async function registerUser() {
     if (data.radCode) {
       currentUser.radCode = data.radCode;
       const el1 = document.getElementById('myRadCode'); if (el1) el1.textContent = data.radCode;
-      const el2 = document.getElementById('waveCodeChip'); if (el2) el2.innerHTML = data.radCode + ' <span style="font-size:12px;">🔑</span>';
+      
+      // ✅ إصلاح: عدم وضع رقم المستخدم (Q) في خانة رقم الموجة (M) إذا لم يكن هناك فرقة
+      const el2 = document.getElementById('waveCodeChip'); 
+      if (el2 && !currentUser.waveId) el2.innerHTML = '--- <span style="font-size:12px;">🔑</span>';
+      
       const el3 = document.getElementById('waveCodeValue'); if (el3) el3.textContent = data.radCode;
-      const el4 = document.getElementById('lcdLine3'); if (el4) el4.textContent = data.radCode + ' • RX';
+      const el4 = document.getElementById('lcdLine3'); if (el4 && !currentUser.waveId) el4.textContent = '--- • RX';
     }
     if (data.waveId) { currentUser.waveId = data.waveId; currentUser.waveCode = data.waveId; }
     return data;
@@ -1269,12 +1281,16 @@ async function leaveWave() {
   localStorage.removeItem('rc_saved_wave_id');
   localStorage.removeItem('rc_saved_wave_name');
   localStorage.removeItem('rc_is_wave_owner');
+  
+  // ✅ إصلاح: مسح رقم الفرقة وعرض (---) بدلاً من رقم المستخدم
   const el1 = document.getElementById('waveCodeChip');
-  if (el1) el1.innerHTML = (currentUser.radCode || 'Q00000') + ' <span style="font-size:12px;">🔑</span>';
+  if (el1) el1.innerHTML = '--- <span style="font-size:12px;">🔑</span>'; 
+  
   const statusText = document.getElementById('waveStatusText');
   if (statusText) statusText.innerHTML = '🔴 غير متصل';
   const el3 = document.getElementById('waveNameLabel'); if (el3) el3.textContent = 'لا توجد فرقة';
   const el4 = document.getElementById('waveNameValue'); if (el4) el4.textContent = '—';
+  const el5 = document.getElementById('lcdLine3'); if (el5) el5.textContent = '--- • RX';
   toast('✅ غادرت الفرقة', 'success');
 }
 
@@ -2161,6 +2177,13 @@ window.addEventListener('DOMContentLoaded', async () => {
     if (el2) el2.textContent = savedWaveName || 'لا توجد فرقة';
     const el3 = document.getElementById('lcdLine3');
     if (el3) el3.textContent = savedWaveId + ' • RX';
+    
+    // ✅ إصلاح: تحديث شاشة LCD والحالة عند استعادة الفرقة
+    const statusChip = document.getElementById('waveStatusChip');
+    const statusText = document.getElementById('waveStatusText');
+    if (statusChip) { statusChip.classList.remove('disconnected'); statusChip.classList.add('live'); }
+    if (statusText) statusText.innerHTML = '🟢 متصل';
+
     setTimeout(() => joinWaveAsMember(savedWaveId), 1500);
   }
   const savedRoomCode = localStorage.getItem('rc_saved_room_code');
