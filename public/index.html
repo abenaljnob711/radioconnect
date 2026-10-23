@@ -314,8 +314,8 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
           <span id="friendReqBadge">0</span>
         </div>
         <div class="chip" id="sendFriendChip" style="cursor:pointer;">
-          <div class="chip-value" style="font-size:13px; font-weight:800;">➕ إرسال طلب</div>
-        </div>
+  <div class="chip-value" style="font-size:13px; font-weight:800;">🔍 بحث عن فرقة</div>
+</div>
       </div>
 
       <div class="radio-stage">
@@ -2004,7 +2004,7 @@ function switchToRoom(roomCode, roomName) {
 document.getElementById('operationsChip').addEventListener('click', openOperationsList);
 document.getElementById('friendRequestsChip').addEventListener('click', openFriendRequests);
 document.getElementById('friendRequestsChip2').addEventListener('click', openFriendRequests);
-document.getElementById('sendFriendChip').addEventListener('click', openSendFriendRequest);
+document.getElementById('sendFriendChip').addEventListener('click', openSearchWave);
 document.getElementById('sendFriendChip2').addEventListener('click', openSendFriendRequest);
 
 setTimeout(updateFriendBadge, 500);
