@@ -712,55 +712,80 @@ io.on("connection", (socket) => {
     socket.emit("wave_join_request_sent", { requestId, waveId });
   });
 
-  socket.on("wave_join_response", ({ requestId, accepted }) => {
-    const request = db.waveRequests[requestId];
-    if (!request) return socket.emit("wave_join_error", { error: "الطلب غير موجود" });
+  // ✅ التعديل المطلوب فقط: إصلاح دالة الرد على الطلب (قبول/رفض)
+  socket.on("wave_join_response", ({ requestId, waveId, fromDeviceId, accepted }) => {
+    let request = null;
+    let actualRequestId = requestId;
 
-    request.status = accepted ? "accepted" : "rejected";
-    saveDb();
-
-    const requesterSocketId = deviceSockets[request.fromDeviceId];
-    if (requesterSocketId) {
-      io.to(requesterSocketId).emit("wave_join_response_received", {
-        requestId,
-        waveId: request.waveId,
-        accepted,
-        fromDeviceId: request.fromDeviceId,
-        fromUserName: request.fromUserName
-      });
+    // 1. البحث عن الطلب بواسطة الـ requestId
+    if (requestId && db.waveRequests[requestId]) {
+        request = db.waveRequests[requestId];
+    } 
+    // 2. إذا لم يوجد (بسبب إرسال الرسالة النصية من الواجهة)، نبحث برقم الفرقة ومعرف المرسل
+    else if (waveId && fromDeviceId) {
+        const reqEntry = Object.entries(db.waveRequests).find(
+            ([id, r]) => r.waveId === waveId && r.fromDeviceId === fromDeviceId && r.status === "pending"
+        );
+        if (reqEntry) {
+            actualRequestId = reqEntry[0];
+            request = reqEntry[1];
+        }
     }
 
+    // إذا لم نجد الطلب بأي طريقة
+    if (!request) {
+        return socket.emit("wave_join_error", { error: "الطلب غير موجود أو تمت معالجته مسبقاً" });
+    }
+
+    // تحديث حالة الطلب ومسحه نهائياً من السيرفر
+    request.status = accepted ? "accepted" : "rejected";
+    delete db.waveRequests[actualRequestId];
+    saveDb();
+
+    // إرسال الرد للشخص الذي طلب الانضمام
+    const requesterSocketId = deviceSockets[request.fromDeviceId];
+    if (requesterSocketId) {
+        io.to(requesterSocketId).emit("wave_join_response_received", {
+            requestId: actualRequestId,
+            waveId: request.waveId,
+            accepted,
+            fromDeviceId: request.fromDeviceId,
+            fromUserName: request.fromUserName
+        });
+    }
+
+    // إذا تم القبول، نضيفه كعضو في الفرقة
     if (accepted) {
-      if (!db.waves[request.waveId]) {
-        db.waves[request.waveId] = {
-          id: request.waveId,
-          name: request.waveId,
-          ownerDevice: null,
-          createdAt: now(),
-          members: {},
-          onlineNow: {}
+        if (!db.waves[request.waveId]) {
+            db.waves[request.waveId] = {
+                id: request.waveId,
+                name: request.waveId,
+                ownerDevice: null,
+                createdAt: now(),
+                members: {},
+                onlineNow: {}
+            };
+        }
+
+        if (!db.waves[request.waveId].members) db.waves[request.waveId].members = {};
+        if (!db.waves[request.waveId].onlineNow) db.waves[request.waveId].onlineNow = {};
+
+        db.waves[request.waveId].members[request.fromDeviceId] = {
+            id: request.fromDeviceId,
+            name: request.fromUserName,
+            isOwner: false,
+            addedAt: now()
         };
-      }
+        saveDb();
 
-      if (!db.waves[request.waveId].members) db.waves[request.waveId].members = {};
-      if (!db.waves[request.waveId].onlineNow) db.waves[request.waveId].onlineNow = {};
-
-      db.waves[request.waveId].members[request.fromDeviceId] = {
-        id: request.fromDeviceId,
-        name: request.fromUserName,
-        isOwner: false,
-        addedAt: now()
-      };
-      saveDb();
-
-      io.to("wave_" + request.waveId).emit("wave_members_updated", {
-        members: Object.values(db.waves[request.waveId].members).map(m => ({
-          id: m.id,
-          name: m.name,
-          isOwner: m.isOwner || false,
-          online: !!(db.waves[request.waveId].onlineNow && db.waves[request.waveId].onlineNow[m.id])
-        }))
-      });
+        io.to("wave_" + request.waveId).emit("wave_members_updated", {
+            members: Object.values(db.waves[request.waveId].members).map(m => ({
+                id: m.id,
+                name: m.name,
+                isOwner: m.isOwner || false,
+                online: !!(db.waves[request.waveId].onlineNow && db.waves[request.waveId].onlineNow[m.id])
+            }))
+        });
     }
   });
 
