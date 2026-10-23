@@ -519,6 +519,7 @@ let localTestAudio = null;
 let isTalking = false;
 let isPttActive = false; 
 let currentPttSession = 0;   
+let ignoredRequests = new Set(); // ✅ لحفظ الطلبات التي تم رفضها وتجاهلها
 let waveRoomPromise = null;  
 
 function factoryReset() {
@@ -1008,7 +1009,6 @@ function doSearch() {
     .then(r => r.json())
     .then(data => {
       if (data.waveId) {
-        // ✅ التعديل 1: استخراج رقم المالك (ownerId) من قائمة الأعضاء
         let ownerId = null;
         if (data.members) {
             const owner = data.members.find(m => m.isOwner);
@@ -1043,9 +1043,7 @@ function confirmJoin() {
   if (!searchResultUser) return;
   closeModal('modalJoinConfirm');
   
-  // ✅ التعديل 2: إرسال الطلب بطريقتين لضمان وصوله للسيرفر (مثل طلب الصداقة)
   if (socket) {
-    // 1. الطريقة الأساسية (مع تحديد رقم المالك)
     socket.emit('wave_join_request', { 
         waveId: searchResultUser.code, 
         fromDeviceId: currentUser.id, 
@@ -1053,7 +1051,6 @@ function confirmJoin() {
         toDeviceId: searchResultUser.ownerId 
     });
 
-    // 2. طريقة الإرسال المزدوج (الحيلة التي جعلت طلب الصداقة ينجح)
     if (searchResultUser.ownerId) {
         const txt = JSON.stringify({ 
           type: 'wave_join_request', 
@@ -1068,16 +1065,38 @@ function confirmJoin() {
 
 function cancelJoin() { closeModal('modalJoinConfirm'); openModal('modalSearch'); }
 
+// ✅ تعديل دالة الرفض
 function rejectIncoming() {
   closeModal('modalIncomingRequest');
-  if (window._incomingRequest && socket) socket.emit('wave_join_response', { requestId: window._incomingRequest.requestId, accepted: false });
+  if (window._incomingRequest && socket) {
+    socket.emit('wave_join_response', { 
+        requestId: window._incomingRequest.requestId, 
+        waveId: window._incomingRequest.waveId,
+        fromDeviceId: window._incomingRequest.fromDeviceId,
+        accepted: false 
+    });
+    if (window._incomingRequest.waveId) {
+        ignoredRequests.add(window._incomingRequest.waveId);
+    }
+  }
   window._incomingRequest = null;
   toast('تم رفض الطلب', 'error');
 }
 
+// ✅ تعديل دالة القبول
 function acceptIncoming() {
   closeModal('modalIncomingRequest');
-  if (window._incomingRequest && socket) socket.emit('wave_join_response', { requestId: window._incomingRequest.requestId, accepted: true });
+  if (window._incomingRequest && socket) {
+    socket.emit('wave_join_response', { 
+        requestId: window._incomingRequest.requestId, 
+        waveId: window._incomingRequest.waveId,
+        fromDeviceId: window._incomingRequest.fromDeviceId,
+        accepted: true 
+    });
+    if (window._incomingRequest.waveId) {
+        ignoredRequests.add(window._incomingRequest.waveId);
+    }
+  }
   window._incomingRequest = null;
   PTTEngine.playRealBeep();
   toast('✅ تم قبول الطلب', 'success');
@@ -1339,8 +1358,6 @@ async function refreshChatList() {
     const empty = document.getElementById('emptyRoom');
     
     let htmlContent = '';
-
-    // ✅ تم إزالة غرفتك الخاصة من هذه القائمة بناءً على طلبك
 
     // إضافة محادثات الأصدقاء فقط
     if (data.conversations && data.conversations.length > 0) {
@@ -2250,15 +2267,20 @@ window.addEventListener('DOMContentLoaded', async () => {
   initSocket();
   refreshChatList();
   
+  // ✅ الفحص الدوري لطلبات الانضمام (مضمون 100%)
   setInterval(async () => {
     if (!currentUser.id) return;
-    if (window._incomingRequest) return;
+    if (window._incomingRequest) return; // لا تفتح نافذة إذا كانت هناك نافذة أخرى مفتوحة
     
     try {
       const res = await fetch(SERVER_URL + '/api/waves/pending-requests/' + currentUser.id);
       const data = await res.json();
       if (data.requests && data.requests.length > 0) {
         const req = data.requests[0]; 
+        
+        // ✅ تجاهل الطلب إذا كنا قد رفضناه سابقاً
+        if (ignoredRequests.has(req.waveId)) return; 
+
         window._incomingRequest = req;
         document.getElementById('incomingName').textContent = req.fromUserName || 'مستخدم';
         document.getElementById('incomingCode').textContent = req.waveId;
@@ -2266,7 +2288,7 @@ window.addEventListener('DOMContentLoaded', async () => {
         if (typeof PTTEngine !== 'undefined' && PTTEngine.playRealBeep) PTTEngine.playRealBeep();
       }
     } catch (e) {}
-  }, 3000);
+  }, 3000); // يفحص كل 3 ثواني
 
   setInterval(async () => {
     if (!currentUser.id) return;
