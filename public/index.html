@@ -648,7 +648,16 @@ async function onPTTStart() {
   PTTEngine.playStartBeep();
   
   try {
-    rawMicStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } });
+    // ✅ التعديل المطلوب: إعدادات وضوح الصوت (PTT)
+    rawMicStream = await navigator.mediaDevices.getUserMedia({ 
+        audio: { 
+            echoCancellation: true, 
+            noiseSuppression: true, 
+            autoGainControl: true,
+            channelCount: 1,
+            sampleRate: 48000
+        } 
+    });
     
     if (mySession !== currentPttSession) {
       rawMicStream.getTracks().forEach(t => t.stop());
@@ -2106,6 +2115,37 @@ window.addEventListener('DOMContentLoaded', async () => {
       }
     } catch (e) {}
   }, 3000); // يفحص كل 3 ثواني
+
+  // ✅ التعديل المطلوب: الفحص الدوري لطلبات الصداقة (لضمان وصولها)
+  setInterval(async () => {
+    if (!currentUser.id) return;
+    
+    try {
+      const res = await fetch(SERVER_URL + '/api/friends/requests/' + currentUser.id);
+      const data = await res.json();
+      
+      if (data.requests && data.requests.length > 0) {
+        data.requests.forEach(req => {
+          if (!friendRequests.incoming.find(r => r.deviceId === req.fromDeviceId)) {
+            const newReq = {
+              name: req.fromUserName || 'مستخدم',
+              code: req.fromCode || '—',
+              deviceId: req.fromDeviceId,
+              receivedAt: Date.now()
+            };
+            
+            friendRequests.incoming.push(newReq);
+            saveFriendRequests();
+            updateFriendBadge();
+            
+            if (!document.querySelector('.modal-overlay.show')) {
+              showIncomingFriendRequest(newReq);
+            }
+          }
+        });
+      }
+    } catch (e) {}
+  }, 4000); // يفحص كل 4 ثوانٍ
 
   const savedWaveId = localStorage.getItem('rc_saved_wave_id');
   const savedWaveName = localStorage.getItem('rc_saved_wave_name');
