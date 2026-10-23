@@ -88,11 +88,6 @@ body::before { content: ''; position: fixed; inset: 0; background: radial-gradie
 #waveStatusChip .wave-timer { font-family: 'Courier New', monospace; color: var(--text-dim); font-size: 11px; font-weight: 700; }
 #waveStatusChip.live .wave-timer { color: var(--green); }
 
-#friendRequestsChip, #friendRequestsChip2 { cursor: pointer; position: relative; }
-#friendRequestsChip:active, #friendRequestsChip2:active { border-color: var(--cyan); box-shadow: 0 0 12px rgba(0,229,255,.3); }
-#sendFriendChip, #sendFriendChip2 { cursor: pointer; }
-#friendReqBadge, #friendReqBadge2 { position: absolute; top: -4px; left: -4px; background: var(--red); color: #fff; border-radius: 50%; min-width: 18px; height: 18px; font-size: 10px; font-weight: 900; align-items: center; justify-content: center; padding: 0 4px; box-shadow: 0 0 8px var(--red); display: none; }
-
 .radio-stage { position: relative; height: 360px; display: flex; align-items: center; justify-content: center; margin: 8px 0 16px; }
 .radio-device { position: relative; width: 210px; height: 320px; filter: drop-shadow(0 20px 40px rgba(0,0,0,.8)) drop-shadow(0 0 30px rgba(0,229,255,.15)); }
 .antenna { position: absolute; top: 0; right: 58px; width: 20px; height: 95px; background: linear-gradient(90deg, #0a0a0a, #2b2b2b 40%, #0a0a0a); border-radius: 10px 10px 3px 3px; box-shadow: inset -2px 0 3px rgba(0,0,0,.8); }
@@ -307,17 +302,6 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
         </div>
       </div>
       
-      <!-- ✅ تم إرجاع أزرار الصداقة هنا في واجهة الموجة -->
-      <div class="status-row" style="grid-template-columns:1fr 1fr;">
-        <div class="chip" id="friendRequestsChip" style="cursor:pointer;">
-          <div class="chip-value" style="font-size:13px; font-weight:800;">👥 طلبات الصداقة</div>
-          <span id="friendReqBadge">0</span>
-        </div>
-        <div class="chip" id="sendFriendChip" style="cursor:pointer;">
-          <div class="chip-value" style="font-size:13px; font-weight:800;">➕ إرسال طلب</div>
-        </div>
-      </div>
-
       <div class="radio-stage">
         <div class="radio-device">
           <div class="antenna"></div>
@@ -360,18 +344,6 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
           <span class="sub" id="roomSubLabel">محادثاتك الخاصة</span>
         </div>
       </div>
-      
-      <!-- ✅ أزرار الصداقة في الغرفة أيضاً -->
-      <div class="status-row" style="grid-template-columns:1fr 1fr;">
-        <div class="chip" id="friendRequestsChip2" style="cursor:pointer;">
-          <div class="chip-value" style="font-size:13px; font-weight:800;">👥 طلبات الصداقة</div>
-          <span id="friendReqBadge2">0</span>
-        </div>
-        <div class="chip" id="sendFriendChip2" style="cursor:pointer;">
-          <div class="chip-value" style="font-size:13px; font-weight:800;">➕ إرسال طلب</div>
-        </div>
-      </div>
-
       <div id="chatListContainer" style="margin-top:14px;"></div>
       <div class="empty-room" id="emptyRoom">
         <div class="empty-room-icon">💬</div>
@@ -508,8 +480,8 @@ let rawMicStream = null;
 let localTestAudio = null;
 let isTalking = false;
 let isPttActive = false; 
-let currentPttSession = 0;   
-let waveRoomPromise = null;  
+let currentPttSession = 0;   // ✅ جديد: لمعرفة الجلسة الحالية للضغط
+let waveRoomPromise = null;  // ✅ جديد: لمنع الاتصال المزدوج
 
 function permanentDelete() {
   if (!confirm('⚠️ تحذير: سيتم حذف حسابك وبياناتك نهائياً من الخادم. هل أنت متأكد؟')) return;
@@ -577,7 +549,7 @@ async function disconnectWaveRoom() {
 
 async function connectWaveChannel() {
   if (waveRoom && waveRoom.state === "connected") return true;
-  if (waveRoomPromise) return waveRoomPromise; 
+  if (waveRoomPromise) return waveRoomPromise; // منع الاتصال المزدوج نهائياً
 
   waveRoomPromise = (async () => {
     try {
@@ -623,7 +595,7 @@ async function onPTTStart() {
   if (isTalking) return;
   if (!currentUser.waveId) { toast('⚠️ انضم إلى فرقة أولاً', 'error'); return; }
   
-  const mySession = ++currentPttSession; 
+  const mySession = ++currentPttSession; // ✅ تحديد معرف فريد لهذه الضغطة
   isTalking = true;
   
   const pttMain = document.getElementById('pttMain');
@@ -643,6 +615,7 @@ async function onPTTStart() {
   try {
     rawMicStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } });
     
+    // ✅ إذا تم إلغاء الجلسة (رفع الإصبع) أثناء طلب المايك
     if (mySession !== currentPttSession) {
       rawMicStream.getTracks().forEach(t => t.stop());
       rawMicStream = null;
@@ -658,6 +631,7 @@ async function onPTTStart() {
     
     await connectWaveChannel();
 
+    // ✅ فحص إضافي بعد الاتصال بالسيرفر
     if (mySession !== currentPttSession) {
       if (rawMicStream) { rawMicStream.getTracks().forEach(t => t.stop()); rawMicStream = null; }
       return;
@@ -666,6 +640,7 @@ async function onPTTStart() {
     if (waveRoom && waveRoom.state === "connected" && rawMicStream) {
       const track = await window.LivekitClient.LocalAudioTrack.createTrack(rawMicStream.getAudioTracks()[0]);
       
+      // ✅ فحص أخير قبل النشر
       if (mySession !== currentPttSession) {
         track.stop();
         return;
@@ -682,7 +657,7 @@ async function onPTTStart() {
 }
 
 function stopTalking() {
-  currentPttSession++; 
+  currentPttSession++; // ✅ إلغاء أي عملية تشغيل قيد التنفيذ فوراً
   
   if (isTalking) PTTEngine.playEndBeep();
   
@@ -725,6 +700,7 @@ function stopTalking() {
   }
 }
 
+// ✅ الحل السحري والمضمون 100% لمشكلة تحريك الإصبع
 const pttMainBtn = document.getElementById('pttMain');
 
 pttMainBtn.addEventListener('pointerdown', (e) => {
@@ -754,10 +730,12 @@ pttMainBtn.addEventListener('pointercancel', (e) => {
   stopTalking();
 });
 
+// منع المتصفح من التمرير أثناء التحدث
 document.body.addEventListener('touchmove', function(e) {
     if (isPttActive) e.preventDefault(); 
 }, { passive: false });
 
+// منع قائمة اللمس الطويل
 pttMainBtn.addEventListener('contextmenu', (e) => e.preventDefault());
 
 function initSocket() {
@@ -1333,6 +1311,7 @@ function addChatMessage(msg, direction, scroll = true) {
   body.addEventListener('pointerleave', () => clearTimeout(pressTimer));
   container.appendChild(div);
   
+  // ✅ التمرير التلقائي لأسفل عند إضافة رسالة جديدة
   if (scroll) {
       container.scrollTop = container.scrollHeight;
   }
@@ -1406,6 +1385,7 @@ async function startVoiceRecording() {
     chatPrimaryBtn.classList.add('recording');
     chatPrimaryBtn.textContent = '⏹';
     
+    // إظهار موجة التسجيل
     chatInputDisplay.style.display = 'none';
     chatInput.style.display = 'none';
     recordingWave.classList.add('active');
@@ -2002,10 +1982,6 @@ function switchToRoom(roomCode, roomName) {
 }
 
 document.getElementById('operationsChip').addEventListener('click', openOperationsList);
-document.getElementById('friendRequestsChip').addEventListener('click', openFriendRequests);
-document.getElementById('friendRequestsChip2').addEventListener('click', openFriendRequests);
-document.getElementById('sendFriendChip').addEventListener('click', openSendFriendRequest);
-document.getElementById('sendFriendChip2').addEventListener('click', openSendFriendRequest);
 
 setTimeout(updateFriendBadge, 500);
 
