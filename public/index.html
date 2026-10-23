@@ -312,7 +312,6 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
         </div>
       </div>
       
-      <!-- ✅ أزرار الصداقة في واجهة الموجة -->
       <div class="status-row" style="grid-template-columns:1fr 1fr;">
         <div class="chip" id="friendRequestsChip" style="cursor:pointer;">
           <div class="chip-value" style="font-size:13px; font-weight:800;">👥 طلبات الصداقة</div>
@@ -366,7 +365,6 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
         </div>
       </div>
       
-      <!-- ✅ أزرار الصداقة في الغرفة -->
       <div class="status-row" style="grid-template-columns:1fr 1fr;">
         <div class="chip" id="friendRequestsChip2" style="cursor:pointer;">
           <div class="chip-value" style="font-size:13px; font-weight:800;">👥 طلبات الصداقة</div>
@@ -834,7 +832,7 @@ function initSocket() {
     refreshChatList();
   });
 
-  // ✅ استقبال طلبات الصداقة القادمة كرسائل نصية
+  // ✅ استقبال طلبات الصداقة وطلبات الانضمام للفرق القادمة كرسائل نصية
   socket.on('new_direct_message', (payload) => {
     try {
       let txt = payload?.message?.text || payload?.text || '';
@@ -846,6 +844,15 @@ function initSocket() {
             fromUserName: obj.fromUserName || obj.fromName,
             fromCode: obj.fromCode
           });
+        }
+      } else if (typeof txt === 'string' && txt.includes('wave_join_request')) {
+        let obj = JSON.parse(txt);
+        if (obj.type === 'wave_join_request') {
+          document.getElementById('incomingName').textContent = obj.fromUserName || 'مستخدم';
+          document.getElementById('incomingCode').textContent = obj.waveId;
+          openModal('modalIncomingRequest');
+          window._incomingRequest = obj; 
+          PTTEngine.playRealBeep();
         }
       }
     } catch(e) {}
@@ -1001,7 +1008,13 @@ function doSearch() {
     .then(r => r.json())
     .then(data => {
       if (data.waveId) {
-        searchResultUser = { name: data.waveName || 'فرقة', code: data.waveId, type: 'wave' };
+        // ✅ التعديل 1: استخراج رقم المالك (ownerId) من قائمة الأعضاء
+        let ownerId = null;
+        if (data.members) {
+            const owner = data.members.find(m => m.isOwner);
+            if (owner) ownerId = owner.id;
+        }
+        searchResultUser = { name: data.waveName || 'فرقة', code: data.waveId, ownerId: ownerId, type: 'wave' };
         res.innerHTML = `<div class="search-result-card" onclick="askJoinWave()"><div class="search-result-icon">📡</div><div class="search-result-info"><div class="search-result-name">${searchResultUser.name}</div><div class="search-result-code">${searchResultUser.code} • ${data.totalMembers || 0} أعضاء</div></div><div style="color:var(--cyan)">←</div></div>`;
         return;
       }
@@ -1029,7 +1042,28 @@ function askJoinWave() {
 function confirmJoin() {
   if (!searchResultUser) return;
   closeModal('modalJoinConfirm');
-  if (socket) socket.emit('wave_join_request', { waveId: searchResultUser.code, fromDeviceId: currentUser.id, fromUserName: currentUser.name });
+  
+  // ✅ التعديل 2: إرسال الطلب بطريقتين لضمان وصوله للسيرفر (مثل طلب الصداقة)
+  if (socket) {
+    // 1. الطريقة الأساسية (مع تحديد رقم المالك)
+    socket.emit('wave_join_request', { 
+        waveId: searchResultUser.code, 
+        fromDeviceId: currentUser.id, 
+        fromUserName: currentUser.name,
+        toDeviceId: searchResultUser.ownerId 
+    });
+
+    // 2. طريقة الإرسال المزدوج (الحيلة التي جعلت طلب الصداقة ينجح)
+    if (searchResultUser.ownerId) {
+        const txt = JSON.stringify({ 
+          type: 'wave_join_request', 
+          waveId: searchResultUser.code,
+          fromDeviceId: currentUser.id, 
+          fromUserName: currentUser.name 
+        });
+        socket.emit('send_direct_message', { toDeviceId: searchResultUser.ownerId, fromDeviceId: currentUser.id, fromName: currentUser.name, text: txt, message: {text: txt} });
+    }
+  }
 }
 
 function cancelJoin() { closeModal('modalJoinConfirm'); openModal('modalSearch'); }
@@ -1355,14 +1389,13 @@ async function openChatWith(otherDeviceId, otherName, convId) {
   
   document.getElementById('chatMessages').innerHTML = '';
 
-  // ✅ إصلاح: إذا كانت غرفتك الخاصة، لا تبحث في السيرفر واعرض ترحيب
   if (convId.startsWith('conv_self_')) {
     document.getElementById('chatMessages').innerHTML = `
       <div style="padding:20px;text-align:center;color:var(--text-dim);font-size:12px;">
         💬 هذه غرفتك "${otherName}"<br>
         يمكنك إرسال رسائل نصية أو صوتية هنا لتجربتها.
       </div>`;
-    return; // إيقاف التنفيذ هنا
+    return; 
   }
 
   if (socket) socket.emit('join_conversation', { conversationId: convId });
@@ -1372,7 +1405,6 @@ async function openChatWith(otherDeviceId, otherName, convId) {
     const data = await res.json();
     (data.messages || []).forEach(m => addChatMessage(m, m.sender === currentUser.id ? 'out' : 'in', false));
     
-    // ✅ التعديل: تأخير بسيط لضمان نزول الشاشة لآخر رسالة
     setTimeout(() => {
         const c = document.getElementById('chatMessages');
         if(c) c.scrollTop = c.scrollHeight;
@@ -1399,7 +1431,6 @@ function addChatMessage(msg, direction, scroll = true) {
 
   const time = msg.time ? new Date(msg.time).toLocaleTimeString('ar', { hour: '2-digit', minute: '2-digit' }) : '';
   
-  // أيقونة علامات الصح للواتساب
   const checkmarks = direction === 'out' 
     ? `<svg viewBox="0 0 16 15" width="16" height="15"><path fill="currentColor" d="M15.01 3.316l-.478-.372a.365.365 0 0 0-.51.063L8.666 9.879a.32.32 0 0 1-.484.033l-.358-.325a.319.319 0 0 0-.484.032l-.378.483a.418.418 0 0 0 .036.541l1.32 1.266c.143.14.361.125.484-.033l6.272-8.048a.366.366 0 0 0-.064-.512zm-4.1 0l-.478-.372a.365.365 0 0 0-.51.063L4.566 9.879a.32.32 0 0 1-.484.033L1.891 7.769a.366.366 0 0 0-.515.006l-.423.433a.364.364 0 0 0 .006.514l3.258 3.185c.143.14.361.125.484-.033l6.272-8.048a.365.365 0 0 0-.063-.51z"></path></svg>` 
     : '';
@@ -1407,7 +1438,6 @@ function addChatMessage(msg, direction, scroll = true) {
   let bodyHtml = '';
   
   if (msg.type === 'voice' && msg.url) {
-    // شكل الرسالة الصوتية
     bodyHtml = `
       <div class="wa-voice-container">
           <button class="wa-play-btn"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>
@@ -1463,7 +1493,6 @@ function addChatMessage(msg, direction, scroll = true) {
 
   div.innerHTML = `<div class="msg-body" data-msgid="${msg.id || ''}">${bodyHtml}</div>`;
 
-  // زر تشغيل الصوت
   const playBtn = div.querySelector('.wa-play-btn');
   if (playBtn) {
     playBtn.addEventListener('click', () => {
@@ -1482,7 +1511,6 @@ function addChatMessage(msg, direction, scroll = true) {
     });
   }
   
-  // الضغط المطول لمسح الرسالة
   let pressTimer;
   const body = div.querySelector('.msg-body');
   body.addEventListener('pointerdown', () => {
@@ -1611,7 +1639,6 @@ async function stopVoiceRecordingAndSend() {
   voiceRecorder.stop();
 }
 
-// ✅ زيادة قائمة الإيموجي إلى 100 إيموجي
 const EMOJIS = [
   '😀','😃','😄','😁','😆','😅','😂','🤣','🥲','😊',
   '😇','🙂','🙃','😉','😌','😍','🥰','😘','😗','😙',
