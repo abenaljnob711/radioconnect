@@ -2100,6 +2100,72 @@ document.addEventListener('click', (e) => {
     md.classList.remove('show');
   }
 });
+    /* =========================================================
+   ✅ استخراج دالة استلام وإرسال الصداقة من الكود القديم
+   ========================================================= */
+(function(){
+  window.sendFriendRequestSignal = function(toDeviceId, payload){
+    if(!socket){ toast('❌ غير متصل','error'); return; }
+    const txt = JSON.stringify(payload);
+    
+    // إرسال الطلب عبر 4 طرق مختلفة لضمان الوصول
+    socket.emit('friend_request_send', {toDeviceId: toDeviceId, fromDeviceId: currentUser.id, fromName: currentUser.name, fromCode: currentUser.radCode});
+    socket.emit('send_direct_message', {toDeviceId: toDeviceId, fromDeviceId: currentUser.id, fromName: currentUser.name, fromCode: currentUser.radCode, text: txt, message: {text: txt}});
+    socket.emit('direct_message', {toDeviceId: toDeviceId, text: txt, fromDeviceId: currentUser.id, fromName: currentUser.name});
+    socket.emit('private_message', {to: toDeviceId, text: txt});
+  };
+
+  // اعتراض دالة الإرسال الحالية لتستخدم الطريقة المضمونة
+  const originalSend = window.sendFriendRequest;
+  window.sendFriendRequest = function(){
+    if(!friendSearchResult || friendSearchResult.type !== 'user'){ if(originalSend) originalSend(); return; }
+    
+    window.sendFriendRequestSignal(friendSearchResult.deviceId, {
+      type: 'friend_request', 
+      fromDeviceId: currentUser.id, 
+      fromName: currentUser.name, 
+      fromCode: currentUser.radCode
+    });
+    
+    // إضافة الطلب للذاكرة المحلية
+    if (!friendRequests.outgoing.find(r => r.deviceId === friendSearchResult.deviceId)) {
+        friendRequests.outgoing.push({ name: friendSearchResult.name, code: friendSearchResult.radCode, deviceId: friendSearchResult.deviceId, sentAt: Date.now() });
+        saveFriendRequests();
+    }
+    
+    if(window.updateFriendBadge) updateFriendBadge();
+    toast('📤 تم إرسال طلب الصداقة إلى ' + friendSearchResult.name, 'success');
+    closeModal('modalSearch');
+    closeModal('modalFriendSend');
+  };
+
+  // الاستماع لاستلام الطلبات (عبر السوكيت المباشر وعبر الرسائل الخاصة)
+  setTimeout(()=>{
+    if(!socket) return;
+    
+    // 1. الاستماع لحدث طلب الصداقة المباشر
+    socket.on('friend_request_received', (data)=>{ 
+        if(window.handleIncomingFriendRequest) handleIncomingFriendRequest(data); 
+    });
+    
+    // 2. الاستماع للرسائل الخاصة (لأن الكود القديم كان يرسل الطلب كرسالة نصية)
+    socket.on('new_direct_message', (payload)=>{
+      try{
+        let txt = payload?.message?.text || payload?.text || '';
+        if(typeof txt === 'string' && txt.includes('friend_request')){
+          let obj = JSON.parse(txt);
+          if(obj.type==='friend_request' && window.handleIncomingFriendRequest){
+            handleIncomingFriendRequest({
+                fromDeviceId: obj.fromDeviceId, 
+                fromUserName: obj.fromName, // توحيد الاسم
+                fromCode: obj.fromCode
+            });
+          }
+        }
+      }catch(e){}
+    });
+  }, 1500);
+})();   
   </script>
 </body>
 </html>
