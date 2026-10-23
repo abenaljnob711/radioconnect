@@ -421,6 +421,13 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
           <div class="setting-info"><span class="setting-title">🔔 اختبار صوت النداء</span><span class="setting-desc">تأكد من أن الصوت يعمل</span></div>
           <span class="setting-value">تجربة</span>
         </div>
+        <div class="setting-item" onclick="factoryReset()">
+  <div class="setting-info">
+    <span class="setting-title" style="color:var(--red);">⚠️ استعادة ضبط المصنع</span>
+    <span class="setting-desc" style="color:var(--red-dark);">مسح كل شيء (الاسم، الفرق، الغرف)</span>
+  </div>
+  <span class="setting-value" style="color:var(--red);">مسح شامل</span>
+</div>
         <div class="setting-item" onclick="toast('الإصدار 4.3.0')">
           <div class="setting-info"><span class="setting-title">ℹ️ حول التطبيق</span><span class="setting-desc">Radio Connect</span></div>
           <span class="setting-value">v4.3</span>
