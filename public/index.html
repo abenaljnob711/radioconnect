@@ -307,15 +307,15 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
         </div>
       </div>
       
-      <!-- ✅ تم إرجاع أزرار الصداقة هنا في واجهة الموجة -->
+      <!-- ✅ أزرار الصداقة في واجهة الموجة -->
       <div class="status-row" style="grid-template-columns:1fr 1fr;">
         <div class="chip" id="friendRequestsChip" style="cursor:pointer;">
           <div class="chip-value" style="font-size:13px; font-weight:800;">👥 طلبات الصداقة</div>
           <span id="friendReqBadge">0</span>
         </div>
         <div class="chip" id="sendFriendChip" style="cursor:pointer;">
-  <div class="chip-value" style="font-size:13px; font-weight:800;">🔍 بحث عن فرقة</div>
-</div>
+          <div class="chip-value" style="font-size:13px; font-weight:800;">🔍 بحث عن فرقة</div>
+        </div>
       </div>
 
       <div class="radio-stage">
@@ -361,7 +361,7 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
         </div>
       </div>
       
-      <!-- ✅ أزرار الصداقة في الغرفة أيضاً -->
+      <!-- ✅ أزرار الصداقة في الغرفة -->
       <div class="status-row" style="grid-template-columns:1fr 1fr;">
         <div class="chip" id="friendRequestsChip2" style="cursor:pointer;">
           <div class="chip-value" style="font-size:13px; font-weight:800;">👥 طلبات الصداقة</div>
@@ -855,6 +855,11 @@ async function registerUser() {
 
 function askUserNameIfNeeded() { if (!currentUser.name) openModal('modalUserName'); }
 
+function openEditName() {
+  document.getElementById('userNameInput').value = currentUser.name || '';
+  openModal('modalUserName');
+}
+
 function saveUserName() {
   const v = document.getElementById('userNameInput').value.trim();
   if (!v) { toast('⚠️ أدخل اسماً', 'error'); return; }
@@ -1082,6 +1087,10 @@ function openSideMenu() {
       </div>
       <button class="menu-item primary" onclick="closeSideMenu();openCreateWave()"><span class="menu-icon">➕</span><span class="menu-text"><span class="menu-label">إنشاء فرقة</span><span class="menu-desc">إنشاء موجة لاسلكية جديدة</span></span></button>
       <button class="menu-item" onclick="closeSideMenu();openSearchWave()"><span class="menu-icon">🔍</span><span class="menu-text"><span class="menu-label">البحث عن فرقة</span><span class="menu-desc">ابحث برقم الفرقة</span></span></button>
+      
+      <!-- ✅ زر تعديل الاسم هنا -->
+      <button class="menu-item" onclick="closeSideMenu();openEditName()"><span class="menu-icon">👤</span><span class="menu-text"><span class="menu-label">تعديل الاسم</span><span class="menu-desc">تغيير اسمك الحالي</span></span></button>
+
       <button class="menu-item" onclick="closeSideMenu();openOperationsList()"><span class="menu-icon">📋</span><span class="menu-text"><span class="menu-label">قائمة العمليات</span><span class="menu-desc">الفرق التي أنت مشترك فيها</span></span></button>
       <button class="menu-item" onclick="closeSideMenu();openFriendRequests()"><span class="menu-icon">👥</span><span class="menu-text"><span class="menu-label">طلبات الصداقة</span><span class="menu-desc">الواردة والصادرة</span></span></button>
       <button class="menu-item" onclick="closeSideMenu();openSendFriendRequest()"><span class="menu-icon">➕</span><span class="menu-text"><span class="menu-label">إرسال طلب صداقة</span><span class="menu-desc">ابحث برقم المستخدم</span></span></button>
@@ -1101,6 +1110,10 @@ function openSideMenu() {
       </div>
       <button class="menu-item primary" onclick="closeSideMenu();openCreateRoom()"><span class="menu-icon">➕</span><span class="menu-text"><span class="menu-label">إنشاء غرفة</span><span class="menu-desc">إنشاء غرفة دردشة جديدة</span></span></button>
       <button class="menu-item" onclick="closeSideMenu();openSearchUser()"><span class="menu-icon">🔍</span><span class="menu-text"><span class="menu-label">البحث عن مستخدم</span><span class="menu-desc">ابحث برقم المستخدم لبدء محادثة</span></span></button>
+      
+      <!-- ✅ زر تعديل الاسم هنا -->
+      <button class="menu-item" onclick="closeSideMenu();openEditName()"><span class="menu-icon">👤</span><span class="menu-text"><span class="menu-label">تعديل الاسم</span><span class="menu-desc">تغيير اسمك الحالي</span></span></button>
+
       <button class="menu-item" onclick="closeSideMenu();openOperationsList()"><span class="menu-icon">📋</span><span class="menu-text"><span class="menu-label">قائمة العمليات</span><span class="menu-desc">الغرف التي أنت مشترك فيها</span></span></button>
       <button class="menu-item" onclick="closeSideMenu();openFriendRequests()"><span class="menu-icon">👥</span><span class="menu-text"><span class="menu-label">طلبات الصداقة</span><span class="menu-desc">الواردة والصادرة</span></span></button>
       <button class="menu-item" onclick="closeSideMenu();openSendFriendRequest()"><span class="menu-icon">➕</span><span class="menu-text"><span class="menu-label">إرسال طلب صداقة</span><span class="menu-desc">ابحث برقم المستخدم</span></span></button>
@@ -1113,6 +1126,10 @@ function openSideMenu() {
     title.textContent = '⚙️ الإعدادات السريعة';
     content.innerHTML = `
       <button class="menu-item" onclick="closeSideMenu();openSearchUser()"><span class="menu-icon">🔍</span><span class="menu-text"><span class="menu-label">البحث</span><span class="menu-desc">ابحث عن مستخدم</span></span></button>
+      
+      <!-- ✅ زر تعديل الاسم هنا -->
+      <button class="menu-item" onclick="closeSideMenu();openEditName()"><span class="menu-icon">👤</span><span class="menu-text"><span class="menu-label">تعديل الاسم</span><span class="menu-desc">تغيير اسمك الحالي</span></span></button>
+
       <button class="menu-item" onclick="closeSideMenu();openFriendRequests()"><span class="menu-icon">👥</span><span class="menu-text"><span class="menu-label">طلبات الصداقة</span><span class="menu-desc">الواردة والصادرة</span></span></button>
       <button class="menu-item" onclick="closeSideMenu();openSendFriendRequest()"><span class="menu-icon">➕</span><span class="menu-text"><span class="menu-label">إرسال طلب صداقة</span><span class="menu-desc">ابحث برقم المستخدم</span></span></button>
       <button class="menu-item" onclick="closeSideMenu();testCall()"><span class="menu-icon">🔔</span><span class="menu-text"><span class="menu-label">اختبار النداء</span><span class="menu-desc">تجربة صوت البيب</span></span></button>
@@ -2004,7 +2021,7 @@ function switchToRoom(roomCode, roomName) {
 document.getElementById('operationsChip').addEventListener('click', openOperationsList);
 document.getElementById('friendRequestsChip').addEventListener('click', openFriendRequests);
 document.getElementById('friendRequestsChip2').addEventListener('click', openFriendRequests);
-document.getElementById('sendFriendChip').addEventListener('click', openSearchWave);
+document.getElementById('sendFriendChip').addEventListener('click', openSearchWave); // ✅ هنا تم التعديل ليبحث عن M
 document.getElementById('sendFriendChip2').addEventListener('click', openSendFriendRequest);
 
 setTimeout(updateFriendBadge, 500);
