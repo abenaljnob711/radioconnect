@@ -584,7 +584,8 @@ const PTTEngine = {
 async function disconnectWaveRoom() {
   try {
     if (waveLocalAudioTrack && waveRoom) {
-      try { waveRoom.localParticipant.unpublishTrack(waveLocalAudioTrack); waveLocalAudioTrack.stop(); } catch(e){}
+      try { waveRoom.localParticipant.unpublishTrack(waveLocalAudioTrack); } catch(e){}
+      waveLocalAudioTrack.stop();
       waveLocalAudioTrack = null;
     }
     if (rawMicStream) {
@@ -603,6 +604,13 @@ async function connectWaveChannel() {
   waveRoomPromise = (async () => {
     try {
       if (!window.LivekitClient || !currentUser.radCode) return false;
+      
+      // تأكد من إغلاق الغرفة القديمة إذا كانت موجودة (لتجنب التعارض)
+      if (waveRoom) {
+          await waveRoom.disconnect();
+          waveRoom = null;
+      }
+
       const tokenRes = await fetch(SERVER_URL + '/api/livekit/token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -654,31 +662,6 @@ async function connectWaveChannel() {
   return waveRoomPromise;
 }
 
-async function ensureMicAndPublish() {
-    if (waveLocalAudioTrack) return;
-    try {
-        if (!rawMicStream) {
-            rawMicStream = await navigator.mediaDevices.getUserMedia({ 
-                audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true, channelCount: 1, sampleRate: 48000 } 
-            });
-        }
-        
-        if (!waveRoom || waveRoom.state !== "connected") {
-            await connectWaveChannel();
-        }
-        
-        if (waveRoom && waveRoom.state === "connected" && rawMicStream) {
-            const track = await window.LivekitClient.LocalAudioTrack.createTrack(rawMicStream.getAudioTracks()[0]);
-            waveLocalAudioTrack = track;
-            await waveRoom.localParticipant.publishTrack(waveLocalAudioTrack, { source: window.LivekitClient.Track.Source.Microphone });
-            waveLocalAudioTrack.mute(); 
-        }
-    } catch(e) {
-        console.error("Mic setup error:", e);
-        throw e;
-    }
-}
-
 async function onPTTStart() {
   if (isTalking) return;
   if (!currentUser.waveId) { toast('⚠️ انضم إلى فرقة أولاً', 'error'); return; }
@@ -703,15 +686,39 @@ async function onPTTStart() {
   PTTEngine.playStartBeep();
   
   try {
-    if (!waveLocalAudioTrack) {
-        await ensureMicAndPublish();
+    // 1. التأكد من أننا متصلون بالغرفة الصوتية (في حال انقطع)
+    if (!waveRoom || waveRoom.state !== "connected") {
+        const connected = await connectWaveChannel();
+        if (!connected) throw new Error("فشل الاتصال بالخادم الصوتي");
     }
-    if (waveLocalAudioTrack) {
-        await waveLocalAudioTrack.unmute();
+
+    // 2. طلب المايك (سيظهر المايك الأخضر الآن فقط)
+    rawMicStream = await navigator.mediaDevices.getUserMedia({ 
+        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true, channelCount: 1, sampleRate: 48000 } 
+    });
+    
+    if (mySession !== currentPttSession) {
+      rawMicStream.getTracks().forEach(t => t.stop());
+      rawMicStream = null;
+      return;
+    }
+
+    // 3. نشر الصوت للغرفة
+    if (waveRoom && waveRoom.state === "connected" && rawMicStream) {
+      const track = await window.LivekitClient.LocalAudioTrack.createTrack(rawMicStream.getAudioTracks()[0]);
+      waveLocalAudioTrack = track;
+      await waveRoom.localParticipant.publishTrack(waveLocalAudioTrack);
+
+      // إذا قام المستخدم برفع إصبعه قبل اكتمال النشر
+      if (mySession !== currentPttSession) {
+          try { waveRoom.localParticipant.unpublishTrack(waveLocalAudioTrack); } catch(e){}
+          waveLocalAudioTrack.stop();
+          waveLocalAudioTrack = null;
+      }
     }
   } catch (err) {
     console.error(err);
-    toast("⚠️ تعذر تشغيل الميكروفون. تأكد من السماح بالوصول.");
+    toast("⚠️ تعذر تشغيل المايك أو الاتصال");
     stopTalking();
   }
 }
@@ -721,8 +728,15 @@ function stopTalking() {
   
   if (isTalking) PTTEngine.playEndBeep();
   
-  if (waveLocalAudioTrack) {
-    waveLocalAudioTrack.mute();
+  // ✅ إيقاف المايك نهائياً وإغلاقه (ستختفي الأيقونة الخضراء)
+  if (waveLocalAudioTrack && waveRoom) {
+    try { waveRoom.localParticipant.unpublishTrack(waveLocalAudioTrack); } catch(e){}
+    waveLocalAudioTrack.stop();
+    waveLocalAudioTrack = null;
+  }
+  if (rawMicStream) {
+    rawMicStream.getTracks().forEach(t => t.stop());
+    rawMicStream = null;
   }
   
   isTalking = false;
@@ -982,9 +996,8 @@ async function createWave() {
     
     if (socket) socket.emit('wave_join', { waveId: data.waveId, deviceId: currentUser.id, userName: currentUser.name });
     
-    connectWaveChannel().then(() => {
-        ensureMicAndPublish().catch(e => console.warn("Silent mic setup fail:", e));
-    });
+    // الاتصال بالغرفة فقط (بدون تشغيل المايك)
+    connectWaveChannel();
     
     toast('✅ تم إنشاء الفرقة "' + name + '"', 'success');
   } catch (e) { toast('❌ ' + e.message, 'error'); }
@@ -1014,9 +1027,8 @@ async function joinWaveAsMember(waveId) {
   
   if (socket) socket.emit('wave_join', { waveId, deviceId: currentUser.id, userName: currentUser.name });
   
-  connectWaveChannel().then(() => {
-      ensureMicAndPublish().catch(e => console.warn("Silent mic setup fail:", e));
-  });
+  // الاتصال بالغرفة فقط (بدون تشغيل المايك)
+  connectWaveChannel();
   
   toast('✅ انضممت إلى الفرقة', 'success');
 }
