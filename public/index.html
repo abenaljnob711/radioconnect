@@ -637,13 +637,40 @@ async function connectWaveChannel() {
       
       waveRoom = new window.LivekitClient.Room();
       waveRoom.on(window.LivekitClient.RoomEvent.TrackSubscribed, (track, pub, participant) => {
-        if (track.kind === "audio") {
-          const audioElement = track.attach();
-          audioElement.volume = 1.0;
-          audioElement.autoplay = true;
-          document.body.appendChild(audioElement);
-        }
-      });
+  if (track.kind === "audio") {
+    const audioElement = track.attach();
+    audioElement.autoplay = true;
+    audioElement.setAttribute('playsinline', 'true'); // مهم جداً للآيفون
+    
+    try {
+      // 🔥 تقنية مضاعفة الصوت (Volume Booster) 🔥
+      if (!window.voiceAudioCtx) {
+          const AC = window.AudioContext || window.webkitAudioContext;
+          window.voiceAudioCtx = new AC();
+          window.voiceGainNode = window.voiceAudioCtx.createGain();
+          // هنا نحدد قوة الصوت (2.5 يعني 250% من الصوت الأصلي)
+          // تقدر تزيدها لـ 3.0 لو تبي أعلى، بس 2.5 يعتبر واضح وطبيعي جداً
+          window.voiceGainNode.gain.value = 2.5; 
+          window.voiceGainNode.connect(window.voiceAudioCtx.destination);
+      }
+      if (window.voiceAudioCtx.state === 'suspended') {
+          window.voiceAudioCtx.resume();
+      }
+
+      // ربط الصوت بالتقنية الجديدة
+      if (!audioElement.dataset.sourceCreated) {
+          const source = window.voiceAudioCtx.createMediaElementSource(audioElement);
+          source.connect(window.voiceGainNode);
+          audioElement.dataset.sourceCreated = "true";
+      }
+    } catch (e) {
+      console.warn("لم يتم دعم مضاعفة الصوت، سيتم استخدام الصوت الافتراضي", e);
+      audioElement.volume = 1.0; // خطة بديلة في حال المتصفح رفض التقنية
+    }
+
+    document.body.appendChild(audioElement);
+  }
+});
       waveRoom.on(window.LivekitClient.RoomEvent.TrackUnsubscribed, (track) => {
         track.detach().forEach(el => el.remove());
       });
