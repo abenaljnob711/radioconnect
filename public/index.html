@@ -84,6 +84,7 @@ body::before { content: ''; position: fixed; inset: 0; background: radial-gradie
 #waveStatusChip { justify-content: center; gap: 2px; }
 #waveStatusChip .status-text { font-size: 11px; font-weight: 800; }
 #waveStatusChip.disconnected .status-text { color: var(--red); }
+#waveStatusChip.connecting .status-text { color: var(--yellow); } /* ✅ أضفنا لون أصفر للاتصال */
 #waveStatusChip.live .status-text { color: var(--green); }
 #waveStatusChip .wave-timer { font-family: 'Courier New', monospace; color: var(--text-dim); font-size: 11px; font-weight: 700; }
 #waveStatusChip.live .wave-timer { color: var(--green); }
@@ -532,13 +533,16 @@ function updateWaveUIStatus(status) {
     const statusText = document.getElementById('waveStatusText');
     if (!statusChip || !statusText) return;
     
-    statusChip.classList.remove('disconnected', 'live');
+    statusChip.classList.remove('disconnected', 'live', 'connecting');
     if (status === 'connected') {
         statusChip.classList.add('live');
         statusText.innerHTML = '🟢 متصل';
     } else if (status === 'talking') {
         statusChip.classList.add('live');
         statusText.innerHTML = '🟢 يتحدث';
+    } else if (status === 'connecting') {
+        statusChip.classList.add('connecting');
+        statusText.innerHTML = '🟡 جاري الاتصال...';
     } else {
         statusChip.classList.add('disconnected');
         statusText.innerHTML = '🔴 غير متصل';
@@ -790,8 +794,13 @@ function stopTalking() {
   if (pttMain) pttMain.classList.remove('holding');
   document.body.classList.remove('ptt-active');
   
-  if (waveRoom && waveRoom.state === "connected") {
-      updateWaveUIStatus('connected');
+  // ✅ التعديل المطلوب فقط: الحالة بعد رفع الإصبع تكون أصفر إذا كان داخل فرقة، وأخضر إذا كان متصلاً
+  if (currentUser.waveId) {
+      if (waveRoom && waveRoom.state === "connected") {
+          updateWaveUIStatus('connected');
+      } else {
+          updateWaveUIStatus('connecting');
+      }
   } else {
       updateWaveUIStatus('disconnected');
   }
@@ -879,21 +888,17 @@ function initSocket() {
   socket.on('wave_join_error', ({ error }) => toast('❌ ' + error, 'error'));
 
   socket.on('new_direct_message', ({ conversationId, message }) => {
-    if (message.sender === currentUser.id) return; // ✅ منع تكرار الرسائل التي ترسلها أنت
+    if (message.sender === currentUser.id) return;
 
     if (currentUser.currentConvId === conversationId) {
       addChatMessage(message, 'in');
-      
-      // ✅ إرسال إشعار للسيرفر بأن الرسالة تم استلامها
       socket.emit('message_delivered', { messageId: message.id, conversationId: conversationId });
-      
     } else {
       toast('💬 رسالة جديدة', 'success');
     }
     refreshChatList();
   });
 
-  // ✅ عند استلام إشعار بأن الطرف الآخر استلم الرسالة، تتحول الصح إلى صحين زرقاء
   socket.on('message_delivered_ack', ({ messageId }) => {
     const tickEl = document.getElementById(`tick_${messageId}`);
     if (tickEl) {
@@ -902,7 +907,6 @@ function initSocket() {
     }
   });
 
-  // ✅ استقبال طلبات الصداقة القادمة كرسائل نصية
   socket.on('new_direct_message', (payload) => {
     try {
       let txt = payload?.message?.text || payload?.text || '';
@@ -941,7 +945,6 @@ function initSocket() {
     messages.forEach(m => {
       let dir = m.sender === currentUser.id ? 'out' : 'in';
       addChatMessage(m, dir, false);
-      // ✅ إذا كانت الرسالة لك، نفترض أنها استُلمت (لتجنب تعليق الصح) في حالة عدم وجود سجل
       if (dir === 'out') {
           const tickEl = document.getElementById(`tick_${m.id}`);
           if(tickEl) { tickEl.textContent = '✓✓'; tickEl.classList.add('delivered'); }
@@ -1578,7 +1581,6 @@ function addChatMessage(msg, direction, scroll = true) {
 
   const time = msg.time ? new Date(msg.time).toLocaleTimeString('ar', { hour: '2-digit', minute: '2-digit' }) : '';
   
-  // ✅ إذا كانت الرسالة صادرة، نضع علامة صح واحدة (في البداية)
   const checkmarks = direction === 'out' 
     ? `<span class="tick" id="tick_${msg.id}">✓</span>` 
     : '';
@@ -1659,7 +1661,6 @@ function addChatMessage(msg, direction, scroll = true) {
     });
   }
   
-  // ✅ الضغط المطول لمسح الرسالة
   let pressTimer;
   const body = div.querySelector('.msg-body');
   body.addEventListener('pointerdown', (e) => {
