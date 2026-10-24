@@ -307,6 +307,7 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
         </div>
       </div>
       
+      <!-- ✅ أزرار الصداقة في واجهة الموجة -->
       <div class="status-row" style="grid-template-columns:1fr 1fr;">
         <div class="chip" id="friendRequestsChip" style="cursor:pointer;">
           <div class="chip-value" style="font-size:13px; font-weight:800;">👥 طلبات الصداقة</div>
@@ -360,6 +361,7 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
         </div>
       </div>
       
+      <!-- ✅ أزرار الصداقة في الغرفة -->
       <div class="status-row" style="grid-template-columns:1fr 1fr;">
         <div class="chip" id="friendRequestsChip2" style="cursor:pointer;">
           <div class="chip-value" style="font-size:13px; font-weight:800;">👥 طلبات الصداقة</div>
@@ -403,7 +405,6 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
         </div>
       </header>
       <div class="settings-list">
-        <!-- ✅ إضافة اسم المستخدم -->
         <div class="setting-item" onclick="openEditName()">
           <div class="setting-info"><span class="setting-title">👤 اسمك</span><span class="setting-desc">الاسم الذي يظهر للآخرين</span></div>
           <span class="setting-value" id="userNameValue">—</span>
@@ -490,7 +491,6 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
 
   <input type="file" id="hiddenFileInput" style="display:none;">
     <script>
-      // تم تشفير الروابط لحمايتها من العبث
 const SERVER_URL = atob('aHR0cHM6Ly9yYWRpby1jb25uZWN0LXNlcnZlci5vbnJlbmRlci5jb20=');
 const LIVEKIT_URL = atob('d3NzOi8vcmFkaW9jb25uZWN0LTh1eWg1M3FjLmxpdmVraXQuY2xvdWQ=');
 
@@ -522,6 +522,24 @@ let isPttActive = false;
 let currentPttSession = 0;   
 let ignoredRequests = new Set(); 
 let waveRoomPromise = null;  
+
+function updateWaveUIStatus(status) {
+    const statusChip = document.getElementById('waveStatusChip');
+    const statusText = document.getElementById('waveStatusText');
+    if (!statusChip || !statusText) return;
+    
+    statusChip.classList.remove('disconnected', 'live');
+    if (status === 'connected') {
+        statusChip.classList.add('live');
+        statusText.innerHTML = '🟢 متصل';
+    } else if (status === 'talking') {
+        statusChip.classList.add('live');
+        statusText.innerHTML = '🟢 يتحدث';
+    } else {
+        statusChip.classList.add('disconnected');
+        statusText.innerHTML = '🔴 غير متصل';
+    }
+}
 
 function factoryReset() {
   if (!confirm('⚠️ تحذير: سيتم مسح جميع بياناتك المحلية (الاسم، الفرق، الغرف، الإعدادات) وإعادة تشغيل التطبيق. هل أنت متأكد؟')) return;
@@ -589,8 +607,13 @@ async function disconnectWaveRoom() {
       try { waveRoom.localParticipant.unpublishTrack(waveLocalAudioTrack); waveLocalAudioTrack.stop(); } catch(e){}
       waveLocalAudioTrack = null;
     }
+    if (rawMicStream) {
+        rawMicStream.getTracks().forEach(t => t.stop());
+        rawMicStream = null;
+    }
     if (waveRoom) { await waveRoom.disconnect(); waveRoom = null; }
     document.querySelectorAll('audio[data-lk-track]').forEach(el => el.remove());
+    updateWaveUIStatus('disconnected');
   } catch(e) {}
 }
 
@@ -601,34 +624,72 @@ async function connectWaveChannel() {
   waveRoomPromise = (async () => {
     try {
       if (!window.LivekitClient || !currentUser.radCode) return false;
+      
+      if (waveRoom) {
+          await waveRoom.disconnect();
+          waveRoom = null;
+      }
+
       const tokenRes = await fetch(SERVER_URL + '/api/livekit/token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ roomId: currentUser.waveId, deviceId: currentUser.id, userName: currentUser.name })
       });
-      const tokenData = await tokenRes.json();
-      if (!tokenData.token) return false;
       
+      if (!tokenRes.ok) throw new Error("فشل الاتصال بالسيرفر لجلب التصريح");
+      const tokenData = await tokenRes.json();
+      
+      if (!tokenData.token) {
+          throw new Error("السيرفر لم يرجع تصريح الدخول (Token)");
+      }
+
+      let lkUrl = tokenData.url || LIVEKIT_URL;
+      
+      if (lkUrl.startsWith('https://')) lkUrl = lkUrl.replace('https://', 'wss://');
+      if (lkUrl.startsWith('http://')) lkUrl = lkUrl.replace('http://', 'ws://');
+
+      console.log("Connecting to LiveKit URL:", lkUrl);
+
       waveRoom = new window.LivekitClient.Room();
+      
+      waveRoom.on(window.LivekitClient.RoomEvent.Connected, () => {
+          updateWaveUIStatus('connected');
+      });
+
       waveRoom.on(window.LivekitClient.RoomEvent.TrackSubscribed, (track, pub, participant) => {
         if (track.kind === "audio") {
           const audioElement = track.attach();
           audioElement.volume = 1.0;
-          audioElement.autoplay = true;
           document.body.appendChild(audioElement);
+          
+          const playPromise = audioElement.play();
+          if (playPromise !== undefined) {
+            playPromise.catch(error => {
+              console.warn("Autoplay prevented:", error);
+              toast("⚠️ يرجى النقر على الشاشة لتفعيل الصوت", "error");
+              document.addEventListener('click', () => {
+                  audioElement.play().catch(()=>{});
+              }, { once: true });
+            });
+          }
         }
       });
+      
       waveRoom.on(window.LivekitClient.RoomEvent.TrackUnsubscribed, (track) => {
         track.detach().forEach(el => el.remove());
       });
+      
       waveRoom.on(window.LivekitClient.RoomEvent.Disconnected, () => {
         waveRoom = null;
         if (isTalking) stopTalking();
+        updateWaveUIStatus('disconnected');
       });
-      await waveRoom.connect(LIVEKIT_URL, tokenData.token);
+      
+      await waveRoom.connect(lkUrl, tokenData.token);
       return true;
     } catch (e) {
       console.error("Wave Connect Error:", e);
+      toast("⚠️ " + (e.message || "فشل الاتصال بالخادم الصوتي"), "error");
       waveRoom = null;
       return false;
     } finally {
@@ -648,10 +709,9 @@ async function onPTTStart() {
   const pttMain = document.getElementById('pttMain');
   pttMain.classList.add('holding');
   document.body.classList.add('ptt-active');
-  const statusChip = document.getElementById('waveStatusChip');
-  const statusText = document.getElementById('waveStatusText');
-  if (statusChip) { statusChip.classList.add('live'); statusChip.classList.remove('disconnected'); }
-  if (statusText) statusText.innerHTML = '🟢 يتحدث';
+  
+  updateWaveUIStatus('talking');
+  
   const lcd3 = document.getElementById('lcdLine3');
   if (lcd3) lcd3.textContent = (currentUser.radCode || '—') + ' • TX';
   startWaveTimer();
@@ -660,15 +720,19 @@ async function onPTTStart() {
   PTTEngine.playStartBeep();
   
   try {
-    rawMicStream = await navigator.mediaDevices.getUserMedia({ 
-        audio: { 
-            echoCancellation: true, 
-            noiseSuppression: true, 
-            autoGainControl: true,
-            channelCount: 1,
-            sampleRate: 48000
-        } 
-    });
+    if (!rawMicStream) {
+        try {
+            rawMicStream = await navigator.mediaDevices.getUserMedia({ 
+                audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true, channelCount: 1, sampleRate: 48000 } 
+            });
+        } catch (micError) {
+            if (micError.name === 'NotAllowedError' || micError.name === 'PermissionDeniedError') {
+                throw new Error("تم رفض إذن المايك. يرجى السماح به من إعدادات المتصفح.");
+            } else {
+                throw new Error("تعذر تشغيل المايك. تأكد من عدم استخدامه في تطبيق آخر.");
+            }
+        }
+    }
     
     if (mySession !== currentPttSession) {
       rawMicStream.getTracks().forEach(t => t.stop());
@@ -676,34 +740,27 @@ async function onPTTStart() {
       return;
     }
 
-    if (!waveRoom || waveRoom.participants.size === 0) {
-      localTestAudio = new Audio();
-      localTestAudio.srcObject = rawMicStream;
-      localTestAudio.volume = 1.0;
-      localTestAudio.play().catch(()=>{});
+    if (!waveRoom || waveRoom.state !== "connected") {
+        const connected = await connectWaveChannel();
+        if (!connected) throw new Error("فشل الاتصال بخادم الصوت (LiveKit). تحقق من الشبكة.");
     }
-    
-    await connectWaveChannel();
 
-    if (mySession !== currentPttSession) {
-      if (rawMicStream) { rawMicStream.getTracks().forEach(t => t.stop()); rawMicStream = null; }
-      return;
-    }
+    if (mySession !== currentPttSession) return;
 
     if (waveRoom && waveRoom.state === "connected" && rawMicStream) {
       const track = await window.LivekitClient.LocalAudioTrack.createTrack(rawMicStream.getAudioTracks()[0]);
-      
-      if (mySession !== currentPttSession) {
-        track.stop();
-        return;
-      }
-
       waveLocalAudioTrack = track;
-      waveRoom.localParticipant.publishTrack(waveLocalAudioTrack);
-      waveLocalAudioTrack.enable();
+      await waveRoom.localParticipant.publishTrack(waveLocalAudioTrack);
+
+      if (mySession !== currentPttSession) {
+          try { waveRoom.localParticipant.unpublishTrack(waveLocalAudioTrack); } catch(e){}
+          waveLocalAudioTrack.stop();
+          waveLocalAudioTrack = null;
+      }
     }
   } catch (err) {
-    toast("⚠️ تعذر تشغيل الميكروفون");
+    console.error(err);
+    toast("⚠️ " + err.message);
     stopTalking();
   }
 }
@@ -713,19 +770,11 @@ function stopTalking() {
   
   if (isTalking) PTTEngine.playEndBeep();
   
-  if (localTestAudio) {
-    try { localTestAudio.pause(); localTestAudio.srcObject = null; } catch (e) {}
-    localTestAudio = null;
-  }
-  
   if (waveLocalAudioTrack && waveRoom) {
-    try { 
-        waveRoom.localParticipant.unpublishTrack(waveLocalAudioTrack); 
-        waveLocalAudioTrack.stop(); 
-    } catch (e) {}
+    try { waveRoom.localParticipant.unpublishTrack(waveLocalAudioTrack); } catch(e){}
+    waveLocalAudioTrack.stop();
     waveLocalAudioTrack = null;
   }
-  
   if (rawMicStream) {
     rawMicStream.getTracks().forEach(t => t.stop());
     rawMicStream = null;
@@ -737,10 +786,11 @@ function stopTalking() {
   if (pttMain) pttMain.classList.remove('holding');
   document.body.classList.remove('ptt-active');
   
-  const statusChip = document.getElementById('waveStatusChip');
-  const statusText = document.getElementById('waveStatusText');
-  if (statusChip) { statusChip.classList.remove('live'); statusChip.classList.add('disconnected'); }
-  if (statusText) statusText.innerHTML = '🔴 غير متصل';
+  if (waveRoom && waveRoom.state === "connected") {
+      updateWaveUIStatus('connected');
+  } else {
+      updateWaveUIStatus('disconnected');
+  }
   
   const lcd3 = document.getElementById('lcdLine3');
   if (lcd3) lcd3.textContent = (currentUser.radCode || '—') + ' • RX';
@@ -804,10 +854,7 @@ function initSocket() {
     toast('⚠️ تم إخراجك من الفرقة', 'error');
     currentUser.waveId = null; 
     disconnectWaveRoom();
-    const statusChip = document.getElementById('waveStatusChip');
-    const statusText = document.getElementById('waveStatusText');
-    if (statusChip) { statusChip.classList.add('disconnected'); statusChip.classList.remove('live'); }
-    if (statusText) statusText.innerHTML = '🔴 غير متصل';
+    updateWaveUIStatus('disconnected');
   });
 
   socket.on('wave_join_request_received', (data) => {
@@ -834,7 +881,6 @@ function initSocket() {
     refreshChatList();
   });
 
-  // ✅ استقبال طلبات الصداقة وطلبات الانضمام للفرق القادمة كرسائل نصية
   socket.on('new_direct_message', (payload) => {
     try {
       let txt = payload?.message?.text || payload?.text || '';
@@ -857,7 +903,6 @@ function initSocket() {
           PTTEngine.playRealBeep();
         }
       } 
-      // ✅ التعديل الجديد: استقبال رسالة "تمت الموافقة" والدخول للفرقة فوراً
       else if (typeof txt === 'string' && txt.includes('wave_join_approved')) {
         let obj = JSON.parse(txt);
         if (obj.type === 'wave_join_approved') {
@@ -915,7 +960,6 @@ async function registerUser() {
       const el4 = document.getElementById('lcdLine3'); if (el4 && !currentUser.waveId) el4.textContent = '--- • RX';
     }
     
-    // تحديث الاسم في الواجهة
     const elName = document.getElementById('userNameValue'); 
     if (elName) elName.textContent = currentUser.name || '—';
 
@@ -938,7 +982,6 @@ function saveUserName() {
   localStorage.setItem('rc_user_name', v);
   closeModal('modalUserName');
   
-  // تحديث الاسم في شاشة الإعدادات
   const elName = document.getElementById('userNameValue'); 
   if (elName) elName.textContent = v;
   
@@ -989,8 +1032,11 @@ async function createWave() {
     localStorage.setItem('rc_is_wave_owner', 'true');
     addWaveToHistory(data.waveId, name);
     await PTTEngine.init(); PTTEngine.playStartBeep();
-    await connectWaveChannel();
+    
     if (socket) socket.emit('wave_join', { waveId: data.waveId, deviceId: currentUser.id, userName: currentUser.name });
+    
+    connectWaveChannel();
+    
     toast('✅ تم إنشاء الفرقة "' + name + '"', 'success');
   } catch (e) { toast('❌ ' + e.message, 'error'); }
 }
@@ -1010,13 +1056,17 @@ async function joinWaveAsMember(waveId) {
     }
     if (data.members) renderWaveMembers(data.members);
   } catch (e) {}
+  
   const el1 = document.getElementById('waveCodeChip'); if (el1) el1.innerHTML = waveId + ' <span style="font-size:12px;">🔑</span>';
   const el2 = document.getElementById('waveCodeValue'); if (el2) el2.textContent = waveId;
   const el3 = document.getElementById('lcdLine3'); if (el3) el3.textContent = waveId + ' • RX';
   localStorage.setItem('rc_saved_wave_id', waveId);
   localStorage.setItem('rc_saved_wave_name', currentUser.waveName || '');
-  await connectWaveChannel();
+  
   if (socket) socket.emit('wave_join', { waveId, deviceId: currentUser.id, userName: currentUser.name });
+  
+  connectWaveChannel();
+  
   toast('✅ انضممت إلى الفرقة', 'success');
 }
 
@@ -1035,7 +1085,6 @@ function doSearch() {
         }
         searchResultUser = { name: data.waveName || 'فرقة', code: data.waveId, ownerId: ownerId, type: 'wave' };
         
-        // ✅ تعديل شكل نتيجة البحث لتوضيح الاسم والرقم
         res.innerHTML = `
         <div class="search-result-card" onclick="askJoinWave()">
             <div class="search-result-icon">📡</div>
@@ -1203,7 +1252,7 @@ function toast(msg, type = '') {
   el.className = 'toast ' + type;
   el.classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.remove('show'), 2400);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 3000); 
 }
 
 function openModal(id) { const el = document.getElementById(id); if (el) el.classList.add('show'); closeSideMenu(); }
@@ -1387,8 +1436,7 @@ async function leaveWave() {
   const el1 = document.getElementById('waveCodeChip');
   if (el1) el1.innerHTML = '--- <span style="font-size:12px;">🔑</span>'; 
   
-  const statusText = document.getElementById('waveStatusText');
-  if (statusText) statusText.innerHTML = '🔴 غير متصل';
+  updateWaveUIStatus('disconnected');
   const el3 = document.getElementById('waveNameLabel'); if (el3) el3.textContent = 'لا توجد فرقة';
   const el4 = document.getElementById('waveNameValue'); if (el4) el4.textContent = '—';
   const el5 = document.getElementById('lcdLine3'); if (el5) el5.textContent = '--- • RX';
@@ -2311,10 +2359,9 @@ window.addEventListener('DOMContentLoaded', async () => {
   initSocket();
   refreshChatList();
   
-  // ✅ الفحص الدوري لطلبات الانضمام (مضمون 100%)
   setInterval(async () => {
     if (!currentUser.id) return;
-    if (window._incomingRequest) return; // لا تفتح نافذة إذا كانت هناك نافذة أخرى مفتوحة
+    if (window._incomingRequest) return; 
     
     try {
       const res = await fetch(SERVER_URL + '/api/waves/pending-requests/' + currentUser.id);
@@ -2322,7 +2369,6 @@ window.addEventListener('DOMContentLoaded', async () => {
       if (data.requests && data.requests.length > 0) {
         const req = data.requests[0]; 
         
-        // ✅ تجاهل الطلب إذا كنا قد رفضناه سابقاً
         if (ignoredRequests.has(req.waveId)) return; 
 
         window._incomingRequest = req;
@@ -2332,7 +2378,7 @@ window.addEventListener('DOMContentLoaded', async () => {
         if (typeof PTTEngine !== 'undefined' && PTTEngine.playRealBeep) PTTEngine.playRealBeep();
       }
     } catch (e) {}
-  }, 3000); // يفحص كل 3 ثواني
+  }, 3000);
 
   setInterval(async () => {
     if (!currentUser.id) return;
@@ -2382,7 +2428,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     const statusChip = document.getElementById('waveStatusChip');
     const statusText = document.getElementById('waveStatusText');
     if (statusChip) { statusChip.classList.remove('disconnected'); statusChip.classList.add('live'); }
-    if (statusText) statusText.innerHTML = '🟢 متصل';
+    if (statusText) statusText.innerHTML = '🟡 جاري الاتصال...';
 
     setTimeout(() => joinWaveAsMember(savedWaveId), 1500);
   }
@@ -2395,7 +2441,6 @@ window.addEventListener('DOMContentLoaded', async () => {
     if (el4 && savedRoomName) el4.textContent = savedRoomName;
   }
   
-  // تحديث الاسم في الإعدادات عند التحميل
   const elName = document.getElementById('userNameValue');
   if (elName) elName.textContent = currentUser.name || '—';
 
