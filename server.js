@@ -588,8 +588,11 @@ io.on("connection", (socket) => {
         }
       });
     }
+  });
 
-    socket.emit("message_delivered", { messageId: message.id });
+  // ✅ التعديل المطلوب: إضافة حدث تأكيد استلام الرسالة (علامات الصح)
+  socket.on('message_delivered', ({ messageId, conversationId }) => {
+    io.to("conv_" + conversationId).emit('message_delivered_ack', { messageId });
   });
 
   socket.on("wave_join", ({ waveId, deviceId, userName }) => {
