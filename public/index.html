@@ -489,7 +489,7 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
 
   <input type="file" id="hiddenFileInput" style="display:none;">
     <script>
-const SERVER_URL = atob('aHR0cHM6Ly9yYWRpby1jb25uZWN0LXNlcnZlci5vbnJlbmRlci5jb20=');
+const SERVER_URL = atob('aHR0cHM6Ly9yYWRpby1jb25uZWN0LXNlcnZlci5vbnJlbmRlci5jb20='); // ⚠️ تأكد أن هذا هو رابط سيرفرك الحالي
 const LIVEKIT_URL = atob('d3NzOi8vcmFkaW9jb25uZWN0LTh1eWg1M3FjLmxpdmVraXQuY2xvdWQ=');
 
 let DEVICE_ID = localStorage.getItem('rc_device_id');
@@ -520,6 +520,24 @@ let isPttActive = false;
 let currentPttSession = 0;   
 let ignoredRequests = new Set(); 
 let waveRoomPromise = null;  
+
+function updateWaveUIStatus(status) {
+    const statusChip = document.getElementById('waveStatusChip');
+    const statusText = document.getElementById('waveStatusText');
+    if (!statusChip || !statusText) return;
+    
+    statusChip.classList.remove('disconnected', 'live');
+    if (status === 'connected') {
+        statusChip.classList.add('live');
+        statusText.innerHTML = '🟢 متصل';
+    } else if (status === 'talking') {
+        statusChip.classList.add('live');
+        statusText.innerHTML = '🟢 يتحدث';
+    } else {
+        statusChip.classList.add('disconnected');
+        statusText.innerHTML = '🔴 غير متصل';
+    }
+}
 
 function factoryReset() {
   if (!confirm('⚠️ تحذير: سيتم مسح جميع بياناتك المحلية (الاسم، الفرق، الغرف، الإعدادات) وإعادة تشغيل التطبيق. هل أنت متأكد؟')) return;
@@ -594,6 +612,7 @@ async function disconnectWaveRoom() {
     }
     if (waveRoom) { await waveRoom.disconnect(); waveRoom = null; }
     document.querySelectorAll('audio[data-lk-track]').forEach(el => el.remove());
+    updateWaveUIStatus('disconnected');
   } catch(e) {}
 }
 
@@ -605,7 +624,6 @@ async function connectWaveChannel() {
     try {
       if (!window.LivekitClient || !currentUser.radCode) return false;
       
-      // تأكد من إغلاق الغرفة القديمة إذا كانت موجودة (لتجنب التعارض)
       if (waveRoom) {
           await waveRoom.disconnect();
           waveRoom = null;
@@ -616,11 +634,17 @@ async function connectWaveChannel() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ roomId: currentUser.waveId, deviceId: currentUser.id, userName: currentUser.name })
       });
+      
+      if (!tokenRes.ok) throw new Error("فشل الاتصال بالسيرفر لجلب التصريح");
       const tokenData = await tokenRes.json();
-      if (!tokenData.token) return false;
+      if (!tokenData.token) throw new Error("لم يتم استلام التصريح");
       
       waveRoom = new window.LivekitClient.Room();
       
+      waveRoom.on(window.LivekitClient.RoomEvent.Connected, () => {
+          updateWaveUIStatus('connected');
+      });
+
       waveRoom.on(window.LivekitClient.RoomEvent.TrackSubscribed, (track, pub, participant) => {
         if (track.kind === "audio") {
           const audioElement = track.attach();
@@ -647,6 +671,7 @@ async function connectWaveChannel() {
       waveRoom.on(window.LivekitClient.RoomEvent.Disconnected, () => {
         waveRoom = null;
         if (isTalking) stopTalking();
+        updateWaveUIStatus('disconnected');
       });
       
       await waveRoom.connect(LIVEKIT_URL, tokenData.token);
@@ -673,10 +698,7 @@ async function onPTTStart() {
   pttMain.classList.add('holding');
   document.body.classList.add('ptt-active');
   
-  const statusChip = document.getElementById('waveStatusChip');
-  const statusText = document.getElementById('waveStatusText');
-  if (statusChip) { statusChip.classList.add('live'); statusChip.classList.remove('disconnected'); }
-  if (statusText) statusText.innerHTML = '🟢 يتحدث';
+  updateWaveUIStatus('talking');
   
   const lcd3 = document.getElementById('lcdLine3');
   if (lcd3) lcd3.textContent = (currentUser.radCode || '—') + ' • TX';
@@ -686,16 +708,20 @@ async function onPTTStart() {
   PTTEngine.playStartBeep();
   
   try {
-    // 1. التأكد من أننا متصلون بالغرفة الصوتية (في حال انقطع)
-    if (!waveRoom || waveRoom.state !== "connected") {
-        const connected = await connectWaveChannel();
-        if (!connected) throw new Error("فشل الاتصال بالخادم الصوتي");
+    // 1. طلب المايك أولاً
+    if (!rawMicStream) {
+        try {
+            rawMicStream = await navigator.mediaDevices.getUserMedia({ 
+                audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true, channelCount: 1, sampleRate: 48000 } 
+            });
+        } catch (micError) {
+            if (micError.name === 'NotAllowedError' || micError.name === 'PermissionDeniedError') {
+                throw new Error("تم رفض إذن المايك. يرجى السماح به من إعدادات المتصفح.");
+            } else {
+                throw new Error("تعذر تشغيل المايك. تأكد من عدم استخدامه في تطبيق آخر.");
+            }
+        }
     }
-
-    // 2. طلب المايك (سيظهر المايك الأخضر الآن فقط)
-    rawMicStream = await navigator.mediaDevices.getUserMedia({ 
-        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true, channelCount: 1, sampleRate: 48000 } 
-    });
     
     if (mySession !== currentPttSession) {
       rawMicStream.getTracks().forEach(t => t.stop());
@@ -703,13 +729,20 @@ async function onPTTStart() {
       return;
     }
 
-    // 3. نشر الصوت للغرفة
+    // 2. التأكد من الاتصال بالسيرفر
+    if (!waveRoom || waveRoom.state !== "connected") {
+        const connected = await connectWaveChannel();
+        if (!connected) throw new Error("فشل الاتصال بخادم الصوت (LiveKit). تحقق من الشبكة.");
+    }
+
+    if (mySession !== currentPttSession) return;
+
+    // 3. نشر الصوت
     if (waveRoom && waveRoom.state === "connected" && rawMicStream) {
       const track = await window.LivekitClient.LocalAudioTrack.createTrack(rawMicStream.getAudioTracks()[0]);
       waveLocalAudioTrack = track;
       await waveRoom.localParticipant.publishTrack(waveLocalAudioTrack);
 
-      // إذا قام المستخدم برفع إصبعه قبل اكتمال النشر
       if (mySession !== currentPttSession) {
           try { waveRoom.localParticipant.unpublishTrack(waveLocalAudioTrack); } catch(e){}
           waveLocalAudioTrack.stop();
@@ -718,7 +751,7 @@ async function onPTTStart() {
     }
   } catch (err) {
     console.error(err);
-    toast("⚠️ تعذر تشغيل المايك أو الاتصال");
+    toast("⚠️ " + err.message);
     stopTalking();
   }
 }
@@ -728,7 +761,6 @@ function stopTalking() {
   
   if (isTalking) PTTEngine.playEndBeep();
   
-  // ✅ إيقاف المايك نهائياً وإغلاقه (ستختفي الأيقونة الخضراء)
   if (waveLocalAudioTrack && waveRoom) {
     try { waveRoom.localParticipant.unpublishTrack(waveLocalAudioTrack); } catch(e){}
     waveLocalAudioTrack.stop();
@@ -745,10 +777,11 @@ function stopTalking() {
   if (pttMain) pttMain.classList.remove('holding');
   document.body.classList.remove('ptt-active');
   
-  const statusChip = document.getElementById('waveStatusChip');
-  const statusText = document.getElementById('waveStatusText');
-  if (statusChip) { statusChip.classList.remove('live'); statusChip.classList.add('disconnected'); }
-  if (statusText) statusText.innerHTML = '🔴 غير متصل';
+  if (waveRoom && waveRoom.state === "connected") {
+      updateWaveUIStatus('connected');
+  } else {
+      updateWaveUIStatus('disconnected');
+  }
   
   const lcd3 = document.getElementById('lcdLine3');
   if (lcd3) lcd3.textContent = (currentUser.radCode || '—') + ' • RX';
@@ -812,10 +845,7 @@ function initSocket() {
     toast('⚠️ تم إخراجك من الفرقة', 'error');
     currentUser.waveId = null; 
     disconnectWaveRoom();
-    const statusChip = document.getElementById('waveStatusChip');
-    const statusText = document.getElementById('waveStatusText');
-    if (statusChip) { statusChip.classList.add('disconnected'); statusChip.classList.remove('live'); }
-    if (statusText) statusText.innerHTML = '🔴 غير متصل';
+    updateWaveUIStatus('disconnected');
   });
 
   socket.on('wave_join_request_received', (data) => {
@@ -996,7 +1026,6 @@ async function createWave() {
     
     if (socket) socket.emit('wave_join', { waveId: data.waveId, deviceId: currentUser.id, userName: currentUser.name });
     
-    // الاتصال بالغرفة فقط (بدون تشغيل المايك)
     connectWaveChannel();
     
     toast('✅ تم إنشاء الفرقة "' + name + '"', 'success');
@@ -1027,7 +1056,6 @@ async function joinWaveAsMember(waveId) {
   
   if (socket) socket.emit('wave_join', { waveId, deviceId: currentUser.id, userName: currentUser.name });
   
-  // الاتصال بالغرفة فقط (بدون تشغيل المايك)
   connectWaveChannel();
   
   toast('✅ انضممت إلى الفرقة', 'success');
@@ -1215,7 +1243,7 @@ function toast(msg, type = '') {
   el.className = 'toast ' + type;
   el.classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.remove('show'), 2400);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 3000); // زيادة وقت الرسالة
 }
 
 function openModal(id) { const el = document.getElementById(id); if (el) el.classList.add('show'); closeSideMenu(); }
@@ -1399,8 +1427,7 @@ async function leaveWave() {
   const el1 = document.getElementById('waveCodeChip');
   if (el1) el1.innerHTML = '--- <span style="font-size:12px;">🔑</span>'; 
   
-  const statusText = document.getElementById('waveStatusText');
-  if (statusText) statusText.innerHTML = '🔴 غير متصل';
+  updateWaveUIStatus('disconnected');
   const el3 = document.getElementById('waveNameLabel'); if (el3) el3.textContent = 'لا توجد فرقة';
   const el4 = document.getElementById('waveNameValue'); if (el4) el4.textContent = '—';
   const el5 = document.getElementById('lcdLine3'); if (el5) el5.textContent = '--- • RX';
@@ -2389,10 +2416,11 @@ window.addEventListener('DOMContentLoaded', async () => {
     const el3 = document.getElementById('lcdLine3');
     if (el3) el3.textContent = savedWaveId + ' • RX';
     
+    // نضع الحالة مؤقتاً كـ "جاري الاتصال"
     const statusChip = document.getElementById('waveStatusChip');
     const statusText = document.getElementById('waveStatusText');
     if (statusChip) { statusChip.classList.remove('disconnected'); statusChip.classList.add('live'); }
-    if (statusText) statusText.innerHTML = '🟢 متصل';
+    if (statusText) statusText.innerHTML = '🟡 جاري الاتصال...';
 
     setTimeout(() => joinWaveAsMember(savedWaveId), 1500);
   }
