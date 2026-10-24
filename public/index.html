@@ -653,7 +653,6 @@ async function connectWaveChannel() {
         updateWaveUIStatus('disconnected');
       });
       
-      // ✅ استخدام الرابط القديم مباشرة (الذي كان يعمل)
       await waveRoom.connect(LIVEKIT_URL, tokenData.token);
       return true;
     } catch (e) {
@@ -765,7 +764,6 @@ function stopTalking() {
   if (pttMain) pttMain.classList.remove('holding');
   document.body.classList.remove('ptt-active');
   
-  // ✅ التعديل المطلوب فقط: الحالة بعد رفع الإصبع تكون أصفر إذا كان داخل فرقة، وأخضر إذا كان متصلاً
   if (currentUser.waveId) {
       if (waveRoom && waveRoom.state === "connected") {
           updateWaveUIStatus('connected');
@@ -1421,6 +1419,16 @@ async function saveWaveName() {
       body: JSON.stringify({ waveId: currentUser.waveId, newName: name, deviceId: currentUser.id })
     });
     currentUser.waveName = name;
+    
+    // ✅ التعديل 1: تحديث اسم الفرقة في الذاكرة المحلية عشان تظهر في سجل العمليات
+    let list = JSON.parse(localStorage.getItem('rc_user_waves_list') || '[]');
+    let existingIndex = list.findIndex(w => w.id === currentUser.waveId);
+    if (existingIndex !== -1) {
+      list[existingIndex].name = name;
+      localStorage.setItem('rc_user_waves_list', JSON.stringify(list));
+    }
+    // -------------------------------------------------------------
+
     const el1 = document.getElementById('waveNameValue'); if (el1) el1.textContent = name;
     const el2 = document.getElementById('waveNameLabel'); if (el2) el2.textContent = name;
     toast('✅ تم تحديث اسم الفرقة', 'success');
@@ -1456,6 +1464,23 @@ async function refreshChatList() {
     const empty = document.getElementById('emptyRoom');
     
     let htmlContent = '';
+
+    // ✅ التعديل 2: إضافة الغرف التي قمت بإنشائها للقائمة عشان تقدر تختبرها
+    let localRooms = JSON.parse(localStorage.getItem('rc_user_rooms_list') || '[]');
+    if (localRooms.length > 0) {
+      localRooms.forEach(r => {
+        const initial = (r.name || '?').charAt(0);
+        htmlContent += `<div class="chat-list-item" onclick="openChatWith('self', '${r.name.replace(/'/g, "")}', 'conv_self_${r.code}')">
+          <div class="chat-list-avatar" style="background:linear-gradient(135deg, var(--green), var(--cyan-dark));">${initial}</div>
+          <div class="chat-list-info">
+            <div class="chat-list-name">${r.name} (غرفتك)</div>
+            <div class="chat-list-last">اختبر المحادثة مع نفسك</div>
+          </div>
+          <div class="chat-list-time">👤</div>
+        </div>`;
+      });
+    }
+    // -------------------------------------------------------------
 
     if (data.conversations && data.conversations.length > 0) {
       data.conversations.forEach(c => {
@@ -1897,6 +1922,10 @@ async function createRoom() {
   localStorage.setItem('rc_saved_room_name', name);
   localStorage.setItem('rc_is_room_owner', 'true');
   
+  // ✅ التعديل 3: حفظ الغرفة في السجل المحلي عشان تظهر في قائمة الغرف
+  addRoomToHistory(roomCode, name);
+  // -------------------------------------------------------------------------
+
   document.getElementById('createdRoomCode').textContent = roomCode;
   document.getElementById('roomNameLabel').textContent = name;
   document.getElementById('roomName').value = '';
@@ -1921,6 +1950,9 @@ async function createRoom() {
       يمكنك مشاركة هذا الرقم مع أصدقائك للبحث عنه.
     </div>
   `;
+  
+  // تحديث قائمة الغرف فوراً
+  refreshChatList();
 }
 
 function saveRoomName() {
