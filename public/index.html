@@ -403,7 +403,6 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
         </div>
       </header>
       <div class="settings-list">
-        <!-- ✅ إضافة اسم المستخدم -->
         <div class="setting-item" onclick="openEditName()">
           <div class="setting-info"><span class="setting-title">👤 اسمك</span><span class="setting-desc">الاسم الذي يظهر للآخرين</span></div>
           <span class="setting-value" id="userNameValue">—</span>
@@ -490,7 +489,6 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
 
   <input type="file" id="hiddenFileInput" style="display:none;">
     <script>
-      // تم تشفير الروابط لحمايتها من العبث
 const SERVER_URL = atob('aHR0cHM6Ly9yYWRpby1jb25uZWN0LXNlcnZlci5vbnJlbmRlci5jb20=');
 const LIVEKIT_URL = atob('d3NzOi8vcmFkaW9jb25uZWN0LTh1eWg1M3FjLmxpdmVraXQuY2xvdWQ=');
 
@@ -589,6 +587,10 @@ async function disconnectWaveRoom() {
       try { waveRoom.localParticipant.unpublishTrack(waveLocalAudioTrack); waveLocalAudioTrack.stop(); } catch(e){}
       waveLocalAudioTrack = null;
     }
+    if (rawMicStream) {
+        rawMicStream.getTracks().forEach(t => t.stop());
+        rawMicStream = null;
+    }
     if (waveRoom) { await waveRoom.disconnect(); waveRoom = null; }
     document.querySelectorAll('audio[data-lk-track]').forEach(el => el.remove());
   } catch(e) {}
@@ -610,21 +612,35 @@ async function connectWaveChannel() {
       if (!tokenData.token) return false;
       
       waveRoom = new window.LivekitClient.Room();
+      
       waveRoom.on(window.LivekitClient.RoomEvent.TrackSubscribed, (track, pub, participant) => {
         if (track.kind === "audio") {
           const audioElement = track.attach();
           audioElement.volume = 1.0;
-          audioElement.autoplay = true;
           document.body.appendChild(audioElement);
+          
+          const playPromise = audioElement.play();
+          if (playPromise !== undefined) {
+            playPromise.catch(error => {
+              console.warn("Autoplay prevented:", error);
+              toast("⚠️ يرجى النقر على الشاشة لتفعيل الصوت", "error");
+              document.addEventListener('click', () => {
+                  audioElement.play().catch(()=>{});
+              }, { once: true });
+            });
+          }
         }
       });
+      
       waveRoom.on(window.LivekitClient.RoomEvent.TrackUnsubscribed, (track) => {
         track.detach().forEach(el => el.remove());
       });
+      
       waveRoom.on(window.LivekitClient.RoomEvent.Disconnected, () => {
         waveRoom = null;
         if (isTalking) stopTalking();
       });
+      
       await waveRoom.connect(LIVEKIT_URL, tokenData.token);
       return true;
     } catch (e) {
@@ -638,6 +654,31 @@ async function connectWaveChannel() {
   return waveRoomPromise;
 }
 
+async function ensureMicAndPublish() {
+    if (waveLocalAudioTrack) return;
+    try {
+        if (!rawMicStream) {
+            rawMicStream = await navigator.mediaDevices.getUserMedia({ 
+                audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true, channelCount: 1, sampleRate: 48000 } 
+            });
+        }
+        
+        if (!waveRoom || waveRoom.state !== "connected") {
+            await connectWaveChannel();
+        }
+        
+        if (waveRoom && waveRoom.state === "connected" && rawMicStream) {
+            const track = await window.LivekitClient.LocalAudioTrack.createTrack(rawMicStream.getAudioTracks()[0]);
+            waveLocalAudioTrack = track;
+            await waveRoom.localParticipant.publishTrack(waveLocalAudioTrack, { source: window.LivekitClient.Track.Source.Microphone });
+            waveLocalAudioTrack.mute(); 
+        }
+    } catch(e) {
+        console.error("Mic setup error:", e);
+        throw e;
+    }
+}
+
 async function onPTTStart() {
   if (isTalking) return;
   if (!currentUser.waveId) { toast('⚠️ انضم إلى فرقة أولاً', 'error'); return; }
@@ -648,10 +689,12 @@ async function onPTTStart() {
   const pttMain = document.getElementById('pttMain');
   pttMain.classList.add('holding');
   document.body.classList.add('ptt-active');
+  
   const statusChip = document.getElementById('waveStatusChip');
   const statusText = document.getElementById('waveStatusText');
   if (statusChip) { statusChip.classList.add('live'); statusChip.classList.remove('disconnected'); }
   if (statusText) statusText.innerHTML = '🟢 يتحدث';
+  
   const lcd3 = document.getElementById('lcdLine3');
   if (lcd3) lcd3.textContent = (currentUser.radCode || '—') + ' • TX';
   startWaveTimer();
@@ -660,50 +703,15 @@ async function onPTTStart() {
   PTTEngine.playStartBeep();
   
   try {
-    rawMicStream = await navigator.mediaDevices.getUserMedia({ 
-        audio: { 
-            echoCancellation: true, 
-            noiseSuppression: true, 
-            autoGainControl: true,
-            channelCount: 1,
-            sampleRate: 48000
-        } 
-    });
-    
-    if (mySession !== currentPttSession) {
-      rawMicStream.getTracks().forEach(t => t.stop());
-      rawMicStream = null;
-      return;
+    if (!waveLocalAudioTrack) {
+        await ensureMicAndPublish();
     }
-
-    if (!waveRoom || waveRoom.participants.size === 0) {
-      localTestAudio = new Audio();
-      localTestAudio.srcObject = rawMicStream;
-      localTestAudio.volume = 1.0;
-      localTestAudio.play().catch(()=>{});
-    }
-    
-    await connectWaveChannel();
-
-    if (mySession !== currentPttSession) {
-      if (rawMicStream) { rawMicStream.getTracks().forEach(t => t.stop()); rawMicStream = null; }
-      return;
-    }
-
-    if (waveRoom && waveRoom.state === "connected" && rawMicStream) {
-      const track = await window.LivekitClient.LocalAudioTrack.createTrack(rawMicStream.getAudioTracks()[0]);
-      
-      if (mySession !== currentPttSession) {
-        track.stop();
-        return;
-      }
-
-      waveLocalAudioTrack = track;
-      waveRoom.localParticipant.publishTrack(waveLocalAudioTrack);
-      waveLocalAudioTrack.enable();
+    if (waveLocalAudioTrack) {
+        await waveLocalAudioTrack.unmute();
     }
   } catch (err) {
-    toast("⚠️ تعذر تشغيل الميكروفون");
+    console.error(err);
+    toast("⚠️ تعذر تشغيل الميكروفون. تأكد من السماح بالوصول.");
     stopTalking();
   }
 }
@@ -713,22 +721,8 @@ function stopTalking() {
   
   if (isTalking) PTTEngine.playEndBeep();
   
-  if (localTestAudio) {
-    try { localTestAudio.pause(); localTestAudio.srcObject = null; } catch (e) {}
-    localTestAudio = null;
-  }
-  
-  if (waveLocalAudioTrack && waveRoom) {
-    try { 
-        waveRoom.localParticipant.unpublishTrack(waveLocalAudioTrack); 
-        waveLocalAudioTrack.stop(); 
-    } catch (e) {}
-    waveLocalAudioTrack = null;
-  }
-  
-  if (rawMicStream) {
-    rawMicStream.getTracks().forEach(t => t.stop());
-    rawMicStream = null;
+  if (waveLocalAudioTrack) {
+    waveLocalAudioTrack.mute();
   }
   
   isTalking = false;
@@ -834,7 +828,6 @@ function initSocket() {
     refreshChatList();
   });
 
-  // ✅ استقبال طلبات الصداقة وطلبات الانضمام للفرق القادمة كرسائل نصية
   socket.on('new_direct_message', (payload) => {
     try {
       let txt = payload?.message?.text || payload?.text || '';
@@ -857,7 +850,6 @@ function initSocket() {
           PTTEngine.playRealBeep();
         }
       } 
-      // ✅ التعديل الجديد: استقبال رسالة "تمت الموافقة" والدخول للفرقة فوراً
       else if (typeof txt === 'string' && txt.includes('wave_join_approved')) {
         let obj = JSON.parse(txt);
         if (obj.type === 'wave_join_approved') {
@@ -915,7 +907,6 @@ async function registerUser() {
       const el4 = document.getElementById('lcdLine3'); if (el4 && !currentUser.waveId) el4.textContent = '--- • RX';
     }
     
-    // تحديث الاسم في الواجهة
     const elName = document.getElementById('userNameValue'); 
     if (elName) elName.textContent = currentUser.name || '—';
 
@@ -938,7 +929,6 @@ function saveUserName() {
   localStorage.setItem('rc_user_name', v);
   closeModal('modalUserName');
   
-  // تحديث الاسم في شاشة الإعدادات
   const elName = document.getElementById('userNameValue'); 
   if (elName) elName.textContent = v;
   
@@ -989,8 +979,13 @@ async function createWave() {
     localStorage.setItem('rc_is_wave_owner', 'true');
     addWaveToHistory(data.waveId, name);
     await PTTEngine.init(); PTTEngine.playStartBeep();
-    await connectWaveChannel();
+    
     if (socket) socket.emit('wave_join', { waveId: data.waveId, deviceId: currentUser.id, userName: currentUser.name });
+    
+    connectWaveChannel().then(() => {
+        ensureMicAndPublish().catch(e => console.warn("Silent mic setup fail:", e));
+    });
+    
     toast('✅ تم إنشاء الفرقة "' + name + '"', 'success');
   } catch (e) { toast('❌ ' + e.message, 'error'); }
 }
@@ -1010,13 +1005,19 @@ async function joinWaveAsMember(waveId) {
     }
     if (data.members) renderWaveMembers(data.members);
   } catch (e) {}
+  
   const el1 = document.getElementById('waveCodeChip'); if (el1) el1.innerHTML = waveId + ' <span style="font-size:12px;">🔑</span>';
   const el2 = document.getElementById('waveCodeValue'); if (el2) el2.textContent = waveId;
   const el3 = document.getElementById('lcdLine3'); if (el3) el3.textContent = waveId + ' • RX';
   localStorage.setItem('rc_saved_wave_id', waveId);
   localStorage.setItem('rc_saved_wave_name', currentUser.waveName || '');
-  await connectWaveChannel();
+  
   if (socket) socket.emit('wave_join', { waveId, deviceId: currentUser.id, userName: currentUser.name });
+  
+  connectWaveChannel().then(() => {
+      ensureMicAndPublish().catch(e => console.warn("Silent mic setup fail:", e));
+  });
+  
   toast('✅ انضممت إلى الفرقة', 'success');
 }
 
@@ -1035,7 +1036,6 @@ function doSearch() {
         }
         searchResultUser = { name: data.waveName || 'فرقة', code: data.waveId, ownerId: ownerId, type: 'wave' };
         
-        // ✅ تعديل شكل نتيجة البحث لتوضيح الاسم والرقم
         res.innerHTML = `
         <div class="search-result-card" onclick="askJoinWave()">
             <div class="search-result-icon">📡</div>
@@ -2311,10 +2311,9 @@ window.addEventListener('DOMContentLoaded', async () => {
   initSocket();
   refreshChatList();
   
-  // ✅ الفحص الدوري لطلبات الانضمام (مضمون 100%)
   setInterval(async () => {
     if (!currentUser.id) return;
-    if (window._incomingRequest) return; // لا تفتح نافذة إذا كانت هناك نافذة أخرى مفتوحة
+    if (window._incomingRequest) return; 
     
     try {
       const res = await fetch(SERVER_URL + '/api/waves/pending-requests/' + currentUser.id);
@@ -2322,7 +2321,6 @@ window.addEventListener('DOMContentLoaded', async () => {
       if (data.requests && data.requests.length > 0) {
         const req = data.requests[0]; 
         
-        // ✅ تجاهل الطلب إذا كنا قد رفضناه سابقاً
         if (ignoredRequests.has(req.waveId)) return; 
 
         window._incomingRequest = req;
@@ -2332,7 +2330,7 @@ window.addEventListener('DOMContentLoaded', async () => {
         if (typeof PTTEngine !== 'undefined' && PTTEngine.playRealBeep) PTTEngine.playRealBeep();
       }
     } catch (e) {}
-  }, 3000); // يفحص كل 3 ثواني
+  }, 3000);
 
   setInterval(async () => {
     if (!currentUser.id) return;
@@ -2395,7 +2393,6 @@ window.addEventListener('DOMContentLoaded', async () => {
     if (el4 && savedRoomName) el4.textContent = savedRoomName;
   }
   
-  // تحديث الاسم في الإعدادات عند التحميل
   const elName = document.getElementById('userNameValue');
   if (elName) elName.textContent = currentUser.name || '—';
 
