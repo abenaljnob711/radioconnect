@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#05080c">
-<title>Radio Connect — راديو كونكت</title>
+<title>الجهاز اللاسلكي — نداء ودردشة</title>
 <audio id="walkieOpen" src="./walkie_open.mp3" preload="auto"></audio>
 <audio id="walkieClose" src="./walkie_close.mp3" preload="auto"></audio>
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
@@ -609,7 +609,6 @@ const PTTEngine = {
 
 async function disconnectWaveRoom() {
   try {
-    // ✅ التعديل: إغلاق المايك وتنظيف الميديا عند الخروج من الفرقة نهائياً
     if (waveLocalAudioTrack && waveRoom) {
       try { waveRoom.localParticipant.unpublishTrack(waveLocalAudioTrack); } catch(e){}
       waveLocalAudioTrack.stop();
@@ -676,12 +675,38 @@ async function connectWaveChannel() {
   return waveRoomPromise;
 }
 
-async function onPTTStart() {
+// ✅ التعديل الجذري: تجهيز المايك والاتصال مسبقاً عند الانضمام للفرقة
+async function prepareAudioForWave() {
+    if (rawMicStream && waveLocalAudioTrack) return;
+    try {
+        rawMicStream = await navigator.mediaDevices.getUserMedia({ 
+            audio: {
+                echoCancellation: true,
+                noiseSuppression: true,
+                autoGainControl: true
+            } 
+        });
+        
+        await connectWaveChannel();
+        
+        if (waveRoom && waveRoom.state === "connected" && rawMicStream) {
+            const track = await window.LivekitClient.LocalAudioTrack.createTrack(rawMicStream.getAudioTracks()[0]);
+            waveLocalAudioTrack = track;
+            await waveRoom.localParticipant.publishTrack(waveLocalAudioTrack);
+            waveLocalAudioTrack.disable(); // يبدأ مكتوماً (صامت)
+        }
+    } catch(e) {
+        console.error("Audio init error:", e);
+    }
+}
+
+// ✅ التعديل الجذري: الضغط يفتح الصوت فقط (فوري جداً)
+function onPTTStart() {
   if (isTalking) return;
   if (!currentUser.waveId) { toast('⚠️ انضم إلى فرقة أولاً', 'error'); return; }
   
-  const mySession = ++currentPttSession; 
   isTalking = true;
+  PTTEngine.init().then(() => PTTEngine.playStartBeep());
   
   const pttMain = document.getElementById('pttMain');
   pttMain.classList.add('holding');
@@ -693,73 +718,30 @@ async function onPTTStart() {
   if (lcd3) lcd3.textContent = (currentUser.radCode || '—') + ' • TX';
   startWaveTimer();
   
-  await PTTEngine.init();
-  PTTEngine.playStartBeep();
-  
-  try {
-    // ✅ التعديل هنا: الاتصال بالغرفة أولاً
-    await connectWaveChannel();
-    if (mySession !== currentPttSession) return;
-    
-    if (waveRoom && waveRoom.state === "connected") {
-      // ✅ التعديل: إذا لم يكن هناك تراك مايك، ننشئه مرة واحدة فقط
-      if (!waveLocalAudioTrack) {
-        rawMicStream = await navigator.mediaDevices.getUserMedia({ 
-            audio: {
-                echoCancellation: true,
-                noiseSuppression: true,
-                autoGainControl: true
-            } 
-        });
-        
-        if (mySession !== currentPttSession) {
-          rawMicStream.getTracks().forEach(t => t.stop());
-          rawMicStream = null;
-          return;
-        }
-
-        const track = await window.LivekitClient.LocalAudioTrack.createTrack(rawMicStream.getAudioTracks()[0]);
-        waveLocalAudioTrack = track;
-        await waveRoom.localParticipant.publishTrack(waveLocalAudioTrack);
-      }
-      
-      // ✅ التعديل: نقوم بفتح الصوت فقط بدل تشغيل المايك من جديد
-      if (mySession === currentPttSession) {
-        waveLocalAudioTrack.enable();
-      }
-    }
-  } catch (err) {
-    toast("⚠️ تعذر تشغيل الميكروفون");
-    stopTalking();
+  if (waveLocalAudioTrack) {
+      waveLocalAudioTrack.enable();
+  } else {
+      // إذا كان المايك لسه بيجهز، نشغله فور ما يجهز
+      prepareAudioForWave().then(() => {
+          if (isTalking && waveLocalAudioTrack) waveLocalAudioTrack.enable();
+      });
   }
 }
 
+// ✅ التعديل الجذري: رفع الإصبع يكتم الصوت فقط (بدون فصل)
 function stopTalking() {
-  if (!isTalking) return; // حماية إضافية
-  
-  currentPttSession++; 
-  
-  if (isTalking) PTTEngine.playEndBeep();
-  
-  if (localTestAudio) {
-    try { localTestAudio.pause(); localTestAudio.srcObject = null; } catch (e) {}
-    localTestAudio = null;
-  }
-  
-  // ✅ التعديل: نقوم بكتم الصوت فقط بدل إغلاق المايك بالكامل
-  if (waveLocalAudioTrack) {
-    try { 
-        waveLocalAudioTrack.disable(); 
-    } catch (e) {}
-  }
-  
-  // لا نغلق rawMicStream هنا أبداً لضمان عدم فصله
+  if (!isTalking) return;
   
   isTalking = false;
+  PTTEngine.playEndBeep();
   
   const pttMain = document.getElementById('pttMain');
   if (pttMain) pttMain.classList.remove('holding');
   document.body.classList.remove('ptt-active');
+  
+  if (waveLocalAudioTrack) {
+      try { waveLocalAudioTrack.disable(); } catch(e) {}
+  }
   
   if (currentUser.waveId) {
       if (waveRoom && waveRoom.state === "connected") {
@@ -783,7 +765,7 @@ function stopTalking() {
 
 const pttMainBtn = document.getElementById('pttMain');
 
-// ✅ التعديل: استخدام أحداث اللمس للموبايل بدل الـ Pointer
+// أحداث اللمس للموبايل
 function handlePressStart(e) {
     if (e.cancelable) e.preventDefault();
     if (isPttActive) return;
@@ -802,6 +784,7 @@ pttMainBtn.addEventListener('touchstart', handlePressStart, { passive: false });
 pttMainBtn.addEventListener('touchend', handlePressEnd, { passive: false });
 pttMainBtn.addEventListener('touchcancel', handlePressEnd, { passive: false });
 
+// أحداث الماوس للكمبيوتر
 pttMainBtn.addEventListener('mousedown', handlePressStart);
 pttMainBtn.addEventListener('mouseup', handlePressEnd);
 pttMainBtn.addEventListener('mouseleave', (e) => {
@@ -1030,7 +1013,7 @@ async function createWave() {
     
     if (socket) socket.emit('wave_join', { waveId: data.waveId, deviceId: currentUser.id, userName: currentUser.name });
     
-    connectWaveChannel();
+    prepareAudioForWave(); // ✅ التعديل: تجهيز المايك فوراً بعد إنشاء الفرقة
     
     toast('✅ تم إنشاء الفرقة "' + name + '"', 'success');
   } catch (e) { toast('❌ ' + e.message, 'error'); }
@@ -1060,7 +1043,7 @@ async function joinWaveAsMember(waveId) {
   
   if (socket) socket.emit('wave_join', { waveId, deviceId: currentUser.id, userName: currentUser.name });
   
-  connectWaveChannel();
+  prepareAudioForWave(); // ✅ التعديل: تجهيز المايك فوراً بعد الانضمام للفرقة
   
   toast('✅ انضممت إلى الفرقة', 'success');
 }
