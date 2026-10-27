@@ -272,8 +272,8 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
         <button class="menu-toggle" id="menuToggle" title="القائمة">☰</button>
         <div class="brand">
           <div class="brand-text">
-            <span class="brand-title">Radio Connect</span>
-            <span class="brand-sub">راديو كونكت</span>
+            <span class="brand-title">الجهاز اللاسلكي</span>
+            <span class="brand-sub">نداء ودردشة</span>
           </div>
           <span class="brand-icon">📻</span>
         </div>
@@ -436,7 +436,7 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
           <span class="setting-value" style="color:var(--red);">مسح شامل</span>
         </div>
         <div class="setting-item" onclick="toast('الإصدار 4.3.0')">
-          <div class="setting-info"><span class="setting-title">ℹ️ حول التطبيق</span><span class="setting-desc">Radio Connect</span></div>
+          <div class="setting-info"><span class="setting-title">ℹ️ حول التطبيق</span><span class="setting-desc">الجهاز اللاسلكي</span></div>
           <span class="setting-value">v4.3</span>
         </div>
       </div>
@@ -609,9 +609,15 @@ const PTTEngine = {
 
 async function disconnectWaveRoom() {
   try {
+    // ✅ التعديل: إغلاق المايك وتنظيف الميديا عند الخروج من الفرقة نهائياً
     if (waveLocalAudioTrack && waveRoom) {
-      try { waveRoom.localParticipant.unpublishTrack(waveLocalAudioTrack); waveLocalAudioTrack.stop(); } catch(e){}
+      try { waveRoom.localParticipant.unpublishTrack(waveLocalAudioTrack); } catch(e){}
+      waveLocalAudioTrack.stop();
       waveLocalAudioTrack = null;
+    }
+    if (rawMicStream) {
+      rawMicStream.getTracks().forEach(t => t.stop());
+      rawMicStream = null;
     }
     if (waveRoom) { await waveRoom.disconnect(); waveRoom = null; }
     document.querySelectorAll('audio[data-lk-track]').forEach(el => el.remove());
@@ -691,46 +697,36 @@ async function onPTTStart() {
   PTTEngine.playStartBeep();
   
   try {
-    // ✅ التعديل هنا: تبسيط إعدادات المايك عشان الموبايل ما يقطعش
-    rawMicStream = await navigator.mediaDevices.getUserMedia({ 
-        audio: {
-            echoCancellation: true,
-            noiseSuppression: true,
-            autoGainControl: true
-        } 
-    });
-    
-    if (mySession !== currentPttSession) {
-      rawMicStream.getTracks().forEach(t => t.stop());
-      rawMicStream = null;
-      return;
-    }
-
-    if (!waveRoom || waveRoom.participants.size === 0) {
-      localTestAudio = new Audio();
-      localTestAudio.srcObject = rawMicStream;
-      localTestAudio.volume = 1.0;
-      localTestAudio.play().catch(()=>{});
-    }
-    
+    // ✅ التعديل هنا: الاتصال بالغرفة أولاً
     await connectWaveChannel();
+    if (mySession !== currentPttSession) return;
+    
+    if (waveRoom && waveRoom.state === "connected") {
+      // ✅ التعديل: إذا لم يكن هناك تراك مايك، ننشئه مرة واحدة فقط
+      if (!waveLocalAudioTrack) {
+        rawMicStream = await navigator.mediaDevices.getUserMedia({ 
+            audio: {
+                echoCancellation: true,
+                noiseSuppression: true,
+                autoGainControl: true
+            } 
+        });
+        
+        if (mySession !== currentPttSession) {
+          rawMicStream.getTracks().forEach(t => t.stop());
+          rawMicStream = null;
+          return;
+        }
 
-    if (mySession !== currentPttSession) {
-      if (rawMicStream) { rawMicStream.getTracks().forEach(t => t.stop()); rawMicStream = null; }
-      return;
-    }
-
-    if (waveRoom && waveRoom.state === "connected" && rawMicStream) {
-      const track = await window.LivekitClient.LocalAudioTrack.createTrack(rawMicStream.getAudioTracks()[0]);
-      
-      if (mySession !== currentPttSession) {
-        track.stop();
-        return;
+        const track = await window.LivekitClient.LocalAudioTrack.createTrack(rawMicStream.getAudioTracks()[0]);
+        waveLocalAudioTrack = track;
+        await waveRoom.localParticipant.publishTrack(waveLocalAudioTrack);
       }
-
-      waveLocalAudioTrack = track;
-      waveRoom.localParticipant.publishTrack(waveLocalAudioTrack);
-      waveLocalAudioTrack.enable();
+      
+      // ✅ التعديل: نقوم بفتح الصوت فقط بدل تشغيل المايك من جديد
+      if (mySession === currentPttSession) {
+        waveLocalAudioTrack.enable();
+      }
     }
   } catch (err) {
     toast("⚠️ تعذر تشغيل الميكروفون");
@@ -739,6 +735,8 @@ async function onPTTStart() {
 }
 
 function stopTalking() {
+  if (!isTalking) return; // حماية إضافية
+  
   currentPttSession++; 
   
   if (isTalking) PTTEngine.playEndBeep();
@@ -748,18 +746,14 @@ function stopTalking() {
     localTestAudio = null;
   }
   
-  if (waveLocalAudioTrack && waveRoom) {
+  // ✅ التعديل: نقوم بكتم الصوت فقط بدل إغلاق المايك بالكامل
+  if (waveLocalAudioTrack) {
     try { 
-        waveRoom.localParticipant.unpublishTrack(waveLocalAudioTrack); 
-        waveLocalAudioTrack.stop(); 
+        waveLocalAudioTrack.disable(); 
     } catch (e) {}
-    waveLocalAudioTrack = null;
   }
   
-  if (rawMicStream) {
-    rawMicStream.getTracks().forEach(t => t.stop());
-    rawMicStream = null;
-  }
+  // لا نغلق rawMicStream هنا أبداً لضمان عدم فصله
   
   isTalking = false;
   
@@ -789,7 +783,7 @@ function stopTalking() {
 
 const pttMainBtn = document.getElementById('pttMain');
 
-// ✅ التعديل هنا: استخدام أحداث اللمس للموبايل بدل الـ Pointer
+// ✅ التعديل: استخدام أحداث اللمس للموبايل بدل الـ Pointer
 function handlePressStart(e) {
     if (e.cancelable) e.preventDefault();
     if (isPttActive) return;
@@ -804,12 +798,10 @@ function handlePressEnd(e) {
     stopTalking();
 }
 
-// أحداث اللمس (للموبايل)
 pttMainBtn.addEventListener('touchstart', handlePressStart, { passive: false });
 pttMainBtn.addEventListener('touchend', handlePressEnd, { passive: false });
 pttMainBtn.addEventListener('touchcancel', handlePressEnd, { passive: false });
 
-// أحداث الماوس (للكمبيوتر)
 pttMainBtn.addEventListener('mousedown', handlePressStart);
 pttMainBtn.addEventListener('mouseup', handlePressEnd);
 pttMainBtn.addEventListener('mouseleave', (e) => {
