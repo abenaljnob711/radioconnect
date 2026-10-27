@@ -3,14 +3,11 @@ const http = require('http');
 const { Server } = require("socket.io");
 const cors = require('cors');
 const path = require('path');
-require('dotenv').config(); // عشان يقرأ المفاتيح لو شغال محلياً
 const { AccessToken } = require('livekit-server-sdk');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
-
-// لتقديم ملفات الواجهة (لو هتستضيف الواجهة على نفس السيرفر)
 app.use(express.static(path.join(__dirname, 'public')));
 
 const server = http.createServer(app);
@@ -61,16 +58,14 @@ app.get('/api/waves/:id', (req, res) => {
     else res.status(404).json({ error: 'Wave not found' });
 });
 
-// 5. مسار توليد توكن LiveKit الحقيقي (للصوت)
+// 5. مسار توليد توكن LiveKit
 app.post('/api/livekit/token', async (req, res) => {
     const { roomId, deviceId, userName } = req.body;
 
-    // ⚠️ بنقرأ المفاتيح من إعدادات Render (Environment Variables)
     const API_KEY = process.env.LIVEKIT_API_KEY; 
     const API_SECRET = process.env.LIVEKIT_API_SECRET; 
 
     if (!API_KEY || !API_SECRET) {
-        console.error('❌ مفاتيح LiveKit غير موجودة في إعدادات Render!');
         return res.status(500).json({ error: 'Server configuration error' });
     }
 
@@ -78,7 +73,7 @@ app.post('/api/livekit/token', async (req, res) => {
         const at = new AccessToken(API_KEY, API_SECRET, {
             identity: deviceId || 'user_' + Date.now(),
             name: userName || 'مستخدم',
-            ttl: '2h' // صلاحية التوكن ساعتين
+            ttl: '2h' 
         });
 
         at.addGrant({ 
@@ -91,35 +86,58 @@ app.post('/api/livekit/token', async (req, res) => {
         const token = await at.toJwt();
         res.json({ token });
     } catch (error) {
-        console.error('خطأ في التوكن:', error);
         res.status(500).json({ error: 'فشل توليد التوكن' });
     }
 });
 
-// إعدادات Socket.io للرسائل الفورية
+// ==========================================
+// إعدادات Socket.io (الرسائل + طلبات الانضمام)
+// ==========================================
 io.on('connection', (socket) => {
-    console.log('مستخدم متصل:', socket.id);
-
+    
     socket.on('register_device', (data) => {
         socket.join(data.deviceId);
     });
 
+    // 1. انضمام مباشر
     socket.on('wave_join', (data) => {
         socket.join(data.waveId);
         if(waves[data.waveId] && !waves[data.waveId].members.find(m => m.id === data.deviceId)) {
-            waves[data.waveId].members.push({ id: data.deviceId, name: data.userName, online: true, isOwner: false });
+            waves[data.waveId].members.push({ id: data.deviceId, name: data.userName || 'مستخدم', online: true, isOwner: false });
         }
         if(waves[data.waveId]) {
             io.to(data.waveId).emit('wave_members_updated', { members: waves[data.waveId].members });
         }
     });
     
+    // 2. طلب انضمام (من شخص غريب للمالك)
+    socket.on('wave_join_request', (data) => {
+        if (data.toDeviceId) {
+            io.to(data.toDeviceId).emit('wave_join_request_received', data);
+        }
+    });
+
+    // 3. رد المالك (قبول أو رفض)
+    socket.on('wave_join_response', (data) => {
+        if (data.accepted) {
+            if (waves[data.waveId] && !waves[data.waveId].members.find(m => m.id === data.fromDeviceId)) {
+                waves[data.waveId].members.push({ id: data.fromDeviceId, name: 'عضو جديد', online: true, isOwner: false });
+            }
+            io.to(data.fromDeviceId).emit('wave_join_response_received', { accepted: true, waveId: data.waveId });
+            if (waves[data.waveId]) {
+                io.to(data.waveId).emit('wave_members_updated', { members: waves[data.waveId].members });
+            }
+        } else {
+            io.to(data.fromDeviceId).emit('wave_join_response_received', { accepted: false });
+        }
+    });
+    
+    // 4. الرسائل
     socket.on('send_direct_message', (data) => {
          io.to(data.toDeviceId).emit('new_direct_message', { conversationId: data.conversationId, message: data.message });
     });
 });
 
-// تشغيل السيرفر
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, '0.0.0.0', () => {
     console.log(`✅ Server is running on port ${PORT}`);
