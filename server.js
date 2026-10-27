@@ -58,7 +58,7 @@ app.get('/api/waves/:id', (req, res) => {
     else res.status(404).json({ error: 'Wave not found' });
 });
 
-// 5. مسار توليد توكن LiveKit
+// 5. مسار توليد توكن LiveKit الحقيقي (للصوت)
 app.post('/api/livekit/token', async (req, res) => {
     const { roomId, deviceId, userName } = req.body;
 
@@ -90,49 +90,22 @@ app.post('/api/livekit/token', async (req, res) => {
     }
 });
 
-// ==========================================
-// إعدادات Socket.io (الرسائل + طلبات الانضمام)
-// ==========================================
+// إعدادات Socket.io للرسائل
 io.on('connection', (socket) => {
-    
     socket.on('register_device', (data) => {
         socket.join(data.deviceId);
     });
 
-    // 1. انضمام مباشر
     socket.on('wave_join', (data) => {
         socket.join(data.waveId);
         if(waves[data.waveId] && !waves[data.waveId].members.find(m => m.id === data.deviceId)) {
-            waves[data.waveId].members.push({ id: data.deviceId, name: data.userName || 'مستخدم', online: true, isOwner: false });
+            waves[data.waveId].members.push({ id: data.deviceId, name: data.userName, online: true, isOwner: false });
         }
         if(waves[data.waveId]) {
             io.to(data.waveId).emit('wave_members_updated', { members: waves[data.waveId].members });
         }
     });
     
-    // 2. طلب انضمام (من شخص غريب للمالك)
-    socket.on('wave_join_request', (data) => {
-        if (data.toDeviceId) {
-            io.to(data.toDeviceId).emit('wave_join_request_received', data);
-        }
-    });
-
-    // 3. رد المالك (قبول أو رفض)
-    socket.on('wave_join_response', (data) => {
-        if (data.accepted) {
-            if (waves[data.waveId] && !waves[data.waveId].members.find(m => m.id === data.fromDeviceId)) {
-                waves[data.waveId].members.push({ id: data.fromDeviceId, name: 'عضو جديد', online: true, isOwner: false });
-            }
-            io.to(data.fromDeviceId).emit('wave_join_response_received', { accepted: true, waveId: data.waveId });
-            if (waves[data.waveId]) {
-                io.to(data.waveId).emit('wave_members_updated', { members: waves[data.waveId].members });
-            }
-        } else {
-            io.to(data.fromDeviceId).emit('wave_join_response_received', { accepted: false });
-        }
-    });
-    
-    // 4. الرسائل
     socket.on('send_direct_message', (data) => {
          io.to(data.toDeviceId).emit('new_direct_message', { conversationId: data.conversationId, message: data.message });
     });
