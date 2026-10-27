@@ -493,7 +493,7 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
 
   <input type="file" id="hiddenFileInput" style="display:none;">
     <script>
-// ✅ تم تعديل رابط السيرفر ليشير إلى Render الجديد
+// ✅ رابط السيرفر
 const SERVER_URL = 'https://radio-connect-server.onrender.com';
 const LIVEKIT_URL = atob('d3NzOi8vcmFkaW9jb25uZWN0LTh1eWg1M3FjLmxpdmVraXQuY2xvdWQ=');
 
@@ -691,13 +691,12 @@ async function onPTTStart() {
   PTTEngine.playStartBeep();
   
   try {
+    // ✅ التعديل هنا: تبسيط إعدادات المايك عشان الموبايل ما يقطعش
     rawMicStream = await navigator.mediaDevices.getUserMedia({ 
-        audio: { 
-            echoCancellation: true, 
-            noiseSuppression: true, 
-            autoGainControl: true,
-            channelCount: 1,
-            sampleRate: 48000
+        audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true
         } 
     });
     
@@ -790,38 +789,35 @@ function stopTalking() {
 
 const pttMainBtn = document.getElementById('pttMain');
 
-pttMainBtn.addEventListener('pointerdown', (e) => {
-  e.preventDefault();
-  if (isPttActive) return;
-  isPttActive = true;
-  if (pttMainBtn.setPointerCapture) {
-    try { pttMainBtn.setPointerCapture(e.pointerId); } catch(ex){}
-  }
-  onPTTStart();
-});
+// ✅ التعديل هنا: استخدام أحداث اللمس للموبايل بدل الـ Pointer
+function handlePressStart(e) {
+    if (e.cancelable) e.preventDefault();
+    if (isPttActive) return;
+    isPttActive = true;
+    onPTTStart();
+}
 
-pttMainBtn.addEventListener('pointerup', (e) => {
-  e.preventDefault();
-  if (!isPttActive) return;
-  isPttActive = false;
-  if (pttMainBtn.releasePointerCapture && e.pointerId) {
-    try { pttMainBtn.releasePointerCapture(e.pointerId); } catch(ex){}
-  }
-  stopTalking();
-});
+function handlePressEnd(e) {
+    if (e.cancelable) e.preventDefault();
+    if (!isPttActive) return;
+    isPttActive = false;
+    stopTalking();
+}
 
-pttMainBtn.addEventListener('pointercancel', (e) => {
-  e.preventDefault();
-  if (!isPttActive) return;
-  isPttActive = false;
-  stopTalking();
-});
+// أحداث اللمس (للموبايل)
+pttMainBtn.addEventListener('touchstart', handlePressStart, { passive: false });
+pttMainBtn.addEventListener('touchend', handlePressEnd, { passive: false });
+pttMainBtn.addEventListener('touchcancel', handlePressEnd, { passive: false });
 
-document.body.addEventListener('touchmove', function(e) {
-    if (isPttActive) e.preventDefault(); 
-}, { passive: false });
+// أحداث الماوس (للكمبيوتر)
+pttMainBtn.addEventListener('mousedown', handlePressStart);
+pttMainBtn.addEventListener('mouseup', handlePressEnd);
+pttMainBtn.addEventListener('mouseleave', (e) => {
+    if (isPttActive) handlePressEnd(e);
+});
 
 pttMainBtn.addEventListener('contextmenu', (e) => e.preventDefault());
+
 
 function initSocket() {
   if (typeof io === 'undefined') return;
@@ -1424,14 +1420,12 @@ async function saveWaveName() {
     });
     currentUser.waveName = name;
     
-    // ✅ التعديل 1: تحديث اسم الفرقة في الذاكرة المحلية عشان تظهر في سجل العمليات
     let list = JSON.parse(localStorage.getItem('rc_user_waves_list') || '[]');
     let existingIndex = list.findIndex(w => w.id === currentUser.waveId);
     if (existingIndex !== -1) {
       list[existingIndex].name = name;
       localStorage.setItem('rc_user_waves_list', JSON.stringify(list));
     }
-    // -------------------------------------------------------------
 
     const el1 = document.getElementById('waveNameValue'); if (el1) el1.textContent = name;
     const el2 = document.getElementById('waveNameLabel'); if (el2) el2.textContent = name;
@@ -1469,7 +1463,6 @@ async function refreshChatList() {
     
     let htmlContent = '';
 
-    // ✅ التعديل 2: إضافة الغرف التي قمت بإنشائها للقائمة عشان تقدر تختبرها
     let localRooms = JSON.parse(localStorage.getItem('rc_user_rooms_list') || '[]');
     if (localRooms.length > 0) {
       localRooms.forEach(r => {
@@ -1484,7 +1477,6 @@ async function refreshChatList() {
         </div>`;
       });
     }
-    // -------------------------------------------------------------
 
     if (data.conversations && data.conversations.length > 0) {
       data.conversations.forEach(c => {
@@ -1926,9 +1918,7 @@ async function createRoom() {
   localStorage.setItem('rc_saved_room_name', name);
   localStorage.setItem('rc_is_room_owner', 'true');
   
-  // ✅ التعديل 3: حفظ الغرفة في السجل المحلي عشان تظهر في قائمة الغرف
   addRoomToHistory(roomCode, name);
-  // -------------------------------------------------------------------------
 
   document.getElementById('createdRoomCode').textContent = roomCode;
   document.getElementById('roomNameLabel').textContent = name;
@@ -1955,7 +1945,6 @@ async function createRoom() {
     </div>
   `;
   
-  // تحديث قائمة الغرف فوراً
   refreshChatList();
 }
 
