@@ -492,8 +492,8 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
   <div class="modal-overlay" id="modalFriendSend"><div class="modal"><div class="modal-title">➕ إرسال طلب صداقة</div><div class="modal-sub">ابحث برقم المستخدم</div><div class="modal-field"><label>رقم المستخدم</label><input type="text" id="friendSearchCode" class="code-input" maxlength="10" placeholder="Q#####"></div><div id="friendSearchResults"></div><div class="modal-actions"><button class="modal-btn cancel" onclick="closeModal('modalFriendSend')">إلغاء</button><button class="modal-btn confirm" onclick="searchFriend()">🔍 بحث</button></div></div></div>
 
   <input type="file" id="hiddenFileInput" style="display:none;">
-    <script>
-// ✅ رابط السيرفر
+
+  <script>
 const SERVER_URL = 'https://radio-connect-server.onrender.com';
 const LIVEKIT_URL = atob('d3NzOi8vcmFkaW9jb25uZWN0LTh1eWg1M3FjLmxpdmVraXQuY2xvdWQ=');
 
@@ -636,8 +636,6 @@ async function connectWaveChannel() {
       if (!tokenData.token) return false;
       
       waveRoom = new window.LivekitClient.Room();
-      
-      // إزالة تقنية الـ AudioContext اللي كانت بتغير نبرة الصوت
       waveRoom.on(window.LivekitClient.RoomEvent.TrackSubscribed, (track, pub, participant) => {
         if (track.kind === "audio") {
           const audioElement = track.attach();
@@ -647,7 +645,6 @@ async function connectWaveChannel() {
           document.body.appendChild(audioElement);
         }
       });
-      
       waveRoom.on(window.LivekitClient.RoomEvent.TrackUnsubscribed, (track) => {
         track.detach().forEach(el => el.remove());
       });
@@ -692,12 +689,10 @@ async function onPTTStart() {
   
   try {
     rawMicStream = await navigator.mediaDevices.getUserMedia({ 
-        audio: { 
-            echoCancellation: true, 
-            noiseSuppression: true, 
-            autoGainControl: true,
-            channelCount: 1,
-            sampleRate: 48000
+        audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true
         } 
     });
     
@@ -790,36 +785,29 @@ function stopTalking() {
 
 const pttMainBtn = document.getElementById('pttMain');
 
-pttMainBtn.addEventListener('pointerdown', (e) => {
-  e.preventDefault();
-  if (isPttActive) return;
-  isPttActive = true;
-  if (pttMainBtn.setPointerCapture) {
-    try { pttMainBtn.setPointerCapture(e.pointerId); } catch(ex){}
-  }
-  onPTTStart();
-});
+function handlePressStart(e) {
+    if (e.cancelable) e.preventDefault();
+    if (isPttActive) return;
+    isPttActive = true;
+    onPTTStart();
+}
 
-pttMainBtn.addEventListener('pointerup', (e) => {
-  e.preventDefault();
-  if (!isPttActive) return;
-  isPttActive = false;
-  if (pttMainBtn.releasePointerCapture && e.pointerId) {
-    try { pttMainBtn.releasePointerCapture(e.pointerId); } catch(ex){}
-  }
-  stopTalking();
-});
+function handlePressEnd(e) {
+    if (e.cancelable) e.preventDefault();
+    if (!isPttActive) return;
+    isPttActive = false;
+    stopTalking();
+}
 
-pttMainBtn.addEventListener('pointercancel', (e) => {
-  e.preventDefault();
-  if (!isPttActive) return;
-  isPttActive = false;
-  stopTalking();
-});
+pttMainBtn.addEventListener('touchstart', handlePressStart, { passive: false });
+pttMainBtn.addEventListener('touchend', handlePressEnd, { passive: false });
+pttMainBtn.addEventListener('touchcancel', handlePressEnd, { passive: false });
 
-document.body.addEventListener('touchmove', function(e) {
-    if (isPttActive) e.preventDefault(); 
-}, { passive: false });
+pttMainBtn.addEventListener('mousedown', handlePressStart);
+pttMainBtn.addEventListener('mouseup', handlePressEnd);
+pttMainBtn.addEventListener('mouseleave', (e) => {
+    if (isPttActive) handlePressEnd(e);
+});
 
 pttMainBtn.addEventListener('contextmenu', (e) => e.preventDefault());
 
@@ -860,29 +848,11 @@ function initSocket() {
 
   socket.on('wave_join_error', ({ error }) => toast('❌ ' + error, 'error'));
 
-  socket.on('new_direct_message', ({ conversationId, message }) => {
-    if (message.sender === currentUser.id) return;
-
-    if (currentUser.currentConvId === conversationId) {
-      addChatMessage(message, 'in');
-      socket.emit('message_delivered', { messageId: message.id, conversationId: conversationId });
-    } else {
-      toast('💬 رسالة جديدة', 'success');
-    }
-    refreshChatList();
-  });
-
-  socket.on('message_delivered_ack', ({ messageId }) => {
-    const tickEl = document.getElementById(`tick_${messageId}`);
-    if (tickEl) {
-      tickEl.textContent = '✓✓';
-      tickEl.classList.add('delivered');
-    }
-  });
-
   socket.on('new_direct_message', (payload) => {
+    const { conversationId, message } = payload;
+    let txt = message?.text || payload?.text || '';
+
     try {
-      let txt = payload?.message?.text || payload?.text || '';
       if (typeof txt === 'string' && txt.includes('friend_request')) {
         let obj = JSON.parse(txt);
         if (obj.type === 'friend_request') {
@@ -891,6 +861,7 @@ function initSocket() {
             fromUserName: obj.fromUserName || obj.fromName,
             fromCode: obj.fromCode
           });
+          return;
         }
       } else if (typeof txt === 'string' && txt.includes('wave_join_request')) {
         let obj = JSON.parse(txt);
@@ -900,16 +871,35 @@ function initSocket() {
           openModal('modalIncomingRequest');
           window._incomingRequest = obj; 
           PTTEngine.playRealBeep();
+          return;
         }
-      } 
-      else if (typeof txt === 'string' && txt.includes('wave_join_approved')) {
+      } else if (typeof txt === 'string' && txt.includes('wave_join_approved')) {
         let obj = JSON.parse(txt);
         if (obj.type === 'wave_join_approved') {
           toast('✅ وافق المالك على انضمامك!', 'success');
           joinWaveAsMember(obj.waveId);
+          return;
         }
       }
     } catch(e) {}
+
+    if (message && message.sender !== currentUser.id) {
+      if (currentUser.currentConvId === conversationId) {
+        addChatMessage(message, 'in');
+        socket.emit('message_delivered', { messageId: message.id, conversationId: conversationId });
+      } else {
+        toast('💬 رسالة جديدة', 'success');
+      }
+      refreshChatList();
+    }
+  });
+
+  socket.on('message_delivered_ack', ({ messageId }) => {
+    const tickEl = document.getElementById(`tick_${messageId}`);
+    if (tickEl) {
+      tickEl.textContent = '✓✓';
+      tickEl.classList.add('delivered');
+    }
   });
 
   socket.on('conversation_history', ({ messages }) => {
@@ -1290,9 +1280,7 @@ function openSideMenu() {
       </div>
       <button class="menu-item primary" onclick="closeSideMenu();openCreateWave()"><span class="menu-icon">➕</span><span class="menu-text"><span class="menu-label">إنشاء فرقة</span><span class="menu-desc">إنشاء موجة لاسلكية جديدة</span></span></button>
       <button class="menu-item" onclick="closeSideMenu();openSearchWave()"><span class="menu-icon">🔍</span><span class="menu-text"><span class="menu-label">البحث عن فرقة</span><span class="menu-desc">ابحث برقم الفرقة</span></span></button>
-      
       <button class="menu-item" onclick="closeSideMenu();openEditName()"><span class="menu-icon">👤</span><span class="menu-text"><span class="menu-label">تعديل اسمك</span><span class="menu-desc">تغيير اسمك الحالي</span></span></button>
-
       <button class="menu-item" onclick="closeSideMenu();openOperationsList()"><span class="menu-icon">📋</span><span class="menu-text"><span class="menu-label">قائمة العمليات</span><span class="menu-desc">الفرق التي أنت مشترك فيها</span></span></button>
       <button class="menu-item" onclick="closeSideMenu();openFriendRequests()"><span class="menu-icon">👥</span><span class="menu-text"><span class="menu-label">طلبات الصداقة</span><span class="menu-desc">الواردة والصادرة</span></span></button>
       <button class="menu-item" onclick="closeSideMenu();openSendFriendRequest()"><span class="menu-icon">➕</span><span class="menu-text"><span class="menu-label">إرسال طلب صداقة</span><span class="menu-desc">ابحث برقم المستخدم</span></span></button>
@@ -1312,9 +1300,7 @@ function openSideMenu() {
       </div>
       <button class="menu-item primary" onclick="closeSideMenu();openCreateRoom()"><span class="menu-icon">➕</span><span class="menu-text"><span class="menu-label">إنشاء غرفة</span><span class="menu-desc">إنشاء غرفة دردشة جديدة</span></span></button>
       <button class="menu-item" onclick="closeSideMenu();openSearchUser()"><span class="menu-icon">🔍</span><span class="menu-text"><span class="menu-label">البحث عن مستخدم</span><span class="menu-desc">ابحث برقم المستخدم لبدء محادثة</span></span></button>
-      
       <button class="menu-item" onclick="closeSideMenu();openEditName()"><span class="menu-icon">👤</span><span class="menu-text"><span class="menu-label">تعديل اسمك</span><span class="menu-desc">تغيير اسمك الحالي</span></span></button>
-
       <button class="menu-item" onclick="closeSideMenu();openOperationsList()"><span class="menu-icon">📋</span><span class="menu-text"><span class="menu-label">قائمة العمليات</span><span class="menu-desc">الغرف التي أنت مشترك فيها</span></span></button>
       <button class="menu-item" onclick="closeSideMenu();openFriendRequests()"><span class="menu-icon">👥</span><span class="menu-text"><span class="menu-label">طلبات الصداقة</span><span class="menu-desc">الواردة والصادرة</span></span></button>
       <button class="menu-item" onclick="closeSideMenu();openSendFriendRequest()"><span class="menu-icon">➕</span><span class="menu-text"><span class="menu-label">إرسال طلب صداقة</span><span class="menu-desc">ابحث برقم المستخدم</span></span></button>
@@ -1327,9 +1313,7 @@ function openSideMenu() {
     title.textContent = '⚙️ الإعدادات السريعة';
     content.innerHTML = `
       <button class="menu-item" onclick="closeSideMenu();openSearchUser()"><span class="menu-icon">🔍</span><span class="menu-text"><span class="menu-label">البحث</span><span class="menu-desc">ابحث عن مستخدم</span></span></button>
-      
       <button class="menu-item" onclick="closeSideMenu();openEditName()"><span class="menu-icon">👤</span><span class="menu-text"><span class="menu-label">تعديل اسمك</span><span class="menu-desc">تغيير اسمك الحالي</span></span></button>
-
       <button class="menu-item" onclick="closeSideMenu();openFriendRequests()"><span class="menu-icon">👥</span><span class="menu-text"><span class="menu-label">طلبات الصداقة</span><span class="menu-desc">الواردة والصادرة</span></span></button>
       <button class="menu-item" onclick="closeSideMenu();openSendFriendRequest()"><span class="menu-icon">➕</span><span class="menu-text"><span class="menu-label">إرسال طلب صداقة</span><span class="menu-desc">ابحث برقم المستخدم</span></span></button>
       <button class="menu-item" onclick="closeSideMenu();testCall()"><span class="menu-icon">🔔</span><span class="menu-text"><span class="menu-label">اختبار النداء</span><span class="menu-desc">تجربة صوت البيب</span></span></button>
@@ -2267,8 +2251,6 @@ function sendFriendRequest() {
     });
     
     socket.emit('send_direct_message', { toDeviceId: user.deviceId, fromDeviceId: currentUser.id, fromName: currentUser.name, fromCode: currentUser.radCode, text: txt, message: {text: txt} });
-    socket.emit('direct_message', { toDeviceId: user.deviceId, text: txt, fromDeviceId: currentUser.id, fromName: currentUser.name });
-    socket.emit('private_message', { to: user.deviceId, text: txt });
   }
   
   closeModal('modalFriendSend');
@@ -2402,57 +2384,6 @@ window.addEventListener('DOMContentLoaded', async () => {
   await registerUser();
   initSocket();
   refreshChatList();
-  
-  setInterval(async () => {
-    if (!currentUser.id) return;
-    if (window._incomingRequest) return; 
-    
-    try {
-      const res = await fetch(SERVER_URL + '/api/waves/pending-requests/' + currentUser.id);
-      const data = await res.json();
-      if (data.requests && data.requests.length > 0) {
-        const req = data.requests[0]; 
-        
-        if (ignoredRequests.has(req.waveId)) return; 
-
-        window._incomingRequest = req;
-        document.getElementById('incomingName').textContent = req.fromUserName || 'مستخدم';
-        document.getElementById('incomingCode').textContent = req.waveId;
-        openModal('modalIncomingRequest');
-        if (typeof PTTEngine !== 'undefined' && PTTEngine.playRealBeep) PTTEngine.playRealBeep();
-      }
-    } catch (e) {}
-  }, 3000);
-
-  setInterval(async () => {
-    if (!currentUser.id) return;
-    
-    try {
-      const res = await fetch(SERVER_URL + '/api/friends/requests/' + currentUser.id);
-      const data = await res.json();
-      
-      if (data.requests && data.requests.length > 0) {
-        data.requests.forEach(req => {
-          if (!friendRequests.incoming.find(r => r.deviceId === req.fromDeviceId)) {
-            const newReq = {
-              name: req.fromUserName || 'مستخدم',
-              code: req.fromCode || '—',
-              deviceId: req.fromDeviceId,
-              receivedAt: Date.now()
-            };
-            
-            friendRequests.incoming.push(newReq);
-            saveFriendRequests();
-            updateFriendBadge();
-            
-            if (!document.querySelector('.modal-overlay.show')) {
-              showIncomingFriendRequest(newReq);
-            }
-          }
-        });
-      }
-    } catch (e) {}
-  }, 4000);
 
   const savedWaveId = localStorage.getItem('rc_saved_wave_id');
   const savedWaveName = localStorage.getItem('rc_saved_wave_name');
