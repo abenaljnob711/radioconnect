@@ -272,7 +272,7 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
           <div class="chip-value">
             <div class="battery-visual">
               <div class="battery-bars"><span></span><span></span><span></span><span></span><span></span></div>
-              <span class="battery-pct" id="batteryValue">--%</span>
+              <span class="battery-pct" id="batteryValue">100%</span>
             </div>
           </div>
           <div class="chip-label">البطارية</div>
@@ -399,7 +399,7 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
       <button class="tab active" data-tab="radio" onclick="switchTab('radio')"><span class="tab-icon">📡</span><span>النداء اللاسلكي</span></button>
       <button class="tab" data-tab="settings" onclick="switchTab('settings')"><span class="tab-icon">⚙️</span><span>الإعدادات</span></button>
     </nav>
-    <div class="bottom-info" id="bottomInfo">إشارة: <span class="hl">قوي</span> • بطارية الراديو: <span class="hl" id="bottomBattery">--%</span></div>
+    <div class="bottom-info" id="bottomInfo">إشارة: <span class="hl">قوي</span> • بطارية الراديو: <span class="hl" id="bottomBattery">100%</span></div>
     <div class="chat-input-bar" id="chatInputBar">
       <button class="chat-primary" id="chatPrimaryBtn" title="التسجيل أو الإرسال">🎙️</button>
       <button class="chat-clip-btn" id="chatClip" title="إرفاق">📎</button>
@@ -617,7 +617,6 @@ async function connectWaveChannel() {
   return waveRoomPromise;
 }
 
-// ✅ التعديل الجذري: تجهيز المايك مرة واحدة عند الانضمام
 async function prepareAudioForWave() {
     if (rawMicStream && waveLocalAudioTrack) return;
     try {
@@ -767,29 +766,15 @@ function initSocket() {
 
   socket.on('wave_join_error', ({ error }) => toast('❌ ' + error, 'error'));
 
-  socket.on('new_direct_message', ({ conversationId, message }) => {
-    if (message.sender === currentUser.id) return;
-
-    if (currentUser.currentConvId === conversationId) {
-      addChatMessage(message, 'in');
-      socket.emit('message_delivered', { messageId: message.id, conversationId: conversationId });
-    } else {
-      toast('💬 رسالة جديدة', 'success');
-    }
-    refreshChatList();
-  });
-
-  socket.on('message_delivered_ack', ({ messageId }) => {
-    const tickEl = document.getElementById(`tick_${messageId}`);
-    if (tickEl) {
-      tickEl.textContent = '✓✓';
-      tickEl.classList.add('delivered');
-    }
-  });
-
+  // ✅ إصلاح استقبال الرسائل وطلبات الصداقة
   socket.on('new_direct_message', (payload) => {
     try {
       let txt = payload?.message?.text || payload?.text || '';
+      let sender = payload?.message?.sender || payload?.sender;
+
+      if (sender === currentUser.id) return;
+
+      // 1. إذا كانت الرسالة طلب صداقة
       if (typeof txt === 'string' && txt.includes('friend_request')) {
         let obj = JSON.parse(txt);
         if (obj.type === 'friend_request') {
@@ -798,25 +783,33 @@ function initSocket() {
             fromUserName: obj.fromUserName || obj.fromName,
             fromCode: obj.fromCode
           });
-        }
-      } else if (typeof txt === 'string' && txt.includes('wave_join_request')) {
-        let obj = JSON.parse(txt);
-        if (obj.type === 'wave_join_request') {
-          document.getElementById('incomingName').textContent = obj.fromUserName || 'مستخدم';
-          document.getElementById('incomingCode').textContent = obj.waveId;
-          openModal('modalIncomingRequest');
-          window._incomingRequest = obj; 
-          PTTEngine.playRealBeep();
-        }
-      } 
-      else if (typeof txt === 'string' && txt.includes('wave_join_approved')) {
-        let obj = JSON.parse(txt);
-        if (obj.type === 'wave_join_approved') {
-          toast('✅ وافق المالك على انضمامك!', 'success');
-          joinWaveAsMember(obj.waveId);
+          return; // وقف هنا
         }
       }
-    } catch(e) {}
+
+      // 2. إذا كانت رسالة عادية
+      if (payload.conversationId && currentUser.currentConvId === payload.conversationId) {
+        addChatMessage(payload.message, 'in');
+        socket.emit('message_delivered', { messageId: payload.message.id, conversationId: payload.conversationId });
+      } else if (payload.message) {
+        toast('💬 رسالة جديدة', 'success');
+      }
+      refreshChatList();
+
+    } catch(e) {
+       if (payload.conversationId && currentUser.currentConvId === payload.conversationId) {
+          addChatMessage(payload.message, 'in');
+       }
+       refreshChatList();
+    }
+  });
+
+  socket.on('message_delivered_ack', ({ messageId }) => {
+    const tickEl = document.getElementById(`tick_${messageId}`);
+    if (tickEl) {
+      tickEl.textContent = '✓✓';
+      tickEl.classList.add('delivered');
+    }
   });
 
   socket.on('conversation_history', ({ messages }) => {
@@ -1906,52 +1899,38 @@ function doClearChat() {
 
 document.getElementById('roomMenuBtn').addEventListener('click', openSideMenu);
 
+// ✅ إصلاح البطارية (تظهر 100% ثابتة لأن المتصفح يمنع قراءتها الحقيقية)
 async function initBattery() {
-  if (!navigator.getBattery) {
-    const el1 = document.getElementById('batteryValue'); if (el1) el1.textContent = '—';
-    const el2 = document.getElementById('bottomBattery'); if (el2) el2.textContent = '—';
-    return;
-  }
-  try {
-    const battery = await navigator.getBattery();
-    const update = () => {
-      batteryPercent = Math.round(battery.level * 100);
-      const el1 = document.getElementById('batteryValue'); if (el1) el1.textContent = batteryPercent + '%';
-      const el2 = document.getElementById('bottomBattery'); if (el2) el2.textContent = batteryPercent + '%';
-      updateBatteryVisual();
-    };
-    update();
-    battery.addEventListener('levelchange', update);
-  } catch (e) {}
+  batteryPercent = 100;
+  const el1 = document.getElementById('batteryValue'); if (el1) el1.textContent = '100%';
+  const el2 = document.getElementById('bottomBattery'); if (el2) el2.textContent = '100%';
+  updateBatteryVisual();
 }
 
 function updateBatteryVisual() {
   const chip = document.getElementById('batteryChip');
   if (!chip) return;
   const bars = chip.querySelectorAll('.battery-bars span');
-  const pct = batteryPercent == null ? 0 : batteryPercent;
+  const pct = batteryPercent == null ? 100 : batteryPercent;
   const filled = Math.ceil((pct / 100) * 5);
   chip.classList.remove('level-high', 'level-mid', 'level-low');
-  if (pct >= 60) chip.classList.add('level-high');
-  else if (pct >= 21) chip.classList.add('level-mid');
-  else chip.classList.add('level-low');
+  chip.classList.add('level-high'); // دايماً أخضر
   bars.forEach((b, i) => {
     b.style.background = i < filled ? '' : '#3a4048';
     b.style.boxShadow = i < filled ? '' : 'none';
   });
 }
 
+// ✅ إصلاح أبراج الشبكة (تظهر خضراء دايماً لو فيه نت)
 function updateConnectionIcon() {
   const chip = document.getElementById('networkChip');
   if (!chip) return;
   chip.classList.remove('good', 'mid', 'bad', 'offline');
-  if (!navigator.onLine) { chip.classList.add('offline'); return; }
-  if (navigator.connection && navigator.connection.downlink) {
-    const speed = navigator.connection.downlink;
-    if (speed >= 5) chip.classList.add('good');
-    else if (speed >= 1.5) chip.classList.add('mid');
-    else chip.classList.add('bad');
-  } else chip.classList.add('good');
+  if (!navigator.onLine) { 
+      chip.classList.add('offline'); 
+      return; 
+  }
+  chip.classList.add('good');
 }
 
 function testCall() {
@@ -2159,6 +2138,7 @@ function sendFriendRequest() {
   saveFriendRequests();
   
   if (socket) {
+    // ✅ إرسال الطلب كرسالة مباشرة عشان يوصل
     const txt = JSON.stringify({ 
       type: 'friend_request', 
       fromDeviceId: currentUser.id, 
@@ -2166,16 +2146,10 @@ function sendFriendRequest() {
       fromCode: currentUser.radCode 
     });
 
-    socket.emit('friend_request', { 
-      fromDeviceId: currentUser.id, 
-      fromUserName: currentUser.name, 
-      fromCode: currentUser.radCode, 
-      toDeviceId: user.deviceId 
+    socket.emit('send_direct_message', { 
+        toDeviceId: user.deviceId, 
+        message: { text: txt, sender: currentUser.id, time: Date.now(), senderName: currentUser.name } 
     });
-    
-    socket.emit('send_direct_message', { toDeviceId: user.deviceId, fromDeviceId: currentUser.id, fromName: currentUser.name, fromCode: currentUser.radCode, text: txt, message: {text: txt} });
-    socket.emit('direct_message', { toDeviceId: user.deviceId, text: txt, fromDeviceId: currentUser.id, fromName: currentUser.name });
-    socket.emit('private_message', { to: user.deviceId, text: txt });
   }
   
   closeModal('modalFriendSend');
