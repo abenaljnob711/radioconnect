@@ -495,34 +495,41 @@ const PTTEngine = {
     if (!this.audioCtx) return;
     const osc = this.audioCtx.createOscillator();
     const gainNode = this.audioCtx.createGain();
+    
     osc.type = type;
     osc.frequency.setValueAtTime(freq1, this.audioCtx.currentTime);
+    
     if (freq2) {
       osc.frequency.exponentialRampToValueAtTime(freq2, this.audioCtx.currentTime + duration);
     }
+    
     osc.connect(gainNode);
     gainNode.connect(this.audioCtx.destination);
-    gainNode.gain.setValueAtTime(0.8, this.audioCtx.currentTime);
+    
+    // جعل الصوت أعلى وأوضح (0.9)
+    gainNode.gain.setValueAtTime(0.9, this.audioCtx.currentTime);
     gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioCtx.currentTime + duration);
+    
     osc.start();
     osc.stop(this.audioCtx.currentTime + duration);
   },
 
   playStartBeep() {
-    this._playTone(1200, 1500, 0.15, 'sine');
-    if (navigator.vibrate) navigator.vibrate([30, 40, 30]);
+    // نغمة بداية التحدث (حادة وقصيرة)
+    this._playTone(1400, 1800, 0.12, 'sine');
+    if (navigator.vibrate) navigator.vibrate(40);
   },
-
+  
   playEndBeep() {
-    this._playTone(800, 600, 0.15, 'square');
-    if (navigator.vibrate) navigator.vibrate([30, 40, 30]);
+    // نغمة نهاية التحدث (منخفضة وقصيرة)
+    this._playTone(900, 600, 0.12, 'sine');
+    if (navigator.vibrate) navigator.vibrate(40);
   },
-
+  
   playRealBeep() {
-    this._playTone(440, null, 0.2, 'sine');
-    setTimeout(() => {
-      this._playTone(480, null, 0.2, 'sine');
-    }, 250);
+    // نغمة إشعار عادية
+    this._playTone(600, null, 0.15, 'sine');
+    setTimeout(() => { this._playTone(800, null, 0.15, 'sine'); }, 200);
   }
 };
 
@@ -583,7 +590,6 @@ async function connectWaveChannel() {
 async function onPTTStart() {
   if (isTalking || pttLock) return;
 
-  // التحقق من وجود فرقة نشطة قبل طلب المايك
   if (!currentUser.waveId) {
     toast('⚠️ لا توجد فرقة نشطة. أنشئ أو انضم لفرقة أولاً', 'error');
     return;
@@ -605,7 +611,12 @@ async function onPTTStart() {
 
   startWaveTimer();
   await PTTEngine.init();
+  
+  // تشغيل نغمة البداية
   PTTEngine.playStartBeep();
+  
+  // ✅ الحل: انتظار 150ms لكي تكتمل النغمة قبل أن يقوم المتصفح بقطعها لتشغيل المايك
+  await new Promise(resolve => setTimeout(resolve, 150));
 
   try {
     const stream = await navigator.mediaDevices.getUserMedia({
