@@ -1616,8 +1616,7 @@ function deleteRoomPermanently() {
   localStorage.removeItem('rc_is_room_owner');
   currentUser.roomCode = null; currentUser.roomName = null;
   currentUser.currentConvId = null; currentUser.currentChatWith = null;
-  document.getElementById('roomNameLabel').textContent = '
-      document.getElementById('roomNameLabel').textContent = 'الغرفة';
+  document.getElementById('roomNameLabel').textContent = 'الغرفة';
   document.getElementById('chatMessages').innerHTML = '';
   toast('✅ تم حذف الغرفة نهائياً', 'success');
   switchTab('log');
