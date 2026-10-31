@@ -1531,7 +1531,7 @@ async function createRoom() {
   if (!name) { toast('⚠️ أدخل اسم الغرفة', 'error'); return; }
 
   // ✅ التعديل الجديد: توليد كود غرفة يبدأ بحرف M
-  const roomCode = 'M' + Math.random().toString(36).substring(2, 8).toUpperCase();
+  const roomCode = 'Q' + Math.random().toString(36).substring(2, 8).toUpperCase();
 
   currentUser.roomName = name;
   currentUser.roomCode = roomCode;
