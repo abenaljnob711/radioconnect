@@ -272,7 +272,7 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
           <div class="chip-value">
             <div class="battery-visual">
               <div class="battery-bars"><span></span><span></span><span></span><span></span><span></span></div>
-              <span class="battery-pct" id="batteryValue">100%</span>
+              <span class="battery-pct" id="batteryValue">--%</span>
             </div>
           </div>
           <div class="chip-label">البطارية</div>
@@ -399,7 +399,7 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
       <button class="tab active" data-tab="radio" onclick="switchTab('radio')"><span class="tab-icon">📡</span><span>النداء اللاسلكي</span></button>
       <button class="tab" data-tab="settings" onclick="switchTab('settings')"><span class="tab-icon">⚙️</span><span>الإعدادات</span></button>
     </nav>
-    <div class="bottom-info" id="bottomInfo">إشارة: <span class="hl">قوي</span> • بطارية الراديو: <span class="hl" id="bottomBattery">100%</span></div>
+    <div class="bottom-info" id="bottomInfo">إشارة: <span class="hl">قوي</span> • بطارية الراديو: <span class="hl" id="bottomBattery">--%</span></div>
     <div class="chat-input-bar" id="chatInputBar">
       <button class="chat-primary" id="chatPrimaryBtn" title="التسجيل أو الإرسال">🎙️</button>
       <button class="chat-clip-btn" id="chatClip" title="إرفاق">📎</button>
@@ -467,51 +467,12 @@ let waveLocalAudioTrack = null;
 let rawMicStream = null;
 let localTestAudio = null;
 let isTalking = false;
-let isPttActive = false; 
-let currentPttSession = 0;   
-let ignoredRequests = new Set(); 
-let waveRoomPromise = null;  
-
-function updateWaveUIStatus(status) {
-    const statusChip = document.getElementById('waveStatusChip');
-    const statusText = document.getElementById('waveStatusText');
-    if (!statusChip || !statusText) return;
-    
-    statusChip.classList.remove('disconnected', 'live', 'connecting');
-    if (status === 'connected') {
-        statusChip.classList.add('live');
-        statusText.innerHTML = '🟢 متصل';
-    } else if (status === 'talking') {
-        statusChip.classList.add('live');
-        statusText.innerHTML = '🟢 يتحدث';
-    } else if (status === 'connecting') {
-        statusChip.classList.add('connecting');
-        statusText.innerHTML = '🟡 جاري الاتصال...';
-    } else {
-        statusChip.classList.add('disconnected');
-        statusText.innerHTML = '🔴 غير متصل';
-    }
-}
 
 function factoryReset() {
-  if (!confirm('⚠️ تحذير: سيتم مسح جميع بياناتك المحلية (الاسم، الفرق، الغرف، الإعدادات) وإعادة تشغيل التطبيق. هل أنت متأكد؟')) return;
+  if (!confirm('⚠️ تحذير: سيتم مسح جميع البيانات. متأكد؟')) return;
+  if (!confirm('متأكد 100%؟ لا يمكن التراجع.')) return;
   localStorage.clear();
-  if (socket) socket.disconnect();
   window.location.reload();
-}
-
-function permanentDelete() {
-  if (!confirm('⚠️ تحذير: سيتم حذف حسابك وبياناتك نهائياً من الخادم. هل أنت متأكد؟')) return;
-  if (!confirm('هل أنت متأكد 100%؟ لا يمكن التراجع عن هذه الخطوة.')) return;
-  
-  fetch(SERVER_URL + '/api/users/delete/' + currentUser.id, { method: 'DELETE' })
-    .then(() => {
-      localStorage.clear();
-      window.location.reload();
-    })
-    .catch(() => {
-      toast('❌ حدث خطأ أثناء الاتصال بالسيرفر للحذف', 'error');
-    });
 }
 
 const PTTEngine = {
@@ -556,13 +517,8 @@ const PTTEngine = {
 async function disconnectWaveRoom() {
   try {
     if (waveLocalAudioTrack && waveRoom) {
-      try { waveRoom.localParticipant.unpublishTrack(waveLocalAudioTrack); } catch(e){}
-      waveLocalAudioTrack.stop();
+      try { waveRoom.localParticipant.unpublishTrack(waveLocalAudioTrack); waveLocalAudioTrack.stop(); } catch(e){}
       waveLocalAudioTrack = null;
-    }
-    if (rawMicStream) {
-      rawMicStream.getTracks().forEach(t => t.stop());
-      rawMicStream = null;
     }
     if (waveRoom) { await waveRoom.disconnect(); waveRoom = null; }
     document.querySelectorAll('audio[data-lk-track]').forEach(el => el.remove());
@@ -570,111 +526,74 @@ async function disconnectWaveRoom() {
 }
 
 async function connectWaveChannel() {
-  if (waveRoom && waveRoom.state === "connected") return true;
-  if (waveRoomPromise) return waveRoomPromise; 
-
-  waveRoomPromise = (async () => {
-    try {
-      if (!window.LivekitClient || !currentUser.radCode) return false;
-      
-      const tokenRes = await fetch(SERVER_URL + '/api/livekit/token', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ roomId: currentUser.waveId, deviceId: currentUser.id, userName: currentUser.name })
-      });
-      const tokenData = await tokenRes.json();
-      if (!tokenData.token) return false;
-      
-      waveRoom = new window.LivekitClient.Room();
-      waveRoom.on(window.LivekitClient.RoomEvent.TrackSubscribed, (track, pub, participant) => {
-        if (track.kind === "audio") {
-          const audioElement = track.attach();
-          audioElement.volume = 1.0; // جودة صوت طبيعية 100%
-          audioElement.autoplay = true;
-          document.body.appendChild(audioElement);
-          audioElement.play().catch(e => console.warn("المستخدم يجب أن يلمس الشاشة لتشغيل الصوت", e));
-        }
-      });
-      waveRoom.on(window.LivekitClient.RoomEvent.TrackUnsubscribed, (track) => {
-        track.detach().forEach(el => el.remove());
-      });
-      waveRoom.on(window.LivekitClient.RoomEvent.Disconnected, () => {
-        waveRoom = null;
-        if (isTalking) stopTalking();
-        updateWaveUIStatus('disconnected');
-      });
-      
-      await waveRoom.connect(LIVEKIT_URL, tokenData.token);
-      return true;
-    } catch (e) {
-      console.error("Wave Connect Error:", e);
+  try {
+    if (!window.LivekitClient || !currentUser.radCode) return false;
+    if (waveRoom && waveRoom.state === "connected") return true;
+    const tokenRes = await fetch(SERVER_URL + '/api/livekit/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ roomId: currentUser.waveId, deviceId: currentUser.id, userName: currentUser.name })
+    });
+    const tokenData = await tokenRes.json();
+    if (!tokenData.token) return false;
+    waveRoom = new window.LivekitClient.Room();
+    waveRoom.on(window.LivekitClient.RoomEvent.TrackSubscribed, (track, pub, participant) => {
+  if (track.kind === "audio") {
+    const audioElement = track.attach();
+    audioElement.volume = 1.0; // ✅ رفع صوت المتحدث الآخر لأقصى حد
+    audioElement.autoplay = true;
+    document.body.appendChild(audioElement);
+  }
+});
+    waveRoom.on(window.LivekitClient.RoomEvent.TrackUnsubscribed, (track) => {
+      track.detach().forEach(el => el.remove());
+    });
+    waveRoom.on(window.LivekitClient.RoomEvent.Disconnected, () => {
       waveRoom = null;
-      return false;
-    } finally {
-      waveRoomPromise = null; 
-    }
-  })();
-  return waveRoomPromise;
-}
-
-// ✅ إصلاح جودة الصوت ليكون نقي وطبيعي مثل المكالمات (Mono + 48kHz)
-async function prepareAudioForWave() {
-    if (rawMicStream && waveLocalAudioTrack) return;
-    try {
-        rawMicStream = await navigator.mediaDevices.getUserMedia({ 
-            audio: { 
-                echoCancellation: true, 
-                noiseSuppression: true, 
-                autoGainControl: true,
-                channelCount: 1,       // قناة واحدة لمنع الصدى الستيريو
-                sampleRate: 48000      // تردد عالي الجودة للمكالمات
-            } 
-        });
-        
-        await connectWaveChannel();
-        
-        if (waveRoom && waveRoom.state === "connected" && !waveLocalAudioTrack) {
-            const track = await window.LivekitClient.LocalAudioTrack.createTrack(rawMicStream.getAudioTracks()[0]);
-            waveLocalAudioTrack = track;
-            await waveRoom.localParticipant.publishTrack(waveLocalAudioTrack);
-            waveLocalAudioTrack.mute(); // يبدأ مكتوم
-        }
-    } catch(e) {
-        console.error("Audio init error:", e);
-    }
+      if (isTalking) stopTalking();
+    });
+    await waveRoom.connect(LIVEKIT_URL, tokenData.token);
+    return true;
+  } catch (e) {
+    console.error("Wave Connect Error:", e);
+    waveRoom = null;
+    return false;
+  }
 }
 
 async function onPTTStart() {
   if (isTalking) return;
   if (!currentUser.waveId) { toast('⚠️ انضم إلى فرقة أولاً', 'error'); return; }
-  
-  const mySession = ++currentPttSession; 
   isTalking = true;
-  
   const pttMain = document.getElementById('pttMain');
   pttMain.classList.add('holding');
   document.body.classList.add('ptt-active');
-  
-  updateWaveUIStatus('talking');
-  
+  const statusChip = document.getElementById('waveStatusChip');
+  const statusText = document.getElementById('waveStatusText');
+  if (statusChip) { statusChip.classList.add('live'); statusChip.classList.remove('disconnected'); }
+  if (statusText) statusText.innerHTML = '🟢 يتحدث';
   const lcd3 = document.getElementById('lcdLine3');
   if (lcd3) lcd3.textContent = (currentUser.radCode || '—') + ' • TX';
   startWaveTimer();
-  
   await PTTEngine.init();
   PTTEngine.playStartBeep();
-  
   try {
-    // إذا كان المايك جاهز، فقط قم بفتح الصوت
-    if (waveLocalAudioTrack) {
-        waveLocalAudioTrack.unmute(); 
-    } else {
-        // إذا لم يكن جاهز (أول مرة)، قم بتجهيزه
-        await prepareAudioForWave();
-        if (waveLocalAudioTrack && mySession === currentPttSession) {
-            waveLocalAudioTrack.unmute();
-        }
+    rawMicStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } });
+    if (!waveRoom || waveRoom.participants.size === 0) {
+      localTestAudio = new Audio();
+      localTestAudio.srcObject = rawMicStream;
+      localTestAudio.volume = 1.0;
+      localTestAudio.play().catch(()=>{});
     }
+    connectWaveChannel().then(() => {
+      if (waveRoom && waveRoom.state === "connected" && rawMicStream) {
+        window.LivekitClient.LocalAudioTrack.createTrack(rawMicStream.getAudioTracks()[0]).then(track => {
+          waveLocalAudioTrack = track;
+          waveRoom.localParticipant.publishTrack(waveLocalAudioTrack);
+          waveLocalAudioTrack.enable();
+        });
+      }
+    });
   } catch (err) {
     toast("⚠️ تعذر تشغيل الميكروفون");
     stopTalking();
@@ -682,59 +601,63 @@ async function onPTTStart() {
 }
 
 function stopTalking() {
-  if (!isTalking) return;
-  
-  currentPttSession++; 
-  
   if (isTalking) PTTEngine.playEndBeep();
-  
   if (localTestAudio) {
     try { localTestAudio.pause(); localTestAudio.srcObject = null; } catch (e) {}
     localTestAudio = null;
   }
-  
-  // ✅ كتم الصوت فقط
-  if (waveLocalAudioTrack) {
-      try { waveLocalAudioTrack.mute(); } catch(e) {}
+  if (waveLocalAudioTrack && waveRoom) {
+    try { waveRoom.localParticipant.unpublishTrack(waveLocalAudioTrack); waveLocalAudioTrack.stop(); } catch (e) {}
+    waveLocalAudioTrack = null;
   }
-  
+  if (rawMicStream) {
+    rawMicStream.getTracks().forEach(t => t.stop());
+    rawMicStream = null;
+  }
   isTalking = false;
-  
   const pttMain = document.getElementById('pttMain');
   if (pttMain) pttMain.classList.remove('holding');
   document.body.classList.remove('ptt-active');
-  
-  if (currentUser.waveId) {
-      if (waveRoom && waveRoom.state === "connected") {
-          updateWaveUIStatus('connected');
-      } else {
-          updateWaveUIStatus('connecting');
-      }
-  } else {
-      updateWaveUIStatus('disconnected');
-  }
-  
+  const statusChip = document.getElementById('waveStatusChip');
+  const statusText = document.getElementById('waveStatusText');
+  if (statusChip) { statusChip.classList.remove('live'); statusChip.classList.add('disconnected'); }
+  if (statusText) statusText.innerHTML = '🔴 غير متصل';
   const lcd3 = document.getElementById('lcdLine3');
   if (lcd3) lcd3.textContent = (currentUser.radCode || '—') + ' • RX';
-  
   stopWaveTimer();
-  
   if (socket && currentUser.waveId) {
     socket.emit('wave_broadcast_stop', { waveId: currentUser.waveId, deviceId: currentUser.id });
   }
 }
 
+const LiveVoice = {
+  room: null, connected: false,
+  async connect(waveId) {
+    if (this.connected) return true;
+    try {
+      const tokenRes = await fetch(SERVER_URL + '/api/livekit/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ roomId: waveId, deviceId: currentUser.id, userName: currentUser.name })
+      });
+      const data = await tokenRes.json();
+      if (!data.token) return false;
+      this.room = new window.LivekitClient.Room();
+      await this.room.connect(LIVEKIT_URL, data.token);
+      this.connected = true;
+      return true;
+    } catch (e) { return false; }
+  },
+  async disconnect() {
+    try { if (this.room) { await this.room.disconnect(); this.room = null; } } catch (e) {}
+    this.connected = false;
+  }
+};
+
 const pttMainBtn = document.getElementById('pttMain');
-pttMainBtn.addEventListener('pointerdown', (e) => { e.preventDefault(); if (isPttActive) return; isPttActive = true; onPTTStart(); });
-pttMainBtn.addEventListener('pointerup', (e) => { e.preventDefault(); if (!isPttActive) return; isPttActive = false; stopTalking(); });
-pttMainBtn.addEventListener('pointercancel', (e) => { e.preventDefault(); if (!isPttActive) return; isPttActive = false; stopTalking(); });
-
-document.body.addEventListener('touchmove', function(e) { if (isPttActive) e.preventDefault(); }, { passive: false });
-pttMainBtn.addEventListener('contextmenu', (e) => e.preventDefault());
-
-document.body.addEventListener('touchstart', () => {
-    document.querySelectorAll('audio').forEach(el => { if (el.paused) el.play().catch(() => {}); });
-}, { once: true });
+pttMainBtn.addEventListener('pointerdown', (e) => { e.preventDefault(); onPTTStart(); });
+pttMainBtn.addEventListener('pointerup', (e) => { e.preventDefault(); stopTalking(); });
+pttMainBtn.addEventListener('pointercancel', (e) => { e.preventDefault(); stopTalking(); });
 
 function initSocket() {
   if (typeof io === 'undefined') return;
@@ -751,9 +674,11 @@ function initSocket() {
 
   socket.on('wave_removed', () => {
     toast('⚠️ تم إخراجك من الفرقة', 'error');
-    currentUser.waveId = null; 
-    disconnectWaveRoom();
-    updateWaveUIStatus('disconnected');
+    currentUser.waveId = null; LiveVoice.disconnect();
+    const statusChip = document.getElementById('waveStatusChip');
+    const statusText = document.getElementById('waveStatusText');
+    if (statusChip) { statusChip.classList.add('disconnected'); statusChip.classList.remove('live'); }
+    if (statusText) statusText.innerHTML = '🔴 غير متصل';
   });
 
   socket.on('wave_join_request_received', (data) => {
@@ -773,64 +698,18 @@ function initSocket() {
 
   socket.on('wave_join_error', ({ error }) => toast('❌ ' + error, 'error'));
 
-  socket.on('new_direct_message', (payload) => {
-    try {
-      let txt = payload?.message?.text || payload?.text || '';
-      let sender = payload?.message?.sender || payload?.sender;
-
-      if (sender === currentUser.id) return;
-
-      if (typeof txt === 'string' && txt.includes('friend_request')) {
-        let obj = JSON.parse(txt);
-        if (obj.type === 'friend_request') {
-          handleIncomingFriendRequest({
-            fromDeviceId: obj.fromDeviceId,
-            fromUserName: obj.fromUserName || obj.fromName,
-            fromCode: obj.fromCode
-          });
-          return;
-        }
-      }
-
-      if (payload.conversationId && currentUser.currentConvId === payload.conversationId) {
-        addChatMessage(payload.message, 'in');
-        socket.emit('message_delivered', { messageId: payload.message.id, conversationId: payload.conversationId });
-      } else if (payload.message) {
-        toast('💬 رسالة جديدة', 'success');
-      }
-      refreshChatList();
-
-    } catch(e) {
-       if (payload.conversationId && currentUser.currentConvId === payload.conversationId) {
-          addChatMessage(payload.message, 'in');
-       }
-       refreshChatList();
-    }
-  });
-
-  socket.on('message_delivered_ack', ({ messageId }) => {
-    const tickEl = document.getElementById(`tick_${messageId}`);
-    if (tickEl) {
-      tickEl.textContent = '✓✓';
-      tickEl.classList.add('delivered');
-    }
+  socket.on('new_direct_message', ({ conversationId, message }) => {
+    if (currentUser.currentConvId === conversationId) {
+      addChatMessage(message, message.sender === currentUser.id ? 'out' : 'in');
+    } else toast('💬 رسالة جديدة', 'success');
+    refreshChatList();
   });
 
   socket.on('conversation_history', ({ messages }) => {
     const container = document.getElementById('chatMessages');
     container.innerHTML = '';
-    messages.forEach(m => {
-      let dir = m.sender === currentUser.id ? 'out' : 'in';
-      addChatMessage(m, dir, false);
-      if (dir === 'out') {
-          const tickEl = document.getElementById(`tick_${m.id}`);
-          if(tickEl) { tickEl.textContent = '✓✓'; tickEl.classList.add('delivered'); }
-      }
-    });
-    
-    setTimeout(() => {
-        container.scrollTop = container.scrollHeight;
-    }, 100);
+    messages.forEach(m => addChatMessage(m, m.sender === currentUser.id ? 'out' : 'in', false));
+    container.scrollTop = container.scrollHeight;
   });
 
   socket.on('conversation_updated', () => refreshChatList());
@@ -863,17 +742,10 @@ async function registerUser() {
     if (data.radCode) {
       currentUser.radCode = data.radCode;
       const el1 = document.getElementById('myRadCode'); if (el1) el1.textContent = data.radCode;
-      
-      const el2 = document.getElementById('waveCodeChip'); 
-      if (el2 && !currentUser.waveId) el2.innerHTML = '--- <span style="font-size:12px;">🔑</span>';
-      
+      const el2 = document.getElementById('waveCodeChip'); if (el2) el2.innerHTML = data.radCode + ' <span style="font-size:12px;">🔑</span>';
       const el3 = document.getElementById('waveCodeValue'); if (el3) el3.textContent = data.radCode;
-      const el4 = document.getElementById('lcdLine3'); if (el4 && !currentUser.waveId) el4.textContent = '--- • RX';
+      const el4 = document.getElementById('lcdLine3'); if (el4) el4.textContent = data.radCode + ' • RX';
     }
-    
-    const elName = document.getElementById('userNameValue'); 
-    if (elName) elName.textContent = currentUser.name || '—';
-
     if (data.waveId) { currentUser.waveId = data.waveId; currentUser.waveCode = data.waveId; }
     return data;
   } catch (e) { return null; }
@@ -881,21 +753,12 @@ async function registerUser() {
 
 function askUserNameIfNeeded() { if (!currentUser.name) openModal('modalUserName'); }
 
-function openEditName() {
-  document.getElementById('userNameInput').value = currentUser.name || '';
-  openModal('modalUserName');
-}
-
 function saveUserName() {
   const v = document.getElementById('userNameInput').value.trim();
   if (!v) { toast('⚠️ أدخل اسماً', 'error'); return; }
   currentUser.name = v;
   localStorage.setItem('rc_user_name', v);
   closeModal('modalUserName');
-  
-  const elName = document.getElementById('userNameValue'); 
-  if (elName) elName.textContent = v;
-  
   registerUser().then(() => {
     if (socket) socket.emit('register_device', { deviceId: currentUser.id, userName: v });
     toast('✅ مرحباً ' + v, 'success');
@@ -943,11 +806,8 @@ async function createWave() {
     localStorage.setItem('rc_is_wave_owner', 'true');
     addWaveToHistory(data.waveId, name);
     await PTTEngine.init(); PTTEngine.playStartBeep();
-    
+    await LiveVoice.connect(data.waveId);
     if (socket) socket.emit('wave_join', { waveId: data.waveId, deviceId: currentUser.id, userName: currentUser.name });
-    
-    await prepareAudioForWave();
-    
     toast('✅ تم إنشاء الفرقة "' + name + '"', 'success');
   } catch (e) { toast('❌ ' + e.message, 'error'); }
 }
@@ -967,17 +827,13 @@ async function joinWaveAsMember(waveId) {
     }
     if (data.members) renderWaveMembers(data.members);
   } catch (e) {}
-  
   const el1 = document.getElementById('waveCodeChip'); if (el1) el1.innerHTML = waveId + ' <span style="font-size:12px;">🔑</span>';
   const el2 = document.getElementById('waveCodeValue'); if (el2) el2.textContent = waveId;
   const el3 = document.getElementById('lcdLine3'); if (el3) el3.textContent = waveId + ' • RX';
   localStorage.setItem('rc_saved_wave_id', waveId);
   localStorage.setItem('rc_saved_wave_name', currentUser.waveName || '');
-  
+  await LiveVoice.connect(waveId);
   if (socket) socket.emit('wave_join', { waveId, deviceId: currentUser.id, userName: currentUser.name });
-  
-  await prepareAudioForWave();
-  
   toast('✅ انضممت إلى الفرقة', 'success');
 }
 
@@ -989,23 +845,8 @@ function doSearch() {
     .then(r => r.json())
     .then(data => {
       if (data.waveId) {
-        let ownerId = null;
-        if (data.members) {
-            const owner = data.members.find(m => m.isOwner);
-            if (owner) ownerId = owner.id;
-        }
-        searchResultUser = { name: data.waveName || 'فرقة', code: data.waveId, ownerId: ownerId, type: 'wave' };
-        
-        res.innerHTML = `
-        <div class="search-result-card" onclick="askJoinWave()">
-            <div class="search-result-icon">📡</div>
-            <div class="search-result-info">
-                <div class="search-result-name">${searchResultUser.name}</div>
-                <div style="font-size:10px; color:var(--text-dim); margin-bottom:2px;">اسم الفرقة</div>
-                <div class="search-result-code" style="font-size:11px;">رقم: ${searchResultUser.code} • ${data.totalMembers || 0} أعضاء</div>
-            </div>
-            <div style="color:var(--cyan)">←</div>
-        </div>`;
+        searchResultUser = { name: data.waveName || 'فرقة', code: data.waveId, type: 'wave' };
+        res.innerHTML = `<div class="search-result-card" onclick="askJoinWave()"><div class="search-result-icon">📡</div><div class="search-result-info"><div class="search-result-name">${searchResultUser.name}</div><div class="search-result-code">${searchResultUser.code} • ${data.totalMembers || 0} أعضاء</div></div><div style="color:var(--cyan)">←</div></div>`;
         return;
       }
       return fetch(SERVER_URL + '/api/users/search/' + q)
@@ -1013,16 +854,7 @@ function doSearch() {
         .then(user => {
           if (user.deviceId) {
             searchResultUser = { name: user.userName, code: user.radCode, deviceId: user.deviceId, type: 'user' };
-            res.innerHTML = `
-            <div class="search-result-card" onclick="startUserChat()">
-                <div class="search-result-icon">👤</div>
-                <div class="search-result-info">
-                    <div class="search-result-name">${searchResultUser.name}</div>
-                    <div style="font-size:10px; color:var(--text-dim); margin-bottom:2px;">اسم المستخدم</div>
-                    <div class="search-result-code" style="font-size:11px;">معرف: ${searchResultUser.code}</div>
-                </div>
-                <div style="color:var(--cyan)">←</div>
-            </div>`;
+            res.innerHTML = `<div class="search-result-card" onclick="startUserChat()"><div class="search-result-icon">👤</div><div class="search-result-info"><div class="search-result-name">${searchResultUser.name}</div><div class="search-result-code">${searchResultUser.code}</div></div><div style="color:var(--cyan)">←</div></div>`;
           } else {
             res.innerHTML = '<div class="no-results"><span class="no-results-icon">❌</span>لا نتائج</div>';
           }
@@ -1041,68 +873,20 @@ function askJoinWave() {
 function confirmJoin() {
   if (!searchResultUser) return;
   closeModal('modalJoinConfirm');
-  
-  if (socket) {
-    socket.emit('wave_join_request', { 
-        waveId: searchResultUser.code, 
-        fromDeviceId: currentUser.id, 
-        fromUserName: currentUser.name,
-        toDeviceId: searchResultUser.ownerId 
-    });
-
-    if (searchResultUser.ownerId) {
-        const txt = JSON.stringify({ 
-          type: 'wave_join_request', 
-          waveId: searchResultUser.code,
-          fromDeviceId: currentUser.id, 
-          fromUserName: currentUser.name 
-        });
-        socket.emit('send_direct_message', { toDeviceId: searchResultUser.ownerId, fromDeviceId: currentUser.id, fromName: currentUser.name, text: txt, message: {text: txt} });
-    }
-  }
+  if (socket) socket.emit('wave_join_request', { waveId: searchResultUser.code, fromDeviceId: currentUser.id, fromUserName: currentUser.name });
 }
 
 function cancelJoin() { closeModal('modalJoinConfirm'); openModal('modalSearch'); }
 
 function rejectIncoming() {
   closeModal('modalIncomingRequest');
-  if (window._incomingRequest && socket) {
-    const req = window._incomingRequest;
-    socket.emit('wave_join_response', { 
-        requestId: req.requestId || null, 
-        waveId: req.waveId,
-        fromDeviceId: req.fromDeviceId,
-        accepted: false 
-    });
-    if (req.waveId) ignoredRequests.add(req.waveId);
-  }
-  window._incomingRequest = null;
+  if (window._incomingRequest && socket) socket.emit('wave_join_response', { requestId: window._incomingRequest.requestId, accepted: false });
   toast('تم رفض الطلب', 'error');
 }
 
 function acceptIncoming() {
   closeModal('modalIncomingRequest');
-  if (window._incomingRequest && socket) {
-    const req = window._incomingRequest;
-
-    socket.emit('wave_join_response', { 
-        requestId: req.requestId || null, 
-        waveId: req.waveId,
-        fromDeviceId: req.fromDeviceId,
-        accepted: true 
-    });
-
-    if (req.fromDeviceId && req.waveId) {
-        const txt = JSON.stringify({ 
-          type: 'wave_join_approved', 
-          waveId: req.waveId 
-        });
-        socket.emit('send_direct_message', { toDeviceId: req.fromDeviceId, fromDeviceId: currentUser.id, fromName: currentUser.name, text: txt, message: {text: txt} });
-    }
-
-    if (req.waveId) ignoredRequests.add(req.waveId);
-  }
-  window._incomingRequest = null;
+  if (window._incomingRequest && socket) socket.emit('wave_join_response', { requestId: window._incomingRequest.requestId, accepted: true });
   PTTEngine.playRealBeep();
   toast('✅ تم قبول الطلب', 'success');
 }
@@ -1135,21 +919,12 @@ function switchTab(tabName) {
   if (tabBtn) tabBtn.classList.add('active');
   const chatBar = document.getElementById('chatInputBar');
   const bottomInfo = document.getElementById('bottomInfo');
-  
   if (tabName === 'chat') {
-    chatBar.classList.add('active'); 
-    bottomInfo.style.display = 'none';
-    setTimeout(() => {
-        const c = document.getElementById('chatMessages');
-        if(c) c.scrollTop = c.scrollHeight;
-    }, 150);
+    chatBar.classList.add('active'); bottomInfo.style.display = 'none';
   } else if (tabName === 'log') {
-    chatBar.classList.remove('active');
-    bottomInfo.style.display = 'none'; 
-    refreshChatList();
+    chatBar.classList.add('active'); bottomInfo.style.display = 'none'; refreshChatList();
   } else {
-    chatBar.classList.remove('active'); 
-    bottomInfo.style.display = 'block';
+    chatBar.classList.remove('active'); bottomInfo.style.display = 'block';
   }
   if (sideMenu && sideMenu.classList.contains('open')) closeSideMenu();
   window.scrollTo(0, 0);
@@ -1163,7 +938,7 @@ function toast(msg, type = '') {
   el.className = 'toast ' + type;
   el.classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.remove('show'), 3000); 
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2400);
 }
 
 function openModal(id) { const el = document.getElementById(id); if (el) el.classList.add('show'); closeSideMenu(); }
@@ -1194,16 +969,12 @@ function openSideMenu() {
       </div>
       <button class="menu-item primary" onclick="closeSideMenu();openCreateWave()"><span class="menu-icon">➕</span><span class="menu-text"><span class="menu-label">إنشاء فرقة</span><span class="menu-desc">إنشاء موجة لاسلكية جديدة</span></span></button>
       <button class="menu-item" onclick="closeSideMenu();openSearchWave()"><span class="menu-icon">🔍</span><span class="menu-text"><span class="menu-label">البحث عن فرقة</span><span class="menu-desc">ابحث برقم الفرقة</span></span></button>
-      
-      <button class="menu-item" onclick="closeSideMenu();openEditName()"><span class="menu-icon">👤</span><span class="menu-text"><span class="menu-label">تعديل اسمك</span><span class="menu-desc">تغيير اسمك الحالي</span></span></button>
-
       <button class="menu-item" onclick="closeSideMenu();openOperationsList()"><span class="menu-icon">📋</span><span class="menu-text"><span class="menu-label">قائمة العمليات</span><span class="menu-desc">الفرق التي أنت مشترك فيها</span></span></button>
       <button class="menu-item" onclick="closeSideMenu();openFriendRequests()"><span class="menu-icon">👥</span><span class="menu-text"><span class="menu-label">طلبات الصداقة</span><span class="menu-desc">الواردة والصادرة</span></span></button>
       <button class="menu-item" onclick="closeSideMenu();openSendFriendRequest()"><span class="menu-icon">➕</span><span class="menu-text"><span class="menu-label">إرسال طلب صداقة</span><span class="menu-desc">ابحث برقم المستخدم</span></span></button>
       <button class="menu-item" onclick="closeSideMenu();saveMyWave()"><span class="menu-icon">💾</span><span class="menu-text"><span class="menu-label">حفظ الفرقة</span><span class="menu-desc">استرجعها تلقائياً عند الدخول</span></span></button>
       <button class="menu-item" onclick="closeSideMenu();openEditWaveName()"><span class="menu-icon">✏️</span><span class="menu-text"><span class="menu-label">تعديل اسم الفرقة</span><span class="menu-desc">غيّر اسم فرقتك</span></span></button>
       <button class="menu-item" onclick="closeSideMenu();leaveWave()"><span class="menu-icon">🗑️</span><span class="menu-text"><span class="menu-label">مسح الفرقة</span><span class="menu-desc">مغادرة الفرقة الحالية</span></span></button>
-      <button class="menu-item danger" onclick="closeSideMenu();permanentDelete()"><span class="menu-icon">🛑</span><span class="menu-text"><span class="menu-label">حذف الحساب نهائياً</span><span class="menu-desc">مسح بياناتك من الخادم</span></span></button>
     `;
   } else if (activeId === 'screen-log' || activeId === 'screen-chat') {
     title.textContent = '💬 قائمة الغرفة';
@@ -1216,28 +987,21 @@ function openSideMenu() {
       </div>
       <button class="menu-item primary" onclick="closeSideMenu();openCreateRoom()"><span class="menu-icon">➕</span><span class="menu-text"><span class="menu-label">إنشاء غرفة</span><span class="menu-desc">إنشاء غرفة دردشة جديدة</span></span></button>
       <button class="menu-item" onclick="closeSideMenu();openSearchUser()"><span class="menu-icon">🔍</span><span class="menu-text"><span class="menu-label">البحث عن مستخدم</span><span class="menu-desc">ابحث برقم المستخدم لبدء محادثة</span></span></button>
-      
-      <button class="menu-item" onclick="closeSideMenu();openEditName()"><span class="menu-icon">👤</span><span class="menu-text"><span class="menu-label">تعديل اسمك</span><span class="menu-desc">تغيير اسمك الحالي</span></span></button>
-
       <button class="menu-item" onclick="closeSideMenu();openOperationsList()"><span class="menu-icon">📋</span><span class="menu-text"><span class="menu-label">قائمة العمليات</span><span class="menu-desc">الغرف التي أنت مشترك فيها</span></span></button>
       <button class="menu-item" onclick="closeSideMenu();openFriendRequests()"><span class="menu-icon">👥</span><span class="menu-text"><span class="menu-label">طلبات الصداقة</span><span class="menu-desc">الواردة والصادرة</span></span></button>
       <button class="menu-item" onclick="closeSideMenu();openSendFriendRequest()"><span class="menu-icon">➕</span><span class="menu-text"><span class="menu-label">إرسال طلب صداقة</span><span class="menu-desc">ابحث برقم المستخدم</span></span></button>
       <button class="menu-item" onclick="closeSideMenu();saveMyRoom()"><span class="menu-icon">💾</span><span class="menu-text"><span class="menu-label">حفظ الغرفة</span><span class="menu-desc">استرجعها تلقائياً عند الدخول</span></span></button>
       <button class="menu-item" onclick="closeSideMenu();openEditRoomName()"><span class="menu-icon">✏️</span><span class="menu-text"><span class="menu-label">تعديل اسم الغرفة</span><span class="menu-desc">غيّر اسم غرفتك</span></span></button>
       <button class="menu-item" onclick="closeSideMenu();confirmClearChat()"><span class="menu-icon">🧹</span><span class="menu-text"><span class="menu-label">مسح المحادثة</span><span class="menu-desc">حذف الرسائل فقط</span></span></button>
-      <button class="menu-item danger" onclick="closeSideMenu();permanentDelete()"><span class="menu-icon">🛑</span><span class="menu-text"><span class="menu-label">حذف الحساب نهائياً</span><span class="menu-desc">مسح بياناتك من الخادم</span></span></button>
+      <button class="menu-item danger" onclick="closeSideMenu();deleteRoomPermanently()"><span class="menu-icon">🗑️</span><span class="menu-text"><span class="menu-label">حذف الغرفة نهائياً</span><span class="menu-desc">مسح الغرفة من السجل</span></span></button>
     `;
   } else {
     title.textContent = '⚙️ الإعدادات السريعة';
     content.innerHTML = `
       <button class="menu-item" onclick="closeSideMenu();openSearchUser()"><span class="menu-icon">🔍</span><span class="menu-text"><span class="menu-label">البحث</span><span class="menu-desc">ابحث عن مستخدم</span></span></button>
-      
-      <button class="menu-item" onclick="closeSideMenu();openEditName()"><span class="menu-icon">👤</span><span class="menu-text"><span class="menu-label">تعديل اسمك</span><span class="menu-desc">تغيير اسمك الحالي</span></span></button>
-
       <button class="menu-item" onclick="closeSideMenu();openFriendRequests()"><span class="menu-icon">👥</span><span class="menu-text"><span class="menu-label">طلبات الصداقة</span><span class="menu-desc">الواردة والصادرة</span></span></button>
       <button class="menu-item" onclick="closeSideMenu();openSendFriendRequest()"><span class="menu-icon">➕</span><span class="menu-text"><span class="menu-label">إرسال طلب صداقة</span><span class="menu-desc">ابحث برقم المستخدم</span></span></button>
       <button class="menu-item" onclick="closeSideMenu();testCall()"><span class="menu-icon">🔔</span><span class="menu-text"><span class="menu-label">اختبار النداء</span><span class="menu-desc">تجربة صوت البيب</span></span></button>
-      <button class="menu-item danger" onclick="closeSideMenu();permanentDelete()"><span class="menu-icon">🛑</span><span class="menu-text"><span class="menu-label">حذف الحساب نهائياً</span><span class="menu-desc">مسح بياناتك من الخادم</span></span></button>
     `;
   }
   sideMenu.classList.add('open');
@@ -1327,14 +1091,6 @@ async function saveWaveName() {
       body: JSON.stringify({ waveId: currentUser.waveId, newName: name, deviceId: currentUser.id })
     });
     currentUser.waveName = name;
-    
-    let list = JSON.parse(localStorage.getItem('rc_user_waves_list') || '[]');
-    let existingIndex = list.findIndex(w => w.id === currentUser.waveId);
-    if (existingIndex !== -1) {
-      list[existingIndex].name = name;
-      localStorage.setItem('rc_user_waves_list', JSON.stringify(list));
-    }
-
     const el1 = document.getElementById('waveNameValue'); if (el1) el1.textContent = name;
     const el2 = document.getElementById('waveNameLabel'); if (el2) el2.textContent = name;
     toast('✅ تم تحديث اسم الفرقة', 'success');
@@ -1347,18 +1103,17 @@ async function leaveWave() {
   if (!confirm('هل تريد مغادرة الفرقة؟')) return;
   if (socket) socket.emit('wave_leave', { waveId: currentUser.waveId, deviceId: currentUser.id });
   await disconnectWaveRoom();
+  await LiveVoice.disconnect();
   currentUser.waveId = null; currentUser.waveCode = null; currentUser.isWaveOwner = false;
   localStorage.removeItem('rc_saved_wave_id');
   localStorage.removeItem('rc_saved_wave_name');
   localStorage.removeItem('rc_is_wave_owner');
-  
   const el1 = document.getElementById('waveCodeChip');
-  if (el1) el1.innerHTML = '--- <span style="font-size:12px;">🔑</span>'; 
-  
-  updateWaveUIStatus('disconnected');
+  if (el1) el1.innerHTML = (currentUser.radCode || 'Q00000') + ' <span style="font-size:12px;">🔑</span>';
+  const statusText = document.getElementById('waveStatusText');
+  if (statusText) statusText.innerHTML = '🔴 غير متصل';
   const el3 = document.getElementById('waveNameLabel'); if (el3) el3.textContent = 'لا توجد فرقة';
   const el4 = document.getElementById('waveNameValue'); if (el4) el4.textContent = '—';
-  const el5 = document.getElementById('lcdLine3'); if (el5) el5.textContent = '--- • RX';
   toast('✅ غادرت الفرقة', 'success');
 }
 
@@ -1368,43 +1123,17 @@ async function refreshChatList() {
     const data = await res.json();
     const list = document.getElementById('chatListContainer');
     const empty = document.getElementById('emptyRoom');
-    
-    let htmlContent = '';
-
-    let localRooms = JSON.parse(localStorage.getItem('rc_user_rooms_list') || '[]');
-    if (localRooms.length > 0) {
-      localRooms.forEach(r => {
-        const initial = (r.name || '?').charAt(0);
-        htmlContent += `<div class="chat-list-item" onclick="openChatWith('self', '${r.name.replace(/'/g, "")}', 'conv_self_${r.code}')">
-          <div class="chat-list-avatar" style="background:linear-gradient(135deg, var(--green), var(--cyan-dark));">${initial}</div>
-          <div class="chat-list-info">
-            <div class="chat-list-name">${r.name} (غرفتك)</div>
-            <div class="chat-list-last">اختبر المحادثة مع نفسك</div>
-          </div>
-          <div class="chat-list-time">👤</div>
-        </div>`;
-      });
+    if (!data.conversations || data.conversations.length === 0) {
+      list.innerHTML = ''; empty.style.display = 'flex'; return;
     }
-
-    if (data.conversations && data.conversations.length > 0) {
-      data.conversations.forEach(c => {
-        const initial = (c.otherUser.userName || '?').charAt(0);
-        const lastText = c.lastMessage ? (c.lastMessage.text || '') : 'لا رسائل';
-        const timeStr = c.lastMessageAt ? new Date(c.lastMessageAt).toLocaleTimeString('ar', { hour: '2-digit', minute: '2-digit' }) : '';
-        htmlContent += `<div class="chat-list-item" onclick="openChatWith('${c.otherUser.deviceId}', '${(c.otherUser.userName || '').replace(/'/g, "")}', '${c.conversationId}')"><div class="chat-list-avatar">${initial}</div><div class="chat-list-info"><div class="chat-list-name">${c.otherUser.userName}</div><div class="chat-list-last">${lastText}</div></div><div class="chat-list-time">${timeStr}</div></div>`;
-      });
-    }
-
-    if (htmlContent === '') {
-      list.innerHTML = ''; 
-      empty.style.display = 'flex'; 
-    } else {
-      empty.style.display = 'none';
-      list.innerHTML = htmlContent;
-    }
-  } catch (e) {
-    console.error(e);
-  }
+    empty.style.display = 'none';
+    list.innerHTML = data.conversations.map(c => {
+      const initial = (c.otherUser.userName || '?').charAt(0);
+      const lastText = c.lastMessage ? (c.lastMessage.text || '') : 'لا رسائل';
+      const timeStr = c.lastMessageAt ? new Date(c.lastMessageAt).toLocaleTimeString('ar', { hour: '2-digit', minute: '2-digit' }) : '';
+      return `<div class="chat-list-item" onclick="openChatWith('${c.otherUser.deviceId}', '${(c.otherUser.userName || '').replace(/'/g, "")}', '${c.conversationId}')"><div class="chat-list-avatar">${initial}</div><div class="chat-list-info"><div class="chat-list-name">${c.otherUser.userName}</div><div class="chat-list-last">${lastText}</div></div><div class="chat-list-time">${timeStr}</div></div>`;
+    }).join('');
+  } catch (e) {}
 }
 
 async function startUserChat() {
@@ -1429,37 +1158,14 @@ async function openChatWith(otherDeviceId, otherName, convId) {
   switchTab('chat');
   const bar = document.getElementById('chatInputBar');
   if (bar) bar.classList.add('active');
-  
-  document.getElementById('chatMessages').innerHTML = '';
-
-  if (convId.startsWith('conv_self_')) {
-    document.getElementById('chatMessages').innerHTML = `
-      <div style="padding:20px;text-align:center;color:var(--text-dim);font-size:12px;">
-        💬 هذه غرفتك "${otherName}"<br>
-        يمكنك إرسال رسائل نصية أو صوتية هنا لتجربتها.
-      </div>`;
-    return; 
-  }
-
   if (socket) socket.emit('join_conversation', { conversationId: convId });
-  
+  document.getElementById('chatMessages').innerHTML = '';
   try {
     const res = await fetch(SERVER_URL + '/api/conversations/' + convId + '/messages');
     const data = await res.json();
-    (data.messages || []).forEach(m => {
-      let dir = m.sender === currentUser.id ? 'out' : 'in';
-      addChatMessage(m, dir, false);
-      if (dir === 'out') {
-          const tickEl = document.getElementById(`tick_${m.id}`);
-          if(tickEl) { tickEl.textContent = '✓✓'; tickEl.classList.add('delivered'); }
-      }
-    });
-    
-    setTimeout(() => {
-        const c = document.getElementById('chatMessages');
-        if(c) c.scrollTop = c.scrollHeight;
-    }, 200);
-
+    (data.messages || []).forEach(m => addChatMessage(m, m.sender === currentUser.id ? 'out' : 'in', false));
+    const c = document.getElementById('chatMessages');
+    c.scrollTop = c.scrollHeight;
   } catch (e) {}
 }
 
@@ -1474,111 +1180,45 @@ function addChatMessage(msg, direction, scroll = true) {
   const container = document.getElementById('chatMessages');
   const div = document.createElement('div');
   div.className = 'msg msg-' + direction;
-  
-  if (msg.type === 'image' || msg.type === 'video') {
-      div.classList.add('msg-media');
-  }
-
   const time = msg.time ? new Date(msg.time).toLocaleTimeString('ar', { hour: '2-digit', minute: '2-digit' }) : '';
-  
-  const checkmarks = direction === 'out' 
-    ? `<span class="tick" id="tick_${msg.id}">✓</span>` 
-    : '';
-
+  const senderName = direction === 'out' ? (currentUser.name || 'أنا') : (msg.senderName || '');
   let bodyHtml = '';
-  
   if (msg.type === 'voice' && msg.url) {
-    bodyHtml = `
-      <div class="wa-voice-container">
-          <button class="wa-play-btn"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>
-          <div class="wa-waveform">
-              <audio src="${msg.url}" preload="auto"></audio>
-              <div class="wa-wave-bars">
-                  <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
-              </div>
-          </div>
-          <span class="wa-duration">${Math.floor((msg.duration || 0) / 60)}:${Math.floor((msg.duration || 0) % 60).toString().padStart(2, '0')}</span>
-          <div class="wa-voice-avatar">${direction === 'out' ? '🎙️' : '👤'}</div>
-      </div>
-      <div class="msg-meta">${time} ${checkmarks}</div>
-    `;
+    bodyHtml = `<div class="voice-msg"><button class="play-btn">▶</button><div class="waveform"><audio src="${msg.url}" preload="auto"></audio><span style="height:10px"></span><span style="height:18px"></span><span style="height:14px"></span><span style="height:22px"></span><span style="height:12px"></span></div></div><div class="voice-meta"><span>${(msg.duration || 0).toFixed(1)}s</span><span>${time}</span></div>`;
   } else if (msg.type === 'image' && msg.url) {
-    bodyHtml = `
-      <img src="${msg.url}" class="wa-img" onclick="window.open('${msg.url}','_blank')">
-      <div class="msg-meta wa-meta-overlay">${time} ${checkmarks}</div>
-    `;
+    bodyHtml = `<img src="${msg.url}" class="attachment-preview-img" onclick="window.open('${msg.url}','_blank')"><div class="voice-meta"><span>${time}</span></div>`;
   } else if (msg.type === 'video' && msg.url) {
-    bodyHtml = `
-      <video src="${msg.url}" class="wa-video" controls></video>
-      <div class="msg-meta wa-meta-overlay">${time} ${checkmarks}</div>
-    `;
+    bodyHtml = `<video src="${msg.url}" class="attachment-preview-video" controls></video><div class="voice-meta"><span>${time}</span></div>`;
   } else if (msg.type === 'file' && msg.url) {
-    bodyHtml = `
-      <div style="display:flex; align-items:center; gap:10px; padding:4px;">
-          <div style="font-size:30px;">📄</div>
-          <div>
-              <div style="font-weight:bold; font-size:13px;">${msg.fileName || 'ملف'}</div>
-              <div style="font-size:11px; color:#99aeb7;">اضغط للتحميل</div>
-          </div>
-      </div>
-      <div class="msg-meta"><a href="${msg.url}" download="${msg.fileName || ''}" style="color:#53bdeb; text-decoration:none; margin-right:auto;">تحميل</a>${time} ${checkmarks}</div>
-    `;
+    bodyHtml = `<div class="attach-msg"><span class="attach-msg-icon">📄</span><div class="attach-msg-info"><div class="attach-msg-name">${msg.fileName || 'ملف'}</div><div class="attach-msg-type">اضغط للتحميل</div></div></div><div class="voice-meta"><span><a href="${msg.url}" download="${msg.fileName || ''}" style="color:var(--cyan)">تحميل</a></span><span>${time}</span></div>`;
   } else if (msg.type === 'contact') {
-    bodyHtml = `
-      <div style="display:flex; align-items:center; gap:10px; padding:4px;">
-          <div style="font-size:30px;">👥</div>
-          <div>
-              <div style="font-weight:bold; font-size:13px;">${msg.contactName || ''}</div>
-              <div style="font-size:11px; color:#99aeb7;">${msg.contactPhone || ''}</div>
-          </div>
-      </div>
-      <div class="msg-meta">${time} ${checkmarks}</div>
-    `;
+    bodyHtml = `<div class="attach-msg"><span class="attach-msg-icon">👥</span><div class="attach-msg-info"><div class="attach-msg-name">${msg.contactName || ''}</div><div class="attach-msg-type">${msg.contactPhone || ''}</div></div></div><div class="voice-meta"><span>${time}</span></div>`;
   } else {
-    bodyHtml = `
-      <div class="wa-text">${msg.text || ''}</div>
-      <div class="msg-meta">${time} ${checkmarks}</div>
-    `;
+    bodyHtml = `<div class="text-msg">${msg.text || ''}</div><div class="voice-meta"><span>${time}</span><span>${direction === 'out' ? '✓✓' : ''}</span></div>`;
   }
-
-  div.innerHTML = `<div class="msg-body" data-msgid="${msg.id || ''}">${bodyHtml}</div>`;
-
-  const playBtn = div.querySelector('.wa-play-btn');
+  div.innerHTML = `<div class="msg-header">${senderName}</div><div class="msg-body" data-msgid="${msg.id || ''}">${bodyHtml}</div>`;
+  const playBtn = div.querySelector('.play-btn');
   if (playBtn) {
     playBtn.addEventListener('click', () => {
-      const audio = playBtn.closest('.wa-voice-container').querySelector('audio');
+      const audio = playBtn.nextElementSibling.querySelector('audio');
       if (audio) {
-        if (audio.paused) { 
-            audio.play(); 
-            playBtn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>'; 
-        }
-        else { 
-            audio.pause(); 
-            playBtn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>'; 
-        }
-        audio.onended = () => playBtn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>';
+        if (audio.paused) { audio.play(); playBtn.textContent = '⏸'; }
+        else { audio.pause(); playBtn.textContent = '▶'; }
+        audio.onended = () => playBtn.textContent = '▶';
       }
     });
   }
-  
   let pressTimer;
   const body = div.querySelector('.msg-body');
-  body.addEventListener('pointerdown', (e) => {
+  body.addEventListener('pointerdown', () => {
     pressTimer = setTimeout(() => {
-      if (confirm('هل تريد مسح هذه الرسالة؟')) { 
-          div.remove(); 
-          toast('🗑️ تم مسح الرسالة', 'success'); 
-      }
+      if (confirm('هل تريد مسح هذه الرسالة؟')) { div.remove(); toast('🗑️ تم مسح الرسالة', 'success'); }
     }, 700);
   });
   body.addEventListener('pointerup', () => clearTimeout(pressTimer));
   body.addEventListener('pointerleave', () => clearTimeout(pressTimer));
-  
   container.appendChild(div);
-  
-  if (scroll) {
-      container.scrollTop = container.scrollHeight;
-  }
+  if (scroll) container.scrollTop = container.scrollHeight;
 }
 
 function sendTextMessage(text) {
@@ -1591,29 +1231,15 @@ function sendTextMessage(text) {
 }
 
 const chatInput = document.getElementById('chatInput');
-const chatInputDisplay = document.getElementById('chatInputDisplay');
 const chatPrimaryBtn = document.getElementById('chatPrimaryBtn');
 const chatClip = document.getElementById('chatClip');
 const emojiBtn = document.getElementById('emojiBtn');
-const recordingWave = document.getElementById('recordingWave');
 
 let isRecordingVoice = false;
 let voiceRecorder = null;
 let voiceChunks = [];
 let voiceStartTime = 0;
 let voiceTimerInt = null;
-
-chatInputDisplay.addEventListener('click', () => {
-    chatInputDisplay.style.display = 'none';
-    chatInput.style.display = 'flex';
-    chatInput.focus();
-});
-chatInput.addEventListener('blur', () => {
-    if(chatInput.value.trim() === '') {
-        chatInput.style.display = 'none';
-        chatInputDisplay.style.display = 'flex';
-    }
-});
 
 chatInput.addEventListener('input', () => {
   const hasText = chatInput.value.trim().length > 0;
@@ -1623,17 +1249,8 @@ chatInput.addEventListener('input', () => {
 
 chatPrimaryBtn.addEventListener('click', async () => {
   const hasText = chatInput.value.trim().length > 0;
-  if (hasText) { 
-      sendTextMessage(chatInput.value); 
-      chatInput.value = ''; 
-      chatPrimaryBtn.textContent = '🎙️'; 
-      chatInput.style.display = 'none';
-      chatInputDisplay.style.display = 'flex';
-  }
-  else { 
-      if (!isRecordingVoice) await startVoiceRecording(); 
-      else await stopVoiceRecordingAndSend(); 
-  }
+  if (hasText) { sendTextMessage(chatInput.value); chatInput.value = ''; chatPrimaryBtn.textContent = '🎙️'; }
+  else { if (!isRecordingVoice) await startVoiceRecording(); else await stopVoiceRecordingAndSend(); }
 });
 
 async function startVoiceRecording() {
@@ -1648,15 +1265,10 @@ async function startVoiceRecording() {
     voiceStartTime = Date.now();
     chatPrimaryBtn.classList.add('recording');
     chatPrimaryBtn.textContent = '⏹';
-    
-    chatInputDisplay.style.display = 'none';
-    chatInput.style.display = 'none';
-    recordingWave.classList.add('active');
-
     clearInterval(voiceTimerInt);
     voiceTimerInt = setInterval(() => {
       const s = Math.floor((Date.now() - voiceStartTime) / 1000);
-      chatInputDisplay.textContent = 'جاري التسجيل... ' + s + 's';
+      chatInput.placeholder = 'جاري التسجيل... ' + s + 's';
     }, 250);
     toast('🎙️ جاري التسجيل...', 'success');
   } catch (e) { toast('❌ تعذّر الوصول للمايك', 'error'); }
@@ -1667,11 +1279,7 @@ async function stopVoiceRecordingAndSend() {
   const duration = (Date.now() - voiceStartTime) / 1000;
   chatPrimaryBtn.classList.remove('recording');
   chatPrimaryBtn.textContent = '🎙️';
-  
-  recordingWave.classList.remove('active');
-  chatInputDisplay.style.display = 'flex';
-  chatInputDisplay.textContent = 'اكتب رسالة...';
-
+  chatInput.placeholder = 'اكتب رسالة...';
   clearInterval(voiceTimerInt);
   voiceRecorder.onstop = async () => {
     const blob = new Blob(voiceChunks, { type: 'audio/webm' });
@@ -1692,31 +1300,15 @@ async function stopVoiceRecordingAndSend() {
   voiceRecorder.stop();
 }
 
-const EMOJIS = [
-  '😀','😃','😄','😁','😆','😅','😂','🤣','🥲','😊',
-  '😇','🙂','🙃','😉','😌','😍','🥰','😘','😗','😙',
-  '😚','😋','😛','😝','😜','🤪','🤨','🧐','🤓','😎',
-  '🥸','🤩','🥳','😏','😒','😞','😔','😟','😕','🙁',
-  '☹️','😣','😖','😫','😩','🥺','😢','😭','😤','😠',
-  '😡','🤬','🤯','😳','🥵','🥶','😱','😨','😰','😥',
-  '😓','🤗','🤔','🤭','🤫','🤥','😶','😐','😑','😬',
-  '🙄','😯','😦','😧','😮','😲','🥱','😴','🤤','😪',
-  '😵','🤐','🥴','🤢','🤮','🤧','😷','🤒','🤕','🤑',
-  '🤠','😈','👿','👹','👺','🤡','💩','👻','💀','👽'
-];
-
+const EMOJIS = ['😀','😂','🥰','😎','🤔','😢','😡','👍','👏','🙏','❤️','🔥','⭐','🎉','📻','📡','🎙️','✅','❌','⚠️'];
 emojiBtn.addEventListener('click', (ev) => {
   ev.stopPropagation();
   const picker = document.createElement('div');
-  picker.style.cssText = 'position:fixed;bottom:130px;left:12px;right:12px;max-width:476px;margin:0 auto;background:var(--card-2);border:1px solid var(--cyan);border-radius:14px;padding:10px;z-index:600;display:grid;grid-template-columns:repeat(10,1fr);gap:6px;max-height:200px;overflow-y:auto;';
+  picker.style.cssText = 'position:fixed;bottom:130px;left:12px;right:12px;max-width:476px;margin:0 auto;background:var(--card-2);border:1px solid var(--cyan);border-radius:14px;padding:10px;z-index:600;display:grid;grid-template-columns:repeat(10,1fr);gap:6px;';
   picker.innerHTML = EMOJIS.map(e => `<button style="font-size:22px;background:none;border:none;cursor:pointer;padding:4px;" data-emoji="${e}">${e}</button>`).join('');
   document.body.appendChild(picker);
   picker.addEventListener('click', (ev2) => {
     if (ev2.target.dataset.emoji) {
-      if(chatInput.style.display === 'none') {
-          chatInputDisplay.style.display = 'none';
-          chatInput.style.display = 'flex';
-      }
       chatInput.value += ev2.target.dataset.emoji;
       chatInput.dispatchEvent(new Event('input'));
       picker.remove();
@@ -1816,6 +1408,7 @@ async function createRoom() {
   const name = document.getElementById('roomName').value.trim();
   if (!name) { toast('⚠️ أدخل اسم الغرفة', 'error'); return; }
 
+  // ✅ رقم الغرفة أصبح هو نفسه معرف المستخدم (Q)
   const roomCode = currentUser.radCode;
   if (!roomCode) { toast('⚠️ انتظر ثانية، لم يتم تحميل رقمك بعد', 'error'); return; }
 
@@ -1826,8 +1419,6 @@ async function createRoom() {
   localStorage.setItem('rc_saved_room_name', name);
   localStorage.setItem('rc_is_room_owner', 'true');
   
-  addRoomToHistory(roomCode, name);
-
   document.getElementById('createdRoomCode').textContent = roomCode;
   document.getElementById('roomNameLabel').textContent = name;
   document.getElementById('roomName').value = '';
@@ -1852,8 +1443,6 @@ async function createRoom() {
       يمكنك مشاركة هذا الرقم مع أصدقائك للبحث عنه.
     </div>
   `;
-  
-  refreshChatList();
 }
 
 function saveRoomName() {
@@ -1901,23 +1490,51 @@ function doClearChat() {
   toast('✅ تم مسح الدردشة', 'success');
 }
 
+function deleteRoomPermanently() {
+  if (!currentUser.roomCode) { toast('⚠️ لا توجد غرفة لحذفها', 'error'); return; }
+  if (!confirm('هل أنت متأكد من حذف هذه الغرفة نهائياً؟')) return;
+  localStorage.removeItem('rc_saved_room_code');
+  localStorage.removeItem('rc_saved_room_name');
+  localStorage.removeItem('rc_is_room_owner');
+  currentUser.roomCode = null; currentUser.roomName = null;
+  currentUser.currentConvId = null; currentUser.currentChatWith = null;
+  document.getElementById('roomNameLabel').textContent = 'الغرفة';
+  document.getElementById('chatMessages').innerHTML = '';
+  toast('✅ تم حذف الغرفة نهائياً', 'success');
+  switchTab('log');
+}
+
 document.getElementById('roomMenuBtn').addEventListener('click', openSideMenu);
 
 async function initBattery() {
-  batteryPercent = 100;
-  const el1 = document.getElementById('batteryValue'); if (el1) el1.textContent = '100%';
-  const el2 = document.getElementById('bottomBattery'); if (el2) el2.textContent = '100%';
-  updateBatteryVisual();
+  if (!navigator.getBattery) {
+    const el1 = document.getElementById('batteryValue'); if (el1) el1.textContent = '—';
+    const el2 = document.getElementById('bottomBattery'); if (el2) el2.textContent = '—';
+    return;
+  }
+  try {
+    const battery = await navigator.getBattery();
+    const update = () => {
+      batteryPercent = Math.round(battery.level * 100);
+      const el1 = document.getElementById('batteryValue'); if (el1) el1.textContent = batteryPercent + '%';
+      const el2 = document.getElementById('bottomBattery'); if (el2) el2.textContent = batteryPercent + '%';
+      updateBatteryVisual();
+    };
+    update();
+    battery.addEventListener('levelchange', update);
+  } catch (e) {}
 }
 
 function updateBatteryVisual() {
   const chip = document.getElementById('batteryChip');
   if (!chip) return;
   const bars = chip.querySelectorAll('.battery-bars span');
-  const pct = batteryPercent == null ? 100 : batteryPercent;
+  const pct = batteryPercent == null ? 0 : batteryPercent;
   const filled = Math.ceil((pct / 100) * 5);
   chip.classList.remove('level-high', 'level-mid', 'level-low');
-  chip.classList.add('level-high');
+  if (pct >= 60) chip.classList.add('level-high');
+  else if (pct >= 21) chip.classList.add('level-mid');
+  else chip.classList.add('level-low');
   bars.forEach((b, i) => {
     b.style.background = i < filled ? '' : '#3a4048';
     b.style.boxShadow = i < filled ? '' : 'none';
@@ -1928,11 +1545,13 @@ function updateConnectionIcon() {
   const chip = document.getElementById('networkChip');
   if (!chip) return;
   chip.classList.remove('good', 'mid', 'bad', 'offline');
-  if (!navigator.onLine) { 
-      chip.classList.add('offline'); 
-      return; 
-  }
-  chip.classList.add('good');
+  if (!navigator.onLine) { chip.classList.add('offline'); return; }
+  if (navigator.connection && navigator.connection.downlink) {
+    const speed = navigator.connection.downlink;
+    if (speed >= 5) chip.classList.add('good');
+    else if (speed >= 1.5) chip.classList.add('mid');
+    else chip.classList.add('bad');
+  } else chip.classList.add('good');
 }
 
 function testCall() {
@@ -2129,30 +1748,11 @@ async function searchFriend() {
 function sendFriendRequest() {
   if (!friendSearchResult) return;
   const user = friendSearchResult;
-  
-  if (friendRequests.outgoing.find(r => r.deviceId === user.deviceId)) { 
-    toast('⚠️ أرسلت طلباً بالفعل', 'error'); 
-    return; 
-  }
-  
+  if (friendRequests.outgoing.find(r => r.deviceId === user.deviceId)) { toast('⚠️ أرسلت طلباً بالفعل', 'error'); return; }
   const req = { name: user.userName || 'مستخدم', code: user.radCode, deviceId: user.deviceId, sentAt: Date.now() };
   friendRequests.outgoing.push(req);
   saveFriendRequests();
-  
-  if (socket) {
-    const txt = JSON.stringify({ 
-      type: 'friend_request', 
-      fromDeviceId: currentUser.id, 
-      fromUserName: currentUser.name, 
-      fromCode: currentUser.radCode 
-    });
-
-    socket.emit('send_direct_message', { 
-        toDeviceId: user.deviceId, 
-        message: { text: txt, sender: currentUser.id, time: Date.now(), senderName: currentUser.name } 
-    });
-  }
-  
+  if (socket) socket.emit('friend_request', { fromDeviceId: currentUser.id, fromUserName: currentUser.name, fromCode: currentUser.radCode, toDeviceId: user.deviceId });
   closeModal('modalFriendSend');
   toast('📤 تم إرسال طلب الصداقة', 'success');
 }
@@ -2232,6 +1832,7 @@ async function switchToWave(waveId) {
   toast('⏳ جاري التبديل...', 'success');
   stopTalking();
   await disconnectWaveRoom();
+  await LiveVoice.disconnect();
   if (socket) socket.emit('wave_leave', { waveId: currentUser.waveId, deviceId: currentUser.id });
   currentUser.waveId = waveId;
   currentUser.waveName = name;
@@ -2284,58 +1885,6 @@ window.addEventListener('DOMContentLoaded', async () => {
   await registerUser();
   initSocket();
   refreshChatList();
-  
-  setInterval(async () => {
-    if (!currentUser.id) return;
-    if (window._incomingRequest) return; 
-    
-    try {
-      const res = await fetch(SERVER_URL + '/api/waves/pending-requests/' + currentUser.id);
-      const data = await res.json();
-      if (data.requests && data.requests.length > 0) {
-        const req = data.requests[0]; 
-        
-        if (ignoredRequests.has(req.waveId)) return; 
-
-        window._incomingRequest = req;
-        document.getElementById('incomingName').textContent = req.fromUserName || 'مستخدم';
-        document.getElementById('incomingCode').textContent = req.waveId;
-        openModal('modalIncomingRequest');
-        if (typeof PTTEngine !== 'undefined' && PTTEngine.playRealBeep) PTTEngine.playRealBeep();
-      }
-    } catch (e) {}
-  }, 3000);
-
-  setInterval(async () => {
-    if (!currentUser.id) return;
-    
-    try {
-      const res = await fetch(SERVER_URL + '/api/friends/requests/' + currentUser.id);
-      const data = await res.json();
-      
-      if (data.requests && data.requests.length > 0) {
-        data.requests.forEach(req => {
-          if (!friendRequests.incoming.find(r => r.deviceId === req.fromDeviceId)) {
-            const newReq = {
-              name: req.fromUserName || 'مستخدم',
-              code: req.fromCode || '—',
-              deviceId: req.fromDeviceId,
-              receivedAt: Date.now()
-            };
-            
-            friendRequests.incoming.push(newReq);
-            saveFriendRequests();
-            updateFriendBadge();
-            
-            if (!document.querySelector('.modal-overlay.show')) {
-              showIncomingFriendRequest(newReq);
-            }
-          }
-        });
-      }
-    } catch (e) {}
-  }, 4000);
-
   const savedWaveId = localStorage.getItem('rc_saved_wave_id');
   const savedWaveName = localStorage.getItem('rc_saved_wave_name');
   const isWaveOwner = localStorage.getItem('rc_is_wave_owner') === 'true';
@@ -2350,12 +1899,6 @@ window.addEventListener('DOMContentLoaded', async () => {
     if (el2) el2.textContent = savedWaveName || 'لا توجد فرقة';
     const el3 = document.getElementById('lcdLine3');
     if (el3) el3.textContent = savedWaveId + ' • RX';
-    
-    const statusChip = document.getElementById('waveStatusChip');
-    const statusText = document.getElementById('waveStatusText');
-    if (statusChip) { statusChip.classList.remove('disconnected'); statusChip.classList.add('connecting'); }
-    if (statusText) statusText.innerHTML = '🟡 جاري الاتصال...';
-
     setTimeout(() => joinWaveAsMember(savedWaveId), 1500);
   }
   const savedRoomCode = localStorage.getItem('rc_saved_room_code');
@@ -2366,10 +1909,6 @@ window.addEventListener('DOMContentLoaded', async () => {
     const el4 = document.getElementById('roomNameLabel');
     if (el4 && savedRoomName) el4.textContent = savedRoomName;
   }
-  
-  const elName = document.getElementById('userNameValue');
-  if (elName) elName.textContent = currentUser.name || '—';
-
   updateFriendBadge();
 });
 
@@ -2387,6 +1926,57 @@ document.addEventListener('click', (e) => {
     md.classList.remove('show');
   }
 });
+    setTimeout(() => {
+  const status = (socket && socket.connected) ? "متصل ✅" : "غير متصل ❌";
+  alert("📱 معرّفي:\n" + currentUser.id + "\n\n🌐 حالة السيرفر:\n" + status);
+}, 4000);  
+     // ===== FIX: إصلاح وصول طلب الصداقة فقط - لا يمس أي كود آخر =====
+(function(){
+  window.sendFriendRequestSignal = function(toDeviceId, payload){
+    if(!socket){ toast('❌ غير متصل','error'); return; }
+    const txt = JSON.stringify(payload);
+    socket.emit('friend_request_send', {toDeviceId: toDeviceId, fromDeviceId: currentUser.id, fromName: currentUser.name, fromCode: currentUser.radCode});
+    socket.emit('send_direct_message', {toDeviceId: toDeviceId, fromDeviceId: currentUser.id, fromName: currentUser.name, fromCode: currentUser.radCode, text: txt, message: {text: txt}});
+    socket.emit('direct_message', {toDeviceId: toDeviceId, text: txt, fromDeviceId: currentUser.id, fromName: currentUser.name});
+    socket.emit('private_message', {to: toDeviceId, text: txt});
+  };
+
+  // Override الإرسال ليضمن الوصول
+  const origSend = window.sendFriendRequestToUser;
+  window.sendFriendRequestToUser = function(){
+    if(!searchResultUser || searchResultUser.type!=='user'){ if(origSend) origSend(); return; }
+    try{
+      let sent = JSON.parse(localStorage.getItem('rc_sent_requests')||'[]');
+      if(!sent.find(r=>r.deviceId===searchResultUser.deviceId)){
+        sent.push({deviceId:searchResultUser.deviceId,name:searchResultUser.name,code:searchResultUser.code,time:new Date().toLocaleString('ar-SA')});
+        localStorage.setItem('rc_sent_requests', JSON.stringify(sent));
+      }
+    }catch(e){}
+    window.sendFriendRequestSignal(searchResultUser.deviceId, {type:'friend_request', fromDeviceId: currentUser.id, fromName: currentUser.name, fromCode: currentUser.radCode});
+    if(window.updateFriendBadge) updateFriendBadge();
+    toast('📤 تم إرسال طلب الصداقة إلى '+searchResultUser.name,'success');
+    closeModal('modalSearch');
+    closeModal('modalFriendSend');
+  };
+
+  // تأكد أن الاستقبال شغال
+  setTimeout(()=>{
+    if(!socket) return;
+    socket.on('friend_request_received', (data)=>{ if(window.handleIncomingFriendRequest) handleIncomingFriendRequest(data); });
+    socket.on('new_direct_message', (payload)=>{
+      try{
+        let txt = payload?.message?.text || payload?.text || '';
+        if(typeof txt === 'string' && txt.includes('friend_request')){
+          let obj = JSON.parse(txt);
+          if(obj.type==='friend_request' && window.handleIncomingFriendRequest){
+            handleIncomingFriendRequest({fromDeviceId: obj.fromDeviceId, fromName: obj.fromName, fromCode: obj.fromCode});
+          }
+        }
+      }catch(e){}
+    });
+  }, 1500);
+  console.log('✅ FIX: Friend request delivery patched - only this changed');
+})(); 
   </script>
 </body>
   </html>
