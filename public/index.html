@@ -427,7 +427,7 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
   <div class="modal-overlay" id="modalRoomCreated"><div class="modal"><div class="modal-title">✅ تم إنشاء الغرفة</div><div class="code-display"><div class="code-display-label">رقم الغرفة</div><div class="code-display-value" id="createdRoomCode">G00000</div></div><div class="modal-actions"><button class="modal-btn cancel" onclick="copyRoomCode()">📋 نسخ</button><button class="modal-btn confirm" onclick="closeModal('modalRoomCreated')">تمام</button></div></div></div>
   <div class="modal-overlay" id="modalSearch"><div class="modal"><div class="modal-title">🔍 البحث</div><div class="modal-sub" id="searchSubTitle">ابحث برقم</div><div class="modal-field"><label id="searchFieldLabel">الرقم</label><input type="text" id="searchQuery" class="code-input" maxlength="10"></div><div class="modal-actions" style="grid-template-columns:1fr;margin-bottom:14px;"><button class="modal-btn confirm" onclick="doSearch()">🔍 بحث</button></div><div id="searchResults"><div class="no-results"><span class="no-results-icon">🔎</span>اكتب الرقم</div></div><div class="modal-actions" style="grid-template-columns:1fr;margin-top:14px;"><button class="modal-btn cancel" onclick="closeModal('modalSearch')">إغلاق</button></div></div></div>
   <div class="modal-overlay" id="modalJoinConfirm"><div class="modal"><div class="modal-title">📩 طلب انضمام</div><div class="join-request-info"><div class="join-request-icon">📡</div><div class="join-request-name" id="joinTargetName">—</div><div class="join-request-code" id="joinTargetCode">Q00000</div></div><div class="modal-actions"><button class="modal-btn cancel" onclick="cancelJoin()">إلغاء</button><button class="modal-btn confirm" onclick="confirmJoin()">موافق</button></div></div></div>
-  <div class="modal-overlay" id="modalIncomingRequest"><div class="modal"><div class="modal-title">🔔 طلب انضمام</div><div class="join-request-info"><div class="join-request-icon">👤</div><div class="join-request-name" id="incomingName" style="font-size:14px; line-height:1.6;">—</div><div class="join-request-code" id="incomingCode">—</div></div><div class="modal-actions"><button class="modal-btn danger" onclick="rejectIncoming()">رفض</button><button class="modal-btn confirm" onclick="acceptIncoming()">قبول</button></div></div></div>
+  <div class="modal-overlay" id="modalIncomingRequest"><div class="modal"><div class="modal-title">🔔 طلب انضمام</div><div class="join-request-info"><div class="join-request-icon">👤</div><div class="join-request-name" id="incomingName">—</div><div class="join-request-code" id="incomingCode">—</div></div><div class="modal-actions"><button class="modal-btn danger" onclick="rejectIncoming()">رفض</button><button class="modal-btn confirm" onclick="acceptIncoming()">قبول</button></div></div></div>
   <div class="modal-overlay" id="modalUserName"><div class="modal"><div class="modal-title">👤 ما اسمك؟</div><div class="modal-field"><label>الاسم</label><input type="text" id="userNameInput" maxlength="20"></div><div class="modal-actions" style="grid-template-columns:1fr;"><button class="modal-btn confirm" onclick="saveUserName()">حفظ</button></div></div></div>
   <div class="modal-overlay" id="modalContactPick"><div class="modal"><div class="modal-title">👥 جهة الاتصال</div><div class="modal-field"><label>الاسم</label><input type="text" id="contactName"></div><div class="modal-field"><label>رقم الهاتف</label><input type="tel" id="contactPhone"></div><div class="modal-actions"><button class="modal-btn cancel" onclick="closeModal('modalContactPick')">إلغاء</button><button class="modal-btn confirm" onclick="sendContact()">إرسال</button></div></div></div>
 
@@ -495,41 +495,34 @@ const PTTEngine = {
     if (!this.audioCtx) return;
     const osc = this.audioCtx.createOscillator();
     const gainNode = this.audioCtx.createGain();
-    
     osc.type = type;
     osc.frequency.setValueAtTime(freq1, this.audioCtx.currentTime);
-    
     if (freq2) {
       osc.frequency.exponentialRampToValueAtTime(freq2, this.audioCtx.currentTime + duration);
     }
-    
     osc.connect(gainNode);
     gainNode.connect(this.audioCtx.destination);
-    
-    // جعل الصوت أعلى وأوضح (0.9)
-    gainNode.gain.setValueAtTime(0.9, this.audioCtx.currentTime);
+    gainNode.gain.setValueAtTime(0.8, this.audioCtx.currentTime);
     gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioCtx.currentTime + duration);
-    
     osc.start();
     osc.stop(this.audioCtx.currentTime + duration);
   },
 
   playStartBeep() {
-    // نغمة بداية التحدث (حادة وقصيرة)
-    this._playTone(1400, 1800, 0.12, 'sine');
-    if (navigator.vibrate) navigator.vibrate(40);
+    this._playTone(1200, 1500, 0.15, 'sine');
+    if (navigator.vibrate) navigator.vibrate([30, 40, 30]);
   },
-  
+
   playEndBeep() {
-    // نغمة نهاية التحدث (منخفضة وقصيرة)
-    this._playTone(900, 600, 0.12, 'sine');
-    if (navigator.vibrate) navigator.vibrate(40);
+    this._playTone(800, 600, 0.15, 'square');
+    if (navigator.vibrate) navigator.vibrate([30, 40, 30]);
   },
-  
+
   playRealBeep() {
-    // نغمة إشعار عادية
-    this._playTone(600, null, 0.15, 'sine');
-    setTimeout(() => { this._playTone(800, null, 0.15, 'sine'); }, 200);
+    this._playTone(440, null, 0.2, 'sine');
+    setTimeout(() => {
+      this._playTone(480, null, 0.2, 'sine');
+    }, 250);
   }
 };
 
@@ -590,6 +583,7 @@ async function connectWaveChannel() {
 async function onPTTStart() {
   if (isTalking || pttLock) return;
 
+  // التحقق من وجود فرقة نشطة قبل طلب المايك
   if (!currentUser.waveId) {
     toast('⚠️ لا توجد فرقة نشطة. أنشئ أو انضم لفرقة أولاً', 'error');
     return;
@@ -611,12 +605,7 @@ async function onPTTStart() {
 
   startWaveTimer();
   await PTTEngine.init();
-  
-  // تشغيل نغمة البداية
   PTTEngine.playStartBeep();
-  
-  // ✅ الحل: انتظار 150ms لكي تكتمل النغمة قبل أن يقوم المتصفح بقطعها لتشغيل المايك
-  await new Promise(resolve => setTimeout(resolve, 150));
 
   try {
     const stream = await navigator.mediaDevices.getUserMedia({
@@ -777,7 +766,7 @@ function initSocket() {
   });
 
   socket.on('wave_join_request_received', (data) => {
-    document.getElementById('incomingName').textContent = (data.fromUserName || 'مستخدم') + ' يريد الانضمام إلى الفرقة';
+    document.getElementById('incomingName').textContent = data.fromUserName || 'مستخدم';
     document.getElementById('incomingCode').textContent = data.waveId;
     openModal('modalIncomingRequest');
     window._incomingRequest = data;
@@ -1530,8 +1519,8 @@ async function createRoom() {
   const name = document.getElementById('roomName').value.trim();
   if (!name) { toast('⚠️ أدخل اسم الغرفة', 'error'); return; }
 
-  // ✅ التعديل الجديد: توليد كود غرفة يبدأ بحرف M
-  const roomCode = 'Q' + Math.random().toString(36).substring(2, 8).toUpperCase();
+  const roomCode = currentUser.radCode;
+  if (!roomCode) { toast('⚠️ انتظر ثانية، لم يتم تحميل رقمك بعد', 'error'); return; }
 
   currentUser.roomName = name;
   currentUser.roomCode = roomCode;
@@ -1561,11 +1550,12 @@ async function createRoom() {
   document.getElementById('chatMessages').innerHTML = `
     <div style="padding:20px;text-align:center;color:var(--text-dim);font-size:12px;">
       💬 هذه غرفتك "${name}"<br>
-      رقم الغرفة: <strong style="color:var(--cyan);">${roomCode}</strong><br>
+      رقمك: <strong style="color:var(--cyan);">${roomCode}</strong><br>
       يمكنك مشاركة هذا الرقم مع أصدقائك للبحث عنه.
     </div>
   `;
 }
+
 function saveRoomName() {
   const name = document.getElementById('newRoomName').value.trim();
   if (!name) { toast('⚠️ أدخل اسماً', 'error'); return; }
