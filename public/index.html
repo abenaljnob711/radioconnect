@@ -777,7 +777,7 @@ function initSocket() {
   });
 
   socket.on('wave_join_request_received', (data) => {
-    document.getElementById('incomingName').textContent = data.fromUserName || 'مستخدم';
+    document.getElementById('incomingName').textContent = (data.fromUserName || 'مستخدم') + ' يريد الانضمام إلى الفرقة';
     document.getElementById('incomingCode').textContent = data.waveId;
     openModal('modalIncomingRequest');
     window._incomingRequest = data;
