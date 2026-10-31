@@ -1530,8 +1530,8 @@ async function createRoom() {
   const name = document.getElementById('roomName').value.trim();
   if (!name) { toast('⚠️ أدخل اسم الغرفة', 'error'); return; }
 
-  const roomCode = currentUser.radCode;
-  if (!roomCode) { toast('⚠️ انتظر ثانية، لم يتم تحميل رقمك بعد', 'error'); return; }
+  // ✅ التعديل الجديد: توليد كود غرفة يبدأ بحرف M
+  const roomCode = 'M' + Math.random().toString(36).substring(2, 8).toUpperCase();
 
   currentUser.roomName = name;
   currentUser.roomCode = roomCode;
@@ -1561,12 +1561,11 @@ async function createRoom() {
   document.getElementById('chatMessages').innerHTML = `
     <div style="padding:20px;text-align:center;color:var(--text-dim);font-size:12px;">
       💬 هذه غرفتك "${name}"<br>
-      رقمك: <strong style="color:var(--cyan);">${roomCode}</strong><br>
+      رقم الغرفة: <strong style="color:var(--cyan);">${roomCode}</strong><br>
       يمكنك مشاركة هذا الرقم مع أصدقائك للبحث عنه.
     </div>
   `;
 }
-
 function saveRoomName() {
   const name = document.getElementById('newRoomName').value.trim();
   if (!name) { toast('⚠️ أدخل اسماً', 'error'); return; }
