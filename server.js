@@ -1,8 +1,8 @@
 "use strict";
 
 /* ==========================================
-   Radio Connect Server - v4.3
-   RadCode format: Q#####
+   Radio Connect Server - v4.4 (Voice Waves)
+   RadCode format: T#####
    ========================================== */
 
 const express = require("express");
@@ -48,12 +48,12 @@ let db = {
   waveRequests: {},
   conversations: {},
   messages: {},
-  friendRequests: {},   // ✅ إضافة 1: طلبات الصداقة
-  friendships: {}       // ✅ إضافة 1: الصداقات المقبولة
+  friendRequests: {},   
+  friendships: {}       
 };
 
 /* ==========================================
-   ✅ توليد كود RadCode بصيغة Q#####
+   ✅ توليد كود RadCode بصيغة T#####
    ========================================== */
 function generateRadCode() {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -69,10 +69,10 @@ function generateWaveId() {
   return generateRadCode();
 }
 
-/* توليد كود غرفة (يبدأ بـ G) */
+/* توليد كود غرفة (يبدأ بـ R) */
 function generateRoomCode() {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  let code = "M";
+  let code = "R";
   for (let i = 0; i < 5; i++) {
     code += chars[Math.floor(Math.random() * chars.length)];
   }
@@ -98,8 +98,8 @@ function loadDb() {
       db.waveRequests = parsed.waveRequests || {};
       db.conversations = parsed.conversations || {};
       db.messages = parsed.messages || {};
-      db.friendRequests = parsed.friendRequests || {};   // ✅ إضافة 2
-      db.friendships = parsed.friendships || {};         // ✅ إضافة 2
+      db.friendRequests = parsed.friendRequests || {};   
+      db.friendships = parsed.friendships || {};         
     }
   } catch (e) {
     console.error("خطأ في تحميل قاعدة البيانات:", e.message);
@@ -128,13 +128,13 @@ app.get("/", (req, res) => {
     res.json({
       status: "ok",
       name: "Radio Connect Server",
-      version: "4.3",
+      version: "4.4",
       livekit: LIVEKIT_URL ? "configured" : "not configured",
       uptime: process.uptime()
     });
   }
 });
-/* جلب طلبات الصداقة المعلقة */
+
 app.get("/api/friends/requests/:deviceId", (req, res) => {
   try {
     const requests = Object.values(db.friendRequests).filter(
@@ -145,11 +145,12 @@ app.get("/api/friends/requests/:deviceId", (req, res) => {
     res.status(500).json({ error: e.message });
   }
 });
+
 app.get("/status", (req, res) => {
   res.json({
     status: "ok",
     name: "Radio Connect Server",
-    version: "4.3",
+    version: "4.4",
     livekit: LIVEKIT_URL ? "configured" : "not configured",
     uptime: process.uptime(),
     waves: Object.keys(db.waves).length,
@@ -438,7 +439,7 @@ app.post("/api/waves/remove-member", (req, res) => {
 });
 
 /* ==========================================
-   LiveKit Token
+   LiveKit Token (إذا كنت تستخدمه)
    ========================================== */
 
 app.post("/api/livekit/token", async (req, res) => {
@@ -531,6 +532,9 @@ io.on("connection", (socket) => {
     if (socket.data.currentConvId === conversationId) socket.data.currentConvId = null;
   });
 
+  // ==========================================
+  // 💬 المحادثات النصية والصوتية (محفوظة)
+  // ==========================================
   socket.on("send_direct_message", ({ conversationId, message }) => {
     if (!db.messages[conversationId]) db.messages[conversationId] = [];
     db.messages[conversationId].push(message);
@@ -602,17 +606,6 @@ io.on("connection", (socket) => {
         online: !!(db.waves[waveId].onlineNow && db.waves[waveId].onlineNow[m.id])
       }))
     });
-
-    io.to("wave_" + waveId).emit("wave_listener_joined", {
-      deviceId,
-      userName,
-      members: Object.values(db.waves[waveId].members).map(m => ({
-        id: m.id,
-        name: m.name,
-        isOwner: m.isOwner || false,
-        online: !!(db.waves[waveId].onlineNow && db.waves[waveId].onlineNow[m.id])
-      }))
-    });
   });
 
   socket.on("wave_leave", ({ waveId, deviceId }) => {
@@ -630,6 +623,19 @@ io.on("connection", (socket) => {
       });
     }
     socket.leave("wave_" + waveId);
+  });
+
+  // ==========================================
+  // 🎤 إرسال الصوت في الفرقة (بدون حفظ)
+  // ==========================================
+  socket.on("send_wave_voice", ({ waveId, senderName, audio }) => {
+    if (!waveId || !audio) return;
+    // إرسال الصوت لكل الأعضاء في الفرقة ما عدا المرسل
+    socket.to("wave_" + waveId).emit("new_wave_voice", {
+      senderId: socket.data.deviceId,
+      senderName: senderName || "مستخدم",
+      audio: audio
+    });
   });
 
   socket.on("wave_join_request", ({ waveId, fromDeviceId, fromUserName }) => {
@@ -737,7 +743,7 @@ io.on("connection", (socket) => {
   });
 
   /* ==========================================
-     🆕 نظام طلبات الصداقة — إضافة 3
+     🆕 نظام طلبات الصداقة
      ========================================== */
 
   socket.on("friend_request", ({ fromDeviceId, fromUserName, fromCode, toDeviceId }) => {
@@ -843,8 +849,6 @@ io.on("connection", (socket) => {
     }
   });
 
-  /* ========== نهاية نظام الصداقة ========== */
-
   socket.on("disconnect", () => {
     const { deviceId, waveId } = socket.data;
 
@@ -871,6 +875,6 @@ io.on("connection", (socket) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`🚀 Radio Connect Server v4.3 على المنفذ ${PORT}`);
+  console.log(`🚀 Radio Connect Server v4.4 على المنفذ ${PORT}`);
   console.log(`📡 LiveKit: ${LIVEKIT_URL ? "✅ مهيّأ" : "❌ غير مهيّأ"}`);
 });
