@@ -6,7 +6,6 @@
 <meta name="theme-color" content="#05080c">
 <title>Radio Connect — راديو كونكت</title>
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/livekit-client@2.15.3/dist/livekit-client.umd.min.js"></script>
 <style>
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 :root { --bg: #05080c; --card: #0f1921; --card-2: #142028; --border: #1c2a36; --text: #e6f0f5; --text-dim: #6b8899; --cyan: #00e5ff; --cyan-dark: #008fa8; --green: #00ff88; --red: #ff2a4d; --red-dark: #b01530; --yellow: #ffcc00; --blue-msg: #1a4d6b; --blue-msg-2: #0f3550; --red-msg: #6b1220; --red-msg-2: #45080f; --radius: 14px; }
@@ -79,7 +78,7 @@ body::before { content: ''; position: fixed; inset: 0; background: radial-gradie
 #waveStatusChip.live .wave-timer { color: var(--green); }
 #friendRequestsChip, #friendRequestsChip2 { cursor: pointer; position: relative; }
 #friendRequestsChip:active, #friendRequestsChip2:active { border-color: var(--cyan); box-shadow: 0 0 12px rgba(0,229,255,.3); }
-#sendFriendChip, #sendFriendChip2 { cursor: pointer; }
+#searchWaveChip, #searchUserChip2 { cursor: pointer; }
 #friendReqBadge, #friendReqBadge2 { position: absolute; top: -4px; left: -4px; background: var(--red); color: #fff; border-radius: 50%; min-width: 18px; height: 18px; font-size: 10px; font-weight: 900; align-items: center; justify-content: center; padding: 0 4px; box-shadow: 0 0 8px var(--red); display: none; }
 .radio-stage { position: relative; height: 360px; display: flex; align-items: center; justify-content: center; margin: 8px 0 16px; }
 .radio-device { position: relative; width: 210px; height: 320px; filter: drop-shadow(0 20px 40px rgba(0,0,0,.8)) drop-shadow(0 0 30px rgba(0,229,255,.15)); }
@@ -254,7 +253,7 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
           <div class="chip-label">الفرقة النشطة</div>
         </div>
         <div class="chip">
-          <div class="chip-value code" id="waveCodeChip">Q00000 <span style="font-size:12px;">🔑</span></div>
+          <div class="chip-value code" id="waveCodeChip">T00000 <span style="font-size:12px;">🔑</span></div>
           <div class="chip-label">رقم الموجة</div>
         </div>
       </div>
@@ -277,15 +276,14 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
         </div>
       </div>
       <div class="status-row" style="grid-template-columns:1fr 1fr;">
-  <div class="chip" id="friendRequestsChip" style="cursor:pointer;">
-    <div class="chip-value" style="font-size:13px; font-weight:800;">👥 طلبات الصداقة</div>
-    <span id="friendReqBadge">0</span>
-  </div>
-  <!-- ✅ تم استبدال زر إرسال الطلب بزر البحث عن فرقة -->
-  <div class="chip" id="searchWaveChip" onclick="openSearchWave()" style="cursor:pointer;">
-    <div class="chip-value" style="font-size:13px; font-weight:800;">🔍 البحث عن فرقة</div>
-  </div>
-</div>
+        <div class="chip" id="friendRequestsChip" style="cursor:pointer;">
+          <div class="chip-value" style="font-size:13px; font-weight:800;">👥 طلبات الصداقة</div>
+          <span id="friendReqBadge">0</span>
+        </div>
+        <div class="chip" id="searchWaveChip" onclick="openSearchWave()" style="cursor:pointer;">
+          <div class="chip-value" style="font-size:13px; font-weight:800;">🔍 البحث عن فرقة</div>
+        </div>
+      </div>
       <div class="radio-stage">
         <div class="radio-device">
           <div class="antenna"></div>
@@ -300,7 +298,7 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
                 <span id="lcdLine2">S458</span>
               </div>
               <div class="lcd-row">
-                <span class="lcd-label" id="lcdLine3">Q00000 • RX</span>
+                <span class="lcd-label" id="lcdLine3">T00000 • RX</span>
                 <span id="lcdStatus">•</span>
               </div>
             </div>
@@ -333,8 +331,8 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
           <span id="friendReqBadge2">0</span>
         </div>
         <div class="chip" id="searchUserChip2" onclick="openSearchUser()" style="cursor:pointer;">
-     <div class="chip-value" style="font-size:13px; font-weight:800;">🔍 البحث عن مستخدم</div>
-     </div>
+          <div class="chip-value" style="font-size:13px; font-weight:800;">🔍 البحث عن مستخدم</div>
+        </div>
       </div>
       <div id="chatListContainer" style="margin-top:14px;"></div>
       <div class="empty-room" id="emptyRoom">
@@ -424,23 +422,21 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
   <div class="modal-overlay" id="modalAttach"><div class="modal"><div class="modal-title">📎 إرفاق</div><div class="modal-sub">اختر نوع المحتوى</div><div class="attach-grid"><button class="attach-item" onclick="pickCamera()"><span class="attach-icon">📷</span><span>كاميرا</span></button><button class="attach-item" onclick="pickFile('image')"><span class="attach-icon">🖼️</span><span>صورة</span></button><button class="attach-item" onclick="pickFile('video')"><span class="attach-icon">🎬</span><span>فيديو</span></button><button class="attach-item" onclick="pickFile('document')"><span class="attach-icon">📄</span><span>مستند</span></button><button class="attach-item" onclick="pickContact()"><span class="attach-icon">👥</span><span>جهة اتصال</span></button><button class="attach-item" onclick="pickFile('audio')"><span class="attach-icon">🎵</span><span>موسيقى</span></button></div><div class="modal-actions" style="grid-template-columns:1fr;margin-top:14px;"><button class="modal-btn cancel" onclick="closeModal('modalAttach')">إلغاء</button></div></div></div>
   <div class="modal-overlay" id="modalCreate"><div class="modal"><div class="modal-title">➕ إنشاء غرفة جديدة</div><div class="modal-sub">سيُولَّد رقم غرفة خاص بك تلقائياً</div><div class="modal-field"><label>اسم الغرفة</label><input type="text" id="roomName" maxlength="30"></div><div class="modal-actions"><button class="modal-btn cancel" onclick="closeModal('modalCreate')">إلغاء</button><button class="modal-btn confirm" onclick="createRoom()">إنشاء</button></div></div></div>
   <div class="modal-overlay" id="modalWave"><div class="modal"><div class="modal-title">📡 إنشاء فرقة</div><div class="modal-sub">سيُولَّد رقم فرقتك الخاص</div><div class="modal-field"><label>اسم الفرقة</label><input type="text" id="waveName" maxlength="30"></div><div class="modal-actions"><button class="modal-btn cancel" onclick="closeModal('modalWave')">إلغاء</button><button class="modal-btn confirm" onclick="createWave()">إنشاء</button></div></div></div>
-  <div class="modal-overlay" id="modalWaveCreated"><div class="modal"><div class="modal-title">✅ تم إنشاء الفرقة</div><div class="code-display"><div class="code-display-label">رقم الفرقة</div><div class="code-display-value" id="createdWaveCode">Q00000</div></div><div class="modal-actions"><button class="modal-btn cancel" onclick="copyWaveCode()">📋 نسخ</button><button class="modal-btn confirm" onclick="closeModal('modalWaveCreated')">تمام</button></div></div></div>
-  <div class="modal-overlay" id="modalRoomCreated"><div class="modal"><div class="modal-title">✅ تم إنشاء الغرفة</div><div class="code-display"><div class="code-display-label">رقم الغرفة</div><div class="code-display-value" id="createdRoomCode">G00000</div></div><div class="modal-actions"><button class="modal-btn cancel" onclick="copyRoomCode()">📋 نسخ</button><button class="modal-btn confirm" onclick="closeModal('modalRoomCreated')">تمام</button></div></div></div>
+  <div class="modal-overlay" id="modalWaveCreated"><div class="modal"><div class="modal-title">✅ تم إنشاء الفرقة</div><div class="code-display"><div class="code-display-label">رقم الفرقة</div><div class="code-display-value" id="createdWaveCode">T00000</div></div><div class="modal-actions"><button class="modal-btn cancel" onclick="copyWaveCode()">📋 نسخ</button><button class="modal-btn confirm" onclick="closeModal('modalWaveCreated')">تمام</button></div></div></div>
+  <div class="modal-overlay" id="modalRoomCreated"><div class="modal"><div class="modal-title">✅ تم إنشاء الغرفة</div><div class="code-display"><div class="code-display-label">رقم الغرفة</div><div class="code-display-value" id="createdRoomCode">R00000</div></div><div class="modal-actions"><button class="modal-btn cancel" onclick="copyRoomCode()">📋 نسخ</button><button class="modal-btn confirm" onclick="closeModal('modalRoomCreated')">تمام</button></div></div></div>
   <div class="modal-overlay" id="modalSearch"><div class="modal"><div class="modal-title">🔍 البحث</div><div class="modal-sub" id="searchSubTitle">ابحث برقم</div><div class="modal-field"><label id="searchFieldLabel">الرقم</label><input type="text" id="searchQuery" class="code-input" maxlength="10"></div><div class="modal-actions" style="grid-template-columns:1fr;margin-bottom:14px;"><button class="modal-btn confirm" onclick="doSearch()">🔍 بحث</button></div><div id="searchResults"><div class="no-results"><span class="no-results-icon">🔎</span>اكتب الرقم</div></div><div class="modal-actions" style="grid-template-columns:1fr;margin-top:14px;"><button class="modal-btn cancel" onclick="closeModal('modalSearch')">إغلاق</button></div></div></div>
-  <div class="modal-overlay" id="modalJoinConfirm"><div class="modal"><div class="modal-title">📩 طلب انضمام</div><div class="join-request-info"><div class="join-request-icon">📡</div><div class="join-request-name" id="joinTargetName">—</div><div class="join-request-code" id="joinTargetCode">Q00000</div></div><div class="modal-actions"><button class="modal-btn cancel" onclick="cancelJoin()">إلغاء</button><button class="modal-btn confirm" onclick="confirmJoin()">موافق</button></div></div></div>
+  <div class="modal-overlay" id="modalJoinConfirm"><div class="modal"><div class="modal-title">📩 طلب انضمام</div><div class="join-request-info"><div class="join-request-icon">📡</div><div class="join-request-name" id="joinTargetName">—</div><div class="join-request-code" id="joinTargetCode">T00000</div></div><div class="modal-actions"><button class="modal-btn cancel" onclick="cancelJoin()">إلغاء</button><button class="modal-btn confirm" onclick="confirmJoin()">موافق</button></div></div></div>
   <div class="modal-overlay" id="modalIncomingRequest"><div class="modal"><div class="modal-title">🔔 طلب انضمام</div><div class="join-request-info"><div class="join-request-icon">👤</div><div class="join-request-name" id="incomingName">—</div><div class="join-request-code" id="incomingCode">—</div></div><div class="modal-actions"><button class="modal-btn danger" onclick="rejectIncoming()">رفض</button><button class="modal-btn confirm" onclick="acceptIncoming()">قبول</button></div></div></div>
   <div class="modal-overlay" id="modalUserName"><div class="modal"><div class="modal-title">👤 ما اسمك؟</div><div class="modal-field"><label>الاسم</label><input type="text" id="userNameInput" maxlength="20"></div><div class="modal-actions" style="grid-template-columns:1fr;"><button class="modal-btn confirm" onclick="saveUserName()">حفظ</button></div></div></div>
   <div class="modal-overlay" id="modalContactPick"><div class="modal"><div class="modal-title">👥 جهة الاتصال</div><div class="modal-field"><label>الاسم</label><input type="text" id="contactName"></div><div class="modal-field"><label>رقم الهاتف</label><input type="tel" id="contactPhone"></div><div class="modal-actions"><button class="modal-btn cancel" onclick="closeModal('modalContactPick')">إلغاء</button><button class="modal-btn confirm" onclick="sendContact()">إرسال</button></div></div></div>
 
   <div class="modal-overlay" id="modalFriendRequests"><div class="modal"><div class="modal-title">👥 طلبات الصداقة</div><div class="modal-sub">الطلبات الواردة والصادرة</div><div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:12px;"><button id="tabIncoming" class="modal-btn confirm" onclick="switchFriendTab('incoming')" style="padding:10px;">📥 واردة</button><button id="tabOutgoing" class="modal-btn cancel" onclick="switchFriendTab('outgoing')" style="padding:10px;">📤 صادرة</button></div><div id="friendRequestsList" style="max-height:320px; overflow-y:auto;"><div class="no-results"><span class="no-results-icon">📭</span>لا توجد طلبات</div></div><div class="modal-actions" style="grid-template-columns:1fr; margin-top:14px;"><button class="modal-btn cancel" onclick="closeModal('modalFriendRequests')">إغلاق</button></div></div></div>
   <div class="modal-overlay" id="modalFriendIncoming"><div class="modal"><div class="modal-title">👋 طلب صداقة</div><div class="join-request-info"><div class="join-request-icon">👤</div><div class="join-request-name" id="frIncomingName" style="font-size:14px; line-height:1.6;">—</div><div class="join-request-code" id="frIncomingCode">—</div></div><div class="modal-actions"><button class="modal-btn danger" onclick="rejectFriendRequest()">❌ إلغاء</button><button class="modal-btn confirm" onclick="acceptFriendRequest()">✅ موافق</button></div></div></div>
-  <div class="modal-overlay" id="modalFriendSend"><div class="modal"><div class="modal-title">➕ إرسال طلب صداقة</div><div class="modal-sub">ابحث برقم المستخدم</div><div class="modal-field"><label>رقم المستخدم</label><input type="text" id="friendSearchCode" class="code-input" maxlength="10" placeholder="Q#####"></div><div id="friendSearchResults"></div><div class="modal-actions"><button class="modal-btn cancel" onclick="closeModal('modalFriendSend')">إلغاء</button><button class="modal-btn confirm" onclick="searchFriend()">🔍 بحث</button></div></div></div>
+  <div class="modal-overlay" id="modalFriendSend"><div class="modal"><div class="modal-title">➕ إرسال طلب صداقة</div><div class="modal-sub">ابحث برقم المستخدم</div><div class="modal-field"><label>رقم المستخدم</label><input type="text" id="friendSearchCode" class="code-input" maxlength="10" placeholder="T#####"></div><div id="friendSearchResults"></div><div class="modal-actions"><button class="modal-btn cancel" onclick="closeModal('modalFriendSend')">إلغاء</button><button class="modal-btn confirm" onclick="searchFriend()">🔍 بحث</button></div></div></div>
 
   <input type="file" id="hiddenFileInput" style="display:none;">
     <script>
-// تم تشفير الروابط لحمايتها من العبث
 const SERVER_URL = atob('aHR0cHM6Ly9yYWRpby1jb25uZWN0LXNlcnZlci5vbnJlbmRlci5jb20=');
-const LIVEKIT_URL = atob('d3NzOi8vcmFkaW9jb25uZWN0LTh1eWg1M3FjLmxpdmVraXQuY2xvdWQ=');
 
 let DEVICE_ID = localStorage.getItem('rc_device_id');
 if (!DEVICE_ID) {
@@ -460,17 +456,12 @@ let menuBusy = false;
 let searchResultUser = null;
 let socket = null;
 
-let livekitRoom = null;
-let waveRoom = null;
-let waveLocalAudioTrack = null;
-let rawMicStream = null;
-let localTestAudio = null;
+// متغيرات PTT (التسجيل)
 let isTalking = false;
-
-// متغيرات القفل لمنع التداخل
-let pttLock = false;
-let activeMediaStream = null;
-let activeLivekitTrack = null;
+let waveRecorder = null;
+let waveAudioChunks = [];
+let waveStartTime = 0;
+let waveTimerInterval = null;
 
 function factoryReset() {
   if (!confirm('⚠️ تحذير: سيتم مسح جميع البيانات. متأكد؟')) return;
@@ -479,7 +470,6 @@ function factoryReset() {
   window.location.reload();
 }
 
-// محرك صوتي حقيقي وعالي (بدون ملفات mp3 خارجية)
 const PTTEngine = {
   audioCtx: null,
   async init() {
@@ -491,16 +481,13 @@ const PTTEngine = {
       return true;
     } catch (e) { return false; }
   },
-
   _playTone(freq1, freq2, duration, type = 'sine') {
     if (!this.audioCtx) return;
     const osc = this.audioCtx.createOscillator();
     const gainNode = this.audioCtx.createGain();
     osc.type = type;
     osc.frequency.setValueAtTime(freq1, this.audioCtx.currentTime);
-    if (freq2) {
-      osc.frequency.exponentialRampToValueAtTime(freq2, this.audioCtx.currentTime + duration);
-    }
+    if (freq2) osc.frequency.exponentialRampToValueAtTime(freq2, this.audioCtx.currentTime + duration);
     osc.connect(gainNode);
     gainNode.connect(this.audioCtx.destination);
     gainNode.gain.setValueAtTime(0.9, this.audioCtx.currentTime);
@@ -508,254 +495,34 @@ const PTTEngine = {
     osc.start();
     osc.stop(this.audioCtx.currentTime + duration);
   },
-
-  playStartBeep() {
-    this._playTone(1400, 1800, 0.12, 'sine');
-    if (navigator.vibrate) navigator.vibrate(40);
-  },
-
-  playEndBeep() {
-    this._playTone(900, 600, 0.12, 'sine');
-    if (navigator.vibrate) navigator.vibrate(40);
-  },
-
-  playRealBeep() {
-    this._playTone(600, null, 0.15, 'sine');
-    setTimeout(() => { this._playTone(800, null, 0.15, 'sine'); }, 200);
-  }
-};
-
-async function disconnectWaveRoom() {
-  try {
-    if (waveLocalAudioTrack && waveRoom) {
-      try { waveRoom.localParticipant.unpublishTrack(waveLocalAudioTrack); waveLocalAudioTrack.stop(); } catch(e){}
-      waveLocalAudioTrack = null;
-    }
-    if (waveRoom) { await waveRoom.disconnect(); waveRoom = null; }
-    document.querySelectorAll('audio[data-lk-track]').forEach(el => el.remove());
-  } catch(e) {}
-}
-
-async function connectWaveChannel() {
-  try {
-    if (!window.LivekitClient || !currentUser.radCode) return false;
-    
-    // ✅ التأكد من الاتصال بالفرقة الصحيحة
-    if (waveRoom && waveRoom.state === "connected" && waveRoom.name === currentUser.waveId) return true;
-
-    if (waveRoom && waveRoom.state === "connected" && waveRoom.name !== currentUser.waveId) {
-        await waveRoom.disconnect();
-        waveRoom = null;
-    }
-
-    const tokenRes = await fetch(SERVER_URL + '/api/livekit/token', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ roomId: currentUser.waveId, deviceId: currentUser.id, userName: currentUser.name })
-    });
-    const tokenData = await tokenRes.json();
-    if (!tokenData.token) return false;
-
-    waveRoom = new window.LivekitClient.Room();
-
-    waveRoom.on(window.LivekitClient.RoomEvent.TrackSubscribed, (track, pub, participant) => {
-      if (track.kind === "audio") {
-        const audioElement = track.attach();
-        audioElement.volume = 1.0;
-        audioElement.autoplay = true;
-        document.body.appendChild(audioElement);
-      }
-    });
-
-    waveRoom.on(window.LivekitClient.RoomEvent.TrackUnsubscribed, (track) => {
-      track.detach().forEach(el => el.remove());
-    });
-
-    waveRoom.on(window.LivekitClient.RoomEvent.Disconnected, () => {
-      waveRoom = null;
-      if (isTalking) stopTalking();
-    });
-
-    await waveRoom.connect(LIVEKIT_URL, tokenData.token);
-    return true;
-  } catch (e) {
-    console.error("Wave Connect Error:", e);
-    waveRoom = null;
-    return false;
-  }
-}
-
-let waveRecorder = null;
-let waveAudioChunks = [];
-
-async function onPTTStart() {
-  if (isTalking) return;
-  if (!currentUser.waveId) { toast('⚠️ انضم إلى فرقة أولاً', 'error'); return; }
-
-  isTalking = true;
-  const pttMain = document.getElementById('pttMain');
-  if (pttMain) pttMain.classList.add('holding');
-  document.body.classList.add('ptt-active');
-  
-  const statusChip = document.getElementById('waveStatusChip');
-  const statusText = document.getElementById('waveStatusText');
-  if (statusChip) { statusChip.classList.add('live'); statusChip.classList.remove('disconnected'); }
-  if (statusText) statusText.innerHTML = '🔴 جاري التسجيل...';
-  
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    waveRecorder = new MediaRecorder(stream);
-    waveAudioChunks = [];
-    waveRecorder.ondataavailable = e => { if (e.data.size > 0) waveAudioChunks.push(e.data); };
-    waveRecorder.start();
-  } catch (err) {
-    toast("⚠️ تعذر تشغيل الميكروفون");
-    stopTalking();
-  }
-}
-
-function stopTalking() {
-  if (!isTalking) return;
-  isTalking = false;
-  
-  const pttMain = document.getElementById('pttMain');
-  if (pttMain) pttMain.classList.remove('holding');
-  document.body.classList.remove('ptt-active');
-  const statusChip = document.getElementById('waveStatusChip');
-  const statusText = document.getElementById('waveStatusText');
-  if (statusChip) { statusChip.classList.remove('live'); statusChip.classList.add('disconnected'); }
-  if (statusText) statusText.innerHTML = '🔴 غير متصل';
-
-  // ✅ قفل التسجيل وإرسال الصوت للسيرفر
-  if (waveRecorder && waveRecorder.state === 'recording') {
-    waveRecorder.onstop = () => {
-      const blob = new Blob(waveAudioChunks, { type: 'audio/webm' });
-      const reader = new FileReader();
-      reader.onload = () => {
-        const base64 = reader.result;
-        if (socket && currentUser.waveId) {
-          socket.emit('send_wave_voice', {
-            waveId: currentUser.waveId,
-            senderName: currentUser.name,
-            audio: base64
-          });
-        }
-      };
-      reader.readAsDataURL(blob);
-      waveRecorder.stream.getTracks().forEach(t => t.stop());
-      waveRecorder = null;
-    };
-    waveRecorder.stop();
-  }
-}
-  if (isTalking) PTTEngine.playEndBeep();
-  isTalking = false;
-  pttLock = false;
-
-  if (activeLivekitTrack) {
-    try {
-      activeLivekitTrack.stop();
-      if (waveRoom && waveRoom.state === "connected") {
-        waveRoom.localParticipant.unpublishTrack(activeLivekitTrack);
-      }
-    } catch(e) {}
-    activeLivekitTrack = null;
-  }
-
-  if (activeMediaStream) {
-    activeMediaStream.getTracks().forEach(t => t.stop());
-    activeMediaStream = null;
-  }
-
-  if (waveLocalAudioTrack) {
-    try { waveLocalAudioTrack.stop(); } catch(e){}
-    waveLocalAudioTrack = null;
-  }
-  if (rawMicStream) {
-    rawMicStream.getTracks().forEach(t => t.stop());
-    rawMicStream = null;
-  }
-  if (localTestAudio) {
-    try { localTestAudio.pause(); localTestAudio.srcObject = null; } catch (e) {}
-    localTestAudio = null;
-  }
-
-  const pttMain = document.getElementById('pttMain');
-  if (pttMain) pttMain.classList.remove('holding');
-  document.body.classList.remove('ptt-active');
-  const statusChip = document.getElementById('waveStatusChip');
-  const statusText = document.getElementById('waveStatusText');
-  if (statusChip) { statusChip.classList.remove('live'); statusChip.classList.add('disconnected'); }
-  if (statusText) statusText.innerHTML = '🔴 غير متصل';
-  const lcd3 = document.getElementById('lcdLine3');
-  if (lcd3) lcd3.textContent = (currentUser.radCode || '—') + ' • RX';
-
-  stopWaveTimer();
-  if (socket && currentUser.waveId) {
-    socket.emit('wave_broadcast_stop', { waveId: currentUser.waveId, deviceId: currentUser.id });
-  }
-}
-
-function forceCleanupAudio() {
-  isTalking = false;
-  pttLock = false;
-  if (activeMediaStream) activeMediaStream.getTracks().forEach(t => t.stop());
-  if (rawMicStream) rawMicStream.getTracks().forEach(t => t.stop());
-  if (activeLivekitTrack) { try { activeLivekitTrack.stop(); } catch(e){} }
-  if (waveLocalAudioTrack) { try { waveLocalAudioTrack.stop(); } catch(e){} }
-  if (waveRoom) { try { waveRoom.disconnect(); } catch(e){} }
-
-  const pttMain = document.getElementById('pttMain');
-  if (pttMain) pttMain.classList.remove('holding');
-  document.body.classList.remove('ptt-active');
-}
-
-document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'hidden') {
-    forceCleanupAudio();
-  }
-});
-
-window.addEventListener('pagehide', forceCleanupAudio);
-
-const LiveVoice = {
-  room: null, connected: false,
-  async connect(waveId) {
-    // ✅ تم تعطيل هذه الدالة عمداً لأننا نستخدم connectWaveChannel فقط لتجنب تعارض الاتصالات
-    return true;
-  },
-  async disconnect() {
-    this.connected = false;
-  }
+  playStartBeep() { this._playTone(1400, 1800, 0.12, 'sine'); if (navigator.vibrate) navigator.vibrate(40); },
+  playEndBeep() { this._playTone(900, 600, 0.12, 'sine'); if (navigator.vibrate) navigator.vibrate(40); },
+  playRealBeep() { this._playTone(600, null, 0.15, 'sine'); setTimeout(() => { this._playTone(800, null, 0.15, 'sine'); }, 200); }
 };
 
 const pttMainBtn = document.getElementById('pttMain');
-// استخدام click عشان نستخدم نظام (اضغط مرة يفتح، واضغط مرة يقفل)
 pttMainBtn.addEventListener('click', (e) => { 
   e.preventDefault(); 
   if (isTalking) stopTalking(); else onPTTStart(); 
 });
 
-// ✅ دوال التسجيل الجديدة
-let waveRecorder = null;
-let waveAudioChunks = [];
-
 async function onPTTStart() {
   if (isTalking) return;
   if (!currentUser.waveId) { toast('⚠️ انضم إلى فرقة أولاً', 'error'); return; }
 
   isTalking = true;
   const pttMain = document.getElementById('pttMain');
-  if (pttMain) {
-      pttMain.classList.add('holding');
-      pttMain.textContent = '⏹'; // شكل زرار الوقف
-  }
+  if (pttMain) { pttMain.classList.add('holding'); pttMain.textContent = '⏹'; }
   document.body.classList.add('ptt-active');
   
   const statusChip = document.getElementById('waveStatusChip');
   const statusText = document.getElementById('waveStatusText');
   if (statusChip) { statusChip.classList.add('live'); statusChip.classList.remove('disconnected'); }
   if (statusText) statusText.innerHTML = '🔴 جاري التسجيل...';
+  
+  startWaveTimer();
+  await PTTEngine.init();
+  PTTEngine.playStartBeep();
   
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -774,18 +541,17 @@ function stopTalking() {
   isTalking = false;
   
   const pttMain = document.getElementById('pttMain');
-  if (pttMain) {
-      pttMain.classList.remove('holding');
-      pttMain.textContent = 'PTT'; // إرجاع زرار PTT
-  }
+  if (pttMain) { pttMain.classList.remove('holding'); pttMain.textContent = 'PTT'; }
   document.body.classList.remove('ptt-active');
   
   const statusChip = document.getElementById('waveStatusChip');
   const statusText = document.getElementById('waveStatusText');
   if (statusChip) { statusChip.classList.remove('live'); statusChip.classList.add('disconnected'); }
   if (statusText) statusText.innerHTML = '🔴 غير متصل';
+  
+  stopWaveTimer();
+  if (isTalking) PTTEngine.playEndBeep(); // If it was talking
 
-  // إرسال الصوت بعد ما التسجيل يقف
   if (waveRecorder && waveRecorder.state === 'recording') {
     waveRecorder.onstop = () => {
       const blob = new Blob(waveAudioChunks, { type: 'audio/webm' });
@@ -793,11 +559,13 @@ function stopTalking() {
       reader.onload = () => {
         const base64 = reader.result;
         if (socket && currentUser.waveId) {
+          // ✅ إرسال الصوت بدون حفظ
           socket.emit('send_wave_voice', {
             waveId: currentUser.waveId,
             senderName: currentUser.name,
             audio: base64
           });
+          toast('✅ تم إرسال الصوت', 'success');
         }
       };
       reader.readAsDataURL(blob);
@@ -814,16 +582,14 @@ function initSocket() {
 
   socket.on('connect', () => {
     socket.emit('register_device', { deviceId: currentUser.id, userName: currentUser.name });
-    if (currentUser.waveId) {
-      socket.emit('wave_join', { waveId: currentUser.waveId, deviceId: currentUser.id, userName: currentUser.name });
-    }
+    if (currentUser.waveId) socket.emit('wave_join', { waveId: currentUser.waveId, deviceId: currentUser.id, userName: currentUser.name });
   });
 
   socket.on('wave_members_updated', ({ members }) => renderWaveMembers(members));
 
   socket.on('wave_removed', () => {
     toast('⚠️ تم إخراجك من الفرقة', 'error');
-    currentUser.waveId = null; disconnectWaveRoom();
+    currentUser.waveId = null;
     const statusChip = document.getElementById('waveStatusChip');
     const statusText = document.getElementById('waveStatusText');
     if (statusChip) { statusChip.classList.add('disconnected'); statusChip.classList.remove('live'); }
@@ -846,14 +612,15 @@ function initSocket() {
   });
 
   socket.on('wave_join_error', ({ error }) => toast('❌ ' + error, 'error'));
-// ✅ استقبال وتشغيل الصوت في الفرقة
-socket.on('new_wave_voice', ({ senderName, audio }) => {
-  const audioEl = new Audio(audio);
-  audioEl.play().catch(e => console.log("Audio play blocked", e));
-  toast('🎤 رسالة صوتية من ' + senderName, 'info');
-});
+
+  // ✅ استقبال وتشغيل الصوت في الفرقة
+  socket.on('new_wave_voice', ({ senderName, audio }) => {
+    const audioEl = new Audio(audio);
+    audioEl.play().catch(e => console.log("Audio play blocked", e));
+    toast('🎤 رسالة صوتية من ' + senderName, 'success');
+  });
+
   socket.on('new_direct_message', ({ conversationId, message, ...payload }) => {
-    // ✅ 1. فلترة طلب الصداقة عشان ميبانش في الشات
     let txt = message?.text || payload?.text || '';
     if (typeof txt === 'string' && txt.includes('friend_request')) {
       try {
@@ -891,7 +658,7 @@ socket.on('new_wave_voice', ({ senderName, audio }) => {
     saveFriendRequests(); updateFriendBadge();
   });
 
-  socket.on('friend_rejected', (data) => {
+  socket.on('friend_rejected', () => {
     toast('❌ تم رفض طلب الصداقة', 'error');
     friendRequests.outgoing = friendRequests.outgoing.filter(r => r.deviceId !== data.byDeviceId);
     saveFriendRequests();
@@ -906,13 +673,13 @@ async function registerUser() {
     });
     const data = await res.json();
     if (data.radCode) {
-      currentUser.radCode = data.radCode;
-      const el1 = document.getElementById('myRadCode'); if (el1) el1.textContent = data.radCode;
-      const el2 = document.getElementById('waveCodeChip'); if (el2) el2.innerHTML = data.radCode + ' <span style="font-size:12px;">🔑</span>';
-      const el3 = document.getElementById('waveCodeValue'); if (el3) el3.textContent = data.radCode;
-      const el4 = document.getElementById('lcdLine3'); if (el4) el4.textContent = data.radCode + ' • RX';
+      currentUser.radCode = data.radCode.replace('Q', 'T'); // Force T
+      const el1 = document.getElementById('myRadCode'); if (el1) el1.textContent = currentUser.radCode;
+      const el2 = document.getElementById('waveCodeChip'); if (el2) el2.innerHTML = currentUser.radCode + ' <span style="font-size:12px;">🔑</span>';
+      const el3 = document.getElementById('waveCodeValue'); if (el3) el3.textContent = currentUser.radCode;
+      const el4 = document.getElementById('lcdLine3'); if (el4) el4.textContent = currentUser.radCode + ' • RX';
     }
-    if (data.waveId) { currentUser.waveId = data.waveId; currentUser.waveCode = data.waveId; }
+    if (data.waveId) { currentUser.waveId = data.waveId.replace('Q', 'T'); currentUser.waveCode = currentUser.waveId; }
     return data;
   } catch (e) { return null; }
 }
@@ -931,6 +698,22 @@ function saveUserName() {
   });
 }
 
+function addWaveToHistory(waveId, waveName) {
+  let list = JSON.parse(localStorage.getItem('rc_user_waves_list') || '[]');
+  if (!list.find(w => w.id === waveId)) {
+    list.push({ id: waveId, name: waveName });
+    localStorage.setItem('rc_user_waves_list', JSON.stringify(list));
+  }
+}
+
+function addRoomToHistory(roomCode, roomName) {
+  let list = JSON.parse(localStorage.getItem('rc_user_rooms_list') || '[]');
+  if (!list.find(r => r.code === roomCode)) {
+    list.push({ code: roomCode, name: roomName });
+    localStorage.setItem('rc_user_rooms_list', JSON.stringify(list));
+  }
+}
+
 async function createWave() {
   const name = document.getElementById('waveName').value.trim();
   if (!name) { toast('⚠️ أدخل اسم الفرقة', 'error'); return; }
@@ -942,8 +725,7 @@ async function createWave() {
     const data = await res.json();
     if (!data.success) throw new Error(data.error);
     
-    // ✅ تحويل الحرف إلى T مباشرة
-    const displayWaveId = 'T' + data.waveId.substring(1);
+    const displayWaveId = data.waveId.replace('Q', 'T');
     
     currentUser.waveId = displayWaveId; 
     currentUser.waveCode = displayWaveId;
@@ -965,21 +747,17 @@ async function createWave() {
     addWaveToHistory(displayWaveId, name);
     
     await PTTEngine.init(); PTTEngine.playStartBeep();
-    await connectWaveChannel();
     
-    // ✅ بنبعت T للسيرفر عشان هو بيفهمه زي ما قلت
-    if (socket) socket.emit('wave_join', { waveId: displayWaveId, deviceId: currentUser.id, userName: currentUser.name });
+    if (socket) socket.emit('wave_join', { waveId: data.waveId, deviceId: currentUser.id, userName: currentUser.name });
     toast('✅ تم إنشاء الفرقة "' + name + '"', 'success');
   } catch (e) { toast('❌ ' + e.message, 'error'); }
 }
 
 async function joinWaveAsMember(waveId) {
-  // ✅ استخدام الكود زي ما هو
-  const serverId = waveId;
+  const serverId = waveId.replace('T', 'Q');
 
   if (currentUser.waveId && currentUser.waveId !== waveId) {
-    if (socket) socket.emit('wave_leave', { waveId: currentUser.waveId, deviceId: currentUser.id });
-    await disconnectWaveRoom();
+    if (socket) socket.emit('wave_leave', { waveId: currentUser.waveId.replace('T', 'Q'), deviceId: currentUser.id });
   }
 
   currentUser.waveId = waveId; currentUser.waveCode = waveId;
@@ -1004,8 +782,6 @@ async function joinWaveAsMember(waveId) {
   localStorage.setItem('rc_saved_wave_id', waveId);
   localStorage.setItem('rc_saved_wave_name', currentUser.waveName || '');
   
-  await connectWaveChannel();
-  
   if (socket) socket.emit('wave_join', { waveId: serverId, deviceId: currentUser.id, userName: currentUser.name });
   toast('✅ انضممت إلى الفرقة', 'success');
 }
@@ -1015,14 +791,13 @@ function doSearch() {
   const res = document.getElementById('searchResults');
   if (!q) { res.innerHTML = '<div class="no-results"><span class="no-results-icon">⚠️</span>أدخل الرقم</div>'; return; }
 
-  // ✅ البحث بالكود زي ما هو
-  const serverQuery = q;
+  const serverQuery = q.replace('T', 'Q');
 
   fetch(SERVER_URL + '/api/waves/' + serverQuery)
     .then(r => r.json())
     .then(data => {
       if (data.waveId) {
-        searchResultUser = { name: data.waveName || 'فرقة', code: data.waveId, type: 'wave' };
+        searchResultUser = { name: data.waveName || 'فرقة', code: data.waveId.replace('Q', 'T'), type: 'wave' };
         res.innerHTML = `<div class="search-result-card" onclick="askJoinWave()"><div class="search-result-icon">📡</div><div class="search-result-info"><div class="search-result-name">${searchResultUser.name}</div><div class="search-result-code">${searchResultUser.code} • ${data.totalMembers || 0} أعضاء</div></div><div style="color:var(--cyan)">←</div></div>`;
         return;
       }
@@ -1050,7 +825,7 @@ function askJoinWave() {
 function confirmJoin() {
   if (!searchResultUser) return;
   closeModal('modalJoinConfirm');
-  if (socket) socket.emit('wave_join_request', { waveId: searchResultUser.code, fromDeviceId: currentUser.id, fromUserName: currentUser.name });
+  if (socket) socket.emit('wave_join_request', { waveId: searchResultUser.code.replace('T', 'Q'), fromDeviceId: currentUser.id, fromUserName: currentUser.name });
 }
 
 function cancelJoin() { closeModal('modalJoinConfirm'); openModal('modalSearch'); }
@@ -1070,29 +845,14 @@ function acceptIncoming() {
 
 function renderWaveMembers(members) {
   if (!members) return;
-  
-  // ✅ 3. إجبار حالتك للـ نشط في القائمة
   members.forEach(m => {
-    if (m.id === currentUser.id || m.name === currentUser.name) {
-      m.online = true;
-    }
+    if (m.id === currentUser.id || m.name === currentUser.name) m.online = true;
   });
 
   const dd = document.getElementById('membersDropdown');
   if (dd && dd.classList.contains('show')) {
     dd.innerHTML = `<div class="members-dropdown-title">👥 المشتركون (${members.length})</div>${members.map(m => `<div class="members-dropdown-item"><span>${m.name} ${m.id === currentUser.id ? '(أنت)' : ''} ${m.isOwner ? '👑' : ''}</span><span class="${m.online ? 'status-active' : 'status-inactive'}">${m.online ? '🟢 نشط' : '🔴 غير نشط'}</span></div>`).join('')}`;
   }
-}
-
-async function removeMember(memberId) {
-  if (!currentUser.isWaveOwner) return;
-  try {
-    await fetch(SERVER_URL + '/api/waves/remove-member', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ waveId: currentUser.waveId, memberId, ownerDevice: currentUser.id })
-    });
-    toast('✅ تم إخراج العضو', 'success');
-  } catch (e) { toast('❌ فشل الإخراج', 'error'); }
 }
 
 function switchTab(tabName) {
@@ -1157,7 +917,6 @@ function openSideMenu() {
       <button class="menu-item" onclick="closeSideMenu();openSearchWave()"><span class="menu-icon">🔍</span><span class="menu-text"><span class="menu-label">البحث عن فرقة</span><span class="menu-desc">ابحث برقم الفرقة</span></span></button>
       <button class="menu-item" onclick="closeSideMenu();openOperationsList()"><span class="menu-icon">📋</span><span class="menu-text"><span class="menu-label">قائمة العمليات</span><span class="menu-desc">الفرق التي أنت مشترك فيها</span></span></button>
       <button class="menu-item" onclick="closeSideMenu();openFriendRequests()"><span class="menu-icon">👥</span><span class="menu-text"><span class="menu-label">طلبات الصداقة</span><span class="menu-desc">الواردة والصادرة</span></span></button>
-      <button class="menu-item" onclick="closeSideMenu();openSendFriendRequest()"><span class="menu-icon">➕</span><span class="menu-text"><span class="menu-label">إرسال طلب صداقة</span><span class="menu-desc">ابحث برقم المستخدم</span></span></button>
       <button class="menu-item" onclick="closeSideMenu();saveMyWave()"><span class="menu-icon">💾</span><span class="menu-text"><span class="menu-label">حفظ الفرقة</span><span class="menu-desc">استرجعها تلقائياً عند الدخول</span></span></button>
       <button class="menu-item" onclick="closeSideMenu();openEditWaveName()"><span class="menu-icon">✏️</span><span class="menu-text"><span class="menu-label">تعديل اسم الفرقة</span><span class="menu-desc">غيّر اسم فرقتك</span></span></button>
       <button class="menu-item" onclick="closeSideMenu();leaveWave()"><span class="menu-icon">🗑️</span><span class="menu-text"><span class="menu-label">مسح الفرقة</span><span class="menu-desc">مغادرة الفرقة الحالية</span></span></button>
@@ -1169,7 +928,8 @@ function openSideMenu() {
         <div style="font-size:11px; color:var(--text-dim); margin-bottom:4px;">📛 اسم الغرفة</div>
         <div style="font-size:14px; font-weight:800; color:var(--text); margin-bottom:10px;">${currentUser.roomName || '—'}</div>
         <div style="font-size:11px; color:var(--text-dim); margin-bottom:4px;">🔑 رقم الغرفة</div>
-        <div onclick="copyMyRoomCode()" style="font-size:16px; font-weight:900; color:var(--cyan); font-family:'Courier New',monospace; letter-spacing:2px; cursor:pointer; padding:6px; border-radius:8px; background:rgba(0,229,255,.1); border:1px solid rgba(0,229,255,.4);">${currentUser.roomCode || '—'} 📋</div> </div> 
+        <div onclick="copyMyRoomCode()" style="font-size:16px; font-weight:900; color:var(--cyan); font-family:'Courier New',monospace; letter-spacing:2px; cursor:pointer; padding:6px; border-radius:8px; background:rgba(0,229,255,.1); border:1px solid rgba(0,229,255,.4);">${currentUser.roomCode || '—'} 📋</div>
+      </div>
       <button class="menu-item primary" onclick="closeSideMenu();openCreateRoom()"><span class="menu-icon">➕</span><span class="menu-text"><span class="menu-label">إنشاء غرفة</span><span class="menu-desc">إنشاء غرفة دردشة جديدة</span></span></button>
       <button class="menu-item" onclick="closeSideMenu();openSearchUser()"><span class="menu-icon">🔍</span><span class="menu-text"><span class="menu-label">البحث عن مستخدم</span><span class="menu-desc">ابحث برقم المستخدم لبدء محادثة</span></span></button>
       <button class="menu-item" onclick="closeSideMenu();openOperationsList()"><span class="menu-icon">📋</span><span class="menu-text"><span class="menu-label">قائمة العمليات</span><span class="menu-desc">الغرف التي أنت مشترك فيها</span></span></button>
@@ -1184,7 +944,6 @@ function openSideMenu() {
     content.innerHTML = `
       <button class="menu-item" onclick="closeSideMenu();openSearchUser()"><span class="menu-icon">🔍</span><span class="menu-text"><span class="menu-label">البحث</span><span class="menu-desc">ابحث عن مستخدم</span></span></button>
       <button class="menu-item" onclick="closeSideMenu();openFriendRequests()"><span class="menu-icon">👥</span><span class="menu-text"><span class="menu-label">طلبات الصداقة</span><span class="menu-desc">الواردة والصادرة</span></span></button>
-      <button class="menu-item" onclick="closeSideMenu();openSendFriendRequest()"><span class="menu-icon">➕</span><span class="menu-text"><span class="menu-label">إرسال طلب صداقة</span><span class="menu-desc">ابحث برقم المستخدم</span></span></button>
       <button class="menu-item" onclick="closeSideMenu();testCall()"><span class="menu-icon">🔔</span><span class="menu-text"><span class="menu-label">اختبار النداء</span><span class="menu-desc">تجربة صوت البيب</span></span></button>
     `;
   }
@@ -1209,9 +968,6 @@ menuToggle.addEventListener('click', (e) => {
 });
 menuBackdrop.addEventListener('click', closeSideMenu);
 
-let waveTimerInterval = null;
-let waveStartTime = 0;
-
 function startWaveTimer() {
   waveStartTime = Date.now();
   const el = document.getElementById('waveTimer');
@@ -1235,7 +991,7 @@ function openCreateWave() { openModal('modalWave'); }
 function openEditWaveName() { document.getElementById('newWaveName').value = currentUser.waveName || ''; openModal('modalEditWave'); }
 
 function openSearchWave() {
-  document.getElementById('searchSubTitle').textContent = 'ابحث برقم الفرقة (T#####)';
+  document.getElementById('searchSubTitle').textContent = 'ابحث برقم الفرقة (T)';
   document.getElementById('searchFieldLabel').textContent = 'رقم الفرقة';
   document.getElementById('searchQuery').placeholder = 'T#####';
   document.getElementById('searchQuery').value = '';
@@ -1244,9 +1000,9 @@ function openSearchWave() {
 }
 
 function openSearchUser() {
-  document.getElementById('searchSubTitle').textContent = 'ابحث برقم المستخدم';
+  document.getElementById('searchSubTitle').textContent = 'ابحث برقم المستخدم (T)';
   document.getElementById('searchFieldLabel').textContent = 'رقم المستخدم';
-  document.getElementById('searchQuery').placeholder = 'R#####';
+  document.getElementById('searchQuery').placeholder = 'T#####';
   document.getElementById('searchQuery').value = '';
   document.getElementById('searchResults').innerHTML = '<div class="no-results"><span class="no-results-icon">🔎</span>اكتب الرقم واضغط بحث</div>';
   openModal('modalSearch');
@@ -1254,15 +1010,11 @@ function openSearchUser() {
 
 function copyWaveCode() {
   if (!currentUser.waveCode) return;
-  navigator.clipboard.writeText(currentUser.waveCode)
-    .then(() => toast('📋 تم نسخ رقم الفرقة', 'success'))
-    .catch(() => toast('رقم الفرقة: ' + currentUser.waveCode, 'success'));
+  navigator.clipboard.writeText(currentUser.waveCode).then(() => toast('📋 تم نسخ رقم الفرقة', 'success')).catch(() => toast('رقم الفرقة: ' + currentUser.waveCode, 'success'));
 }
 function copyMyWaveCode() {
   if (!currentUser.radCode) { toast('⚠️ لم يتم توليد الرقم بعد', 'error'); return; }
-  navigator.clipboard.writeText(currentUser.radCode)
-    .then(() => toast('📋 تم نسخ رقمك', 'success'))
-    .catch(() => toast('رقمك: ' + currentUser.radCode, 'success'));
+  navigator.clipboard.writeText(currentUser.radCode).then(() => toast('📋 تم نسخ رقمك', 'success')).catch(() => toast('رقمك: ' + currentUser.radCode, 'success'));
 }
 
 async function saveWaveName() {
@@ -1272,7 +1024,7 @@ async function saveWaveName() {
   try {
     await fetch(SERVER_URL + '/api/waves/rename', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ waveId: currentUser.waveId, newName: name, deviceId: currentUser.id })
+      body: JSON.stringify({ waveId: currentUser.waveId.replace('T', 'Q'), newName: name, deviceId: currentUser.id })
     });
     currentUser.waveName = name;
     const el1 = document.getElementById('waveNameValue'); if (el1) el1.textContent = name;
@@ -1285,14 +1037,13 @@ async function saveWaveName() {
 async function leaveWave() {
   if (!currentUser.waveId) { toast('⚠️ لا توجد فرقة', 'error'); return; }
   if (!confirm('هل تريد مغادرة الفرقة؟')) return;
-  if (socket) socket.emit('wave_leave', { waveId: currentUser.waveId, deviceId: currentUser.id });
-  await disconnectWaveRoom();
+  if (socket) socket.emit('wave_leave', { waveId: currentUser.waveId.replace('T', 'Q'), deviceId: currentUser.id });
   currentUser.waveId = null; currentUser.waveCode = null; currentUser.isWaveOwner = false;
   localStorage.removeItem('rc_saved_wave_id');
   localStorage.removeItem('rc_saved_wave_name');
   localStorage.removeItem('rc_is_wave_owner');
   const el1 = document.getElementById('waveCodeChip');
-  if (el1) el1.innerHTML = (currentUser.radCode || 'Q00000') + ' <span style="font-size:12px;">🔑</span>';
+  if (el1) el1.innerHTML = (currentUser.radCode || 'T00000') + ' <span style="font-size:12px;">🔑</span>';
   const statusText = document.getElementById('waveStatusText');
   if (statusText) statusText.innerHTML = '🔴 غير متصل';
   const el3 = document.getElementById('waveNameLabel'); if (el3) el3.textContent = 'لا توجد فرقة';
@@ -1391,15 +1142,6 @@ function addChatMessage(msg, direction, scroll = true) {
       }
     });
   }
-  let pressTimer;
-  const body = div.querySelector('.msg-body');
-  body.addEventListener('pointerdown', () => {
-    pressTimer = setTimeout(() => {
-      if (confirm('هل تريد مسح هذه الرسالة؟')) { div.remove(); toast('🗑️ تم مسح الرسالة', 'success'); }
-    }, 700);
-  });
-  body.addEventListener('pointerup', () => clearTimeout(pressTimer));
-  body.addEventListener('pointerleave', () => clearTimeout(pressTimer));
   container.appendChild(div);
   if (scroll) container.scrollTop = container.scrollHeight;
 }
@@ -1589,38 +1331,31 @@ function openEditRoomIcon() {
     };
   });
 }
+
 async function createRoom() {
   const name = document.getElementById('roomName').value.trim();
   if (!name) { toast('⚠️ أدخل اسم الغرفة', 'error'); return; }
 
-  // ✅ التعديل: الغرفة تبدأ بحرف R
-  const roomCode = 'R' + Math.random().toString(36).substring(2, 8).toUpperCase();
+  const roomCode = 'R' + Math.random().toString(36).substring(2, 6).toUpperCase();
 
   currentUser.roomName = name;
   currentUser.roomCode = roomCode;
-  
   localStorage.setItem('rc_saved_room_code', roomCode);
   localStorage.setItem('rc_saved_room_name', name);
   localStorage.setItem('rc_is_room_owner', 'true');
   addRoomToHistory(roomCode, name);
-  
   document.getElementById('createdRoomCode').textContent = roomCode;
   document.getElementById('roomNameLabel').textContent = name;
   document.getElementById('roomName').value = '';
-  
   closeModal('modalCreate');
   openModal('modalRoomCreated');
   toast('✅ تم إنشاء الغرفة "' + name + '"', 'success');
-  
   const selfConvId = 'conv_self_' + roomCode;
   currentUser.currentConvId = selfConvId;
   currentUser.currentChatWith = 'self';
-
   document.getElementById('chatWithName').textContent = name + ' (غرفتك)';
   document.getElementById('chatWithCode').textContent = roomCode;
-
   switchTab('chat');
-  
   document.getElementById('chatMessages').innerHTML = `
     <div style="padding:20px;text-align:center;color:var(--text-dim);font-size:12px;">
       💬 هذه غرفتك "${name}"<br>
@@ -1641,9 +1376,7 @@ function saveRoomName() {
 
 function copyMyRoomCode() {
   if (!currentUser.roomCode) { toast('⚠️ لا يوجد رقم غرفة', 'error'); return; }
-  navigator.clipboard.writeText(currentUser.roomCode)
-    .then(() => toast('📋 تم نسخ رقم الغرفة', 'success'))
-    .catch(() => toast('رقم الغرفة: ' + currentUser.roomCode, 'success'));
+  navigator.clipboard.writeText(currentUser.roomCode).then(() => toast('📋 تم نسخ رقم الغرفة', 'success')).catch(() => toast('رقم الغرفة: ' + currentUser.roomCode, 'success'));
 }
 
 function saveMyWave() {
@@ -1662,9 +1395,7 @@ function saveMyRoom() {
 
 function copyRoomCode() {
   if (!currentUser.roomCode) return;
-  navigator.clipboard.writeText(currentUser.roomCode)
-    .then(() => toast('📋 تم نسخ الرقم', 'success'))
-    .catch(() => toast('رقم الغرفة: ' + currentUser.roomCode, 'success'));
+  navigator.clipboard.writeText(currentUser.roomCode).then(() => toast('📋 تم نسخ الرقم', 'success')).catch(() => toast('رقم الغرفة: ' + currentUser.roomCode, 'success'));
 }
 
 function confirmClearChat() { closeModal('modalRoomMenu'); openModal('modalClearChat'); }
@@ -1753,368 +1484,363 @@ document.getElementById('waveNameChip').addEventListener('click', () => {
   if (!dd) return;
   if (dd.classList.contains('show')) { dd.classList.remove('show'); return; }
   if (currentUser.waveId) {
-    fetch(SERVER_URL + '/api/waves/' + currentUser.waveId)
+    fetch(SERVER_URL + '/api/waves/' + currentUser.waveId.replace('T', 'Q'))
       .then(r => r.json())
       .then(data => {
         if (data.members) {
-          data.members.forEach(m => {
-            if (m.id === currentUser.id || m.name === currentUser.name) m.online = true;
-          });
+          data.members.forEach(m => { if (m.id === currentUser.id || m.name === currentUser.name) m.online = true; });
           dd.innerHTML = `<div class="members-dropdown-title">👥 المشتركون (${data.members.length})</div>${data.members.map(m => `<div class="members-dropdown-item"><span>${m.name} ${m.id === currentUser.id ? '(أنت)' : ''} ${m.isOwner ? '👑' : ''}</span><span class="${m.online ? 'status-active' : 'status-inactive'}">${m.online ? '🟢 نشط' : '🔴 غير نشط'}</span></div>`).join('')}`;
         } else dd.innerHTML = '<div class="operations-empty">لا يوجد مشتركون</div>';
         dd.classList.add('show');
       });
   } else {
-    dd.innerHTML = '<div class="operations-empty">لا توجد فرقة نشطة</div>';
-    dd.classList.add('show');
-  }
-});
+            dd.innerHTML = '<div class="operations-empty">لا توجد فرقة نشطة</div>';
+        dd.classList.add('show');
+      }
+    });
 
-// ============ نظام طلبات الصداقة ============
-let friendRequests = {
-  incoming: JSON.parse(localStorage.getItem('rc_fr_incoming') || '[]'),
-  outgoing: JSON.parse(localStorage.getItem('rc_fr_outgoing') || '[]'),
-  friends: JSON.parse(localStorage.getItem('rc_fr_friends') || '[]')
-};
+    // ============ نظام طلبات الصداقة ============
+    let friendRequests = {
+      incoming: JSON.parse(localStorage.getItem('rc_fr_incoming') || '[]'),
+      outgoing: JSON.parse(localStorage.getItem('rc_fr_outgoing') || '[]'),
+      friends: JSON.parse(localStorage.getItem('rc_fr_friends') || '[]')
+    };
 
-let currentFriendTab = 'incoming';
-let pendingFriendIncoming = null;
-let friendSearchResult = null;
+    let currentFriendTab = 'incoming';
+    let pendingFriendIncoming = null;
+    let friendSearchResult = null;
 
-function saveFriendRequests() {
-  localStorage.setItem('rc_fr_incoming', JSON.stringify(friendRequests.incoming));
-  localStorage.setItem('rc_fr_outgoing', JSON.stringify(friendRequests.outgoing));
-  localStorage.setItem('rc_fr_friends', JSON.stringify(friendRequests.friends));
-}
-
-function updateFriendBadge() {
-  const count = friendRequests.incoming.length;
-  ['friendReqBadge', 'friendReqBadge2'].forEach(id => {
-    const badge = document.getElementById(id);
-    if (!badge) return;
-    if (count > 0) { badge.textContent = count; badge.style.display = 'flex'; }
-    else { badge.style.display = 'none'; }
-  });
-}
-
-async function openFriendRequests() {
-  try {
-    const res = await fetch(SERVER_URL + '/api/friends/requests/' + currentUser.id);
-    const data = await res.json();
-    if (data.requests) {
-      friendRequests.incoming = data.requests.map(r => ({
-        name: r.fromUserName,
-        code: r.fromCode,
-        deviceId: r.fromDeviceId
-      }));
-      saveFriendRequests();
+    function saveFriendRequests() {
+      localStorage.setItem('rc_fr_incoming', JSON.stringify(friendRequests.incoming));
+      localStorage.setItem('rc_fr_outgoing', JSON.stringify(friendRequests.outgoing));
+      localStorage.setItem('rc_fr_friends', JSON.stringify(friendRequests.friends));
     }
-  } catch(e) {}
-  renderFriendList();
-  updateFriendBadge();
-  openModal('modalFriendRequests');
-}
 
-function switchFriendTab(tab) {
-  currentFriendTab = tab;
-  const tabIn = document.getElementById('tabIncoming');
-  const tabOut = document.getElementById('tabOutgoing');
-  if (tab === 'incoming') { tabIn.className = 'modal-btn confirm'; tabOut.className = 'modal-btn cancel'; }
-  else { tabIn.className = 'modal-btn cancel'; tabOut.className = 'modal-btn confirm'; }
-  renderFriendList();
-}
-
-function renderFriendList() {
-  const list = document.getElementById('friendRequestsList');
-  if (!list) return;
-  const items = currentFriendTab === 'incoming' ? friendRequests.incoming : friendRequests.outgoing;
-  if (!items || items.length === 0) {
-    list.innerHTML = `<div class="no-results"><span class="no-results-icon">📭</span>${currentFriendTab === 'incoming' ? 'لا توجد طلبات واردة' : 'لا توجد طلبات صادرة'}</div>`;
-    return;
-  }
-  list.innerHTML = items.map((req, idx) => `
-    <div class="search-result-card" style="margin-bottom:8px; cursor:default;">
-      <div class="search-result-icon">👤</div>
-      <div class="search-result-info">
-        <div class="search-result-name">${req.name || 'مستخدم'}</div>
-        <div class="search-result-code">${req.code || '—'}</div>
-      </div>
-      ${currentFriendTab === 'incoming' ? `<div style="display:flex; gap:6px;"><button class="modal-btn confirm" style="padding:6px 10px; font-size:12px;" onclick="quickAccept(${idx})">✅</button><button class="modal-btn danger" style="padding:6px 10px; font-size:12px;" onclick="quickReject(${idx})">❌</button></div>` : `<span style="color:var(--text-dim); font-size:11px;">⏳ منتظر</span>`}
-    </div>
-  `).join('');
-}
-
-function quickAccept(idx) {
-  const req = friendRequests.incoming[idx];
-  if (!req) return;
-  if (!friendRequests.friends.find(f => f.code === req.code)) {
-    friendRequests.friends.push({ name: req.name, code: req.code, deviceId: req.deviceId, addedAt: Date.now() });
-  }
-  friendRequests.incoming.splice(idx, 1);
-  saveFriendRequests(); updateFriendBadge(); renderFriendList();
-  toast('✅ تم قبول الصداقة مع ' + req.name, 'success');
-  if (socket) socket.emit('friend_accept', { fromDeviceId: req.deviceId, toDeviceId: currentUser.id });
-}
-
-function quickReject(idx) {
-  const req = friendRequests.incoming[idx];
-  if (!req) return;
-  friendRequests.incoming.splice(idx, 1);
-  saveFriendRequests(); updateFriendBadge(); renderFriendList();
-  toast('❌ تم رفض الطلب', 'error');
-  if (socket) socket.emit('friend_reject', { fromDeviceId: req.deviceId, toDeviceId: currentUser.id });
-}
-
-function showIncomingFriendRequest(req) {
-  pendingFriendIncoming = req;
-  document.getElementById('frIncomingName').textContent = (req.name || 'مستخدم') + ' يريد إضافتك كصديق';
-  document.getElementById('frIncomingCode').textContent = req.code || '—';
-  openModal('modalFriendIncoming');
-  PTTEngine.playRealBeep();
-}
-
-function acceptFriendRequest() {
-  if (!pendingFriendIncoming) return;
-  const req = pendingFriendIncoming;
-  if (!friendRequests.friends.find(f => f.code === req.code)) {
-    friendRequests.friends.push({ name: req.name, code: req.code, deviceId: req.deviceId, addedAt: Date.now() });
-  }
-  friendRequests.incoming = friendRequests.incoming.filter(r => r.code !== req.code);
-  saveFriendRequests(); updateFriendBadge();
-  closeModal('modalFriendIncoming');
-  pendingFriendIncoming = null;
-  toast('✅ أصبحت صديقاً لـ ' + req.name, 'success');
-  if (socket) socket.emit('friend_accept', { fromDeviceId: req.deviceId, toDeviceId: currentUser.id });
-  refreshChatList();
-}
-
-function rejectFriendRequest() {
-  if (!pendingFriendIncoming) return;
-  const req = pendingFriendIncoming;
-  friendRequests.incoming = friendRequests.incoming.filter(r => r.code !== req.code);
-  saveFriendRequests(); updateFriendBadge();
-  closeModal('modalFriendIncoming');
-  pendingFriendIncoming = null;
-  toast('❌ تم رفض الطلب', 'error');
-  if (socket) socket.emit('friend_reject', { fromDeviceId: req.deviceId, toDeviceId: currentUser.id });
-}
-
-function openSendFriendRequest() {
-  document.getElementById('friendSearchCode').value = '';
-  document.getElementById('friendSearchResults').innerHTML = '';
-  friendSearchResult = null;
-  openModal('modalFriendSend');
-}
-
-async function searchFriend() {
-  const code = document.getElementById('friendSearchCode').value.trim().toUpperCase();
-  const res = document.getElementById('friendSearchResults');
-  if (!code) { res.innerHTML = '<div class="no-results"><span class="no-results-icon">⚠️</span>أدخل الرقم</div>'; return; }
-  res.innerHTML = '<div class="no-results">⏳ جاري البحث...</div>';
-  try {
-    const r = await fetch(SERVER_URL + '/api/users/search/' + code);
-    const user = await r.json();
-    if (user.deviceId) {
-      if (user.deviceId === currentUser.id) { res.innerHTML = '<div class="no-results"><span class="no-results-icon">🙃</span>هذا أنت!</div>'; return; }
-      if (friendRequests.friends.find(f => f.deviceId === user.deviceId)) { res.innerHTML = '<div class="no-results"><span class="no-results-icon">✅</span>أنتما صديقان بالفعل</div>'; return; }
-      friendSearchResult = user;
-      res.innerHTML = `<div class="search-result-card" onclick="sendFriendRequest()"><div class="search-result-icon">👤</div><div class="search-result-info"><div class="search-result-name">${user.userName || 'مستخدم'}</div><div class="search-result-code">${user.radCode || code}</div></div><div style="color:var(--cyan); font-size:20px;">➕</div></div>`;
-    } else {
-      res.innerHTML = '<div class="no-results"><span class="no-results-icon">❌</span>لا يوجد مستخدم بهذا الرقم</div>';
+    function updateFriendBadge() {
+      const count = friendRequests.incoming.length;
+      ['friendReqBadge', 'friendReqBadge2'].forEach(id => {
+        const badge = document.getElementById(id);
+        if (!badge) return;
+        if (count > 0) { badge.textContent = count; badge.style.display = 'flex'; }
+        else { badge.style.display = 'none'; }
+      });
     }
-  } catch (e) {
-    res.innerHTML = '<div class="no-results"><span class="no-results-icon">❌</span>خطأ في البحث</div>';
-  }
-}
 
-// ✅ دالة إرسال طلب الصداقة (تجمع كل الطرق لضمان الوصول)
-function sendFriendRequest() {
-  if (!friendSearchResult) return;
-  const user = friendSearchResult;
-  if (friendRequests.outgoing.find(r => r.deviceId === user.deviceId)) { toast('⚠️ أرسلت طلباً بالفعل', 'error'); return; }
-  
-  const req = { name: user.userName || 'مستخدم', code: user.radCode, deviceId: user.deviceId, sentAt: Date.now() };
-  friendRequests.outgoing.push(req);
-  saveFriendRequests();
-  
-  if (socket) {
-    const txt = JSON.stringify({type:'friend_request', fromDeviceId: currentUser.id, fromName: currentUser.name, fromCode: currentUser.radCode});
-    
-    // الطريقة التي تعمل مع سيرفرك (رسالة مباشرة)
-    socket.emit('send_direct_message', {toDeviceId: user.deviceId, fromDeviceId: currentUser.id, fromName: currentUser.name, fromCode: currentUser.radCode, text: txt, message: {text: txt}});
-    socket.emit('friend_request_send', {toDeviceId: user.deviceId, fromDeviceId: currentUser.id, fromName: currentUser.name, fromCode: currentUser.radCode});
-    socket.emit('friend_request', { fromDeviceId: currentUser.id, fromUserName: currentUser.name, fromCode: currentUser.radCode, toDeviceId: user.deviceId });
-  }
-  
-  closeModal('modalFriendSend');
-  toast('📤 تم إرسال طلب الصداقة', 'success');
-}
-
-function handleIncomingFriendRequest(data) {
-  const fromId = data.fromDeviceId;
-  const fromName = data.fromUserName || data.fromName || 'مستخدم';
-  const fromCode = data.fromCode || '—';
-  
-  if (friendRequests.friends.find(f => f.deviceId === fromId)) return;
-  if (friendRequests.incoming.find(r => r.deviceId === fromId)) return;
-  
-  const req = { name: fromName, code: fromCode, deviceId: fromId, receivedAt: Date.now() };
-  friendRequests.incoming.push(req);
-  saveFriendRequests(); updateFriendBadge();
-  showIncomingFriendRequest(req);
-}
-
-// ============ قائمة العمليات ============
-async function openOperationsList() {
-  const title = document.getElementById('sideMenuTitle');
-  const content = document.getElementById('sideMenuContent');
-  let allWaves = JSON.parse(localStorage.getItem('rc_user_waves_list') || '[]');
-  let allRooms = JSON.parse(localStorage.getItem('rc_user_rooms_list') || '[]');
-  if (currentUser.waveId && !allWaves.find(w => w.id === currentUser.waveId)) allWaves.push({ id: currentUser.waveId, name: currentUser.waveName || 'فرقة حالية' });
-  if (currentUser.roomCode && !allRooms.find(r => r.code === currentUser.roomCode)) allRooms.push({ code: currentUser.roomCode, name: currentUser.roomName || 'غرفة حالية' });
-
-  title.textContent = '📋 سجل العمليات';
-  let html = `<div style="font-size:13px; color:var(--cyan); font-weight:800; margin-bottom:8px; margin-top:4px;">📡 الفرق:</div>`;
-  if (allWaves.length === 0) {
-    html += `<div style="font-size:11px; color:var(--text-dim); margin-bottom:15px;">لا توجد فرق مسجلة بعد.</div>`;
-  } else {
-    for (const w of allWaves) {
-      let isActive = currentUser.waveId === w.id;
-      let isOwner = false, activeCount = 0;
+    async function openFriendRequests() {
       try {
-        const res = await fetch(SERVER_URL + '/api/waves/' + w.id);
+        const res = await fetch(SERVER_URL + '/api/friends/requests/' + currentUser.id);
         const data = await res.json();
-        if (data.members) {
-          activeCount = data.members.filter(m => m.online).length;
-          isOwner = data.members.some(m => m.id === currentUser.id && m.isOwner);
+        if (data.requests) {
+          friendRequests.incoming = data.requests.map(r => ({
+            name: r.fromUserName,
+            code: r.fromCode,
+            deviceId: r.fromDeviceId
+          }));
+          saveFriendRequests();
         }
-      } catch (e) {}
-      let badgeHtml = '';
-      if (isOwner) badgeHtml += `<span style="background:var(--yellow); color:#000; border-radius:4px; padding:2px 6px; font-size:9px; font-weight:900; margin-right:4px;">👑 المالك</span>`;
-      if (isActive) badgeHtml += `<span style="background:var(--green); color:#000; border-radius:4px; padding:2px 6px; font-size:9px; font-weight:900; margin-right:4px;">🟢 نشط</span>`;
-      html += `<button class="menu-item ${isActive ? 'primary' : ''}" onclick="switchToWave('${w.id}')"><span class="menu-icon">${isActive ? '🟢' : '📡'}</span><span class="menu-text"><span class="menu-label">${w.name} ${badgeHtml}</span><span class="menu-desc">${w.id} • <span style="color:var(--green); font-size:10px;">● ${activeCount} نشط</span></span></span></button>`;
+      } catch(e) {}
+      renderFriendList();
+      updateFriendBadge();
+      openModal('modalFriendRequests');
     }
-  }
-  html += `<div style="border-top:1px solid var(--border); margin:10px 0;"></div><div style="font-size:13px; color:var(--cyan); font-weight:800; margin-bottom:8px;">💬 الغرف:</div>`;
-  if (allRooms.length === 0) {
-    html += `<div style="font-size:11px; color:var(--text-dim); margin-bottom:15px;">لا توجد غرف مسجلة بعد.</div>`;
-  } else {
-    for (const r of allRooms) {
-      let isActive = currentUser.roomCode === r.code;
-      let isOwner = localStorage.getItem('rc_is_room_owner') === 'true' && currentUser.roomCode === r.code;
-      let badgeHtml = '';
-      if (isOwner) badgeHtml += `<span style="background:var(--yellow); color:#000; border-radius:4px; padding:2px 6px; font-size:9px; font-weight:900; margin-right:4px;">👑 المالك</span>`;
-      if (isActive) badgeHtml += `<span style="background:var(--green); color:#000; border-radius:4px; padding:2px 6px; font-size:9px; font-weight:900; margin-right:4px;">🟢 نشط</span>`;
-      html += `<button class="menu-item ${isActive ? 'primary' : ''}" onclick="switchToRoom('${r.code}', '${r.name}')"><span class="menu-icon">${isActive ? '🟢' : '💬'}</span><span class="menu-text"><span class="menu-label">${r.name} ${badgeHtml}</span><span class="menu-desc">${r.code}</span></span></button>`;
+
+    function switchFriendTab(tab) {
+      currentFriendTab = tab;
+      const tabIn = document.getElementById('tabIncoming');
+      const tabOut = document.getElementById('tabOutgoing');
+      if (tab === 'incoming') { tabIn.className = 'modal-btn confirm'; tabOut.className = 'modal-btn cancel'; }
+      else { tabIn.className = 'modal-btn cancel'; tabOut.className = 'modal-btn confirm'; }
+      renderFriendList();
     }
-  }
-  content.innerHTML = html;
-  sideMenu.classList.add('open');
-  menuBackdrop.classList.add('show');
-  menuToggle.classList.add('open');
-}
 
-async function switchToWave(waveId) {
-  closeSideMenu();
-  if (currentUser.waveId === waveId) return;
-  let allWaves = JSON.parse(localStorage.getItem('rc_user_waves_list') || '[]');
-  let targetWave = allWaves.find(w => w.id === waveId);
-  let name = targetWave ? targetWave.name : (currentUser.waveName || 'فرقة');
-  toast('⏳ جاري التبديل...', 'success');
-  stopTalking();
-  await disconnectWaveRoom();
-  if (socket) socket.emit('wave_leave', { waveId: currentUser.waveId, deviceId: currentUser.id });
-  currentUser.waveId = waveId;
-  currentUser.waveName = name;
-  currentUser.waveCode = waveId;
-  localStorage.setItem('rc_saved_wave_id', waveId);
-  localStorage.setItem('rc_saved_wave_name', name);
-  document.getElementById('waveNameLabel').textContent = name;
-  document.getElementById('waveNameValue').textContent = name;
-  document.getElementById('waveCodeValue').textContent = waveId;
-  document.getElementById('waveCodeChip').innerHTML = waveId + ' <span style="font-size:12px;">🔑</span>';
-  document.getElementById('lcdLine3').textContent = waveId + ' • RX';
-  await joinWaveAsMember(waveId);
-  toast('✅ تم الانتقال إلى ' + name, 'success');
-}
+    function renderFriendList() {
+      const list = document.getElementById('friendRequestsList');
+      if (!list) return;
+      const items = currentFriendTab === 'incoming' ? friendRequests.incoming : friendRequests.outgoing;
+      if (!items || items.length === 0) {
+        list.innerHTML = `<div class="no-results"><span class="no-results-icon">📭</span>${currentFriendTab === 'incoming' ? 'لا توجد طلبات واردة' : 'لا توجد طلبات صادرة'}</div>`;
+        return;
+      }
+      list.innerHTML = items.map((req, idx) => `
+        <div class="search-result-card" style="margin-bottom:8px; cursor:default;">
+          <div class="search-result-icon">👤</div>
+          <div class="search-result-info">
+            <div class="search-result-name">${req.name || 'مستخدم'}</div>
+            <div class="search-result-code">${req.code || '—'}</div>
+          </div>
+          ${currentFriendTab === 'incoming' ? `<div style="display:flex; gap:6px;"><button class="modal-btn confirm" style="padding:6px 10px; font-size:12px;" onclick="quickAccept(${idx})">✅</button><button class="modal-btn danger" style="padding:6px 10px; font-size:12px;" onclick="quickReject(${idx})">❌</button></div>` : `<span style="color:var(--text-dim); font-size:11px;">⏳ منتظر</span>`}
+        </div>
+      `).join('');
+    }
 
-function switchToRoom(roomCode, roomName) {
-  closeSideMenu();
-  if (currentUser.roomCode === roomCode) return;
-  currentUser.roomCode = roomCode;
-  currentUser.roomName = roomName;
-  currentUser.currentConvId = 'conv_self_' + roomCode;
-  currentUser.currentChatWith = 'self';
-  localStorage.setItem('rc_saved_room_code', roomCode);
-  localStorage.setItem('rc_saved_room_name', roomName);
-  document.getElementById('roomNameLabel').textContent = roomName;
-  document.getElementById('chatWithName').textContent = roomName + ' (غرفتك)';
-  document.getElementById('chatWithCode').textContent = roomCode;
-  switchTab('chat');
-  toast('✅ تم الانتقال إلى الغرفة', 'success');
-}
-document.getElementById('operationsChip').addEventListener('click', openOperationsList);
-document.getElementById('friendRequestsChip').addEventListener('click', openFriendRequests);
-document.getElementById('friendRequestsChip2').addEventListener('click', openFriendRequests);
+    function quickAccept(idx) {
+      const req = friendRequests.incoming[idx];
+      if (!req) return;
+      if (!friendRequests.friends.find(f => f.code === req.code)) {
+        friendRequests.friends.push({ name: req.name, code: req.code, deviceId: req.deviceId, addedAt: Date.now() });
+      }
+      friendRequests.incoming.splice(idx, 1);
+      saveFriendRequests(); updateFriendBadge(); renderFriendList();
+      toast('✅ تم قبول الصداقة مع ' + req.name, 'success');
+      if (socket) socket.emit('friend_accept', { fromDeviceId: req.deviceId, toDeviceId: currentUser.id });
+    }
 
-setTimeout(updateFriendBadge, 500);
+    function quickReject(idx) {
+      const req = friendRequests.incoming[idx];
+      if (!req) return;
+      friendRequests.incoming.splice(idx, 1);
+      saveFriendRequests(); updateFriendBadge(); renderFriendList();
+      toast('❌ تم رفض الطلب', 'error');
+      if (socket) socket.emit('friend_reject', { fromDeviceId: req.deviceId, toDeviceId: currentUser.id });
+    }
 
-window.addEventListener('DOMContentLoaded', async () => {
-  const bar = document.getElementById('chatInputBar');
-  if (bar) bar.classList.remove('active');
-  await initBattery();
-  await PTTEngine.init();
-  updateBatteryVisual();
-  updateConnectionIcon();
-  window.addEventListener('online', updateConnectionIcon);
-  window.addEventListener('offline', updateConnectionIcon);
-  askUserNameIfNeeded();
-  await registerUser();
-  initSocket();
-  refreshChatList();
+    function showIncomingFriendRequest(req) {
+      pendingFriendIncoming = req;
+      document.getElementById('frIncomingName').textContent = (req.name || 'مستخدم') + ' يريد إضافتك كصديق';
+      document.getElementById('frIncomingCode').textContent = req.code || '—';
+      openModal('modalFriendIncoming');
+      PTTEngine.playRealBeep();
+    }
 
-  const savedWaveId = localStorage.getItem('rc_saved_wave_id');
-  const savedWaveName = localStorage.getItem('rc_saved_wave_name');
-  const isWaveOwner = localStorage.getItem('rc_is_wave_owner') === 'true';
-  if (savedWaveId) {
-    currentUser.waveId = savedWaveId;
-    currentUser.waveCode = savedWaveId;
-    currentUser.waveName = savedWaveName;
-    currentUser.isWaveOwner = isWaveOwner;
-    const el1 = document.getElementById('waveCodeChip');
-    if (el1) el1.innerHTML = savedWaveId + ' <span style="font-size:12px;">🔑</span>';
-    const el2 = document.getElementById('waveNameLabel');
-    if (el2) el2.textContent = savedWaveName || 'لا توجد فرقة';
-    const el3 = document.getElementById('lcdLine3');
-    if (el3) el3.textContent = savedWaveId + ' • RX';
-    setTimeout(() => joinWaveAsMember(savedWaveId), 1500);
-  }
+    function acceptFriendRequest() {
+      if (!pendingFriendIncoming) return;
+      const req = pendingFriendIncoming;
+      if (!friendRequests.friends.find(f => f.code === req.code)) {
+        friendRequests.friends.push({ name: req.name, code: req.code, deviceId: req.deviceId, addedAt: Date.now() });
+      }
+      friendRequests.incoming = friendRequests.incoming.filter(r => r.code !== req.code);
+      saveFriendRequests(); updateFriendBadge();
+      closeModal('modalFriendIncoming');
+      pendingFriendIncoming = null;
+      toast('✅ أصبحت صديقاً لـ ' + req.name, 'success');
+      if (socket) socket.emit('friend_accept', { fromDeviceId: req.deviceId, toDeviceId: currentUser.id });
+      refreshChatList();
+    }
 
-  const savedRoomCode = localStorage.getItem('rc_saved_room_code');
-  const savedRoomName = localStorage.getItem('rc_saved_room_name');
-  if (savedRoomCode) {
-    currentUser.roomCode = savedRoomCode;
-    currentUser.roomName = savedRoomName;
-    const el4 = document.getElementById('roomNameLabel');
-    if (el4 && savedRoomName) el4.textContent = savedRoomName;
-  }
-  updateFriendBadge();
-});
+    function rejectFriendRequest() {
+      if (!pendingFriendIncoming) return;
+      const req = pendingFriendIncoming;
+      friendRequests.incoming = friendRequests.incoming.filter(r => r.code !== req.code);
+      saveFriendRequests(); updateFriendBadge();
+      closeModal('modalFriendIncoming');
+      pendingFriendIncoming = null;
+      toast('❌ تم رفض الطلب', 'error');
+      if (socket) socket.emit('friend_reject', { fromDeviceId: req.deviceId, toDeviceId: currentUser.id });
+    }
 
-document.addEventListener('keydown', (e) => {
-  if (e.code === 'Space' && !e.repeat && !document.querySelector('.modal-overlay.show')) {
-    e.preventDefault();
-    if (isTalking) stopTalking(); else onPTTStart();
-  }
-});
+    function openSendFriendRequest() {
+      document.getElementById('friendSearchCode').value = '';
+      document.getElementById('friendSearchResults').innerHTML = '';
+      friendSearchResult = null;
+      openModal('modalFriendSend');
+    }
 
-document.addEventListener('click', (e) => {
-  const md = document.getElementById('membersDropdown');
-  const wnc = document.getElementById('waveNameChip');
-  if (md && md.classList.contains('show') && !md.contains(e.target) && wnc && !wnc.contains(e.target)) {
-    md.classList.remove('show');
-  }
-});
-</script>
+    async function searchFriend() {
+      const code = document.getElementById('friendSearchCode').value.trim().toUpperCase();
+      const res = document.getElementById('friendSearchResults');
+      if (!code) { res.innerHTML = '<div class="no-results"><span class="no-results-icon">⚠️</span>أدخل الرقم</div>'; return; }
+      res.innerHTML = '<div class="no-results">⏳ جاري البحث...</div>';
+      try {
+        const r = await fetch(SERVER_URL + '/api/users/search/' + code);
+        const user = await r.json();
+        if (user.deviceId) {
+          if (user.deviceId === currentUser.id) { res.innerHTML = '<div class="no-results"><span class="no-results-icon">🙃</span>هذا أنت!</div>'; return; }
+          if (friendRequests.friends.find(f => f.deviceId === user.deviceId)) { res.innerHTML = '<div class="no-results"><span class="no-results-icon">✅</span>أنتما صديقان بالفعل</div>'; return; }
+          friendSearchResult = user;
+          res.innerHTML = `<div class="search-result-card" onclick="sendFriendRequest()"><div class="search-result-icon">👤</div><div class="search-result-info"><div class="search-result-name">${user.userName || 'مستخدم'}</div><div class="search-result-code">${user.radCode || code}</div></div><div style="color:var(--cyan); font-size:20px;">➕</div></div>`;
+        } else {
+          res.innerHTML = '<div class="no-results"><span class="no-results-icon">❌</span>لا يوجد مستخدم بهذا الرقم</div>';
+        }
+      } catch (e) {
+        res.innerHTML = '<div class="no-results"><span class="no-results-icon">❌</span>خطأ في البحث</div>';
+      }
+    }
+
+    function sendFriendRequest() {
+      if (!friendSearchResult) return;
+      const user = friendSearchResult;
+      if (friendRequests.outgoing.find(r => r.deviceId === user.deviceId)) { toast('⚠️ أرسلت طلباً بالفعل', 'error'); return; }
+      
+      const req = { name: user.userName || 'مستخدم', code: user.radCode, deviceId: user.deviceId, sentAt: Date.now() };
+      friendRequests.outgoing.push(req);
+      saveFriendRequests();
+      
+      if (socket) {
+        const txt = JSON.stringify({type:'friend_request', fromDeviceId: currentUser.id, fromName: currentUser.name, fromCode: currentUser.radCode});
+        socket.emit('send_direct_message', {toDeviceId: user.deviceId, fromDeviceId: currentUser.id, fromName: currentUser.name, fromCode: currentUser.radCode, text: txt, message: {text: txt}});
+        socket.emit('friend_request_send', {toDeviceId: user.deviceId, fromDeviceId: currentUser.id, fromName: currentUser.name, fromCode: currentUser.radCode});
+        socket.emit('friend_request', { fromDeviceId: currentUser.id, fromUserName: currentUser.name, fromCode: currentUser.radCode, toDeviceId: user.deviceId });
+      }
+      
+      closeModal('modalFriendSend');
+      toast('📤 تم إرسال طلب الصداقة', 'success');
+    }
+
+    function handleIncomingFriendRequest(data) {
+      const fromId = data.fromDeviceId;
+      const fromName = data.fromUserName || data.fromName || 'مستخدم';
+      const fromCode = data.fromCode || '—';
+      
+      if (friendRequests.friends.find(f => f.deviceId === fromId)) return;
+      if (friendRequests.incoming.find(r => r.deviceId === fromId)) return;
+      
+      const req = { name: fromName, code: fromCode, deviceId: fromId, receivedAt: Date.now() };
+      friendRequests.incoming.push(req);
+      saveFriendRequests(); updateFriendBadge();
+      showIncomingFriendRequest(req);
+    }
+
+    // ============ قائمة العمليات ============
+    async function openOperationsList() {
+      const title = document.getElementById('sideMenuTitle');
+      const content = document.getElementById('sideMenuContent');
+      let allWaves = JSON.parse(localStorage.getItem('rc_user_waves_list') || '[]');
+      let allRooms = JSON.parse(localStorage.getItem('rc_user_rooms_list') || '[]');
+      if (currentUser.waveId && !allWaves.find(w => w.id === currentUser.waveId)) allWaves.push({ id: currentUser.waveId, name: currentUser.waveName || 'فرقة حالية' });
+      if (currentUser.roomCode && !allRooms.find(r => r.code === currentUser.roomCode)) allRooms.push({ code: currentUser.roomCode, name: currentUser.roomName || 'غرفة حالية' });
+
+      title.textContent = '📋 سجل العمليات';
+      let html = `<div style="font-size:13px; color:var(--cyan); font-weight:800; margin-bottom:8px; margin-top:4px;">📡 الفرق:</div>`;
+      if (allWaves.length === 0) {
+        html += `<div style="font-size:11px; color:var(--text-dim); margin-bottom:15px;">لا توجد فرق مسجلة بعد.</div>`;
+      } else {
+        for (const w of allWaves) {
+          let isActive = currentUser.waveId === w.id;
+          let isOwner = false, activeCount = 0;
+          try {
+            const res = await fetch(SERVER_URL + '/api/waves/' + w.id.replace('T', 'Q'));
+            const data = await res.json();
+            if (data.members) {
+              activeCount = data.members.filter(m => m.online).length;
+              isOwner = data.members.some(m => m.id === currentUser.id && m.isOwner);
+            }
+          } catch (e) {}
+          let badgeHtml = '';
+          if (isOwner) badgeHtml += `<span style="background:var(--yellow); color:#000; border-radius:4px; padding:2px 6px; font-size:9px; font-weight:900; margin-right:4px;">👑 المالك</span>`;
+          if (isActive) badgeHtml += `<span style="background:var(--green); color:#000; border-radius:4px; padding:2px 6px; font-size:9px; font-weight:900; margin-right:4px;">🟢 نشط</span>`;
+          html += `<button class="menu-item ${isActive ? 'primary' : ''}" onclick="switchToWave('${w.id}')"><span class="menu-icon">${isActive ? '🟢' : '📡'}</span><span class="menu-text"><span class="menu-label">${w.name} ${badgeHtml}</span><span class="menu-desc">${w.id} • <span style="color:var(--green); font-size:10px;">● ${activeCount} نشط</span></span></span></button>`;
+        }
+      }
+      html += `<div style="border-top:1px solid var(--border); margin:10px 0;"></div><div style="font-size:13px; color:var(--cyan); font-weight:800; margin-bottom:8px;">💬 الغرف:</div>`;
+      if (allRooms.length === 0) {
+        html += `<div style="font-size:11px; color:var(--text-dim); margin-bottom:15px;">لا توجد غرف مسجلة بعد.</div>`;
+      } else {
+        for (const r of allRooms) {
+          let isActive = currentUser.roomCode === r.code;
+          let isOwner = localStorage.getItem('rc_is_room_owner') === 'true' && currentUser.roomCode === r.code;
+          let badgeHtml = '';
+          if (isOwner) badgeHtml += `<span style="background:var(--yellow); color:#000; border-radius:4px; padding:2px 6px; font-size:9px; font-weight:900; margin-right:4px;">👑 المالك</span>`;
+          if (isActive) badgeHtml += `<span style="background:var(--green); color:#000; border-radius:4px; padding:2px 6px; font-size:9px; font-weight:900; margin-right:4px;">🟢 نشط</span>`;
+          html += `<button class="menu-item ${isActive ? 'primary' : ''}" onclick="switchToRoom('${r.code}', '${r.name}')"><span class="menu-icon">${isActive ? '🟢' : '💬'}</span><span class="menu-text"><span class="menu-label">${r.name} ${badgeHtml}</span><span class="menu-desc">${r.code}</span></span></button>`;
+        }
+      }
+      content.innerHTML = html;
+      sideMenu.classList.add('open');
+      menuBackdrop.classList.add('show');
+      menuToggle.classList.add('open');
+    }
+
+    async function switchToWave(waveId) {
+      closeSideMenu();
+      if (currentUser.waveId === waveId) return;
+      let allWaves = JSON.parse(localStorage.getItem('rc_user_waves_list') || '[]');
+      let targetWave = allWaves.find(w => w.id === waveId);
+      let name = targetWave ? targetWave.name : (currentUser.waveName || 'فرقة');
+      toast('⏳ جاري التبديل...', 'success');
+      stopTalking();
+      if (socket) socket.emit('wave_leave', { waveId: currentUser.waveId.replace('T', 'Q'), deviceId: currentUser.id });
+      currentUser.waveId = waveId;
+      currentUser.waveName = name;
+      currentUser.waveCode = waveId;
+      localStorage.setItem('rc_saved_wave_id', waveId);
+      localStorage.setItem('rc_saved_wave_name', name);
+      document.getElementById('waveNameLabel').textContent = name;
+      document.getElementById('waveNameValue').textContent = name;
+      document.getElementById('waveCodeValue').textContent = waveId;
+      document.getElementById('waveCodeChip').innerHTML = waveId + ' <span style="font-size:12px;">🔑</span>';
+      document.getElementById('lcdLine3').textContent = waveId + ' • RX';
+      await joinWaveAsMember(waveId);
+      toast('✅ تم الانتقال إلى ' + name, 'success');
+    }
+
+    function switchToRoom(roomCode, roomName) {
+      closeSideMenu();
+      if (currentUser.roomCode === roomCode) return;
+      currentUser.roomCode = roomCode;
+      currentUser.roomName = roomName;
+      currentUser.currentConvId = 'conv_self_' + roomCode;
+      currentUser.currentChatWith = 'self';
+      localStorage.setItem('rc_saved_room_code', roomCode);
+      localStorage.setItem('rc_saved_room_name', roomName);
+      document.getElementById('roomNameLabel').textContent = roomName;
+      document.getElementById('chatWithName').textContent = roomName + ' (غرفتك)';
+      document.getElementById('chatWithCode').textContent = roomCode;
+      switchTab('chat');
+      toast('✅ تم الانتقال إلى الغرفة', 'success');
+    }
+
+    document.getElementById('operationsChip').addEventListener('click', openOperationsList);
+    document.getElementById('friendRequestsChip').addEventListener('click', openFriendRequests);
+    document.getElementById('friendRequestsChip2').addEventListener('click', openFriendRequests);
+
+    setTimeout(updateFriendBadge, 500);
+
+    window.addEventListener('DOMContentLoaded', async () => {
+      const bar = document.getElementById('chatInputBar');
+      if (bar) bar.classList.remove('active');
+      await initBattery();
+      await PTTEngine.init();
+      updateBatteryVisual();
+      updateConnectionIcon();
+      window.addEventListener('online', updateConnectionIcon);
+      window.addEventListener('offline', updateConnectionIcon);
+      askUserNameIfNeeded();
+      await registerUser();
+      initSocket();
+      refreshChatList();
+
+      const savedWaveId = localStorage.getItem('rc_saved_wave_id');
+      const savedWaveName = localStorage.getItem('rc_saved_wave_name');
+      const isWaveOwner = localStorage.getItem('rc_is_wave_owner') === 'true';
+      if (savedWaveId) {
+        currentUser.waveId = savedWaveId;
+        currentUser.waveCode = savedWaveId;
+        currentUser.waveName = savedWaveName;
+        currentUser.isWaveOwner = isWaveOwner;
+        const el1 = document.getElementById('waveCodeChip');
+        if (el1) el1.innerHTML = savedWaveId + ' <span style="font-size:12px;">🔑</span>';
+        const el2 = document.getElementById('waveNameLabel');
+        if (el2) el2.textContent = savedWaveName || 'لا توجد فرقة';
+        const el3 = document.getElementById('lcdLine3');
+        if (el3) el3.textContent = savedWaveId + ' • RX';
+        setTimeout(() => joinWaveAsMember(savedWaveId), 1500);
+      }
+
+      const savedRoomCode = localStorage.getItem('rc_saved_room_code');
+      const savedRoomName = localStorage.getItem('rc_saved_room_name');
+      if (savedRoomCode) {
+        currentUser.roomCode = savedRoomCode;
+        currentUser.roomName = savedRoomName;
+        const el4 = document.getElementById('roomNameLabel');
+        if (el4 && savedRoomName) el4.textContent = savedRoomName;
+      }
+      updateFriendBadge();
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.code === 'Space' && !e.repeat && !document.querySelector('.modal-overlay.show')) {
+        e.preventDefault();
+        if (isTalking) stopTalking(); else onPTTStart();
+      }
+    });
+
+    document.addEventListener('click', (e) => {
+      const md = document.getElementById('membersDropdown');
+      const wnc = document.getElementById('waveNameChip');
+      if (md && md.classList.contains('show') && !md.contains(e.target) && wnc && !wnc.contains(e.target)) {
+        md.classList.remove('show');
+      }
+    });
+    </script>
 </body>
-</html>                                                                                                                                                                                                         
+</html>
