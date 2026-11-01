@@ -277,14 +277,15 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
         </div>
       </div>
       <div class="status-row" style="grid-template-columns:1fr 1fr;">
-        <div class="chip" id="friendRequestsChip" style="cursor:pointer;">
-          <div class="chip-value" style="font-size:13px; font-weight:800;">👥 طلبات الصداقة</div>
-          <span id="friendReqBadge">0</span>
-        </div>
-        <div class="chip" id="sendFriendChip" style="cursor:pointer;">
-          <div class="chip-value" style="font-size:13px; font-weight:800;">➕ إرسال طلب</div>
-        </div>
-      </div>
+  <div class="chip" id="friendRequestsChip" style="cursor:pointer;">
+    <div class="chip-value" style="font-size:13px; font-weight:800;">👥 طلبات الصداقة</div>
+    <span id="friendReqBadge">0</span>
+  </div>
+  <!-- ✅ تم استبدال زر إرسال الطلب بزر البحث عن فرقة -->
+  <div class="chip" id="searchWaveChip" onclick="openSearchWave()" style="cursor:pointer;">
+    <div class="chip-value" style="font-size:13px; font-weight:800;">🔍 البحث عن فرقة</div>
+  </div>
+</div>
       <div class="radio-stage">
         <div class="radio-device">
           <div class="antenna"></div>
