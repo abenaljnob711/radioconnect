@@ -730,9 +730,83 @@ const LiveVoice = {
 };
 
 const pttMainBtn = document.getElementById('pttMain');
-pttMainBtn.addEventListener('pointerdown', (e) => { e.preventDefault(); onPTTStart(); });
-pttMainBtn.addEventListener('pointerup', (e) => { e.preventDefault(); stopTalking(); });
-pttMainBtn.addEventListener('pointercancel', (e) => { e.preventDefault(); stopTalking(); });
+// استخدام click عشان نستخدم نظام (اضغط مرة يفتح، واضغط مرة يقفل)
+pttMainBtn.addEventListener('click', (e) => { 
+  e.preventDefault(); 
+  if (isTalking) stopTalking(); else onPTTStart(); 
+});
+
+// ✅ دوال التسجيل الجديدة
+let waveRecorder = null;
+let waveAudioChunks = [];
+
+async function onPTTStart() {
+  if (isTalking) return;
+  if (!currentUser.waveId) { toast('⚠️ انضم إلى فرقة أولاً', 'error'); return; }
+
+  isTalking = true;
+  const pttMain = document.getElementById('pttMain');
+  if (pttMain) {
+      pttMain.classList.add('holding');
+      pttMain.textContent = '⏹'; // شكل زرار الوقف
+  }
+  document.body.classList.add('ptt-active');
+  
+  const statusChip = document.getElementById('waveStatusChip');
+  const statusText = document.getElementById('waveStatusText');
+  if (statusChip) { statusChip.classList.add('live'); statusChip.classList.remove('disconnected'); }
+  if (statusText) statusText.innerHTML = '🔴 جاري التسجيل...';
+  
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    waveRecorder = new MediaRecorder(stream);
+    waveAudioChunks = [];
+    waveRecorder.ondataavailable = e => { if (e.data.size > 0) waveAudioChunks.push(e.data); };
+    waveRecorder.start();
+  } catch (err) {
+    toast("⚠️ تعذر تشغيل الميكروفون");
+    stopTalking();
+  }
+}
+
+function stopTalking() {
+  if (!isTalking) return;
+  isTalking = false;
+  
+  const pttMain = document.getElementById('pttMain');
+  if (pttMain) {
+      pttMain.classList.remove('holding');
+      pttMain.textContent = 'PTT'; // إرجاع زرار PTT
+  }
+  document.body.classList.remove('ptt-active');
+  
+  const statusChip = document.getElementById('waveStatusChip');
+  const statusText = document.getElementById('waveStatusText');
+  if (statusChip) { statusChip.classList.remove('live'); statusChip.classList.add('disconnected'); }
+  if (statusText) statusText.innerHTML = '🔴 غير متصل';
+
+  // إرسال الصوت بعد ما التسجيل يقف
+  if (waveRecorder && waveRecorder.state === 'recording') {
+    waveRecorder.onstop = () => {
+      const blob = new Blob(waveAudioChunks, { type: 'audio/webm' });
+      const reader = new FileReader();
+      reader.onload = () => {
+        const base64 = reader.result;
+        if (socket && currentUser.waveId) {
+          socket.emit('send_wave_voice', {
+            waveId: currentUser.waveId,
+            senderName: currentUser.name,
+            audio: base64
+          });
+        }
+      };
+      reader.readAsDataURL(blob);
+      waveRecorder.stream.getTracks().forEach(t => t.stop());
+      waveRecorder = null;
+    };
+    waveRecorder.stop();
+  }
+}
 
 function initSocket() {
   if (typeof io === 'undefined') return;
