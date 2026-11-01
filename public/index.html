@@ -1158,9 +1158,9 @@ function openCreateWave() { openModal('modalWave'); }
 function openEditWaveName() { document.getElementById('newWaveName').value = currentUser.waveName || ''; openModal('modalEditWave'); }
 
 function openSearchWave() {
-  document.getElementById('searchSubTitle').textContent = 'ابحث برقم الفرقة (Q#####)';
+  document.getElementById('searchSubTitle').textContent = 'ابحث برقم الفرقة (T#####)';
   document.getElementById('searchFieldLabel').textContent = 'رقم الفرقة';
-  document.getElementById('searchQuery').placeholder = 'Q#####';
+  document.getElementById('searchQuery').placeholder = 'T#####';
   document.getElementById('searchQuery').value = '';
   document.getElementById('searchResults').innerHTML = '<div class="no-results"><span class="no-results-icon">🔎</span>اكتب رقم الفرقة واضغط بحث</div>';
   openModal('modalSearch');
@@ -1169,7 +1169,7 @@ function openSearchWave() {
 function openSearchUser() {
   document.getElementById('searchSubTitle').textContent = 'ابحث برقم المستخدم';
   document.getElementById('searchFieldLabel').textContent = 'رقم المستخدم';
-  document.getElementById('searchQuery').placeholder = 'Q#####';
+  document.getElementById('searchQuery').placeholder = 'T#####';
   document.getElementById('searchQuery').value = '';
   document.getElementById('searchResults').innerHTML = '<div class="no-results"><span class="no-results-icon">🔎</span>اكتب الرقم واضغط بحث</div>';
   openModal('modalSearch');
