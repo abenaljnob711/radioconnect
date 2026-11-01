@@ -879,8 +879,8 @@ async function createWave() {
     const data = await res.json();
     if (!data.success) throw new Error(data.error);
     
-    // ✅ تحويل Q اللي جاية من السيرفر لـ T عشان تظهرلك
-    const displayWaveId = data.waveId.replace('Q', 'T');
+    // ✅ تحويل T اللي جاية من السيرفر لـ Q عشان تظهرلك
+    const displayWaveId = data.waveId.replace('T', 'Q');
     
     currentUser.waveId = displayWaveId; 
     currentUser.waveCode = displayWaveId;
