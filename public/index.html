@@ -852,22 +852,6 @@ function saveUserName() {
   });
 }
 
-function addWaveToHistory(waveId, waveName) {
-  let list = JSON.parse(localStorage.getItem('rc_user_waves_list') || '[]');
-  if (!list.find(w => w.id === waveId)) {
-    list.push({ id: waveId, name: waveName });
-    localStorage.setItem('rc_user_waves_list', JSON.stringify(list));
-  }
-}
-
-function addRoomToHistory(roomCode, roomName) {
-  let list = JSON.parse(localStorage.getItem('rc_user_rooms_list') || '[]');
-  if (!list.find(r => r.code === roomCode)) {
-    list.push({ code: roomCode, name: roomName });
-    localStorage.setItem('rc_user_rooms_list', JSON.stringify(list));
-  }
-}
-
 async function createWave() {
   const name = document.getElementById('waveName').value.trim();
   if (!name) { toast('⚠️ أدخل اسم الفرقة', 'error'); return; }
@@ -879,8 +863,8 @@ async function createWave() {
     const data = await res.json();
     if (!data.success) throw new Error(data.error);
     
-    // ✅ تحويل T اللي جاية من السيرفر لـ Q عشان تظهرلك
-    const displayWaveId = data.waveId.replace('T', 'Q');
+    // ✅ تحويل الحرف إلى T مباشرة
+    const displayWaveId = 'T' + data.waveId.substring(1);
     
     currentUser.waveId = displayWaveId; 
     currentUser.waveCode = displayWaveId;
@@ -904,14 +888,16 @@ async function createWave() {
     await PTTEngine.init(); PTTEngine.playStartBeep();
     await connectWaveChannel();
     
-    // بنبعت للسيرفر Q عشان هو بيفهمه
-    if (socket) socket.emit('wave_join', { waveId: data.waveId, deviceId: currentUser.id, userName: currentUser.name });
+    // ✅ بنبعت T للسيرفر عشان هو بيفهمه زي ما قلت
+    if (socket) socket.emit('wave_join', { waveId: displayWaveId, deviceId: currentUser.id, userName: currentUser.name });
     toast('✅ تم إنشاء الفرقة "' + name + '"', 'success');
   } catch (e) { toast('❌ ' + e.message, 'error'); }
 }
 
 async function joinWaveAsMember(waveId) {
-  // ✅ 1. الخروج من الفرقة القديمة
+  // ✅ استخدام الكود زي ما هو
+  const serverId = waveId;
+
   if (currentUser.waveId && currentUser.waveId !== waveId) {
     if (socket) socket.emit('wave_leave', { waveId: currentUser.waveId, deviceId: currentUser.id });
     await disconnectWaveRoom();
@@ -922,7 +908,7 @@ async function joinWaveAsMember(waveId) {
   localStorage.setItem('rc_is_wave_owner', 'false');
   
   try {
-    const res = await fetch(SERVER_URL + '/api/waves/' + waveId);
+    const res = await fetch(SERVER_URL + '/api/waves/' + serverId);
     const data = await res.json();
     if (data.waveName) {
       currentUser.waveName = data.waveName;
@@ -939,10 +925,9 @@ async function joinWaveAsMember(waveId) {
   localStorage.setItem('rc_saved_wave_id', waveId);
   localStorage.setItem('rc_saved_wave_name', currentUser.waveName || '');
   
-  // ✅ 2. الاتصال بالغرفة الصوتية فوراً
   await connectWaveChannel();
   
-  if (socket) socket.emit('wave_join', { waveId, deviceId: currentUser.id, userName: currentUser.name });
+  if (socket) socket.emit('wave_join', { waveId: serverId, deviceId: currentUser.id, userName: currentUser.name });
   toast('✅ انضممت إلى الفرقة', 'success');
 }
 
@@ -950,7 +935,11 @@ function doSearch() {
   const q = document.getElementById('searchQuery').value.trim().toUpperCase();
   const res = document.getElementById('searchResults');
   if (!q) { res.innerHTML = '<div class="no-results"><span class="no-results-icon">⚠️</span>أدخل الرقم</div>'; return; }
-  fetch(SERVER_URL + '/api/waves/' + q)
+
+  // ✅ البحث بالكود زي ما هو
+  const serverQuery = q;
+
+  fetch(SERVER_URL + '/api/waves/' + serverQuery)
     .then(r => r.json())
     .then(data => {
       if (data.waveId) {
