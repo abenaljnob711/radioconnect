@@ -1968,11 +1968,9 @@ function switchToRoom(roomCode, roomName) {
   switchTab('chat');
   toast('✅ تم الانتقال إلى الغرفة', 'success');
 }
-
 document.getElementById('operationsChip').addEventListener('click', openOperationsList);
 document.getElementById('friendRequestsChip').addEventListener('click', openFriendRequests);
 document.getElementById('friendRequestsChip2').addEventListener('click', openFriendRequests);
-document.getElementById('sendFriendChip').addEventListener('click', openSendFriendRequest);
 document.getElementById('sendFriendChip2').addEventListener('click', openSendFriendRequest);
 
 setTimeout(updateFriendBadge, 500);
