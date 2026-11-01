@@ -57,7 +57,7 @@ let db = {
    ========================================== */
 function generateRadCode() {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  let code = "Q";
+  let code = "T";
   for (let i = 0; i < 5; i++) {
     code += chars[Math.floor(Math.random() * chars.length)];
   }
@@ -72,7 +72,7 @@ function generateWaveId() {
 /* توليد كود غرفة (يبدأ بـ G) */
 function generateRoomCode() {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  let code = "G";
+  let code = "M";
   for (let i = 0; i < 5; i++) {
     code += chars[Math.floor(Math.random() * chars.length)];
   }
