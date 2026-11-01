@@ -332,9 +332,9 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
           <div class="chip-value" style="font-size:13px; font-weight:800;">👥 طلبات الصداقة</div>
           <span id="friendReqBadge2">0</span>
         </div>
-        <div class="chip" id="sendFriendChip2" style="cursor:pointer;">
-          <div class="chip-value" style="font-size:13px; font-weight:800;">➕ إرسال طلب</div>
-        </div>
+        <div class="chip" id="searchUserChip2" onclick="openSearchUser()" style="cursor:pointer;">
+     <div class="chip-value" style="font-size:13px; font-weight:800;">🔍 البحث عن مستخدم</div>
+     </div>
       </div>
       <div id="chatListContainer" style="margin-top:14px;"></div>
       <div class="empty-room" id="emptyRoom">
@@ -1979,7 +1979,6 @@ function switchToRoom(roomCode, roomName) {
 document.getElementById('operationsChip').addEventListener('click', openOperationsList);
 document.getElementById('friendRequestsChip').addEventListener('click', openFriendRequests);
 document.getElementById('friendRequestsChip2').addEventListener('click', openFriendRequests);
-document.getElementById('sendFriendChip2').addEventListener('click', openSendFriendRequest);
 
 setTimeout(updateFriendBadge, 500);
 
