@@ -1125,7 +1125,22 @@ function addChatMessage(msg, direction, scroll = true) {
   const senderName = direction === 'out' ? (currentUser.name || 'أنا') : (msg.senderName || '');
   let bodyHtml = '';
   if (msg.type === 'voice' && msg.url) {
-    bodyHtml = `<div class="voice-msg"><button class="play-btn">▶</button><div class="waveform"><audio src="${msg.url}" preload="auto"></audio><span style="height:10px"></span><span style="height:18px"></span><span style="height:14px"></span><span style="height:22px"></span><span style="height:12px"></span></div></div><div class="voice-meta"><span>${(msg.duration || 0).toFixed(1)}s</span><span>${time}</span></div>`;
+    let barsHtml = '';
+for(let i=0; i<28; i++) {
+    let h = Math.floor(Math.random() * 16) + 4;
+    barsHtml += `<span style="height:${h}px"></span>`;
+}
+bodyHtml = `
+  <div class="voice-msg">
+    <div class="voice-avatar">👤</div>
+    <button class="play-btn">▶</button>
+    <div class="waveform">
+      <audio src="${msg.url}" preload="auto"></audio>
+      ${barsHtml}
+    </div>
+  </div>
+  <div class="voice-meta"><span>${time}</span><span>${(msg.duration || 0).toFixed(1)}s</span></div>
+`;
   } else if (msg.type === 'image' && msg.url) {
     bodyHtml = `<img src="${msg.url}" class="attachment-preview-img" onclick="window.open('${msg.url}','_blank')"><div class="voice-meta"><span>${time}</span></div>`;
   } else if (msg.type === 'video' && msg.url) {
