@@ -126,8 +126,7 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
 .msg-in .msg-header { color: var(--cyan); justify-content: flex-end; }
 .msg-out .msg-header { color: #ff5577; }
 .msg-body { border-radius: 14px; padding: 12px 14px; position: relative; border: 1px solid; }
-.msg-in .msg-body { background: linear-gradient(135deg, var(--blue-msg), var(--blue-msg-2)); border-color: rgba(0,229,255,.3); border-top-right-radius: 4px; }
-.msg-out .msg-body { background: linear-gradient(135deg, var(--red-msg), var(--red-msg-2)); border-color: rgba(255,42,77,.35); border-top-left-radius: 4px; }
+.msg-in .msg-body { background: linear-gradient(135deg, var(--blue-msg), var(--blue-msg-2)); border-color: rgba(0,229,255,.3); border-top-right-radius: 4px4px; }
 .voice-msg { display: flex; align-items: center; gap: 10px; }
 .play-btn { width: 42px; height: 42px; border-radius: 50%; background: rgba(0,229,255,.2); border: 1.5px solid var(--cyan); display: flex; align-items: center; justify-content: center; color: var(--cyan); font-size: 16px; cursor: pointer; flex-shrink: 0; transition: all .2s; font-family: inherit; font-weight: 700; }
 .msg-out .play-btn { background: rgba(255,42,77,.2); border-color: #ff5577; color: #ff5577; }
@@ -1187,13 +1186,34 @@ chatPrimaryBtn.addEventListener('click', async () => {
 });
 
 async function startVoiceRecording() {
+async function startVoiceRecording() {
   if (!currentUser.currentConvId) { toast('⚠️ اختر محادثة أولاً', 'error'); return; }
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    // ✅ طلب المايك بإعدادات جودة عالية وعزل ضوضاء
+    const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: { 
+            echoCancellation: true, 
+            noiseSuppression: true, 
+            autoGainControl: true,
+            sampleRate: 44100,
+            channelCount: 1
+        } 
+    });
+    
     voiceChunks = [];
-    voiceRecorder = new MediaRecorder(stream);
+    // ✅ استخدام ترميز Opus بأعلى جودة
+    const options = { mimeType: 'audio/webm;codecs=opus', audioBitsPerSecond: 128000 };
+    
+    try {
+        voiceRecorder = new MediaRecorder(stream, options);
+    } catch (e) {
+        // لو المتصفح مش بيدعم الإعدادات دي، يرجع للافتراضي
+        voiceRecorder = new MediaRecorder(stream);
+    }
+    
     voiceRecorder.ondataavailable = (e) => { if (e.data.size > 0) voiceChunks.push(e.data); };
     voiceRecorder.start(100);
+    
     isRecordingVoice = true;
     voiceStartTime = Date.now();
     chatPrimaryBtn.classList.add('recording');
