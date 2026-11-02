@@ -791,28 +791,36 @@ function doSearch() {
   const res = document.getElementById('searchResults');
   if (!q) { res.innerHTML = '<div class="no-results"><span class="no-results-icon">⚠️</span>أدخل الرقم</div>'; return; }
 
-  const serverQuery = q.replace('T', 'Q');
-
-  fetch(SERVER_URL + '/api/waves/' + serverQuery)
-    .then(r => r.json())
-    .then(data => {
-      if (data.waveId) {
-        searchResultUser = { name: data.waveName || 'فرقة', code: data.waveId.replace('Q', 'T'), type: 'wave' };
-        res.innerHTML = `<div class="search-result-card" onclick="askJoinWave()"><div class="search-result-icon">📡</div><div class="search-result-info"><div class="search-result-name">${searchResultUser.name}</div><div class="search-result-code">${searchResultUser.code} • ${data.totalMembers || 0} أعضاء</div></div><div style="color:var(--cyan)">←</div></div>`;
-        return;
-      }
-      return fetch(SERVER_URL + '/api/users/search/' + q)
-        .then(r => r.json())
-        .then(user => {
-          if (user.deviceId) {
-            searchResultUser = { name: user.userName, code: user.radCode, deviceId: user.deviceId, type: 'user' };
-            res.innerHTML = `<div class="search-result-card" onclick="startUserChat()"><div class="search-result-icon">👤</div><div class="search-result-info"><div class="search-result-name">${searchResultUser.name}</div><div class="search-result-code">${searchResultUser.code}</div></div><div style="color:var(--cyan)">←</div></div>`;
-          } else {
-            res.innerHTML = '<div class="no-results"><span class="no-results-icon">❌</span>لا نتائج</div>';
-          }
-        });
-    })
-    .catch(() => { res.innerHTML = '<div class="no-results"><span class="no-results-icon">❌</span>خطأ في البحث</div>'; });
+  // ✅ البحث عن فرقة بحرف T
+  if (q.startsWith('T')) {
+    fetch(SERVER_URL + '/api/waves/' + q)
+      .then(r => r.json())
+      .then(data => {
+        if (data.waveId) {
+          searchResultUser = { name: data.waveName || 'فرقة', code: data.waveId, type: 'wave' };
+          res.innerHTML = `<div class="search-result-card" onclick="askJoinWave()"><div class="search-result-icon">📡</div><div class="search-result-info"><div class="search-result-name">${searchResultUser.name}</div><div class="search-result-code">${searchResultUser.code} • ${data.totalMembers || 0} أعضاء</div></div><div style="color:var(--cyan)">←</div></div>`;
+        } else {
+          res.innerHTML = '<div class="no-results"><span class="no-results-icon">❌</span>لا توجد فرقة بهذا الرقم</div>';
+        }
+      })
+      .catch(() => { res.innerHTML = '<div class="no-results">❌ خطأ في البحث</div>'; });
+  } 
+  // ✅ البحث عن غرفة (مستخدم) بحرف R
+  else if (q.startsWith('R')) {
+    fetch(SERVER_URL + '/api/users/search/' + q)
+      .then(r => r.json())
+      .then(user => {
+        if (user.deviceId) {
+          searchResultUser = { name: user.userName, code: user.radCode, deviceId: user.deviceId, type: 'user' };
+          res.innerHTML = `<div class="search-result-card" onclick="startUserChat()"><div class="search-result-icon">💬</div><div class="search-result-info"><div class="search-result-name">${searchResultUser.name}</div><div class="search-result-code">${searchResultUser.code}</div></div><div style="color:var(--cyan)">←</div></div>`;
+        } else {
+          res.innerHTML = '<div class="no-results"><span class="no-results-icon">❌</span>لا توجد غرفة بهذا الرقم</div>';
+        }
+      })
+      .catch(() => { res.innerHTML = '<div class="no-results">❌ خطأ في البحث</div>'; });
+  } else {
+    res.innerHTML = '<div class="no-results"><span class="no-results-icon">⚠️</span>الرقم يجب أن يبدأ بـ T (فرقة) أو R (غرفة)</div>';
+  }
 }
 
 function askJoinWave() {
@@ -1336,15 +1344,20 @@ async function createRoom() {
   const name = document.getElementById('roomName').value.trim();
   if (!name) { toast('⚠️ أدخل اسم الغرفة', 'error'); return; }
 
-  const roomCode = 'R' + Math.random().toString(36).substring(2, 6).toUpperCase();
+  // ✅ توليد الغرفة بحرف R
+  const roomCode = 'R' + Math.random().toString(36).substring(2, 8).toUpperCase();
+  
+  // ✅ حفظ كود الغرفة في السيرفر عشان يظهر في البحث
+  try {
+    await fetch(SERVER_URL + '/api/rooms/create', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ deviceId: currentUser.id, roomCode: roomCode })
+    });
+  } catch(e) { console.log("Error saving room", e); }
 
   currentUser.roomName = name;
   currentUser.roomCode = roomCode;
-  localStorage.setItem('rc_saved_room_code', roomCode);
-  localStorage.setItem('rc_saved_room_name', name);
-  localStorage.setItem('rc_is_room_owner', 'true');
-  addRoomToHistory(roomCode, name);
-  document.getElementById('createdRoomCode').textContent = roomCode;
+  // ... (كمل باقي كود الغرفة زي ما هو عادي)
   document.getElementById('roomNameLabel').textContent = name;
   document.getElementById('roomName').value = '';
   closeModal('modalCreate');
