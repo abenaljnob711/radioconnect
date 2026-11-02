@@ -128,12 +128,14 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
 .msg-body { border-radius: 8px; padding: 6px 7px 2px 7px; position: relative; border: 1px solid; }
 .msg-in .msg-body { background: linear-gradient(135deg, var(--blue-msg), var(--blue-msg-2)); border-color: rgba(0,229,255,.3); border-top-right-radius: 2px; }
 .msg-out .msg-body { background: linear-gradient(135deg, var(--red-msg), var(--red-msg-2)); border-color: rgba(255,42,77,.35); border-top-left-radius: 2px; }
-.play-btn { width: 42px; height: 42px; border-radius: 50%; background: rgba(0,229,255,.2); border: 1.5px solid var(--cyan); display: flex; align-items: center; justify-content: center; color: var(--cyan); font-size: 16px; cursor: pointer; flex-shrink: 0; transition: all .2s; font-family: inherit; font-weight: 700; }
-.msg-out .play-btn { background: rgba(255,42,77,.2); border-color: #ff5577; color: #ff5577; }
-.waveform { flex: 1; height: 38px; display: flex; align-items: center; gap: 2px; overflow: hidden; }
-.waveform span { display: block; width: 2.5px; background: var(--cyan); border-radius: 2px; opacity: .9; }
-.msg-out .waveform span { background: #ff5577; }
-.voice-meta { display: flex; justify-content: flex-end; align-items: center; gap: 6px; font-size: 10px; color: rgba(255,255,255,.6); margin-top: 2px; }
+.voice-msg { display: flex !important; flex-direction: row !important; align-items: center !important; gap: 10px !important; width: 100% !important; direction: ltr !important; padding: 4px 0 !important; }
+.voice-avatar { width: 42px !important; height: 42px !important; border-radius: 50% !important; background: rgba(255,255,255,0.1) !important; display: flex !important; align-items: center !important; justify-content: center !important; font-size: 18px !important; font-weight: 800 !important; flex-shrink: 0 !important; color: #fff !important; }
+.play-btn { width: 40px !important; height: 40px !important; border-radius: 50% !important; background: transparent !important; border: none !important; display: flex !important; align-items: center !important; justify-content: center !important; color: var(--cyan) !important; font-size: 24px !important; cursor: pointer !important; flex-shrink: 0 !important; padding: 0 !important; }
+.msg-out .play-btn { color: #ff5577 !important; background: transparent !important; border: none !important; }
+.waveform { flex: 1 !important; height: 30px !important; display: flex !important; align-items: center !important; gap: 3px !important; overflow: hidden !important; }
+.waveform span { display: block !important; width: 3px !important; background: var(--cyan) !important; border-radius: 2px !important; }
+.msg-out .waveform span { background: #ff5577 !important; }
+.voice-meta { display: flex !important; justify-content: space-between !important; align-items: center !important; font-size: 11px !important; color: rgba(255,255,255,.6) !important; margin-top: 4px !important; }
 .text-msg { font-size: 14px; line-height: 1.4; color: #fff; font-weight: 400; padding-bottom: 2px; }
 .attach-msg { display: flex; align-items: center; gap: 10px; padding: 8px 4px; }
 .attach-msg-icon { font-size: 32px; }
