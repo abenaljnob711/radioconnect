@@ -1192,6 +1192,19 @@ bodyHtml = `
       }
     });
   }
+  // ✅ كود خيارات مسح الرسالة بالضغط المطول
+let pressTimer;
+const msgBody = div.querySelector('.msg-body');
+msgBody.addEventListener('pointerdown', () => {
+  pressTimer = setTimeout(() => {
+    if (confirm('هل تريد مسح هذه الرسالة؟')) {
+      div.remove();
+      toast('🗑️ تم مسح الرسالة', 'success');
+    }
+  }, 700);
+});
+msgBody.addEventListener('pointerup', () => clearTimeout(pressTimer));
+msgBody.addEventListener('pointerleave', () => clearTimeout(pressTimer));
   container.appendChild(div);
   if (scroll) container.scrollTop = container.scrollHeight;
 }
