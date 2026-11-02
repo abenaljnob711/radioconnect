@@ -320,10 +320,10 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
           <span id="roomMenuBtn">☰</span>
           <span onclick="toast('معلومات الغرفة')">ⓘ</span>
         </div>
-        <div class="log-title">
-          <h2><span id="roomIcon">💬</span> <span id="roomNameLabel">الغرفة</span></h2>
-          <span class="sub" id="roomSubLabel">محادثاتك الخاصة</span>
-        </div>
+        <div class="log-title" onclick="openMyRoom()" style="cursor:pointer;">
+  <h2><span id="roomIcon">💬</span> <span id="roomNameLabel">الغرفة</span></h2>
+  <span class="sub" id="roomSubLabel">محادثاتك الخاصة</span>
+</div>
       </div>
       <div class="status-row" style="grid-template-columns:1fr 1fr;">
         <div class="chip" id="friendRequestsChip2" style="cursor:pointer;">
@@ -1854,6 +1854,32 @@ document.getElementById('waveNameChip').addEventListener('click', () => {
         md.classList.remove('show');
       }
     });
+      function openMyRoom() {
+  // لو مفيش غرفة متسجلة، نظهرله رسالة
+  if (!currentUser.roomCode) {
+    toast('⚠️ ليس لديك غرفة. قم بإنشاء غرفة أولاً', 'error');
+    return;
+  }
+  
+  // فتح شات الغرفة الخاصة
+  currentUser.currentConvId = 'conv_self_' + currentUser.roomCode;
+  currentUser.currentChatWith = 'self';
+  
+  document.getElementById('chatWithName').textContent = currentUser.roomName + ' (غرفتك)';
+  document.getElementById('chatWithCode').textContent = currentUser.roomCode;
+  
+  // الانتقال لشاشة الشات
+  switchTab('chat');
+  
+  // عرض رسالة الترحيب في الغرفة
+  document.getElementById('chatMessages').innerHTML = `
+    <div style="padding:20px;text-align:center;color:var(--text-dim);font-size:12px;">
+      💬 هذه غرفتك "${currentUser.roomName}"<br>
+      رقم الغرفة: <strong style="color:var(--cyan);">${currentUser.roomCode}</strong><br>
+      يمكنك مشاركة هذا الرقم مع أصدقائك للبحث عنه.
+    </div>
+  `;
+}
     </script>
 </body>
 </html>
