@@ -1141,10 +1141,10 @@ function addChatMessage(msg, direction, scroll = true) {
   let bodyHtml = '';
   if (msg.type === 'voice' && msg.url) {
     let barsHtml = '';
-    for(let i=0; i<28; i++) {
-      let h = Math.floor(Math.random() * 16) + 4;
-      barsHtml += `<span style="height:${h}px"></span>`;
-    }
+for(let i=0; i<28; i++) {
+  let h = Math.floor(Math.random() * 16) + 4;
+  barsHtml += `<span style="height:${h}px; --i: ${i};"></span>`;
+}
     bodyHtml = `
       <div class="voice-msg">
         <div class="voice-avatar">👤</div>
@@ -1170,16 +1170,30 @@ function addChatMessage(msg, direction, scroll = true) {
   div.innerHTML = `<div class="msg-header">${senderName}</div><div class="msg-body" data-msgid="${msg.id || ''}">${bodyHtml}</div>`;
   
   const playBtn = div.querySelector('.play-btn');
-  if (playBtn) {
-    playBtn.addEventListener('click', () => {
-      const audio = playBtn.nextElementSibling.querySelector('audio');
-      if (audio) {
-        if (audio.paused) { audio.play(); playBtn.textContent = '⏸'; }
-        else { audio.pause(); playBtn.textContent = '▶'; }
-        audio.onended = () => playBtn.textContent = '▶';
+if (playBtn) {
+  playBtn.addEventListener('click', () => {
+    const audio = playBtn.nextElementSibling.querySelector('audio');
+    const waveform = div.querySelector('.waveform'); // تحديد الموجة الخاصة بهذه الرسالة
+    
+    if (audio) {
+      if (audio.paused) { 
+        audio.play(); 
+        playBtn.textContent = '⏸'; 
+        if(waveform) waveform.classList.add('playing'); // تشغيل التموج
       }
-    });
-  }
+      else { 
+        audio.pause(); 
+        playBtn.textContent = '▶'; 
+        if(waveform) waveform.classList.remove('playing'); // إيقاف التموج
+      }
+      
+      audio.onended = () => {
+        playBtn.textContent = '▶';
+        if(waveform) waveform.classList.remove('playing'); // إيقاف التموج عند انتهاء الصوت
+      };
+    }
+  });
+}
 
   // ✅ الضغط المطول لمسح الرسالة
   let pressTimer;
