@@ -816,18 +816,18 @@ function doSearch() {
       .catch(() => { res.innerHTML = '<div class="no-results">❌ خطأ في البحث</div>'; });
   } 
   else if (q.startsWith('R')) {
-  fetch(SERVER_URL + '/api/rooms/search/' + q)
-    .then(r => r.json())
-    .then(room => {
-      if (room.roomCode) {
-        searchResultUser = { name: room.roomName, code: room.roomCode, deviceId: room.deviceId, type: 'room' };
-        res.innerHTML = `<div class="search-result-card" onclick="startUserChat()"><div class="search-result-icon">💬</div><div class="search-result-info"><div class="search-result-name">${room.roomName}</div><div class="search-result-code">${room.roomCode}</div></div><div style="color:var(--cyan)">←</div></div>`;
-      } else {
-        res.innerHTML = '<div class="no-results"><span class="no-results-icon">❌</span>لا توجد غرفة بهذا الرقم</div>';
-      }
-    })
-    .catch(() => { res.innerHTML = '<div class="no-results">❌ خطأ في البحث</div>'; });
-}
+    fetch(SERVER_URL + '/api/rooms/search/' + q)
+      .then(r => r.json())
+      .then(room => {
+        if (room.roomCode) {
+          searchResultUser = { name: room.roomName, code: room.roomCode, deviceId: room.deviceId, type: 'room' };
+          res.innerHTML = `<div class="search-result-card" onclick="startUserChat()"><div class="search-result-icon">💬</div><div class="search-result-info"><div class="search-result-name">${room.roomName}</div><div class="search-result-code">${room.roomCode}</div></div><div style="color:var(--cyan)">←</div></div>`;
+        } else {
+          res.innerHTML = '<div class="no-results"><span class="no-results-icon">❌</span>لا توجد غرفة بهذا الرقم</div>';
+        }
+      })
+      .catch(() => { res.innerHTML = '<div class="no-results">❌ خطأ في البحث</div>'; });
+  } else {
     res.innerHTML = '<div class="no-results"><span class="no-results-icon">⚠️</span>الرقم يجب أن يبدأ بـ T (فرقة) أو R (غرفة)</div>';
   }
 }
