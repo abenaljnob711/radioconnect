@@ -1059,6 +1059,15 @@ async function saveWaveName() {
 async function leaveWave() {
   if (!currentUser.waveId) { toast('⚠️ لا توجد فرقة', 'error'); return; }
   if (!confirm('هل تريد مغادرة الفرقة؟')) return;
+  // إرسال طلب للسيرفر لحذف الفرقة نهائياً إذا كنت المالك
+if (currentUser.isWaveOwner) {
+  try {
+    await fetch(SERVER_URL + '/api/waves/delete', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ waveId: currentUser.waveId })
+    });
+  } catch(e) { console.log("Error deleting wave from server", e); }
+}
   if (socket) socket.emit('wave_leave', { waveId: currentUser.waveId, deviceId: currentUser.id });
   currentUser.waveId = null; currentUser.waveCode = null; currentUser.isWaveOwner = false;
   localStorage.removeItem('rc_saved_wave_id');
