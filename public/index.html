@@ -1006,7 +1006,10 @@ function stopWaveTimer() {
 
 function openCreateWave() { openModal('modalWave'); }
 function openEditWaveName() { document.getElementById('newWaveName').value = currentUser.waveName || ''; openModal('modalEditWave'); }
-
+function openEditPersonalName() {
+  document.getElementById('userNameInput').value = currentUser.name || '';
+  openModal('modalUserName');
+}
 function openSearchWave() {
   document.getElementById('searchSubTitle').textContent = 'ابحث برقم الفرقة (T)';
   document.getElementById('searchFieldLabel').textContent = 'رقم الفرقة';
