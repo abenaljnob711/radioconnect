@@ -522,9 +522,18 @@ const PTTEngine = {
     osc.start();
     osc.stop(this.audioCtx.currentTime + duration);
   },
-  playStartBeep() { this._playTone(1400, 1800, 0.12, 'sine'); if (navigator.vibrate) navigator.vibrate(40); },
-  playEndBeep() { this._playTone(900, 600, 0.12, 'sine'); if (navigator.vibrate) navigator.vibrate(40); },
-  playRealBeep() { this._playTone(600, null, 0.15, 'sine'); setTimeout(() => { this._playTone(800, null, 0.15, 'sine'); }, 200); }
+  playStartBeep() { 
+      this._playTone(1400, 1800, 0.12, 'sine'); 
+      if (navigator.vibrate) navigator.vibrate(40); 
+  },
+  playEndBeep() { 
+      this._playTone(900, 600, 0.12, 'sine'); 
+      if (navigator.vibrate) navigator.vibrate(40); 
+  },
+  playRealBeep() { 
+      this._playTone(600, null, 0.15, 'sine'); 
+      setTimeout(() => { this._playTone(800, null, 0.15, 'sine'); }, 200); 
+  }
 };
 
 const pttMainBtn = document.getElementById('pttMain');
