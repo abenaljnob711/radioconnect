@@ -2,7 +2,6 @@
 
 /* ==========================================
    Radio Connect Server - v4.4 (Voice Waves)
-   RadCode format: T#####
    ========================================== */
 
 const express = require("express");
@@ -53,20 +52,27 @@ let db = {
 };
 
 /* ==========================================
-   ✅ توليد كود RadCode بصيغة T#####
+   ✅ التعديل هنا: توليد الأكواد
    ========================================== */
+
+// كود المستخدم يبدأ بحرف R
 function generateRadCode() {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  let code = "R";
+  let code = "R"; 
   for (let i = 0; i < 5; i++) {
     code += chars[Math.floor(Math.random() * chars.length)];
   }
   return code;
 }
 
-/* توليد كود موجة (نفس الصيغة) */
+// كود الفرقة يبدأ بحرف T
 function generateWaveId() {
-  return generateRadCode();
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let code = "T"; 
+  for (let i = 0; i < 5; i++) {
+    code += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return code;
 }
 
 /* توليد كود غرفة (يبدأ بـ R) */
@@ -439,7 +445,7 @@ app.post("/api/waves/remove-member", (req, res) => {
 });
 
 /* ==========================================
-   LiveKit Token (إذا كنت تستخدمه)
+   LiveKit Token
    ========================================== */
 
 app.post("/api/livekit/token", async (req, res) => {
@@ -476,7 +482,7 @@ app.post("/api/livekit/token", async (req, res) => {
 });
 
 /* ==========================================
-   Socket.IO — الأحداث الحية
+   Socket.IO
    ========================================== */
 
 io.on("connection", (socket) => {
@@ -532,9 +538,6 @@ io.on("connection", (socket) => {
     if (socket.data.currentConvId === conversationId) socket.data.currentConvId = null;
   });
 
-  // ==========================================
-  // 💬 المحادثات النصية والصوتية (محفوظة)
-  // ==========================================
   socket.on("send_direct_message", ({ conversationId, message }) => {
     if (!db.messages[conversationId]) db.messages[conversationId] = [];
     db.messages[conversationId].push(message);
@@ -625,12 +628,8 @@ io.on("connection", (socket) => {
     socket.leave("wave_" + waveId);
   });
 
-  // ==========================================
-  // 🎤 إرسال الصوت في الفرقة (بدون حفظ)
-  // ==========================================
   socket.on("send_wave_voice", ({ waveId, senderName, audio }) => {
     if (!waveId || !audio) return;
-    // إرسال الصوت لكل الأعضاء في الفرقة ما عدا المرسل
     socket.to("wave_" + waveId).emit("new_wave_voice", {
       senderId: socket.data.deviceId,
       senderName: senderName || "مستخدم",
@@ -741,10 +740,6 @@ io.on("connection", (socket) => {
   socket.on("wave_broadcast_stop", ({ waveId, deviceId }) => {
     socket.to("wave_" + waveId).emit("wave_broadcast_stop", { deviceId });
   });
-
-  /* ==========================================
-     🆕 نظام طلبات الصداقة
-     ========================================== */
 
   socket.on("friend_request", ({ fromDeviceId, fromUserName, fromCode, toDeviceId }) => {
     try {
