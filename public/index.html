@@ -12,36 +12,9 @@
 html, body { height: 100%; overflow: hidden; background: var(--bg); }
 body { font-family: 'Segoe UI', 'Tahoma', system-ui, -apple-system, sans-serif; color: var(--text); user-select: none; -webkit-user-select: none; position: relative; }
 body::before { content: ''; position: fixed; inset: 0; background: radial-gradient(circle at 20% 20%, rgba(0,229,255,.06), transparent 45%), radial-gradient(circle at 80% 80%, rgba(0,255,136,.05), transparent 45%); pointer-events: none; z-index: 0; }
-.app {
-  position: relative;
-  z-index: 1;
-  height: 100%;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  max-width: 500px;
-  margin: 0 auto;
- }
-.screen {
-  flex: 1 1 0%;
-  min-height: 0;
-  height: 0;
-  overflow-y: auto;
-  overflow-x: hidden;
-  display: none;
-  padding: 14px 14px calc(180px + env(safe-area-inset-bottom));
-  animation: fadeIn .3s ease;
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior-y: contain;
-  touch-action: pan-y;
-}
-.screen::-webkit-scrollbar {
-  display: none;
-}
-.screen.active {
-  display: block;
-} 
+.app { position: relative; z-index: 1; height: 100%; min-height: 0; display: flex; flex-direction: column; max-width: 500px; margin: 0 auto; }
+.screen { flex: 1 1 0%; min-height: 0; height: 0; overflow-y: auto; overflow-x: hidden; display: none; padding: 14px 14px calc(180px + env(safe-area-inset-bottom)); animation: fadeIn .3s ease; scrollbar-width: none; -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain; touch-action: pan-y; }
+.screen::-webkit-scrollbar { display: none; }
 .screen.active { display: block; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 .top-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 4px 14px; }
@@ -54,7 +27,7 @@ body::before { content: ''; position: fixed; inset: 0; background: radial-gradie
 .menu-toggle { width: 42px; height: 42px; border-radius: 11px; background: linear-gradient(180deg, var(--card-2), var(--card)); border: 1px solid var(--border); color: var(--cyan); font-size: 22px; font-weight: 900; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all .2s; font-family: inherit; flex-shrink: 0; line-height: 1; }
 .menu-toggle:active { transform: scale(.94); border-color: var(--cyan); box-shadow: 0 0 14px rgba(0,229,255,.4); }
 .menu-toggle.open { background: linear-gradient(180deg, #00e5ff, #008fa8); color: #001418; border-color: var(--cyan); box-shadow: 0 0 18px rgba(0,229,255,.6); }
-.side-menu { position: fixed; top: 0; bottom: 0; right: 0; height: auto; width: 280px; background: linear-gradient(180deg, var(--card-2), var(--bg)); border-left: 1px solid var(--cyan); box-shadow: -12px 0 40px rgba(0,229,255,.25); z-index: 300; transform: translateX(110%); transition: transform .32s cubic-bezier(.4,0,.2,1); display: flex; flex-direction: column; padding: 20px 16px; overflow-y: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain; touch-action: pan-y; } 
+.side-menu { position: fixed; top: 0; bottom: 0; right: 0; height: auto; width: 280px; background: linear-gradient(180deg, var(--card-2), var(--bg)); border-left: 1px solid var(--cyan); box-shadow: -12px 0 40px rgba(0,229,255,.25); z-index: 300; transform: translateX(110%); transition: transform .32s cubic-bezier(.4,0,.2,1); display: flex; flex-direction: column; padding: 20px 16px; overflow-y: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain; touch-action: pan-y; }
 .side-menu::-webkit-scrollbar { display: none; }
 .side-menu.open { transform: translateX(0); }
 .side-menu-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.7); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); z-index: 299; opacity: 0; pointer-events: none; transition: opacity .3s; }
@@ -257,9 +230,10 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
 .chat-back:active { border-color: var(--cyan); background: rgba(0,229,255,.1); }
 </style>
 </head>
-  <body>
+<body>
   <audio id="walkieOpen" src="./walkie_open.mp3" preload="auto"></audio>
   <audio id="walkieClose" src="./walkie_close.mp3" preload="auto"></audio>
+
   <div class="app">
     <section class="screen active" id="screen-radio">
       <header class="top-header">
@@ -461,7 +435,7 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
 
   <div class="modal-overlay" id="modalFriendRequests"><div class="modal"><div class="modal-title">👥 طلبات الصداقة</div><div class="modal-sub">الطلبات الواردة والصادرة</div><div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:12px;"><button id="tabIncoming" class="modal-btn confirm" onclick="switchFriendTab('incoming')" style="padding:10px;">📥 واردة</button><button id="tabOutgoing" class="modal-btn cancel" onclick="switchFriendTab('outgoing')" style="padding:10px;">📤 صادرة</button></div><div id="friendRequestsList" style="max-height:320px; overflow-y:auto;"><div class="no-results"><span class="no-results-icon">📭</span>لا توجد طلبات</div></div><div class="modal-actions" style="grid-template-columns:1fr; margin-top:14px;"><button class="modal-btn cancel" onclick="closeModal('modalFriendRequests')">إغلاق</button></div></div></div>
   <div class="modal-overlay" id="modalFriendIncoming"><div class="modal"><div class="modal-title">👋 طلب صداقة</div><div class="join-request-info"><div class="join-request-icon">👤</div><div class="join-request-name" id="frIncomingName" style="font-size:14px; line-height:1.6;">—</div><div class="join-request-code" id="frIncomingCode">—</div></div><div class="modal-actions"><button class="modal-btn danger" onclick="rejectFriendRequest()">❌ إلغاء</button><button class="modal-btn confirm" onclick="acceptFriendRequest()">✅ موافق</button></div></div></div>
-  <div class="modal-overlay" id="modalFriendSend"><div class="modal"><div class="modal-title">➕ إرسال طلب صداقة</div><div class="modal-sub">ابحث برقم المستخدم</div><div class="modal-field"><label>رقم المستخدم</label><input type="text" id="friendSearchCode" class="code-input" maxlength="10" placeholder="T#####"></div><div id="friendSearchResults"></div><div class="modal-actions"><button class="modal-btn cancel" onclick="closeModal('modalFriendSend')">إلغاء</button><button class="modal-btn confirm" onclick="searchFriend()">🔍 بحث</button></div></div></div>
+  <div class="modal-overlay" id="modalFriendSend"><div class="modal"><div class="modal-title">➕ إرسال طلب صداقة</div><div class="modal-sub">ابحث برقم المستخدم</div><div class="modal-field"><label>رقم المستخدم</label><input type="text" id="friendSearchCode" class="code-input" maxlength="10" placeholder="R#####"></div><div id="friendSearchResults"></div><div class="modal-actions"><button class="modal-btn cancel" onclick="closeModal('modalFriendSend')">إلغاء</button><button class="modal-btn confirm" onclick="searchFriend()">🔍 بحث</button></div></div></div>
 
   <input type="file" id="hiddenFileInput" style="display:none;">
     <script>
@@ -500,42 +474,42 @@ function factoryReset() {
 }
 
 const PTTEngine = {
-  audioCtx: null,
+  audioCtx: null, beepReady: false,
   async init() {
     if (this.audioCtx) return true;
     try {
       const AC = window.AudioContext || window.webkitAudioContext;
       this.audioCtx = new AC();
       if (this.audioCtx.state === 'suspended') await this.audioCtx.resume();
+      const openEl = document.getElementById('walkieOpen');
+      const closeEl = document.getElementById('walkieClose');
+      [openEl, closeEl].forEach(el => {
+        if (el) {
+          el.volume = 0;
+          el.play().then(() => {
+            el.pause(); el.currentTime = 0; el.volume = 0.9;
+            this.beepReady = true;
+          }).catch(() => { el.volume = 0.9; });
+        }
+      });
       return true;
     } catch (e) { return false; }
   },
-  _playTone(freq1, freq2, duration, type = 'sine') {
-    if (!this.audioCtx) return;
-    const osc = this.audioCtx.createOscillator();
-    const gainNode = this.audioCtx.createGain();
-    osc.type = type;
-    osc.frequency.setValueAtTime(freq1, this.audioCtx.currentTime);
-    if (freq2) osc.frequency.exponentialRampToValueAtTime(freq2, this.audioCtx.currentTime + duration);
-    osc.connect(gainNode);
-    gainNode.connect(this.audioCtx.destination);
-    gainNode.gain.setValueAtTime(0.9, this.audioCtx.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioCtx.currentTime + duration);
-    osc.start();
-    osc.stop(this.audioCtx.currentTime + duration);
+  playOpenBeep() {
+    const el = document.getElementById('walkieOpen');
+    if (!el) return;
+    try { el.currentTime = 0; el.volume = 0.9; el.play().catch(() => {}); } catch (e) {}
+    if (navigator.vibrate) navigator.vibrate([30, 40, 30]);
   },
-  playStartBeep() { 
-      this._playTone(1400, 1800, 0.12, 'sine'); 
-      if (navigator.vibrate) navigator.vibrate(40); 
+  playCloseBeep() {
+    const el = document.getElementById('walkieClose');
+    if (!el) return;
+    try { el.currentTime = 0; el.volume = 0.9; el.play().catch(() => {}); } catch (e) {}
+    if (navigator.vibrate) navigator.vibrate([30, 40, 30]);
   },
-  playEndBeep() { 
-      this._playTone(900, 600, 0.12, 'sine'); 
-      if (navigator.vibrate) navigator.vibrate(40); 
-  },
-  playRealBeep() { 
-      this._playTone(600, null, 0.15, 'sine'); 
-      setTimeout(() => { this._playTone(800, null, 0.15, 'sine'); }, 200); 
-  }
+  playRealBeep() { this.playCloseBeep(); },
+  playStartBeep() { this.playCloseBeep(); },
+  playEndBeep() { this.playOpenBeep(); }
 };
 
 const pttMainBtn = document.getElementById('pttMain');
@@ -561,6 +535,9 @@ async function onPTTStart() {
   startWaveTimer();
   await PTTEngine.init();
   PTTEngine.playStartBeep();
+
+  // ✅ الحل: انتظار 300ms لكي تكتمل نغمة البيب قبل أن يقوم المتصفح بقطعها لتشغيل المايك
+  await new Promise(resolve => setTimeout(resolve, 300));
   
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -576,6 +553,7 @@ async function onPTTStart() {
 
 function stopTalking() {
   if (!isTalking) return;
+  PTTEngine.playEndBeep(); // نغمة الإغلاق
   isTalking = false;
   
   const pttMain = document.getElementById('pttMain');
@@ -588,7 +566,6 @@ function stopTalking() {
   if (statusText) statusText.innerHTML = '🔴 غير متصل';
   
   stopWaveTimer();
-  if (isTalking) PTTEngine.playEndBeep(); // If it was talking
 
   if (waveRecorder && waveRecorder.state === 'recording') {
     waveRecorder.onstop = () => {
@@ -711,13 +688,13 @@ async function registerUser() {
     });
     const data = await res.json();
     if (data.radCode) {
-      currentUser.radCode = data.radCode.replace('Q', 'T'); // Force T
+      currentUser.radCode = data.radCode; // مفيش تحويل هنا
       const el1 = document.getElementById('myRadCode'); if (el1) el1.textContent = currentUser.radCode;
       const el2 = document.getElementById('waveCodeChip'); if (el2) el2.innerHTML = currentUser.radCode + ' <span style="font-size:12px;">🔑</span>';
       const el3 = document.getElementById('waveCodeValue'); if (el3) el3.textContent = currentUser.radCode;
       const el4 = document.getElementById('lcdLine3'); if (el4) el4.textContent = currentUser.radCode + ' • RX';
     }
-    if (data.waveId) { currentUser.waveId = data.waveId.replace('Q', 'T'); currentUser.waveCode = currentUser.waveId; }
+    if (data.waveId) { currentUser.waveId = data.waveId; currentUser.waveCode = currentUser.waveId; }
     return data;
   } catch (e) { return null; }
 }
@@ -763,26 +740,24 @@ async function createWave() {
     const data = await res.json();
     if (!data.success) throw new Error(data.error);
     
-    const displayWaveId = data.waveId.replace('Q', 'T');
-    
-    currentUser.waveId = displayWaveId; 
-    currentUser.waveCode = displayWaveId;
+    currentUser.waveId = data.waveId; 
+    currentUser.waveCode = data.waveId;
     currentUser.waveName = data.waveName; currentUser.isWaveOwner = true;
     
-    document.getElementById('createdWaveCode').textContent = displayWaveId;
+    document.getElementById('createdWaveCode').textContent = data.waveId;
     document.getElementById('waveName').value = '';
     closeModal('modalWave'); openModal('modalWaveCreated');
     
-    const el1 = document.getElementById('waveCodeChip'); if (el1) el1.innerHTML = displayWaveId + ' <span style="font-size:12px;">🔑</span>';
-    const el2 = document.getElementById('waveCodeValue'); if (el2) el2.textContent = displayWaveId;
+    const el1 = document.getElementById('waveCodeChip'); if (el1) el1.innerHTML = data.waveId + ' <span style="font-size:12px;">🔑</span>';
+    const el2 = document.getElementById('waveCodeValue'); if (el2) el2.textContent = data.waveId;
     const el3 = document.getElementById('waveNameValue'); if (el3) el3.textContent = name;
     const el4 = document.getElementById('waveNameLabel'); if (el4) el4.textContent = name;
-    const el5 = document.getElementById('lcdLine3'); if (el5) el5.textContent = displayWaveId + ' • TX';
+    const el5 = document.getElementById('lcdLine3'); if (el5) el5.textContent = data.waveId + ' • TX';
     
-    localStorage.setItem('rc_saved_wave_id', displayWaveId);
+    localStorage.setItem('rc_saved_wave_id', data.waveId);
     localStorage.setItem('rc_saved_wave_name', name);
     localStorage.setItem('rc_is_wave_owner', 'true');
-    addWaveToHistory(displayWaveId, name);
+    addWaveToHistory(data.waveId, name);
     
     await PTTEngine.init(); PTTEngine.playStartBeep();
     
@@ -792,10 +767,8 @@ async function createWave() {
 }
 
 async function joinWaveAsMember(waveId) {
-  const serverId = waveId.replace('T', 'Q');
-
   if (currentUser.waveId && currentUser.waveId !== waveId) {
-    if (socket) socket.emit('wave_leave', { waveId: currentUser.waveId.replace('T', 'Q'), deviceId: currentUser.id });
+    if (socket) socket.emit('wave_leave', { waveId: currentUser.waveId, deviceId: currentUser.id });
   }
 
   currentUser.waveId = waveId; currentUser.waveCode = waveId;
@@ -803,7 +776,7 @@ async function joinWaveAsMember(waveId) {
   localStorage.setItem('rc_is_wave_owner', 'false');
   
   try {
-    const res = await fetch(SERVER_URL + '/api/waves/' + serverId);
+    const res = await fetch(SERVER_URL + '/api/waves/' + waveId);
     const data = await res.json();
     if (data.waveName) {
       currentUser.waveName = data.waveName;
@@ -820,7 +793,7 @@ async function joinWaveAsMember(waveId) {
   localStorage.setItem('rc_saved_wave_id', waveId);
   localStorage.setItem('rc_saved_wave_name', currentUser.waveName || '');
   
-  if (socket) socket.emit('wave_join', { waveId: serverId, deviceId: currentUser.id, userName: currentUser.name });
+  if (socket) socket.emit('wave_join', { waveId: waveId, deviceId: currentUser.id, userName: currentUser.name });
   toast('✅ انضممت إلى الفرقة', 'success');
 }
 
@@ -829,7 +802,9 @@ function doSearch() {
   const res = document.getElementById('searchResults');
   if (!q) { res.innerHTML = '<div class="no-results"><span class="no-results-icon">⚠️</span>أدخل الرقم</div>'; return; }
 
-  // ✅ البحث عن فرقة بحرف T
+  res.innerHTML = '<div class="no-results">⏳ جاري البحث...</div>';
+
+  // ✅ بحث مباشر بالحرف اللي كتبه المستخدم
   if (q.startsWith('T')) {
     fetch(SERVER_URL + '/api/waves/' + q)
       .then(r => r.json())
@@ -843,7 +818,6 @@ function doSearch() {
       })
       .catch(() => { res.innerHTML = '<div class="no-results">❌ خطأ في البحث</div>'; });
   } 
-  // ✅ البحث عن غرفة (مستخدم) بحرف R
   else if (q.startsWith('R')) {
     fetch(SERVER_URL + '/api/users/search/' + q)
       .then(r => r.json())
@@ -871,7 +845,7 @@ function askJoinWave() {
 function confirmJoin() {
   if (!searchResultUser) return;
   closeModal('modalJoinConfirm');
-  if (socket) socket.emit('wave_join_request', { waveId: searchResultUser.code.replace('T', 'Q'), fromDeviceId: currentUser.id, fromUserName: currentUser.name });
+  if (socket) socket.emit('wave_join_request', { waveId: searchResultUser.code, fromDeviceId: currentUser.id, fromUserName: currentUser.name });
 }
 
 function cancelJoin() { closeModal('modalJoinConfirm'); openModal('modalSearch'); }
@@ -1046,9 +1020,9 @@ function openSearchWave() {
 }
 
 function openSearchUser() {
-  document.getElementById('searchSubTitle').textContent = 'ابحث برقم المستخدم (T)';
+  document.getElementById('searchSubTitle').textContent = 'ابحث برقم المستخدم (R)';
   document.getElementById('searchFieldLabel').textContent = 'رقم المستخدم';
-  document.getElementById('searchQuery').placeholder = 'T#####';
+  document.getElementById('searchQuery').placeholder = 'R#####';
   document.getElementById('searchQuery').value = '';
   document.getElementById('searchResults').innerHTML = '<div class="no-results"><span class="no-results-icon">🔎</span>اكتب الرقم واضغط بحث</div>';
   openModal('modalSearch');
@@ -1070,7 +1044,7 @@ async function saveWaveName() {
   try {
     await fetch(SERVER_URL + '/api/waves/rename', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ waveId: currentUser.waveId.replace('T', 'Q'), newName: name, deviceId: currentUser.id })
+      body: JSON.stringify({ waveId: currentUser.waveId, newName: name, deviceId: currentUser.id })
     });
     currentUser.waveName = name;
     const el1 = document.getElementById('waveNameValue'); if (el1) el1.textContent = name;
@@ -1083,7 +1057,7 @@ async function saveWaveName() {
 async function leaveWave() {
   if (!currentUser.waveId) { toast('⚠️ لا توجد فرقة', 'error'); return; }
   if (!confirm('هل تريد مغادرة الفرقة؟')) return;
-  if (socket) socket.emit('wave_leave', { waveId: currentUser.waveId.replace('T', 'Q'), deviceId: currentUser.id });
+  if (socket) socket.emit('wave_leave', { waveId: currentUser.waveId, deviceId: currentUser.id });
   currentUser.waveId = null; currentUser.waveCode = null; currentUser.isWaveOwner = false;
   localStorage.removeItem('rc_saved_wave_id');
   localStorage.removeItem('rc_saved_wave_name');
@@ -1430,10 +1404,8 @@ async function createRoom() {
   const name = document.getElementById('roomName').value.trim();
   if (!name) { toast('⚠️ أدخل اسم الغرفة', 'error'); return; }
 
-  // ✅ توليد الغرفة بحرف R
   const roomCode = 'R' + Math.random().toString(36).substring(2, 8).toUpperCase();
   
-  // ✅ حفظ كود الغرفة في السيرفر عشان يظهر في البحث
   try {
     await fetch(SERVER_URL + '/api/rooms/create', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -1443,7 +1415,6 @@ async function createRoom() {
 
   currentUser.roomName = name;
   currentUser.roomCode = roomCode;
-  // ... (كمل باقي كود الغرفة زي ما هو عادي)
   document.getElementById('roomNameLabel').textContent = name;
   document.getElementById('roomName').value = '';
   document.getElementById('createdRoomCode').textContent = roomCode;
@@ -1584,7 +1555,7 @@ document.getElementById('waveNameChip').addEventListener('click', () => {
   if (!dd) return;
   if (dd.classList.contains('show')) { dd.classList.remove('show'); return; }
   if (currentUser.waveId) {
-    fetch(SERVER_URL + '/api/waves/' + currentUser.waveId.replace('T', 'Q'))
+    fetch(SERVER_URL + '/api/waves/' + currentUser.waveId)
       .then(r => r.json())
       .then(data => {
         if (data.members) {
@@ -1808,7 +1779,7 @@ document.getElementById('waveNameChip').addEventListener('click', () => {
           let isActive = currentUser.waveId === w.id;
           let isOwner = false, activeCount = 0;
           try {
-            const res = await fetch(SERVER_URL + '/api/waves/' + w.id.replace('T', 'Q'));
+            const res = await fetch(SERVER_URL + '/api/waves/' + w.id);
             const data = await res.json();
             if (data.members) {
               activeCount = data.members.filter(m => m.online).length;
@@ -1848,7 +1819,7 @@ document.getElementById('waveNameChip').addEventListener('click', () => {
       let name = targetWave ? targetWave.name : (currentUser.waveName || 'فرقة');
       toast('⏳ جاري التبديل...', 'success');
       stopTalking();
-      if (socket) socket.emit('wave_leave', { waveId: currentUser.waveId.replace('T', 'Q'), deviceId: currentUser.id });
+      if (socket) socket.emit('wave_leave', { waveId: currentUser.waveId, deviceId: currentUser.id });
       currentUser.waveId = waveId;
       currentUser.waveName = name;
       currentUser.waveCode = waveId;
@@ -1969,4 +1940,4 @@ document.getElementById('waveNameChip').addEventListener('click', () => {
 }
     </script>
 </body>
-</html>
+  </html>
