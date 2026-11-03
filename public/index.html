@@ -1483,9 +1483,19 @@ function doClearChat() {
   toast('✅ تم مسح الدردشة', 'success');
 }
 
-function deleteRoomPermanently() {
+async function deleteRoomPermanently() {
   if (!currentUser.roomCode) { toast('⚠️ لا توجد غرفة لحذفها', 'error'); return; }
   if (!confirm('هل أنت متأكد من حذف هذه الغرفة نهائياً؟')) return;
+
+  // 👇 إرسال طلب للسيرفر لحذف الغرفة نهائياً 👇
+  try {
+    await fetch(SERVER_URL + '/api/rooms/delete', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ roomCode: currentUser.roomCode, deviceId: currentUser.id })
+    });
+  } catch(e) { console.log("Error deleting room from server", e); }
+  // 👆 نهاية التعديل 👆
+
   let rooms = JSON.parse(localStorage.getItem('rc_user_rooms_list') || '[]');
   rooms = rooms.filter(r => r.code !== currentUser.roomCode);
   localStorage.setItem('rc_user_rooms_list', JSON.stringify(rooms));
