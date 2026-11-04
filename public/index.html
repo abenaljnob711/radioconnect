@@ -954,7 +954,7 @@ function openSideMenu() {
       <button class="menu-item" onclick="closeSideMenu();openEditPersonalName()"><span class="menu-icon">👤</span><span class="menu-text"><span class="menu-label">تعديل الاسم الشخصي</span><span class="menu-desc">تغيير اسمك الظاهر للآخرين</span></span></button>
       <button class="menu-item" onclick="closeSideMenu();saveMyWave()"><span class="menu-icon">💾</span><span class="menu-text"><span class="menu-label">حفظ الفرقة</span><span class="menu-desc">استرجعها تلقائياً عند الدخول</span></span></button>
       <button class="menu-item" onclick="closeSideMenu();openEditWaveName()"><span class="menu-icon">✏️</span><span class="menu-text"><span class="menu-label">تعديل اسم الفرقة</span><span class="menu-desc">غيّر اسم فرقتك</span></span></button>
-      <button class="menu-item" onclick="closeSideMenu();leaveWave()"><span class="menu-icon">🗑️</span><span class="menu-text"><span class="menu-label">مسح الفرقة</span><span class="menu-desc">مغادرة الفرقة الحالية</span></span></button>
+      <button class="menu-item danger" onclick="closeSideMenu();leaveWave()"><span class="menu-icon">🗑️</span><span class="menu-text"><span class="menu-label">حذف الفرقة نهائياً</span><span class="menu-desc">مسحها من السيرفر للجميع</span></span></button>
     `;
   } else if (activeId === 'screen-log' || activeId === 'screen-chat') {
     title.textContent = '💬 قائمة الغرفة';
