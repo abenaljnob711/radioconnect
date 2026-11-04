@@ -665,7 +665,6 @@ if (currentUser.currentConvId === conversationId) {
     });
   }
 }
-
   socket.on('conversation_history', ({ messages }) => {
   const container = document.getElementById('chatMessages');
   container.innerHTML = '';
