@@ -1930,11 +1930,12 @@ document.addEventListener('keydown', (e) => {
     return; 
   }
   
-  if (e.code === 'Space' && !e.repeat && !document.querySelector('.modal-overlay.show')) {
-    e.preventDefault();
-    if (isTalking) stopTalking(); else onPTTStart();
+  document.addEventListener('keydown', (e) => {
+  // إذا كان المستخدم يكتب في حقل الدردشة، لا تفعل أي شيء
+  if (document.activeElement && document.activeElement.id === 'chatInput') {
+    return; 
   }
-});
+  
   if (e.code === 'Space' && !e.repeat && !document.querySelector('.modal-overlay.show')) {
     e.preventDefault();
     if (isTalking) stopTalking(); else onPTTStart();
