@@ -135,6 +135,12 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
 .waveform { flex: 1 !important; height: 30px !important; display: flex !important; align-items: center !important; gap: 3px !important; overflow: hidden !important; }
 .waveform span { display: block !important; width: 3px !important; background: var(--cyan) !important; border-radius: 2px !important; }
 .msg-out .waveform span { background: #ff5577 !important; }
+/* ✅ تموج الصوت أثناء التشغيل */
+.waveform.playing span { animation: wavePulse 0.6s ease-in-out infinite alternate; }
+.waveform.playing span:nth-child(odd) { animation-delay: 0.2s; }
+.waveform.playing span:nth-child(even) { animation-delay: 0.4s; }
+@keyframes wavePulse { 0% { transform: scaleY(0.4); opacity: 0.5; } 100% { transform: scaleY(1.4); opacity: 1; } }
+
 .voice-meta { display: flex !important; justify-content: space-between !important; align-items: center !important; font-size: 11px !important; color: rgba(255,255,255,.6) !important; margin-top: 4px !important; }
 .text-msg { font-size: 14px; line-height: 1.4; color: #fff; font-weight: 400; padding-bottom: 2px; }
 .attach-msg { display: flex; align-items: center; gap: 10px; padding: 8px 4px; }
@@ -142,8 +148,15 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
 .attach-msg-info { display: flex; flex-direction: column; gap: 2px; }
 .attach-msg-name { font-size: 13px; font-weight: 700; color: #fff; }
 .attach-msg-type { font-size: 10px; color: rgba(255,255,255,.65); }
-.attachment-preview-img { max-width: 100%; max-height: 240px; border-radius: 10px; display: block; margin-bottom: 6px; cursor: pointer; }
-.attachment-preview-video { max-width: 100%; max-height: 240px; border-radius: 10px; display: block; margin-bottom: 6px; }
+
+/* ✅ إزالة الخلفية الحمراء للوسائط لتصبح طبيعية ومرتبة */
+.attachment-preview-img { max-width: 100%; max-height: 240px; border-radius: 10px; display: block; margin-bottom: 6px; cursor: pointer; background: transparent !important; }
+.attachment-preview-video { max-width: 100%; max-height: 240px; border-radius: 10px; display: block; margin-bottom: 6px; background: transparent !important; }
+
+/* ✅ دائرة التحميل للصور والمرفقات أثناء الإرسال */
+.upload-spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: #fff; animation: spin 0.8s linear infinite; margin-left: 4px; vertical-align: middle; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
 .chat-input-bar { position: fixed; bottom: 68px; left: 50%; transform: translateX(-50%); width: 100%; max-width: 500px; background: linear-gradient(180deg, rgba(11,18,24,.9), rgba(5,8,12,1)); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-top: 1px solid var(--border); padding: 10px 12px 14px; display: none; align-items: center; gap: 8px; z-index: 98; }
 .chat-input-bar.active { display: flex; }
 .chat-primary { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(180deg, #00e5ff, #008fa8); border: 1.5px solid var(--cyan); display: flex; align-items: center; justify-content: center; color: #001418; font-size: 20px; cursor: pointer; flex-shrink: 0; box-shadow: 0 0 16px rgba(0,229,255,.55); transition: all .15s; font-family: inherit; font-weight: 900; }
@@ -536,7 +549,6 @@ async function onPTTStart() {
   await PTTEngine.init();
   PTTEngine.playStartBeep();
 
-  // ✅ تأخير 300ms لعدم تقطيع البيب
   await new Promise(resolve => setTimeout(resolve, 300));
   
   try {
@@ -647,24 +659,8 @@ function initSocket() {
 
     if (currentUser.currentConvId === conversationId) {
       addChatMessage(message, message.sender === currentUser.id ? 'out' : 'in');
-      const chatContainer = document.getElementById('chatMessages');
-      if (chatContainer) chatContainer.scrollTop = chatContainer.scrollHeight;
     } else {
       toast('💬 رسالة جديدة', 'success');
-      if (Notification.permission === "granted") {
-        new Notification("رسالة جديدة من " + (message.senderName || "مستخدم"), {
-          body: message.text || "📷 صورة / 🎤 رسالة صوتية",
-          icon: "./icon.png"
-        });
-      } else if (Notification.permission !== "denied") {
-        Notification.requestPermission().then(permission => {
-          if (permission === "granted") {
-            new Notification("رسالة جديدة من " + (message.senderName || "مستخدم"), {
-              body: message.text || "📷 صورة / 🎤 رسالة صوتية"
-            });
-          }
-        });
-      }
     }
     refreshChatList();
   });
@@ -676,12 +672,13 @@ function initSocket() {
     container.scrollTop = container.scrollHeight;
   });
 
+  /* ✅ تحديث حالة صحين الاستلام وإزالة دائرة التحميل عند استلام السيرفر للرسالة */
   socket.on('message_delivered', ({ messageId }) => {
     const statusSpan = document.querySelector(`.msg-status[data-msgid="${messageId}"]`);
     if (statusSpan) statusSpan.textContent = '✓✓';
     const msgDiv = document.getElementById('msg_' + messageId);
     if (msgDiv) {
-      const spinner = msgDiv.querySelector('.spinner');
+      const spinner = msgDiv.querySelector('.upload-spinner');
       if (spinner) spinner.remove();
     }
   });
@@ -1046,7 +1043,7 @@ function openSearchWave() {
   document.getElementById('searchFieldLabel').textContent = 'رقم الفرقة';
   document.getElementById('searchQuery').placeholder = 'T#####';
   document.getElementById('searchQuery').value = '';
-  document.getElementById('searchResults').innerHTML = '<div class="no-results"><span class="no-results-icon">🔎</span>اكتب رقم الفرقة واضغط بحث</div>';
+  document.getElementById('searchResults').innerHTML = '<div class="no-results"><span class="no-results-icon">🔎</span>اكتب رقم الفرقة وابحث</div>';
   openModal('modalSearch');
 }
 
@@ -1055,7 +1052,7 @@ function openSearchUser() {
   document.getElementById('searchFieldLabel').textContent = 'رقم المستخدم';
   document.getElementById('searchQuery').placeholder = 'R#####';
   document.getElementById('searchQuery').value = '';
-  document.getElementById('searchResults').innerHTML = '<div class="no-results"><span class="no-results-icon">🔎</span>اكتب الرقم واضغط بحث</div>';
+  document.getElementById('searchResults').innerHTML = '<div class="no-results"><span class="no-results-icon">🔎</span>اكتب الرقم وابحث</div>';
   openModal('modalSearch');
 }
 
@@ -1168,12 +1165,13 @@ function addChatMessage(msg, direction, scroll = true) {
   const time = msg.time ? new Date(msg.time).toLocaleTimeString('ar', { hour: '2-digit', minute: '2-digit' }) : '';
   const senderName = direction === 'out' ? (currentUser.name || 'أنا') : (msg.senderName || '');
   let bodyHtml = '';
+  
   if (msg.type === 'voice' && msg.url) {
     let barsHtml = '';
-for(let i=0; i<28; i++) {
-  let h = Math.floor(Math.random() * 16) + 4;
-  barsHtml += `<span style="height:${h}px; --i: ${i};"></span>`;
-}
+    for(let i=0; i<28; i++) {
+      let h = Math.floor(Math.random() * 16) + 4;
+      barsHtml += `<span style="height:${h}px; --i: ${i};"></span>`;
+    }
     bodyHtml = `
       <div class="voice-msg">
         <div class="voice-avatar">👤</div>
@@ -1194,37 +1192,43 @@ for(let i=0; i<28; i++) {
   } else if (msg.type === 'contact') {
     bodyHtml = `<div class="attach-msg"><span class="attach-msg-icon">👥</span><div class="attach-msg-info"><div class="attach-msg-name">${msg.contactName || ''}</div><div class="attach-msg-type">${msg.contactPhone || ''}</div></div></div><div class="voice-meta"><span>${time}</span></div>`;
   } else {
-    bodyHtml = `<div class="text-msg">${msg.text || ''}</div><div class="voice-meta"><span>${time}</span><span>${direction === 'out' ? '✓✓' : ''}</span></div>`;
+    bodyHtml = `<div class="text-msg">${msg.text || ''}</div>`;
   }
-  div.innerHTML = `<div class="msg-header">${senderName}</div><div class="msg-body" data-msgid="${msg.id || ''}">${bodyHtml}</div>`;
+
+  /* ✅ حالة الصح (صح واحد عند الإرسال، صحين عند الاستلام) مع دائرة التحميل للصورة */
+  let statusIndicator = '';
+  if (direction === 'out') {
+    const isImageOrFile = msg.type === 'image' || msg.type === 'file' || msg.type === 'video';
+    const spinnerHtml = isImageOrFile ? `<span class="upload-spinner"></span>` : '';
+    statusIndicator = `<span class="msg-status" data-msgid="${msg.id || ''}">✓</span>${spinnerHtml}`;
+  }
+
+  div.innerHTML = `<div class="msg-header">${senderName}</div><div class="msg-body" data-msgid="${msg.id || ''}">${bodyHtml}<div class="voice-meta" style="justify-content: flex-end; gap: 4px; margin-top: 2px;"><span>${time}</span>${statusIndicator}</div></div>`;
   
   const playBtn = div.querySelector('.play-btn');
-if (playBtn) {
-  playBtn.addEventListener('click', () => {
-    const audio = playBtn.nextElementSibling.querySelector('audio');
-    const waveform = div.querySelector('.waveform'); // تحديد الموجة الخاصة بهذه الرسالة
-    
-    if (audio) {
-      if (audio.paused) { 
-        audio.play(); 
-        playBtn.textContent = '⏸'; 
-        if(waveform) waveform.classList.add('playing'); // تشغيل التموج
-      }
-      else { 
-        audio.pause(); 
-        playBtn.textContent = '▶'; 
-        if(waveform) waveform.classList.remove('playing'); // إيقاف التموج
-      }
+  if (playBtn) {
+    playBtn.addEventListener('click', () => {
+      const audio = playBtn.nextElementSibling.querySelector('audio');
+      const waveform = div.querySelector('.waveform');
       
-      audio.onended = () => {
-        playBtn.textContent = '▶';
-        if(waveform) waveform.classList.remove('playing'); // إيقاف التموج عند انتهاء الصوت
-      };
-    }
-  });
-}
+      if (audio) {
+        if (audio.paused) { 
+          audio.play(); 
+          playBtn.textContent = '⏸'; 
+          if(waveform) waveform.classList.add('playing'); 
+        } else { 
+          audio.pause(); 
+          playBtn.textContent = '▶'; 
+          if(waveform) waveform.classList.remove('playing'); 
+        }
+        audio.onended = () => {
+          playBtn.textContent = '▶';
+          if(waveform) waveform.classList.remove('playing');
+        };
+      }
+    });
+  }
 
-  // ✅ الضغط المطول لمسح الرسالة
   let pressTimer;
   const msgBody = div.querySelector('.msg-body');
   msgBody.addEventListener('pointerdown', () => {
@@ -1239,7 +1243,13 @@ if (playBtn) {
   msgBody.addEventListener('pointerleave', () => clearTimeout(pressTimer));
 
   container.appendChild(div);
-  if (scroll) container.scrollTop = container.scrollHeight;
+  
+  /* ✅ ضمان التمرير التلقائي (Auto-scroll) عند إرسال أو استلام الرسائل */
+  if (scroll) {
+    requestAnimationFrame(() => {
+      container.scrollTop = container.scrollHeight;
+    });
+  }
 }
 
 function sendTextMessage(text) {
