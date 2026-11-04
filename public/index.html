@@ -256,10 +256,10 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
           <div class="chip-value" id="waveNameLabel" style="font-size:11px;">لا توجد فرقة</div>
           <div class="chip-label">الفرقة النشطة</div>
         </div>
-        <div class="chip">
-          <div class="chip-value code" id="waveCodeChip">T00000 <span style="font-size:12px;">🔑</span></div>
-          <div class="chip-label">رقم الموجة</div>
-        </div>
+        <div class="chip" onclick="copyWaveCode()" style="cursor:pointer;">
+  <div class="chip-value code" id="waveCodeChip">T00000 <span style="font-size:12px;">🔑</span></div>
+  <div class="chip-label">رقم الموجة</div>
+</div>
       </div>
       <div class="status-row">
         <div class="chip disconnected" id="waveStatusChip">
