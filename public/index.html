@@ -652,11 +652,16 @@ function initSocket() {
   });
 
   socket.on('conversation_history', ({ messages }) => {
-    const container = document.getElementById('chatMessages');
-    container.innerHTML = '';
-    messages.forEach(m => addChatMessage(m, m.sender === currentUser.id ? 'out' : 'in', false));
-    container.scrollTop = container.scrollHeight;
-  });
+  const container = document.getElementById('chatMessages');
+  container.innerHTML = '';
+  messages.forEach(m => addChatMessage(m, m.sender === currentUser.id ? 'out' : 'in', false));
+  container.scrollTop = container.scrollHeight;
+});
+
+socket.on('message_delivered', ({ messageId }) => {
+  const statusSpan = document.querySelector(`.msg-status[data-msgid="${messageId}"]`);
+  if (statusSpan) statusSpan.textContent = '✓✓';
+});
 
   socket.on('conversation_updated', () => refreshChatList());
 
