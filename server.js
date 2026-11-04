@@ -446,7 +446,10 @@ io.on("connection", (socket) => {
     db.messages[conversationId].push(message);
     if (db.conversations[conversationId]) db.conversations[conversationId].lastMessageAt = now();
     saveDb();
-    io.to("conv_" + conversationId).emit("new_direct_message", { conversationId, message });
+    socket.to("conv_" + conversationId).emit("new_direct_message", {
+  conversationId: conversationId,
+  message: message
+});
     const conv = db.conversations[conversationId];
     if (conv) {
       conv.participants.forEach(pid => {
