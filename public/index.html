@@ -644,12 +644,27 @@ function initSocket() {
         }
       } catch(e) {}
     }
-
-    if (currentUser.currentConvId === conversationId) {
-      addChatMessage(message, message.sender === currentUser.id ? 'out' : 'in');
-    } else toast('💬 رسالة جديدة', 'success');
-    refreshChatList();
-  });
+if (currentUser.currentConvId === conversationId) {
+  addChatMessage(message, message.sender === currentUser.id ? 'out' : 'in');
+} else {
+  toast('💬 رسالة جديدة', 'success');
+  
+  // إظهار إشعار على شاشة الهاتف
+  if (Notification.permission === "granted") {
+    new Notification("رسالة جديدة من " + (message.senderName || "مستخدم"), {
+      body: message.text || "📷 صورة / 🎤 رسالة صوتية",
+      icon: "./icon.png" 
+    });
+  } else if (Notification.permission !== "denied") {
+    Notification.requestPermission().then(permission => {
+      if (permission === "granted") {
+        new Notification("رسالة جديدة من " + (message.senderName || "مستخدم"), {
+          body: message.text || "📷 صورة / 🎤 رسالة صوتية"
+        });
+      }
+    });
+  }
+}
 
   socket.on('conversation_history', ({ messages }) => {
   const container = document.getElementById('chatMessages');
