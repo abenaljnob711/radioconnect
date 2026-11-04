@@ -675,8 +675,7 @@ socket.on('message_delivered', ({ messageId }) => {
     }
     saveFriendRequests(); updateFriendBadge();
   });
-
-  socket.on('friend_rejected', () => {
+  socket.on('friend_rejected', (data) => {
     toast('❌ تم رفض طلب الصداقة', 'error');
     friendRequests.outgoing = friendRequests.outgoing.filter(r => r.deviceId !== data.byDeviceId);
     saveFriendRequests();
