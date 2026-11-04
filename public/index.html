@@ -1204,11 +1204,22 @@ for(let i=0; i<28; i++) {
         </div>
       </div>
       <div class="voice-meta"><span>${time}</span><span>${(msg.duration || 0).toFixed(1)}s</span></div>
-    `;
-  } else if (msg.type === 'image' && msg.url) {
-    bodyHtml = `<img src="${msg.url}" class="attachment-preview-img" onclick="window.open('${msg.url}','_blank')"><div class="voice-meta"><span>${time}</span></div>`;
-  } else if (msg.type === 'video' && msg.url) {
-    bodyHtml = `<video src="${msg.url}" class="attachment-preview-video" controls></video><div class="voice-meta"><span>${time}</span></div>`;
+    } else if (msg.type === 'image' && msg.url) {
+  bodyHtml = `
+    <div class="image-container">
+      ${isSending ? '<div class="spinner"></div>' : ''}
+      <img src="${msg.url}" class="attachment-preview-img" style="margin-bottom:0; border-radius:10px;" onclick="window.open('${msg.url}','_blank')">
+    </div>
+    <div class="voice-meta" style="margin-top:4px;"><span>${time}</span><span class="msg-status" data-msgid="${msg.id}">${direction === 'out' && !isSending ? '✓' : ''}</span></div>
+  `;
+} else if (msg.type === 'video' && msg.url) {
+  bodyHtml = `
+    <div class="image-container">
+      ${isSending ? '<div class="spinner"></div>' : ''}
+      <video src="${msg.url}" class="attachment-preview-video" style="margin-bottom:0; border-radius:10px;" controls></video>
+    </div>
+    <div class="voice-meta" style="margin-top:4px;"><span>${time}</span><span class="msg-status" data-msgid="${msg.id}">${direction === 'out' && !isSending ? '✓' : ''}</span></div>
+  `; 
   } else if (msg.type === 'file' && msg.url) {
     bodyHtml = `<div class="attach-msg"><span class="attach-msg-icon">📄</span><div class="attach-msg-info"><div class="attach-msg-name">${msg.fileName || 'ملف'}</div><div class="attach-msg-type">اضغط للتحميل</div></div></div><div class="voice-meta"><span><a href="${msg.url}" download="${msg.fileName || ''}" style="color:var(--cyan)">تحميل</a></span><span>${time}</span></div>`;
   } else if (msg.type === 'contact') {
