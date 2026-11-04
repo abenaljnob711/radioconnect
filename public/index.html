@@ -662,8 +662,7 @@ socket.on('message_delivered', ({ messageId }) => {
   const statusSpan = document.querySelector(`.msg-status[data-msgid="${messageId}"]`);
   if (statusSpan) statusSpan.textContent = '✓✓';
 });
-
-  socket.on('conversation_updated', () => refreshChatList());
+  socket.on('conversation_updated', (data) => refreshChatList());
 
   socket.on('friend_request_received', (data) => handleIncomingFriendRequest(data));
 
