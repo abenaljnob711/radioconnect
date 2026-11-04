@@ -1938,7 +1938,6 @@ window.addEventListener('DOMContentLoaded', async () => {
   updateBatteryVisual();
   updateConnectionIcon();
   window.addEventListener('online', updateConnectionIcon);
-  window.addEventListener('offline', updateConnectionIcon);
   askUserNameIfNeeded();
   await registerUser();
   initSocket();
