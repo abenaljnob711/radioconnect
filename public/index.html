@@ -1936,14 +1936,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     if (el4 && savedRoomName) el4.textContent = savedRoomName;
   }
   updateFriendBadge();
-});
-
-document.addEventListener('keydown', (e) => {
-  // إذا كان المستخدم يكتب في حقل الدردشة، لا تفعل أي شيء
-  if (document.activeElement && document.activeElement.id === 'chatInput') {
-    return; 
-  }
-  
+}); 
   document.addEventListener('keydown', (e) => {
   // إذا كان المستخدم يكتب في حقل الدردشة، لا تفعل أي شيء
   if (document.activeElement && document.activeElement.id === 'chatInput') {
