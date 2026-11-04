@@ -646,6 +646,10 @@ function initSocket() {
     }
 if (currentUser.currentConvId === conversationId) {
   addChatMessage(message, message.sender === currentUser.id ? 'out' : 'in');
+
+  // 👇 التمرير التلقائي للأسفل عند وصول رسالة جديدة 👇
+const chatContainer = document.getElementById('chatMessages');
+if (chatContainer) chatContainer.scrollTop = chatContainer.scrollHeight;
 } else {
   toast('💬 رسالة جديدة', 'success');
   
