@@ -80,6 +80,18 @@ body::before { content: ''; position: fixed; inset: 0; background: radial-gradie
 #friendRequestsChip:active, #friendRequestsChip2:active { border-color: var(--cyan); box-shadow: 0 0 12px rgba(0,229,255,.3); }
 #searchWaveChip, #searchUserChip2 { cursor: pointer; }
 #friendReqBadge, #friendReqBadge2 { position: absolute; top: -4px; left: -4px; background: var(--red); color: #fff; border-radius: 50%; min-width: 18px; height: 18px; font-size: 10px; font-weight: 900; align-items: center; justify-content: center; padding: 0 4px; box-shadow: 0 0 8px var(--red); display: none; }
+
+/* ✅ زر التموج الصوتي الجديد للفرقة بدلاً من طلبات الصداقة */
+#waveWaveformChip { cursor: pointer; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; background: linear-gradient(180deg, var(--card-2), var(--card)); border: 1px solid var(--border); border-radius: 10px; padding: 6px; min-height: 54px; }
+#waveWaveformChip .live-wave-bars { display: flex; align-items: center; gap: 2px; height: 16px; }
+#waveWaveformChip .live-wave-bars span { display: block; width: 3px; height: 6px; background: var(--text-dim); border-radius: 2px; transition: height 0.2s; }
+#waveWaveformChip.active .live-wave-bars span { background: var(--cyan); box-shadow: 0 0 8px var(--cyan); animation: chipWavePulse 0.5s ease-in-out infinite alternate; }
+#waveWaveformChip.active .live-wave-bars span:nth-child(2) { animation-delay: 0.1s; }
+#waveWaveformChip.active .live-wave-bars span:nth-child(3) { animation-delay: 0.2s; }
+#waveWaveformChip.active .live-wave-bars span:nth-child(4) { animation-delay: 0.3s; }
+#waveWaveformChip.active .live-wave-bars span:nth-child(5) { animation-delay: 0.4s; }
+@keyframes chipWavePulse { 0% { height: 4px; } 100% { height: 16px; } }
+
 .radio-stage { position: relative; height: 360px; display: flex; align-items: center; justify-content: center; margin: 8px 0 16px; }
 .radio-device { position: relative; width: 210px; height: 320px; filter: drop-shadow(0 20px 40px rgba(0,0,0,.8)) drop-shadow(0 0 30px rgba(0,229,255,.15)); }
 .antenna { position: absolute; top: 0; right: 58px; width: 20px; height: 95px; background: linear-gradient(90deg, #0a0a0a, #2b2b2b 40%, #0a0a0a); border-radius: 10px 10px 3px 3px; box-shadow: inset -2px 0 3px rgba(0,0,0,.8); }
@@ -135,7 +147,6 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
 .waveform { flex: 1 !important; height: 30px !important; display: flex !important; align-items: center !important; gap: 3px !important; overflow: hidden !important; }
 .waveform span { display: block !important; width: 3px !important; background: var(--cyan) !important; border-radius: 2px !important; }
 .msg-out .waveform span { background: #ff5577 !important; }
-/* ✅ تموج الصوت أثناء التشغيل */
 .waveform.playing span { animation: wavePulse 0.6s ease-in-out infinite alternate; }
 .waveform.playing span:nth-child(odd) { animation-delay: 0.2s; }
 .waveform.playing span:nth-child(even) { animation-delay: 0.4s; }
@@ -149,11 +160,9 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
 .attach-msg-name { font-size: 13px; font-weight: 700; color: #fff; }
 .attach-msg-type { font-size: 10px; color: rgba(255,255,255,.65); }
 
-/* ✅ إزالة الخلفية الحمراء للوسائط لتصبح طبيعية ومرتبة */
 .attachment-preview-img { max-width: 100%; max-height: 240px; border-radius: 10px; display: block; margin-bottom: 6px; cursor: pointer; background: transparent !important; }
 .attachment-preview-video { max-width: 100%; max-height: 240px; border-radius: 10px; display: block; margin-bottom: 6px; background: transparent !important; }
 
-/* ✅ دائرة التحميل للصور والمرفقات أثناء الإرسال */
 .upload-spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: #fff; animation: spin 0.8s linear infinite; margin-left: 4px; vertical-align: middle; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
@@ -293,9 +302,12 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
         </div>
       </div>
       <div class="status-row" style="grid-template-columns:1fr 1fr;">
-        <div class="chip" id="friendRequestsChip" style="cursor:pointer;">
-          <div class="chip-value" style="font-size:13px; font-weight:800;">👥 طلبات الصداقة</div>
-          <span id="friendReqBadge">0</span>
+        <!-- ✅ زر التموج الصوتي الجديد للفرقة بدلاً من طلبات الصداقة -->
+        <div class="chip" id="waveWaveformChip">
+          <div class="live-wave-bars">
+            <span></span><span></span><span></span><span></span><span></span>
+          </div>
+          <div class="chip-label" id="waveWaveformLabel">موجة الفرقة</div>
         </div>
         <div class="chip" id="searchWaveChip" onclick="openSearchWave()" style="cursor:pointer;">
           <div class="chip-value" style="font-size:13px; font-weight:800;">🔍 البحث عن فرقة</div>
@@ -531,6 +543,7 @@ pttMainBtn.addEventListener('click', (e) => {
   if (isTalking) stopTalking(); else onPTTStart(); 
 });
 
+/* ✅ إعدادات تسجيل الصوت بجودة عالية جداً وطبيعية (مثل مكالمات الجوال) للفرقة */
 async function onPTTStart() {
   if (isTalking) return;
   if (!currentUser.waveId) { toast('⚠️ انضم إلى فرقة أولاً', 'error'); return; }
@@ -552,8 +565,21 @@ async function onPTTStart() {
   await new Promise(resolve => setTimeout(resolve, 300));
   
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    waveRecorder = new MediaRecorder(stream);
+    const stream = await navigator.mediaDevices.getUserMedia({ 
+      audio: { 
+        echoCancellation: true, 
+        noiseSuppression: true, 
+        autoGainControl: true, 
+        sampleRate: 48000, 
+        channelCount: 1 
+      } 
+    });
+    const options = { mimeType: 'audio/webm;codecs=opus', audioBitsPerSecond: 128000 };
+    try {
+      waveRecorder = new MediaRecorder(stream, options);
+    } catch (e) {
+      waveRecorder = new MediaRecorder(stream);
+    }
     waveAudioChunks = [];
     waveRecorder.ondataavailable = e => { if (e.data.size > 0) waveAudioChunks.push(e.data); };
     waveRecorder.start();
@@ -639,10 +665,23 @@ function initSocket() {
 
   socket.on('wave_join_error', ({ error }) => toast('❌ ' + error, 'error'));
 
+  /* ✅ تشغيل صوت الفرقة الوارد مع تفعيل مؤشر التموج في الزر الجديد */
   socket.on('new_wave_voice', ({ senderName, audio }) => {
     const audioEl = new Audio(audio);
     audioEl.play().catch(e => console.log("Audio play blocked", e));
     toast('🎤 رسالة صوتية من ' + senderName, 'success');
+    
+    // تفعيل التموج للزر الجديد
+    const waveChip = document.getElementById('waveWaveformChip');
+    const waveLabel = document.getElementById('waveWaveformLabel');
+    if (waveChip) {
+      waveChip.classList.add('active');
+      if(waveLabel) waveLabel.textContent = senderName;
+      audioEl.onended = () => {
+        waveChip.classList.remove('active');
+        if(waveLabel) waveLabel.textContent = 'موجة الفرقة';
+      };
+    }
   });
 
   socket.on('new_direct_message', ({ conversationId, message, ...payload }) => {
@@ -672,7 +711,6 @@ function initSocket() {
     container.scrollTop = container.scrollHeight;
   });
 
-  /* ✅ تحديث حالة صحين الاستلام وإزالة دائرة التحميل عند استلام السيرفر للرسالة */
   socket.on('message_delivered', ({ messageId }) => {
     const statusSpan = document.querySelector(`.msg-status[data-msgid="${messageId}"]`);
     if (statusSpan) statusSpan.textContent = '✓✓';
@@ -1195,7 +1233,6 @@ function addChatMessage(msg, direction, scroll = true) {
     bodyHtml = `<div class="text-msg">${msg.text || ''}</div>`;
   }
 
-  /* ✅ حالة الصح (صح واحد عند الإرسال، صحين عند الاستلام) مع دائرة التحميل للصورة */
   let statusIndicator = '';
   if (direction === 'out') {
     const isImageOrFile = msg.type === 'image' || msg.type === 'file' || msg.type === 'video';
@@ -1244,7 +1281,6 @@ function addChatMessage(msg, direction, scroll = true) {
 
   container.appendChild(div);
   
-  /* ✅ ضمان التمرير التلقائي (Auto-scroll) عند إرسال أو استلام الرسائل */
   if (scroll) {
     requestAnimationFrame(() => {
       container.scrollTop = container.scrollHeight;
@@ -1284,11 +1320,12 @@ chatPrimaryBtn.addEventListener('click', async () => {
   else { if (!isRecordingVoice) await startVoiceRecording(); else await stopVoiceRecordingAndSend(); }
 });
 
+/* ✅ إعدادات تسجيل الصوت بجودة نقية جداً في الغرفة (مثل مكالمات الجوال) */
 async function startVoiceRecording() {
   if (!currentUser.currentConvId) { toast('⚠️ اختر محادثة أولاً', 'error'); return; }
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ 
-        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true, sampleRate: 44100, channelCount: 1 } 
+        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true, sampleRate: 48000, channelCount: 1 } 
     });
     voiceChunks = [];
     const options = { mimeType: 'audio/webm;codecs=opus', audioBitsPerSecond: 128000 };
@@ -1894,7 +1931,6 @@ function switchToRoom(roomCode, roomName) {
 }
 
 document.getElementById('operationsChip').addEventListener('click', openOperationsList);
-document.getElementById('friendRequestsChip').addEventListener('click', openFriendRequests);
 document.getElementById('friendRequestsChip2').addEventListener('click', openFriendRequests);
 
 setTimeout(updateFriendBadge, 500);
