@@ -1174,7 +1174,7 @@ for(let i=0; i<28; i++) {
   } else if (msg.type === 'contact') {
     bodyHtml = `<div class="attach-msg"><span class="attach-msg-icon">👥</span><div class="attach-msg-info"><div class="attach-msg-name">${msg.contactName || ''}</div><div class="attach-msg-type">${msg.contactPhone || ''}</div></div></div><div class="voice-meta"><span>${time}</span></div>`;
   } else {
-    bodyHtml = `<div class="text-msg">${msg.text || ''}</div><div class="voice-meta"><span>${time}</span><span>${direction === 'out' ? '✓✓' : ''}</span></div>`;
+    bodyHtml = `<div class="text-msg">${msg.text || ''}</div><div class="voice-meta"><span>${time}</span><span class="msg-status" data-msgid="${msg.id}">${direction === 'out' ? '✓' : ''}</span></div>`;
   }
   div.innerHTML = `<div class="msg-header">${senderName}</div><div class="msg-body" data-msgid="${msg.id || ''}">${bodyHtml}</div>`;
   
