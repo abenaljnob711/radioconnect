@@ -1,3 +1,6 @@
+- name: Change Android App Name
+  run: |
+    sed -i 's|<string name="app_name">.*</string>|<string name="app_name">جهاز لاسلكي نداء ودردشة حقيقي</string>|' android/app/src/main/res/values/strings.xml
 name: Build APK
 
 on:
