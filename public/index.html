@@ -263,7 +263,8 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
         <div class="brand">
           <div class="brand-text">
             <span class="brand-title">جهاز لاسلكي نداء ودردشة حقيقي</span>
-<span class="brand-sub">جهاز لاسلكي</span>
+            <span class="brand-sub">جهاز لاسلكي</span>
+          </div>
           <span class="brand-icon">📻</span>
         </div>
       </header>
@@ -810,7 +811,6 @@ async function createWave() {
     const el4 = document.getElementById('waveNameLabel'); if (el4) el4.textContent = name;
     const el5 = document.getElementById('lcdLine3'); if (el5) el5.textContent = data.waveId + ' • TX';
     
-    // ✅ حفظ تلقائي فوري لا يطير أبداً
     localStorage.setItem('rc_saved_wave_id', data.waveId);
     localStorage.setItem('rc_saved_wave_name', name);
     localStorage.setItem('rc_is_wave_owner', 'true');
@@ -848,7 +848,6 @@ async function joinWaveAsMember(waveId) {
   const el2 = document.getElementById('waveCodeValue'); if (el2) el2.textContent = waveId;
   const el3 = document.getElementById('lcdLine3'); if (el3) el3.textContent = waveId + ' • RX';
   
-  // ✅ حفظ تلقائي فوري
   localStorage.setItem('rc_saved_wave_id', waveId);
   localStorage.setItem('rc_saved_wave_name', currentUser.waveName || '');
   addWaveToHistory(waveId, currentUser.waveName || '');
@@ -1288,7 +1287,7 @@ function addChatMessage(msg, direction, scroll = true) {
   const playBtn = div.querySelector('.play-btn');
   if (playBtn) {
     playBtn.addEventListener('click', () => {
-      const audio = playBtn.nextElementSibling.querySelector('audio');
+      const audio = playBtn.parentElement.querySelector('audio');
       const waveform = div.querySelector('.waveform');
       
       if (audio) {
@@ -1308,19 +1307,6 @@ function addChatMessage(msg, direction, scroll = true) {
       }
     });
   }
-
-  let pressTimer;
-  const msgBody = div.querySelector('.msg-body');
-  msgBody.addEventListener('pointerdown', () => {
-    pressTimer = setTimeout(() => {
-      if (confirm('هل تريد مسح هذه الرسالة؟')) {
-        div.remove();
-        toast('🗑️ تم مسح الرسالة', 'success');
-      }
-    }, 700);
-  });
-  msgBody.addEventListener('pointerup', () => clearTimeout(pressTimer));
-  msgBody.addEventListener('pointerleave', () => clearTimeout(pressTimer));
 
   container.appendChild(div);
   
@@ -1444,7 +1430,6 @@ chatClip.addEventListener('click', () => {
   openModal('modalAttach');
 });
 
-/* ✅ تحسين التقاط الصور عبر الكاميرا (وضوح تام للمستندات وحماية للذاكرة) */
 function pickCamera() {
   const inp = document.getElementById('hiddenFileInput');
   inp.accept = 'image/*'; 
@@ -1537,7 +1522,6 @@ function pickFile(type) {
   inp.click(); closeModal('modalAttach');
 }
 
-/* ✅ إصلاح زر جهات الاتصال ليدعم الـ APK والمتصفح */
 async function pickContact() {
   closeModal('modalAttach');
   if (('contacts' in navigator) && ('ContactsManager' in window)) {
@@ -1603,7 +1587,6 @@ async function createRoom() {
   currentUser.roomName = name;
   currentUser.roomCode = roomCode;
   
-  // ✅ حفظ تلقائي فوري ودائم للغرفة
   localStorage.setItem('rc_saved_room_code', roomCode);
   localStorage.setItem('rc_saved_room_name', name);
   localStorage.setItem('rc_is_room_owner', 'true');
