@@ -2,13 +2,13 @@
   "background_color": "#ffffff",
   "dir": "ltr",
   "display": "standalone",
-  "name": "Radio Connect",
+  "name": "جهاز لاسلكي نداء ودردشة حقيقي",
   "orientation": "any",
   "scope": "/",
-  "short_name": "Radio Connect",
+  "short_name": "جهاز لاسلكي",
   "start_url": "/",
   "theme_color": "#ffffff",
-  "description": "Radio connect app",
+  "description": "تطبيق جهاز لاسلكي للنداء والدردشة",
   "icons": [
     {
       "src": "./icon.png",
