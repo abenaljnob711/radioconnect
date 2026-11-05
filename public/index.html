@@ -341,27 +341,22 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
         </div>
       </div>
     </section>
-    <section class="screen" id="screen-log">
+        <section class="screen" id="screen-log">
       <div class="log-header">
-        <div class="log-actions">
+        <div class="log-actions" style="display: flex; align-items: center; gap: 12px;">
           <span id="roomMenuBtn">☰</span>
           <span onclick="toast('معلومات الغرفة')">ⓘ</span>
+          <!-- زر البحث عن مستخدم الجديد بجانب الهيدر من الجهة اليسرى -->
+          <span onclick="openSearchUser()" title="البحث عن مستخدم" style="cursor: pointer; font-size: 20px;">🔍</span>
         </div>
         <div class="log-title" onclick="openMyRoom()" style="cursor:pointer;">
-          <h2><span id="roomIcon">💬</span> <span id="roomNameLabel">الغرفة</span></h2>
+          <h2><span id="roomIcon">💬</span> <span id="roomNameLabel">معرفة</span></h2>
           <span class="sub" id="roomSubLabel">محادثاتك الخاصة</span>
         </div>
       </div>
-            <div class="status-row" style="grid-template-columns:1fr 1fr;">
-        <div class="chip" id="friendRequestsChip2" style="cursor:pointer;">
-          <div class="chip-value" style="font-size:13px; font-weight:800;">👥 طلبات الصداقة</div>
-          <span id="friendReqBadge2">0</span>
-        </div>
-        <div class="chip" id="searchUserChip2" onclick="openSearchUser()" style="cursor:pointer;">
-          <div class="chip-value" style="font-size:13px; font-weight:800;">🔍 البحث عن مستخدم</div>
-        </div>
-      </div>
-      </div>
+      
+      <!-- تم حذف صف أزرار طلبات الصداقة والبحث القديم من هنا نهائياً -->
+
       <div id="chatListContainer" style="margin-top:14px;"></div>
       <div class="empty-room" id="emptyRoom">
         <div class="empty-room-icon">💬</div>
@@ -369,6 +364,7 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
         <div class="empty-room-text">اضغط ☰ بالأعلى، ثم اختر "البحث" للعثور على مستخدم وبدء محادثة.</div>
         <button class="empty-room-btn" onclick="openSearchUser()">🔍 البحث عن مستخدم</button>
       </div>
+    </section>
     </section>
     <section class="screen" id="screen-chat">
       <div class="log-header">
