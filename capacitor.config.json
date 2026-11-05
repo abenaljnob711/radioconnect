@@ -1,6 +1,6 @@
-
 {
-  "name": "جهاز لاسلكي نداء ودردشة حقيقي",
+  "appId": "com.radioconnect.app",
+  "appName": "جهاز لاسلكي نداء ودردشة حقيقي",
   "webDir": "www",
   "server": {
     "url": "https://radio-connect-server.onrender.com",
