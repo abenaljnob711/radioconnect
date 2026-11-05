@@ -341,19 +341,11 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
         </div>
       </div>
     </section>
-          <section class="screen" id="screen-log">
+    <section class="screen" id="screen-log">
       <div class="log-header">
         <div class="log-actions">
           <span id="roomMenuBtn">☰</span>
           <span onclick="toast('معلومات الغرفة')">ⓘ</span>
-                <div class="log-header" style="display: flex; justify-content: space-between; align-items: center;">
-        <div class="log-title" onclick="openMyRoom()" style="cursor:pointer;">
-          <h2><span id="roomIcon">💬</span> <span id="roomNameLabel">الغرفة</span></h2>
-          <span class="sub" id="roomSubLabel">محادثاتك الخاصة</span>
-        </div>
-        <!-- أيقونة البحث عن مستخدم لوحدها في أقصى اليسار مقابل الغرفة -->
-        <span onclick="openSearchUser()" title="البحث عن مستخدم" style="cursor: pointer; font-size: 20px;">🔍</span>
-      </div>
         </div>
         <div class="log-title" onclick="openMyRoom()" style="cursor:pointer;">
           <h2><span id="roomIcon">💬</span> <span id="roomNameLabel">الغرفة</span></h2>
@@ -376,8 +368,11 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
         <div class="empty-room-text">اضغط ☰ بالأعلى، ثم اختر "البحث" للعثور على مستخدم وبدء محادثة.</div>
         <button class="empty-room-btn" onclick="openSearchUser()">🔍 البحث عن مستخدم</button>
       </div>
-    </section>  
-       <button class="chat-back" id="chatBackBtn">→</button>
+    </section>
+    <section class="screen" id="screen-chat">
+      <div class="log-header">
+        <div class="log-actions">
+          <button class="chat-back" id="chatBackBtn">→</button>
         </div>
         <div class="log-title">
           <h2><span id="chatWithName">—</span></h2>
