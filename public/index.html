@@ -1240,7 +1240,8 @@ function addChatMessage(msg, direction, scroll = true) {
     statusIndicator = `<span class="msg-status" data-msgid="${msg.id || ''}">✓</span>${spinnerHtml}`;
   }
 
-  div.innerHTML = `<div class="msg-header">${senderName}</div><div class="msg-body" data-msgid="${msg.id || ''}">${bodyHtml}<div class="voice-meta" style="justify-content: flex-end; gap: 4px; margin-top: 2px;"><span>${time}</span>${statusIndicator}</div></div>`;
+  div.innerHTML = `<div class="msg-header">${senderName}</div><div class="msg-body" data-msgid="${msg.id || ''}" style="background: transparent !important; border-color: rgba(255,255,255,0.1) !important;">${bodyHtml}<div class="voice-meta" style="justify-content: flex-end; gap: 4px; margin-top: 2px;"><span>${time}</span>${statusIndicator}</div></div>`;
+
   
   const playBtn = div.querySelector('.play-btn');
   if (playBtn) {
