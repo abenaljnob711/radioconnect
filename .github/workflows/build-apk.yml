@@ -1,6 +1,4 @@
-- name: Change Android App Name
-  run: |
-    sed -i 's|<string name="app_name">.*</string>|<string name="app_name">جهاز لاسلكي نداء ودردشة حقيقي</string>|' android/app/src/main/res/values/strings.xml
+
 name: Build APK
 
 on:
@@ -57,6 +55,20 @@ jobs:
         run: |
           npx cap add android
           npx cap sync android
+
+      - name: Change Android App Name
+        run: |
+          STRINGS="android/app/src/main/res/values/strings.xml"
+          if [ ! -f "$STRINGS" ]; then
+            echo "ERROR: strings.xml not found!"
+            exit 1
+          fi
+          if grep -q 'name="app_name"' "$STRINGS"; then
+            sed -i 's|<string name="app_name">.*</string>|<string name="app_name">جهاز لاسلكي نداء ودردشة حقيقي</string>|' "$STRINGS"
+          else
+            sed -i 's|</resources>|    <string name="app_name">جهاز لاسلكي نداء ودردشة حقيقي</string>\n</resources>|' "$STRINGS"
+          fi
+          cat "$STRINGS"
 
       - name: Replace App Icons
         run: |
