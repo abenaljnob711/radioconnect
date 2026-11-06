@@ -356,7 +356,11 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
   <button id="searchUserBtn" onclick="openSearchUser()" style="background-color: transparent; border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 8px 16px; border-radius: 20px; cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600;">
     <span>🔍</span> بحث عن مستخدم
     </button>
-        </div>
+         <div class="status-row" style="grid-template-columns:1fr 1fr;">
+  <div class="chip" id="friendRequestsChip2" style="cursor:pointer;">
+    <div class="chip-value" style="font-size:13px; font-weight:800;">👥 طلبات الصداقة</div>
+    <span id="friendReqBadge2">0</span>
+  </div>
       </div>
       <div id="chatListContainer" style="margin-top:14px;"></div>
       <div class="empty-room" id="emptyRoom">
