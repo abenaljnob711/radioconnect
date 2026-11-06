@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#05080c">
-<title>جهاز لاسلكي نداء ودردشة حقيقي</title>
+<title>Radio Connect — راديو كونكت</title>
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 <style>
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -80,30 +80,19 @@ body::before { content: ''; position: fixed; inset: 0; background: radial-gradie
 #friendRequestsChip:active, #friendRequestsChip2:active { border-color: var(--cyan); box-shadow: 0 0 12px rgba(0,229,255,.3); }
 #searchWaveChip, #searchUserChip2 { cursor: pointer; }
 #friendReqBadge, #friendReqBadge2 { position: absolute; top: -4px; left: -4px; background: var(--red); color: #fff; border-radius: 50%; min-width: 18px; height: 18px; font-size: 10px; font-weight: 900; align-items: center; justify-content: center; padding: 0 4px; box-shadow: 0 0 8px var(--red); display: none; }
-
-#waveWaveformChip { cursor: pointer; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; background: linear-gradient(180deg, var(--card-2), var(--card)); border: 1px solid var(--border); border-radius: 10px; padding: 6px; min-height: 54px; }
-#waveWaveformChip .live-wave-bars { display: flex; align-items: center; gap: 2px; height: 16px; }
-#waveWaveformChip .live-wave-bars span { display: block; width: 3px; height: 6px; background: var(--text-dim); border-radius: 2px; transition: height 0.2s; }
-#waveWaveformChip.active .live-wave-bars span { background: var(--cyan); box-shadow: 0 0 8px var(--cyan); animation: chipWavePulse 0.5s ease-in-out infinite alternate; }
-#waveWaveformChip.active .live-wave-bars span:nth-child(2) { animation-delay: 0.1s; }
-#waveWaveformChip.active .live-wave-bars span:nth-child(3) { animation-delay: 0.2s; }
-#waveWaveformChip.active .live-wave-bars span:nth-child(4) { animation-delay: 0.3s; }
-#waveWaveformChip.active .live-wave-bars span:nth-child(5) { animation-delay: 0.4s; }
-@keyframes chipWavePulse { 0% { height: 4px; } 100% { height: 16px; } }
-
 .radio-stage { position: relative; height: 360px; display: flex; align-items: center; justify-content: center; margin: 8px 0 16px; }
 .radio-device { position: relative; width: 210px; height: 320px; filter: drop-shadow(0 20px 40px rgba(0,0,0,.8)) drop-shadow(0 0 30px rgba(0,229,255,.15)); }
 .antenna { position: absolute; top: 0; right: 58px; width: 20px; height: 95px; background: linear-gradient(90deg, #0a0a0a, #2b2b2b 40%, #0a0a0a); border-radius: 10px 10px 3px 3px; box-shadow: inset -2px 0 3px rgba(0,0,0,.8); }
 .antenna::before { content: ''; position: absolute; top: -8px; left: 50%; transform: translateX(-50%); width: 12px; height: 12px; background: var(--red); border-radius: 50%; box-shadow: 0 0 8px var(--red); transition: all .25s; }
 body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14px var(--green); }
-.knobs { position : absolute ; top : 88 px ; right : 18 px ; display : flex ; gap : 20 px ; }​  
-.knob { العرض  : 28 بكسل ؛ الارتفاع : 28 بكسل ؛ نصف قطر الحواف : 50 % ؛ الخلفية : تدرج شعاعي ( دائرة عند 35 % 35 % ، #4a4a4a، #0d0d0d ) ؛ الحدود : 2 بكسل صلب # 1c1c1c؛ ظل الصندوق : 0 3 بكسل 6 بكسل rgba ( 0 ، 0 ، 0 ، 0.8 ) ، داخلي -2 بكسل -2 بكسل 4 بكسل rgba ( 0 ، 0 ، 0 ، 0.5 ) ؛ الموضع : نسبي ؛ }            
-.nob :: after  {  content : '' ; position : absolute ; top : 3px ; left : 50 % ; transform : translateX ( -50 % ) ; width : 3px ; height : 9px ; background : # 888 ; border - radius : 2px ; }
-.body - main  {  position : absolute ; top : 110px ; left : 0 ; right : 0 ; height : 210px ; background : linear - gradient ( 180deg , #1e1e1e, # 0a0a0a ) ; border - radius : 18px ; border : 2px solid # 0a0a0a ; box - shadow : inset 0 2px 4px rgba ( 255 , 255 , 255 , .06 ) , inset 0 -4px 8px rgba ( 0 , 0 , 0 , .7 ) , 0 10px 25px rgba ( 0 , 0 , 0 , .7 ) ; overflow : hidden ; }            
-.body -main :: before  {  content : ' ' ; position : absolute ; inset : 6px ; border - radius : 13px ; border : 1px solid rgba ( 0 , 229 , 255 , .08 ) ; pointer - events : none ; }  
-.lcd { position : absolute ; top : 16px ; left : 20px ; right : 20px ; height : 65px  ; background : # 0a1a0f ; border : 2px solid # 050505 ; border - radius : 6px ; box - shadow : inset 0 0 14px rgba ( 0 , 255 , 136 , .18 ) , inset 0 2px 4px rgba ( 0 , 0 , 0 , .9 ) , 0 0 14px rgba ( 0 , 255 , 136 , .15 ) ; display : flex ; flex - direction : column ; justify - content : center ; padding : 6px 10px ; font-family : 'Courier New' , monospace ; color : var ( -- green ) ; text -shadow : 0 0 7px rgba ( 0 , 255 , 136 , .9 ) ; font -size : 12px ; font-weight : 700 ; letter-spacing : .5px ; line-height : 1.6 ; }                 
-.lcd -row  {  display : flex ; justify-content : space -between ; font-size : 11.5px ; }
-.lcd -row .lcd -label  {  color : #00cc70; }
+.knobs { position: absolute; top: 88px; right: 18px; display: flex; gap: 20px; }
+.knob { width: 28px; height: 28px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #4a4a4a, #0d0d0d); border: 2px solid #1c1c1c; box-shadow: 0 3px 6px rgba(0,0,0,.8), inset -2px -2px 4px rgba(0,0,0,.5); position: relative; }
+.knob::after { content: ''; position: absolute; top: 3px; left: 50%; transform: translateX(-50%); width: 3px; height: 9px; background: #888; border-radius: 2px; }
+.body-main { position: absolute; top: 110px; left: 0; right: 0; height: 210px; background: linear-gradient(180deg, #1e1e1e, #0a0a0a); border-radius: 18px; border: 2px solid #0a0a0a; box-shadow: inset 0 2px 4px rgba(255,255,255,.06), inset 0 -4px 8px rgba(0,0,0,.7), 0 10px 25px rgba(0,0,0,.7); overflow: hidden; }
+.body-main::before { content: ''; position: absolute; inset: 6px; border-radius: 13px; border: 1px solid rgba(0,229,255,.08); pointer-events: none; }
+.lcd { position: absolute; top: 16px; left: 20px; right: 20px; height: 65px; background: #0a1a0f; border: 2px solid #050505; border-radius: 6px; box-shadow: inset 0 0 14px rgba(0,255,136,.18), inset 0 2px 4px rgba(0,0,0,.9), 0 0 14px rgba(0,255,136,.15); display: flex; flex-direction: column; justify-content: center; padding: 6px 10px; font-family: 'Courier New', monospace; color: var(--green); text-shadow: 0 0 7px rgba(0,255,136,.9); font-size: 12px; font-weight: 700; letter-spacing: .5px; line-height: 1.6; }
+.lcd-row { display: flex; justify-content: space-between; font-size: 11.5px; }
+.lcd-row .lcd-label { color: #00cc70; }
 .side-btns { position: absolute; top: 92px; left: 12px; right: 12px; display: flex; justify-content: space-between; font-size: 8px; color: #666; letter-spacing: .5px; font-weight: 700; }
 .side-btn { padding: 2px 7px; background: #1a1a1a; border-radius: 4px; border: 1px solid #2a2a2a; }
 .speaker-grill { position: absolute; bottom: 14px; left: 24px; right: 24px; height: 46px; border-radius: 6px; background: repeating-linear-gradient(90deg, #050505 0, #050505 3px, #1a1a1a 3px, #1a1a1a 6px); box-shadow: inset 0 3px 6px rgba(0,0,0,.95); }
@@ -138,7 +127,7 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
 .msg-out .msg-header { color: #ff5577; }
 .msg-body { border-radius: 8px; padding: 4px 8px 2px 8px; position: relative; border: 1px solid; }
 .msg-in .msg-body { background: linear-gradient(135deg, var(--blue-msg), var(--blue-msg-2)); border-color: rgba(0,229,255,.3); border-top-right-radius: 2px; }
-.msg-out .msg-body { background: transparent !important; border-color: rgba(255,255,255,0.1) !important; border-top-left-radius: 2px; }
+.msg-out .msg-body { background: linear-gradient(135deg, var(--red-msg), var(--red-msg-2)); border-color: rgba(255,42,77,.35); border-top-left-radius: 2px; }
 .voice-msg { display: flex !important; flex-direction: row !important; align-items: center !important; gap: 10px !important; width: 100% !important; direction: ltr !important; padding: 4px 0 !important; }
 .voice-avatar { width: 38px !important; height: 38px !important; border-radius: 50% !important; background: rgba(255,255,255,0.1) !important; display: flex !important; align-items: center !important; justify-content: center !important; font-size: 18px !important; font-weight: 800 !important; flex-shrink: 0 !important; color: #fff !important; }
 .play-btn { width: 40px !important; height: 40px !important; border-radius: 50% !important; background: transparent !important; border: none !important; display: flex !important; align-items: center !important; justify-content: center !important; color: var(--cyan) !important; font-size: 24px !important; cursor: pointer !important; flex-shrink: 0 !important; padding: 0 !important; }
@@ -146,11 +135,6 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
 .waveform { flex: 1 !important; height: 30px !important; display: flex !important; align-items: center !important; gap: 3px !important; overflow: hidden !important; }
 .waveform span { display: block !important; width: 3px !important; background: var(--cyan) !important; border-radius: 2px !important; }
 .msg-out .waveform span { background: #ff5577 !important; }
-.waveform.playing span { animation: wavePulse 0.6s ease-in-out infinite alternate; }
-.waveform.playing span:nth-child(odd) { animation-delay: 0.2s; }
-.waveform.playing span:nth-child(even) { animation-delay: 0.4s; }
-@keyframes wavePulse { 0% { transform: scaleY(0.4); opacity: 0.5; } 100% { transform: scaleY(1.4); opacity: 1; } }
-
 .voice-meta { display: flex !important; justify-content: space-between !important; align-items: center !important; font-size: 11px !important; color: rgba(255,255,255,.6) !important; margin-top: 4px !important; }
 .text-msg { font-size: 14px; line-height: 1.4; color: #fff; font-weight: 400; padding-bottom: 2px; }
 .attach-msg { display: flex; align-items: center; gap: 10px; padding: 8px 4px; }
@@ -158,13 +142,8 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
 .attach-msg-info { display: flex; flex-direction: column; gap: 2px; }
 .attach-msg-name { font-size: 13px; font-weight: 700; color: #fff; }
 .attach-msg-type { font-size: 10px; color: rgba(255,255,255,.65); }
-
-.attachment-preview-img { max-width: 100%; max-height: 240px; border-radius: 10px; display: block; margin-bottom: 6px; cursor: pointer; background: transparent !important; }
-.attachment-preview-video { max-width: 100%; max-height: 240px; border-radius: 10px; display: block; margin-bottom: 6px; background: transparent !important; }
-
-.upload-spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: #fff; animation: spin 0.8s linear infinite; margin-left: 4px; vertical-align: middle; }
-@keyframes spin { to { transform: rotate(360deg); } }
-
+.attachment-preview-img { max-width: 100%; max-height: 240px; border-radius: 10px; display: block; margin-bottom: 6px; cursor: pointer; }
+.attachment-preview-video { max-width: 100%; max-height: 240px; border-radius: 10px; display: block; margin-bottom: 6px; }
 .chat-input-bar { position: fixed; bottom: 68px; left: 50%; transform: translateX(-50%); width: 100%; max-width: 500px; background: linear-gradient(180deg, rgba(11,18,24,.9), rgba(5,8,12,1)); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-top: 1px solid var(--border); padding: 10px 12px 14px; display: none; align-items: center; gap: 8px; z-index: 98; }
 .chat-input-bar.active { display: flex; }
 .chat-primary { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(180deg, #00e5ff, #008fa8); border: 1.5px solid var(--cyan); display: flex; align-items: center; justify-content: center; color: #001418; font-size: 20px; cursor: pointer; flex-shrink: 0; box-shadow: 0 0 16px rgba(0,229,255,.55); transition: all .15s; font-family: inherit; font-weight: 900; }
@@ -262,8 +241,8 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
         <button class="menu-toggle" id="menuToggle" title="القائمة">☰</button>
         <div class="brand">
           <div class="brand-text">
-            <span class="brand-title">جهاز لاسلكي نداء ودردشة حقيقي</span>
-            <span class="brand-sub">جهاز لاسلكي</span>
+            <span class="brand-title">Radio Connect</span>
+            <span class="brand-sub">راديو كونكت</span>
           </div>
           <span class="brand-icon">📻</span>
         </div>
@@ -301,11 +280,9 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
         </div>
       </div>
       <div class="status-row" style="grid-template-columns:1fr 1fr;">
-        <div class="chip" id="waveWaveformChip">
-          <div class="live-wave-bars">
-            <span></span><span></span><span></span><span></span><span></span>
-          </div>
-          <div class="chip-label" id="waveWaveformLabel">موجة الفرقة</div>
+        <div class="chip" id="friendRequestsChip" style="cursor:pointer;">
+          <div class="chip-value" style="font-size:13px; font-weight:800;">👥 طلبات الصداقة</div>
+          <span id="friendReqBadge">0</span>
         </div>
         <div class="chip" id="searchWaveChip" onclick="openSearchWave()" style="cursor:pointer;">
           <div class="chip-value" style="font-size:13px; font-weight:800;">🔍 البحث عن فرقة</div>
@@ -349,22 +326,25 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
         </div>
         <div class="log-title" onclick="openMyRoom()" style="cursor:pointer;">
           <h2><span id="roomIcon">💬</span> <span id="roomNameLabel">الغرفة</span></h2>
-          <h2><span class="sub" id="roomSubLabel">محادثاتك الخاصة</span>
+          <span class="sub" id="roomSubLabel">محادثاتك الخاصة</span>
         </div>
-           </div>
-        <button class="empty-room-btn" onclick="openSearchUser()">🔍 البحث عن مستخدم</button>
+      </div>
       <div class="status-row" style="grid-template-columns:1fr 1fr;">
         <div class="chip" id="friendRequestsChip2" style="cursor:pointer;">
+          <div class="chip-value" style="font-size:13px; font-weight:800;">👥 طلبات الصداقة</div>
           <span id="friendReqBadge2">0</span>
         </div>
+        <div class="chip" id="searchUserChip2" onclick="openSearchUser()" style="cursor:pointer;">
+          <div class="chip-value" style="font-size:13px; font-weight:800;">🔍 البحث عن مستخدم</div>
         </div>
       </div>
       <div id="chatListContainer" style="margin-top:14px;"></div>
       <div class="empty-room" id="emptyRoom">
         <div class="empty-room-icon">💬</div>
-        <div class="empty-room-title">لا توجد محادثات بعد</div>  
-      <div class="empty-room-text">اضغط ☰ بالأعلى، ثم اختر "البحث" للعثور على مستخدم وبدء محادثة.</div>
-      </div> 
+        <div class="empty-room-title">لا توجد محادثات بعد</div>
+        <div class="empty-room-text">اضغط ☰ بالأعلى، ثم اختر "البحث" للعثور على مستخدم وبدء محادثة.</div>
+        <button class="empty-room-btn" onclick="openSearchUser()">🔍 البحث عن مستخدم</button>
+      </div>
     </section>
     <section class="screen" id="screen-chat">
       <div class="log-header">
@@ -556,24 +536,12 @@ async function onPTTStart() {
   await PTTEngine.init();
   PTTEngine.playStartBeep();
 
+  // ✅ تأخير 300ms لعدم تقطيع البيب
   await new Promise(resolve => setTimeout(resolve, 300));
   
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({ 
-      audio: { 
-        echoCancellation: true, 
-        noiseSuppression: true, 
-        autoGainControl: true, 
-        sampleRate: 48000, 
-        channelCount: 1 
-      } 
-    });
-    const options = { mimeType: 'audio/webm;codecs=opus', audioBitsPerSecond: 128000 };
-    try {
-      waveRecorder = new MediaRecorder(stream, options);
-    } catch (e) {
-      waveRecorder = new MediaRecorder(stream);
-    }
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    waveRecorder = new MediaRecorder(stream);
     waveAudioChunks = [];
     waveRecorder.ondataavailable = e => { if (e.data.size > 0) waveAudioChunks.push(e.data); };
     waveRecorder.start();
@@ -663,17 +631,6 @@ function initSocket() {
     const audioEl = new Audio(audio);
     audioEl.play().catch(e => console.log("Audio play blocked", e));
     toast('🎤 رسالة صوتية من ' + senderName, 'success');
-    
-    const waveChip = document.getElementById('waveWaveformChip');
-    const waveLabel = document.getElementById('waveWaveformLabel');
-    if (waveChip) {
-      waveChip.classList.add('active');
-      if(waveLabel) waveLabel.textContent = senderName;
-      audioEl.onended = () => {
-        waveChip.classList.remove('active');
-        if(waveLabel) waveLabel.textContent = 'موجة الفرقة';
-      };
-    }
   });
 
   socket.on('new_direct_message', ({ conversationId, message, ...payload }) => {
@@ -690,9 +647,7 @@ function initSocket() {
 
     if (currentUser.currentConvId === conversationId) {
       addChatMessage(message, message.sender === currentUser.id ? 'out' : 'in');
-    } else {
-      toast('💬 رسالة جديدة', 'success');
-    }
+    } else toast('💬 رسالة جديدة', 'success');
     refreshChatList();
   });
 
@@ -703,17 +658,8 @@ function initSocket() {
     container.scrollTop = container.scrollHeight;
   });
 
-  socket.on('message_delivered', ({ messageId }) => {
-    const statusSpan = document.querySelector(`.msg-status[data-msgid="${messageId}"]`);
-    if (statusSpan) statusSpan.textContent = '✓✓';
-    const msgDiv = document.getElementById('msg_' + messageId);
-    if (msgDiv) {
-      const spinner = msgDiv.querySelector('.upload-spinner');
-      if (spinner) spinner.remove();
-    }
-  });
+  socket.on('conversation_updated', () => refreshChatList());
 
-  socket.on('conversation_updated', (data) => refreshChatList());
   socket.on('friend_request_received', (data) => handleIncomingFriendRequest(data));
 
   socket.on('friend_accepted', (data) => {
@@ -725,12 +671,10 @@ function initSocket() {
     saveFriendRequests(); updateFriendBadge();
   });
 
-  socket.on('friend_rejected', (data) => {
+  socket.on('friend_rejected', () => {
     toast('❌ تم رفض طلب الصداقة', 'error');
-    if (data && data.byDeviceId) {
-      friendRequests.outgoing = friendRequests.outgoing.filter(r => r.deviceId !== data.byDeviceId);
-      saveFriendRequests();
-    }
+    friendRequests.outgoing = friendRequests.outgoing.filter(r => r.deviceId !== data.byDeviceId);
+    saveFriendRequests();
   });
 }
 
@@ -816,7 +760,7 @@ async function createWave() {
     await PTTEngine.init(); PTTEngine.playStartBeep();
     
     if (socket) socket.emit('wave_join', { waveId: data.waveId, deviceId: currentUser.id, userName: currentUser.name });
-    toast('✅ تم إنشاء وحفظ الفرقة "' + name + '" تلقائياً', 'success');
+    toast('✅ تم إنشاء الفرقة "' + name + '"', 'success');
   } catch (e) { toast('❌ ' + e.message, 'error'); }
 }
 
@@ -844,12 +788,11 @@ async function joinWaveAsMember(waveId) {
   const el1 = document.getElementById('waveCodeChip'); if (el1) el1.innerHTML = waveId + ' <span style="font-size:12px;">🔑</span>';
   const el2 = document.getElementById('waveCodeValue'); if (el2) el2.textContent = waveId;
   const el3 = document.getElementById('lcdLine3'); if (el3) el3.textContent = waveId + ' • RX';
-  
   localStorage.setItem('rc_saved_wave_id', waveId);
   localStorage.setItem('rc_saved_wave_name', currentUser.waveName || '');
-  addWaveToHistory(waveId, currentUser.waveName || '');
   
   if (socket) socket.emit('wave_join', { waveId: waveId, deviceId: currentUser.id, userName: currentUser.name });
+  toast('✅ انضممت إلى الفرقة', 'success');
 }
 
 function doSearch() {
@@ -992,6 +935,7 @@ function openSideMenu() {
       <button class="menu-item" onclick="closeSideMenu();openOperationsList()"><span class="menu-icon">📋</span><span class="menu-text"><span class="menu-label">قائمة العمليات</span><span class="menu-desc">الفرق التي أنت مشترك فيها</span></span></button>
       <button class="menu-item" onclick="closeSideMenu();openFriendRequests()"><span class="menu-icon">👥</span><span class="menu-text"><span class="menu-label">طلبات الصداقة</span><span class="menu-desc">الواردة والصادرة</span></span></button>
       <button class="menu-item" onclick="closeSideMenu();openEditPersonalName()"><span class="menu-icon">👤</span><span class="menu-text"><span class="menu-label">تعديل الاسم الشخصي</span><span class="menu-desc">تغيير اسمك الظاهر للآخرين</span></span></button>
+      <button class="menu-item" onclick="closeSideMenu();saveMyWave()"><span class="menu-icon">💾</span><span class="menu-text"><span class="menu-label">حفظ الفرقة</span><span class="menu-desc">استرجعها تلقائياً عند الدخول</span></span></button>
       <button class="menu-item" onclick="closeSideMenu();openEditWaveName()"><span class="menu-icon">✏️</span><span class="menu-text"><span class="menu-label">تعديل اسم الفرقة</span><span class="menu-desc">غيّر اسم فرقتك</span></span></button>
       <button class="menu-item" onclick="closeSideMenu();leaveWave()"><span class="menu-icon">🗑️</span><span class="menu-text"><span class="menu-label">مسح الفرقة</span><span class="menu-desc">مغادرة الفرقة الحالية</span></span></button>
     `;
@@ -1008,6 +952,7 @@ function openSideMenu() {
       <button class="menu-item" onclick="closeSideMenu();openSearchUser()"><span class="menu-icon">🔍</span><span class="menu-text"><span class="menu-label">البحث عن مستخدم</span><span class="menu-desc">ابحث برقم المستخدم لبدء محادثة</span></span></button>
       <button class="menu-item" onclick="closeSideMenu();openOperationsList()"><span class="menu-icon">📋</span><span class="menu-text"><span class="menu-label">قائمة العمليات</span><span class="menu-desc">الغرف التي أنت مشترك فيها</span></span></button>
       <button class="menu-item" onclick="closeSideMenu();openFriendRequests()"><span class="menu-icon">👥</span><span class="menu-text"><span class="menu-label">طلبات الصداقة</span><span class="menu-desc">الواردة والصادرة</span></span></button>
+      <button class="menu-item" onclick="closeSideMenu();saveMyRoom()"><span class="menu-icon">💾</span><span class="menu-text"><span class="menu-label">حفظ الغرفة</span><span class="menu-desc">استرجعها تلقائياً عند الدخول</span></span></button>
       <button class="menu-item" onclick="closeSideMenu();openEditPersonalName()"><span class="menu-icon">👤</span><span class="menu-text"><span class="menu-label">تعديل الاسم الشخصي</span><span class="menu-desc">تغيير اسمك الظاهر للآخرين</span></span></button>
       <button class="menu-item" onclick="closeSideMenu();openEditRoomName()"><span class="menu-icon">✏️</span><span class="menu-text"><span class="menu-label">تعديل اسم الغرفة</span><span class="menu-desc">غيّر اسم غرفتك</span></span></button>
       <button class="menu-item" onclick="closeSideMenu();confirmClearChat()"><span class="menu-icon">🧹</span><span class="menu-text"><span class="menu-label">مسح المحادثة</span><span class="menu-desc">حذف الرسائل فقط</span></span></button>
@@ -1072,7 +1017,7 @@ function openSearchWave() {
   document.getElementById('searchFieldLabel').textContent = 'رقم الفرقة';
   document.getElementById('searchQuery').placeholder = 'T#####';
   document.getElementById('searchQuery').value = '';
-  document.getElementById('searchResults').innerHTML = '<div class="no-results"><span class="no-results-icon">🔎</span>اكتب رقم الفرقة وابحث</div>';
+  document.getElementById('searchResults').innerHTML = '<div class="no-results"><span class="no-results-icon">🔎</span>اكتب رقم الفرقة واضغط بحث</div>';
   openModal('modalSearch');
 }
 
@@ -1081,7 +1026,7 @@ function openSearchUser() {
   document.getElementById('searchFieldLabel').textContent = 'رقم المستخدم';
   document.getElementById('searchQuery').placeholder = 'R#####';
   document.getElementById('searchQuery').value = '';
-  document.getElementById('searchResults').innerHTML = '<div class="no-results"><span class="no-results-icon">🔎</span>اكتب الرقم وابحث</div>';
+  document.getElementById('searchResults').innerHTML = '<div class="no-results"><span class="no-results-icon">🔎</span>اكتب الرقم واضغط بحث</div>';
   openModal('modalSearch');
 }
 
@@ -1104,11 +1049,9 @@ async function saveWaveName() {
       body: JSON.stringify({ waveId: currentUser.waveId, newName: name, deviceId: currentUser.id })
     });
     currentUser.waveName = name;
-    localStorage.setItem('rc_saved_wave_name', name);
-    addWaveToHistory(currentUser.waveId, name);
     const el1 = document.getElementById('waveNameValue'); if (el1) el1.textContent = name;
     const el2 = document.getElementById('waveNameLabel'); if (el2) el2.textContent = name;
-    toast('✅ تم تحديث اسم الفرقة وحفظه', 'success');
+    toast('✅ تم تحديث اسم الفرقة', 'success');
     closeModal('modalEditWave');
   } catch (e) { toast('❌ فشل التحديث', 'error'); }
 }
@@ -1196,25 +1139,12 @@ function addChatMessage(msg, direction, scroll = true) {
   const time = msg.time ? new Date(msg.time).toLocaleTimeString('ar', { hour: '2-digit', minute: '2-digit' }) : '';
   const senderName = direction === 'out' ? (currentUser.name || 'أنا') : (msg.senderName || '');
   let bodyHtml = '';
-  
-  let statusIndicator = '';
-  if (direction === 'out') {
-    const spinnerHtml = `<span class="upload-spinner"></span>`;
-    statusIndicator = `<span class="msg-status" data-msgid="${msg.id || ''}">✓</span>${spinnerHtml}`;
-  }
-
-  const metaOverlay = `
-    <div style="position: absolute; bottom: 6px; left: 8px; background: rgba(0,0,0,0.6); padding: 2px 6px; border-radius: 10px; display: flex; align-items: center; gap: 4px; font-size: 10px; color: #fff; z-index: 2;">
-      <span>${time}</span>${statusIndicator}
-    </div>
-  `;
-
   if (msg.type === 'voice' && msg.url) {
     let barsHtml = '';
-    for(let i=0; i<28; i++) {
-      let h = Math.floor(Math.random() * 16) + 4;
-      barsHtml += `<span style="height:${h}px; --i: ${i};"></span>`;
-    }
+for(let i=0; i<28; i++) {
+  let h = Math.floor(Math.random() * 16) + 4;
+  barsHtml += `<span style="height:${h}px; --i: ${i};"></span>`;
+}
     bodyHtml = `
       <div class="voice-msg">
         <div class="voice-avatar">👤</div>
@@ -1224,94 +1154,63 @@ function addChatMessage(msg, direction, scroll = true) {
           ${barsHtml}
         </div>
       </div>
-      <div class="voice-meta"><span>${time}</span><span>${(msg.duration || 0).toFixed(1)}s</span>${statusIndicator}</div>
+      <div class="voice-meta"><span>${time}</span><span>${(msg.duration || 0).toFixed(1)}s</span></div>
     `;
   } else if (msg.type === 'image' && msg.url) {
-    bodyHtml = `
-      <div style="position: relative; display: inline-block; max-width: 100%;">
-        <img src="${msg.url}" class="attachment-preview-img" onclick="window.open('${msg.url}','_blank')">
-        ${metaOverlay}
-      </div>
-    `;
+    bodyHtml = `<img src="${msg.url}" class="attachment-preview-img" onclick="window.open('${msg.url}','_blank')"><div class="voice-meta"><span>${time}</span></div>`;
   } else if (msg.type === 'video' && msg.url) {
-    bodyHtml = `
-      <div style="position: relative; display: inline-block; max-width: 100%;">
-        <video src="${msg.url}" class="attachment-preview-video" controls></video>
-        ${metaOverlay}
-      </div>
-    `;
+    bodyHtml = `<video src="${msg.url}" class="attachment-preview-video" controls></video><div class="voice-meta"><span>${time}</span></div>`;
   } else if (msg.type === 'file' && msg.url) {
-    bodyHtml = `
-      <div style="position: relative; padding-bottom: 16px;">
-        <div class="attach-msg" style="padding-bottom: 4px;">
-          <span class="attach-msg-icon">📄</span>
-          <div class="attach-msg-info">
-            <div class="attach-msg-name">${msg.fileName || 'ملف'}</div>
-            <div class="attach-msg-type"><a href="${msg.url}" download="${msg.fileName || ''}" style="color:var(--cyan); text-decoration:none;">تحميل المستند</a></div>
-          </div>
-        </div>
-        ${metaOverlay}
-      </div>
-    `;
+    bodyHtml = `<div class="attach-msg"><span class="attach-msg-icon">📄</span><div class="attach-msg-info"><div class="attach-msg-name">${msg.fileName || 'ملف'}</div><div class="attach-msg-type">اضغط للتحميل</div></div></div><div class="voice-meta"><span><a href="${msg.url}" download="${msg.fileName || ''}" style="color:var(--cyan)">تحميل</a></span><span>${time}</span></div>`;
   } else if (msg.type === 'contact') {
-    bodyHtml = `
-      <div style="position: relative; padding-bottom: 16px;">
-        <div class="attach-msg" style="padding-bottom: 4px;">
-          <span class="attach-msg-icon">👥</span>
-          <div class="attach-msg-info">
-            <div class="attach-msg-name">${msg.contactName || ''}</div>
-            <div class="attach-msg-type">${msg.contactPhone || ''}</div>
-          </div>
-        </div>
-        ${metaOverlay}
-      </div>
-    `;
+    bodyHtml = `<div class="attach-msg"><span class="attach-msg-icon">👥</span><div class="attach-msg-info"><div class="attach-msg-name">${msg.contactName || ''}</div><div class="attach-msg-type">${msg.contactPhone || ''}</div></div></div><div class="voice-meta"><span>${time}</span></div>`;
   } else {
-    bodyHtml = `<div class="text-msg">${msg.text || ''}</div>`;
+    bodyHtml = `<div class="text-msg">${msg.text || ''}</div><div class="voice-meta"><span>${time}</span><span>${direction === 'out' ? '✓✓' : ''}</span></div>`;
   }
-
-  const isAttachment = ['image', 'video', 'file', 'contact', 'voice'].includes(msg.type);
-  const customStyle = isAttachment ? 'padding: 4px !important;' : '';
-
-  div.innerHTML = `
-    <div class="msg-header">${senderName}</div>
-    <div class="msg-body" data-msgid="${msg.id || ''}" style="${customStyle}">
-      ${bodyHtml}
-      ${!isAttachment ? `<div class="voice-meta" style="justify-content: flex-end; gap: 4px; margin-top: 2px;"><span>${time}</span>${statusIndicator}</div>` : ''}
-    </div>
-  `;
+  div.innerHTML = `<div class="msg-header">${senderName}</div><div class="msg-body" data-msgid="${msg.id || ''}">${bodyHtml}</div>`;
   
   const playBtn = div.querySelector('.play-btn');
-  if (playBtn) {
-    playBtn.addEventListener('click', () => {
-      const audio = playBtn.parentElement.querySelector('audio');
-      const waveform = div.querySelector('.waveform');
-      
-      if (audio) {
-        if (audio.paused) { 
-          audio.play(); 
-          playBtn.textContent = '⏸'; 
-          if(waveform) waveform.classList.add('playing'); 
-        } else { 
-          audio.pause(); 
-          playBtn.textContent = '▶'; 
-          if(waveform) waveform.classList.remove('playing'); 
-        }
-        audio.onended = () => {
-          playBtn.textContent = '▶';
-          if(waveform) waveform.classList.remove('playing');
-        };
+if (playBtn) {
+  playBtn.addEventListener('click', () => {
+    const audio = playBtn.nextElementSibling.querySelector('audio');
+    const waveform = div.querySelector('.waveform'); // تحديد الموجة الخاصة بهذه الرسالة
+    
+    if (audio) {
+      if (audio.paused) { 
+        audio.play(); 
+        playBtn.textContent = '⏸'; 
+        if(waveform) waveform.classList.add('playing'); // تشغيل التموج
       }
-    });
-  }
+      else { 
+        audio.pause(); 
+        playBtn.textContent = '▶'; 
+        if(waveform) waveform.classList.remove('playing'); // إيقاف التموج
+      }
+      
+      audio.onended = () => {
+        playBtn.textContent = '▶';
+        if(waveform) waveform.classList.remove('playing'); // إيقاف التموج عند انتهاء الصوت
+      };
+    }
+  });
+}
+
+  // ✅ الضغط المطول لمسح الرسالة
+  let pressTimer;
+  const msgBody = div.querySelector('.msg-body');
+  msgBody.addEventListener('pointerdown', () => {
+    pressTimer = setTimeout(() => {
+      if (confirm('هل تريد مسح هذه الرسالة؟')) {
+        div.remove();
+        toast('🗑️ تم مسح الرسالة', 'success');
+      }
+    }, 700);
+  });
+  msgBody.addEventListener('pointerup', () => clearTimeout(pressTimer));
+  msgBody.addEventListener('pointerleave', () => clearTimeout(pressTimer));
 
   container.appendChild(div);
-  
-  if (scroll) {
-    requestAnimationFrame(() => {
-      container.scrollTop = container.scrollHeight;
-    });
-  }
+  if (scroll) container.scrollTop = container.scrollHeight;
 }
 
 function sendTextMessage(text) {
@@ -1350,7 +1249,7 @@ async function startVoiceRecording() {
   if (!currentUser.currentConvId) { toast('⚠️ اختر محادثة أولاً', 'error'); return; }
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ 
-        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true, sampleRate: 48000, channelCount: 1 } 
+        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true, sampleRate: 44100, channelCount: 1 } 
     });
     voiceChunks = [];
     const options = { mimeType: 'audio/webm;codecs=opus', audioBitsPerSecond: 128000 };
@@ -1429,63 +1328,8 @@ chatClip.addEventListener('click', () => {
 
 function pickCamera() {
   const inp = document.getElementById('hiddenFileInput');
-  inp.accept = 'image/*'; 
-  inp.setAttribute('capture', 'environment');
-  inp.onchange = (e) => {
-    const file = e.target.files[0];
-    e.target.value = '';
-    if (!file) return;
-    
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        let width = img.width;
-        let height = img.height;
-        const MAX_WIDTH = 1600;
-        const MAX_HEIGHT = 1600;
-        if (width > height) {
-          if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
-        } else {
-          if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
-        }
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, width, height);
-        
-        const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.9);
-        
-        if (!currentUser.currentConvId) { toast('⚠️ اختر محادثة أولاً', 'error'); return; }
-        
-        const msg = { 
-          id: 'msg_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6), 
-          sender: currentUser.id, 
-          senderName: currentUser.name, 
-          type: 'image', 
-          url: compressedDataUrl, 
-          fileName: file.name || 'document.jpg', 
-          duration: 0, 
-          time: Date.now() 
-        };
-        
-        if (currentUser.currentConvId.startsWith('conv_self_')) { 
-          addChatMessage(msg, 'out'); 
-          toast('✅ تم إرسال الصورة بوضوح تام', 'success'); 
-          return; 
-        }
-        
-        if (socket) socket.emit('send_direct_message', { conversationId: currentUser.currentConvId, message: msg });
-        addChatMessage(msg, 'out');
-        toast('✅ تم إرسال الصورة بوضوح تام', 'success');
-      };
-      img.src = event.target.result;
-    };
-    reader.readAsDataURL(file);
-  };
-  inp.click(); 
-  closeModal('modalAttach');
+  inp.accept = 'image/*'; inp.setAttribute('capture', 'environment');
+  inp.click(); closeModal('modalAttach');
 }
 
 function pickFile(type) {
@@ -1496,41 +1340,16 @@ function pickFile(type) {
   else if (type === 'document') inp.accept = '.pdf,.doc,.docx,.txt,.xls,.xlsx,.ppt,.pptx,application/*';
   else inp.accept = '*/*';
   inp.removeAttribute('capture');
-  inp.onchange = (e) => {
-    const file = e.target.files[0];
-    e.target.value = '';
-    if (!file) return;
-    if (file.size > 15 * 1024 * 1024) { toast('⚠️ الملف كبير جداً (الحد 15MB)', 'error'); return; }
-    if (!currentUser.currentConvId) { toast('⚠️ اختر محادثة أولاً', 'error'); return; }
-    const reader = new FileReader();
-    reader.onload = () => {
-      let fileType = 'file';
-      if (file.type.startsWith('image/')) fileType = 'image';
-      else if (file.type.startsWith('video/')) fileType = 'video';
-      else if (file.type.startsWith('audio/')) fileType = 'voice';
-      const msg = { id: 'msg_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6), sender: currentUser.id, senderName: currentUser.name, type: fileType, url: reader.result, fileName: file.name, duration: 0, time: Date.now() };
-      if (currentUser.currentConvId.startsWith('conv_self_')) { addChatMessage(msg, 'out'); toast('✅ تم إرسال الملف', 'success'); return; }
-      if (socket) socket.emit('send_direct_message', { conversationId: currentUser.currentConvId, message: msg });
-      addChatMessage(msg, 'out');
-      toast('✅ تم إرسال الملف', 'success');
-    };
-    reader.readAsDataURL(file);
-  };
   inp.click(); closeModal('modalAttach');
 }
 
-async function pickContact() {
+function pickContact() {
   closeModal('modalAttach');
-  if (('contacts' in navigator) && ('ContactsManager' in window)) {
-    try {
-      const contacts = await navigator.contacts.select(['name', 'tel'], { multiple: false });
-      if (contacts && contacts.length > 0) {
-        sendContactMessage(contacts[0].name[0], contacts[0].tel[0] || '');
-        return;
-      }
-    } catch (ex) {}
-  }
-  openModal('modalContactPick');
+  if ('contacts' in navigator && 'ContactsManager' in window) {
+    navigator.contacts.select(['name', 'tel'], { multiple: false })
+      .then(contacts => { if (contacts.length) sendContactMessage(contacts[0].name[0], contacts[0].tel[0] || ''); })
+      .catch(() => openModal('modalContactPick'));
+  } else openModal('modalContactPick');
 }
 
 function sendContact() {
@@ -1539,8 +1358,6 @@ function sendContact() {
   if (!name) { toast('⚠️ أدخل الاسم', 'error'); return; }
   closeModal('modalContactPick');
   sendContactMessage(name, phone);
-  document.getElementById('contactName').value = '';
-  document.getElementById('contactPhone').value = '';
 }
 
 function sendContactMessage(name, phone) {
@@ -1550,6 +1367,27 @@ function sendContactMessage(name, phone) {
   addChatMessage(msg, 'out');
   toast('✅ تم إرسال جهة الاتصال', 'success');
 }
+
+document.getElementById('hiddenFileInput').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  e.target.value = '';
+  if (!file) return;
+  if (file.size > 5 * 1024 * 1024) { toast('⚠️ الملف كبير جداً (الحد 5MB)', 'error'); return; }
+  if (!currentUser.currentConvId) { toast('⚠️ اختر محادثة أولاً', 'error'); return; }
+  const reader = new FileReader();
+  reader.onload = () => {
+    let type = 'file';
+    if (file.type.startsWith('image/')) type = 'image';
+    else if (file.type.startsWith('video/')) type = 'video';
+    else if (file.type.startsWith('audio/')) type = 'voice';
+    const msg = { id: 'msg_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6), sender: currentUser.id, senderName: currentUser.name, type: type, url: reader.result, fileName: file.name, duration: 0, time: Date.now() };
+    if (currentUser.currentConvId.startsWith('conv_self_')) { addChatMessage(msg, 'out'); toast('✅ تم إرسال المرفق', 'success'); return; }
+    if (socket) socket.emit('send_direct_message', { conversationId: currentUser.currentConvId, message: msg });
+    addChatMessage(msg, 'out');
+    toast('✅ تم إرسال المرفق', 'success');
+  };
+  reader.readAsDataURL(file);
+});
 
 function openCreateRoom() { openModal('modalCreate'); }
 function openEditRoomName() { document.getElementById('newRoomName').value = currentUser.roomName || ''; openModal('modalEditName'); }
@@ -1579,23 +1417,16 @@ async function createRoom() {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ deviceId: currentUser.id, roomCode: roomCode })
     });
-  } catch(e) {}
+  } catch(e) { console.log("Error saving room", e); }
 
   currentUser.roomName = name;
   currentUser.roomCode = roomCode;
-  
-  localStorage.setItem('rc_saved_room_code', roomCode);
-  localStorage.setItem('rc_saved_room_name', name);
-  localStorage.setItem('rc_is_room_owner', 'true');
-  addRoomToHistory(roomCode, name);
-
   document.getElementById('roomNameLabel').textContent = name;
   document.getElementById('roomName').value = '';
   document.getElementById('createdRoomCode').textContent = roomCode;
   closeModal('modalCreate');
   openModal('modalRoomCreated');
-  toast('✅ تم إنشاء وحفظ الغرفة "' + name + '" تلقائياً', 'success');
-  
+  toast('✅ تم إنشاء الغرفة "' + name + '"', 'success');
   const selfConvId = 'conv_self_' + roomCode;
   currentUser.currentConvId = selfConvId;
   currentUser.currentChatWith = 'self';
@@ -1615,15 +1446,28 @@ function saveRoomName() {
   const name = document.getElementById('newRoomName').value.trim();
   if (!name) { toast('⚠️ أدخل اسماً', 'error'); return; }
   currentUser.roomName = name;
-  localStorage.setItem('rc_saved_room_name', name);
   document.getElementById('roomNameLabel').textContent = name;
-  toast('✅ تم تحديث اسم الغرفة وحفظه', 'success');
+  toast('✅ تم تحديث اسم الغرفة', 'success');
   closeModal('modalEditName');
 }
 
 function copyMyRoomCode() {
   if (!currentUser.roomCode) { toast('⚠️ لا يوجد رقم غرفة', 'error'); return; }
   navigator.clipboard.writeText(currentUser.roomCode).then(() => toast('📋 تم نسخ رقم الغرفة', 'success')).catch(() => toast('رقم الغرفة: ' + currentUser.roomCode, 'success'));
+}
+
+function saveMyWave() {
+  if (!currentUser.waveId) { toast('⚠️ لا توجد فرقة', 'error'); return; }
+  localStorage.setItem('rc_saved_wave_id', currentUser.waveId);
+  localStorage.setItem('rc_saved_wave_name', currentUser.waveName || '');
+  toast('✅ تم حفظ الفرقة', 'success');
+}
+
+function saveMyRoom() {
+  if (!currentUser.roomCode) { toast('⚠️ لا توجد غرفة', 'error'); return; }
+  localStorage.setItem('rc_saved_room_code', currentUser.roomCode);
+  localStorage.setItem('rc_saved_room_name', currentUser.roomName || '');
+  toast('✅ تم حفظ الغرفة', 'success');
 }
 
 function copyRoomCode() {
@@ -2011,6 +1855,7 @@ function switchToRoom(roomCode, roomName) {
 }
 
 document.getElementById('operationsChip').addEventListener('click', openOperationsList);
+document.getElementById('friendRequestsChip').addEventListener('click', openFriendRequests);
 document.getElementById('friendRequestsChip2').addEventListener('click', openFriendRequests);
 
 setTimeout(updateFriendBadge, 500);
@@ -2055,12 +1900,9 @@ window.addEventListener('DOMContentLoaded', async () => {
     if (el4 && savedRoomName) el4.textContent = savedRoomName;
   }
   updateFriendBadge();
-}); 
+});
 
 document.addEventListener('keydown', (e) => {
-  if (document.activeElement && document.activeElement.id === 'chatInput') {
-    return; 
-  }
   if (e.code === 'Space' && !e.repeat && !document.querySelector('.modal-overlay.show')) {
     e.preventDefault();
     if (isTalking) stopTalking(); else onPTTStart();
@@ -2095,4 +1937,4 @@ function openMyRoom() {
 }
   </script>
 </body>
-</html>
+                                                        </html>
