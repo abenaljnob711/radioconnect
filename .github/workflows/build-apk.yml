@@ -1,5 +1,5 @@
 
-name: Build APK
+name: Build Radio Connect APK
 
 on:
   push:
@@ -9,6 +9,7 @@ on:
 
 jobs:
   build:
+    name: Build APK
     runs-on: ubuntu-latest
 
     steps:
@@ -18,38 +19,34 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: 20
 
       - name: Setup Java JDK 21
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
-          java-version: '21'
+          distribution: temurin
+          java-version: 21
 
       - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK packages
         run: |
-          mkdir -p $ANDROID_HOME/cmdline-tools
-          cd $ANDROID_HOME/cmdline-tools
-          if [ ! -d "latest" ]; then
-            wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O cmdline-tools.zip
-            unzip -q cmdline-tools.zip
-            mv cmdline-tools latest
-            rm cmdline-tools.zip
-          fi
-          export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin
-          yes | sdkmanager --licenses > /dev/null 2>&1 || true
-          sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0" > /dev/null 2>&1 || true
+          sdkmanager "platform-tools"
+          sdkmanager "platforms;android-34"
+          sdkmanager "build-tools;34.0.0"
 
       - name: Install Capacitor
         run: |
-          npm install -g @capacitor/cli
-          npm install @capacitor/core @capacitor/android
+          npm install @capacitor/core @capacitor/cli @capacitor/android
 
       - name: Create www folder
         run: |
           mkdir -p www
           cp -r public/* www/
-          rm -f www/package.json www/gitignore www/manifest.json
+          rm -f www/package.json
+          rm -f www/gitignore
+          rm -f www/manifest.json
 
       - name: Add Android platform
         run: |
@@ -59,16 +56,10 @@ jobs:
       - name: Change Android App Name
         run: |
           STRINGS="android/app/src/main/res/values/strings.xml"
-          if [ ! -f "$STRINGS" ]; then
-            echo "ERROR: strings.xml not found!"
-            exit 1
-          fi
-          if grep -q 'name="app_name"' "$STRINGS"; then
+
+          if [ -f "$STRINGS" ]; then
             sed -i 's|<string name="app_name">.*</string>|<string name="app_name">جهاز لاسلكي نداء ودردشة حقيقي</string>|' "$STRINGS"
-          else
-            sed -i 's|</resources>|    <string name="app_name">جهاز لاسلكي نداء ودردشة حقيقي</string>\n</resources>|' "$STRINGS"
           fi
-          cat "$STRINGS"
 
       - name: Replace App Icons
         run: |
@@ -86,6 +77,11 @@ jobs:
           file "$ICON"
           ls -lh "$ICON"
 
+          echo "===== Remove old adaptive icons ====="
+          rm -f "$RES/mipmap-anydpi-v26/ic_launcher.xml"
+          rm -f "$RES/mipmap-anydpi-v26/ic_launcher_round.xml"
+
+          echo "===== Replace launcher icons ====="
           for dir in "$RES"/mipmap-*; do
             if [ -d "$dir" ]; then
               cp "$ICON" "$dir/ic_launcher.png"
@@ -94,33 +90,28 @@ jobs:
             fi
           done
 
+          echo "===== Verify icons ====="
+          find "$RES" \( -name "ic_launcher.png" -o -name "ic_launcher_round.png" \)
+
           echo "===== Icon replacement completed ====="
 
       - name: Add Permissions to AndroidManifest
         run: |
           MANIFEST="android/app/src/main/AndroidManifest.xml"
-          if [ -f "$MANIFEST" ]; then
-            sed -i 's|<application|<uses-permission android:name="android.permission.INTERNET"/>\n    <uses-permission android:name="android.permission.RECORD_AUDIO"/>\n    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>\n    <uses-permission android:name="android.permission.CAMERA"/>\n    <uses-permission android:name="android.permission.READ_CONTACTS"/>\n    <uses-permission android:name="android.permission.WRITE_CONTACTS"/>\n    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>\n    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>\n    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>\n    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO"/>\n    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO"/>\n    <application|' "$MANIFEST"
-            echo "===== AndroidManifest.xml updated ====="
-          else
-            echo "ERROR: AndroidManifest.xml not found!"
-            exit 1
-          fi
+
+          sed -i '/<application/i\
+          <uses-permission android:name="android.permission.INTERNET" />\
+          <uses-permission android:name="android.permission.RECORD_AUDIO" />\
+          <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />\
+          <uses-permission android:name="android.permission.CAMERA" />\
+          <uses-permission android:name="android.permission.WAKE_LOCK" />' "$MANIFEST"
 
       - name: Fix Kotlin Dependencies
         run: |
-          cat >> android/app/build.gradle <<'EOF'
-
-          // Fix Kotlin duplicate class errors
-          configurations.all {
-              resolutionStrategy.eachDependency { details ->
-                  if (details.requested.group == 'org.jetbrains.kotlin' &&
-                      details.requested.name.startsWith('kotlin-stdlib')) {
-                      details.useVersion '1.8.22'
-                  }
-              }
-          }
-          EOF
+          find android -name "*.gradle" -o -name "*.gradle.kts" | while read file; do
+            sed -i 's/kotlin-stdlib-jdk7/kotlin-stdlib/g' "$file"
+            sed -i 's/kotlin-stdlib-jdk8/kotlin-stdlib/g' "$file"
+          done
 
       - name: Build APK
         run: |
@@ -133,3 +124,4 @@ jobs:
         with:
           name: radio-connect-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
