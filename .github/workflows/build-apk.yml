@@ -1,4 +1,3 @@
-
 name: Build Radio Connect APK
 
 on:
@@ -48,9 +47,11 @@ jobs:
           rm -f www/gitignore
           rm -f www/manifest.json
 
-      - name: Add Android platform
+      - name: Add or Sync Android platform
         run: |
-          npx cap add android
+          if [ ! -d "android" ]; then
+            npx cap add android
+          fi
           npx cap sync android
 
       - name: Change Android App Name
@@ -73,14 +74,6 @@ jobs:
             exit 1
           fi
 
-          echo "===== Check new icon ====="
-          file "$ICON"
-          ls -lh "$ICON"
-
-          echo "===== Remove adaptive icon XML files ====="
-          rm -f "$RES/mipmap-anydpi-v26/ic_launcher.xml"
-          rm -f "$RES/mipmap-anydpi-v26/ic_launcher_round.xml"
-
           echo "===== Replace launcher icons ====="
           for dir in "$RES"/mipmap-*; do
             if [ -d "$dir" ]; then
@@ -90,9 +83,10 @@ jobs:
             fi
           done
 
-          echo "===== Verify icon files ====="
-          test -f "$RES/mipmap-hdpi/ic_launcher.png"
-          test -f "$RES/mipmap-hdpi/ic_launcher_round.png"
+          # تحديث أو إنهاء ملفات الـ Adaptive Icons لتعمل بشكل صحيح ولا تظهر مربعة أو بيضاء
+          if [ -d "$RES/mipmap-anydpi-v26" ]; then
+            cp "$ICON" "$RES/mipmap-anydpi-v26/ic_launcher.png" || true
+          fi
 
           echo "===== Icon replacement completed ====="
 
@@ -100,12 +94,15 @@ jobs:
         run: |
           MANIFEST="android/app/src/main/AndroidManifest.xml"
 
-          sed -i '/<application/i\
-          <uses-permission android:name="android.permission.INTERNET" />\
-          <uses-permission android:name="android.permission.RECORD_AUDIO" />\
-          <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />\
-          <uses-permission android:name="android.permission.CAMERA" />\
-          <uses-permission android:name="android.permission.WAKE_LOCK" />' "$MANIFEST"
+          # التأكد من عدم تكرار إضافة الصلاحيات إذا تمت مسبقاً
+          if ! grep -q "RECORD_AUDIO" "$MANIFEST"; then
+            sed -i '/<application/i\
+            <uses-permission android:name="android.permission.INTERNET" />\
+            <uses-permission android:name="android.permission.RECORD_AUDIO" />\
+            <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />\
+            <uses-permission android:name="android.permission.CAMERA" />\
+            <uses-permission android:name="android.permission.WAKE_LOCK" />' "$MANIFEST"
+          fi
 
       - name: Fix Kotlin Dependencies
         run: |
