@@ -73,11 +73,11 @@ jobs:
             exit 1
           fi
 
-          echo "===== New icon information ====="
+          echo "===== Check new icon ====="
           file "$ICON"
           ls -lh "$ICON"
 
-          echo "===== Remove old adaptive icons ====="
+          echo "===== Remove adaptive icon XML files ====="
           rm -f "$RES/mipmap-anydpi-v26/ic_launcher.xml"
           rm -f "$RES/mipmap-anydpi-v26/ic_launcher_round.xml"
 
@@ -90,8 +90,9 @@ jobs:
             fi
           done
 
-          echo "===== Verify icons ====="
-          find "$RES" \( -name "ic_launcher.png" -o -name "ic_launcher_round.png" \)
+          echo "===== Verify icon files ====="
+          test -f "$RES/mipmap-hdpi/ic_launcher.png"
+          test -f "$RES/mipmap-hdpi/ic_launcher_round.png"
 
           echo "===== Icon replacement completed ====="
 
@@ -108,7 +109,7 @@ jobs:
 
       - name: Fix Kotlin Dependencies
         run: |
-          find android -name "*.gradle" -o -name "*.gradle.kts" | while read file; do
+          find android \( -name "*.gradle" -o -name "*.gradle.kts" \) -type f | while read file; do
             sed -i 's/kotlin-stdlib-jdk7/kotlin-stdlib/g' "$file"
             sed -i 's/kotlin-stdlib-jdk8/kotlin-stdlib/g' "$file"
           done
