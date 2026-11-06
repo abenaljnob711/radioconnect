@@ -72,20 +72,29 @@ jobs:
 
       - name: Replace App Icons
         run: |
-          cd android/app/src/main/res
-          echo "===== Before ====="
-          ls -la mipmap-anydpi-v26/ || true
-          rm -f mipmap-anydpi-v26/ic_launcher.xml
-          rm -f mipmap-anydpi-v26/ic_launcher_round.xml
-          for dir in mipmap-*; do
+          set -e
+
+          ICON="$GITHUB_WORKSPACE/public/icon.png"
+          RES="android/app/src/main/res"
+
+          if [ ! -f "$ICON" ]; then
+            echo "ERROR: New icon not found: $ICON"
+            exit 1
+          fi
+
+          echo "===== New icon information ====="
+          file "$ICON"
+          ls -lh "$ICON"
+
+          for dir in "$RES"/mipmap-*; do
             if [ -d "$dir" ]; then
-              cp $GITHUB_WORKSPACE/public/icon.png "$dir/ic_launcher.png" 2>/dev/null || true
-              cp $GITHUB_WORKSPACE/public/icon.png "$dir/ic_launcher_round.png" 2>/dev/null || true
+              cp "$ICON" "$dir/ic_launcher.png"
+              cp "$ICON" "$dir/ic_launcher_round.png"
+              echo "Updated: $dir"
             fi
           done
-          echo "===== After ====="
-          ls -la mipmap-anydpi-v26/ || true
-          ls -la mipmap-hdpi/ || true
+
+          echo "===== Icon replacement completed ====="
 
       - name: Add Permissions to AndroidManifest
         run: |
