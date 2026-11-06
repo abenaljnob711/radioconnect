@@ -47,7 +47,7 @@ jobs:
           rm -f www/gitignore
           rm -f www/manifest.json
 
-      - name: Add or Sync Android platform
+      - name: Add Android platform
         run: |
           if [ ! -d "android" ]; then
             npx cap add android
@@ -74,6 +74,14 @@ jobs:
             exit 1
           fi
 
+          echo "===== New icon information ====="
+          file "$ICON"
+          ls -lh "$ICON"
+
+          echo "===== Remove old adaptive icons ====="
+          rm -f "$RES/mipmap-anydpi-v26/ic_launcher.xml"
+          rm -f "$RES/mipmap-anydpi-v26/ic_launcher_round.xml"
+
           echo "===== Replace launcher icons ====="
           for dir in "$RES"/mipmap-*; do
             if [ -d "$dir" ]; then
@@ -83,18 +91,14 @@ jobs:
             fi
           done
 
-          # تحديث أو إنهاء ملفات الـ Adaptive Icons لتعمل بشكل صحيح ولا تظهر مربعة أو بيضاء
-          if [ -d "$RES/mipmap-anydpi-v26" ]; then
-            cp "$ICON" "$RES/mipmap-anydpi-v26/ic_launcher.png" || true
-          fi
-
+          echo "===== Verify icons ====="
+          find "$RES" -name "ic_launcher.png" -o -name "ic_launcher_round.png"
           echo "===== Icon replacement completed ====="
 
       - name: Add Permissions to AndroidManifest
         run: |
           MANIFEST="android/app/src/main/AndroidManifest.xml"
 
-          # التأكد من عدم تكرار إضافة الصلاحيات إذا تمت مسبقاً
           if ! grep -q "RECORD_AUDIO" "$MANIFEST"; then
             sed -i '/<application/i\
             <uses-permission android:name="android.permission.INTERNET" />\
@@ -106,7 +110,7 @@ jobs:
 
       - name: Fix Kotlin Dependencies
         run: |
-          find android \( -name "*.gradle" -o -name "*.gradle.kts" \) -type f | while read file; do
+          find android -name "*.gradle" -o -name "*.gradle.kts" | while read file; do
             sed -i 's/kotlin-stdlib-jdk7/kotlin-stdlib/g' "$file"
             sed -i 's/kotlin-stdlib-jdk8/kotlin-stdlib/g' "$file"
           done
