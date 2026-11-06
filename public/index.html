@@ -96,14 +96,14 @@ body::before { content: ''; position: fixed; inset: 0; background: radial-gradie
 .antenna { position: absolute; top: 0; right: 58px; width: 20px; height: 95px; background: linear-gradient(90deg, #0a0a0a, #2b2b2b 40%, #0a0a0a); border-radius: 10px 10px 3px 3px; box-shadow: inset -2px 0 3px rgba(0,0,0,.8); }
 .antenna::before { content: ''; position: absolute; top: -8px; left: 50%; transform: translateX(-50%); width: 12px; height: 12px; background: var(--red); border-radius: 50%; box-shadow: 0 0 8px var(--red); transition: all .25s; }
 body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14px var(--green); }
-.knobs { position: absolute; top: 88px; right: 18px; display: flex; gap: 20px; }
-.knob { width: 28px; height: 28px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #4a4a4a, #0d0d0d); border: 2px solid #1c1c1c; box-shadow: 0 3px 6px rgba(0,0,0,.8), inset -2px -2px 4px rgba(0,0,0,.5); position: relative; }
-.knob::after { content: ''; position: absolute; top: 3px; left: 50%; transform: translateX(-50%); width: 3px; height: 9px; background: #888; border-radius: 2px; }
-.body-main { position: absolute; top: 110px; left: 0; right: 0; height: 210px; background: linear-gradient(180deg, #1e1e1e, #0a0a0a); border-radius: 18px; border: 2px solid #0a0a0a; box-shadow: inset 0 2px 4px rgba(255,255,255,.06), inset 0 -4px 8px rgba(0,0,0,.7), 0 10px 25px rgba(0,0,0,.7); overflow: hidden; }
-.body-main::before { content: ''; position: absolute; inset: 6px; border-radius: 13px; border: 1px solid rgba(0,229,255,.08); pointer-events: none; }
-.lcd { position: absolute; top: 16px; left: 20px; right: 20px; height: 65px; background: #0a1a0f; border: 2px solid #050505; border-radius: 6px; box-shadow: inset 0 0 14px rgba(0,255,136,.18), inset 0 2px 4px rgba(0,0,0,.9), 0 0 14px rgba(0,255,136,.15); display: flex; flex-direction: column; justify-content: center; padding: 6px 10px; font-family: 'Courier New', monospace; color: var(--green); text-shadow: 0 0 7px rgba(0,255,136,.9); font-size: 12px; font-weight: 700; letter-spacing: .5px; line-height: 1.6; }
-.lcd-row { display: flex; justify-content: space-between; font-size: 11.5px; }
-.lcd-row .lcd-label { color: #00cc70; }
+.knobs { position : absolute ; top : 88 px ; right : 18 px ; display : flex ; gap : 20 px ; }​  
+.knob { العرض  : 28 بكسل ؛ الارتفاع : 28 بكسل ؛ نصف قطر الحواف : 50 % ؛ الخلفية : تدرج شعاعي ( دائرة عند 35 % 35 % ، #4a4a4a، #0d0d0d ) ؛ الحدود : 2 بكسل صلب # 1c1c1c؛ ظل الصندوق : 0 3 بكسل 6 بكسل rgba ( 0 ، 0 ، 0 ، 0.8 ) ، داخلي -2 بكسل -2 بكسل 4 بكسل rgba ( 0 ، 0 ، 0 ، 0.5 ) ؛ الموضع : نسبي ؛ }            
+.nob :: after  {  content : '' ; position : absolute ; top : 3px ; left : 50 % ; transform : translateX ( -50 % ) ; width : 3px ; height : 9px ; background : # 888 ; border - radius : 2px ; }
+.body - main  {  position : absolute ; top : 110px ; left : 0 ; right : 0 ; height : 210px ; background : linear - gradient ( 180deg , #1e1e1e, # 0a0a0a ) ; border - radius : 18px ; border : 2px solid # 0a0a0a ; box - shadow : inset 0 2px 4px rgba ( 255 , 255 , 255 , .06 ) , inset 0 -4px 8px rgba ( 0 , 0 , 0 , .7 ) , 0 10px 25px rgba ( 0 , 0 , 0 , .7 ) ; overflow : hidden ; }            
+.body -main :: before  {  content : ' ' ; position : absolute ; inset : 6px ; border - radius : 13px ; border : 1px solid rgba ( 0 , 229 , 255 , .08 ) ; pointer - events : none ; }  
+.lcd { position : absolute ; top : 16px ; left : 20px ; right : 20px ; height : 65px  ; background : # 0a1a0f ; border : 2px solid # 050505 ; border - radius : 6px ; box - shadow : inset 0 0 14px rgba ( 0 , 255 , 136 , .18 ) , inset 0 2px 4px rgba ( 0 , 0 , 0 , .9 ) , 0 0 14px rgba ( 0 , 255 , 136 , .15 ) ; display : flex ; flex - direction : column ; justify - content : center ; padding : 6px 10px ; font-family : 'Courier New' , monospace ; color : var ( -- green ) ; text -shadow : 0 0 7px rgba ( 0 , 255 , 136 , .9 ) ; font -size : 12px ; font-weight : 700 ; letter-spacing : .5px ; line-height : 1.6 ; }                 
+.lcd -row  {  display : flex ; justify-content : space -between ; font-size : 11.5px ; }
+.lcd -row .lcd -label  {  color : #00cc70; }
 .side-btns { position: absolute; top: 92px; left: 12px; right: 12px; display: flex; justify-content: space-between; font-size: 8px; color: #666; letter-spacing: .5px; font-weight: 700; }
 .side-btn { padding: 2px 7px; background: #1a1a1a; border-radius: 4px; border: 1px solid #2a2a2a; }
 .speaker-grill { position: absolute; bottom: 14px; left: 24px; right: 24px; height: 46px; border-radius: 6px; background: repeating-linear-gradient(90deg, #050505 0, #050505 3px, #1a1a1a 3px, #1a1a1a 6px); box-shadow: inset 0 3px 6px rgba(0,0,0,.95); }
@@ -351,6 +351,7 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
           <h2><span id="roomIcon">💬</span> <span id="roomNameLabel">الغرفة</span></h2>
           <h2><span class="sub" id="roomSubLabel">محادثاتك الخاصة</span>
         </div>
+          <span class="brand-title">🔍 البحث عن مستخدم</span>
         <h2></h2><button class="empty-room-btn" onclick="openSearchUser()">🔍 البحث عن مستخدم</button></h2>
       </div>
       </div>
