@@ -31,9 +31,10 @@ jobs:
         run: |
           echo "y" | sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
 
-      - name: Install Capacitor
+            - name: Install Capacitor
         run: |
-          npm install @capacitor/core @capacitor/cli
+          npm install @capacitor/core @capacitor/cli @capacitor/android
+          ls node_modules/@capacitor/android
 
       - name: Create www folder and copy assets
         run: |
