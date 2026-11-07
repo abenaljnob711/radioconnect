@@ -1,4 +1,4 @@
-name: Build APK
+name: Build Radio Connect APK
 
 on:
   push:
@@ -6,121 +6,244 @@ on:
       - main
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   build:
     name: Build APK
     runs-on: ubuntu-latest
 
-    steps:  
-      - name: Checkout code  
-        uses: actions/checkout@v4  
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - name: Setup Node.js  
-        uses: actions/setup-node@v4  
-        with:  
-          node-version: 20  
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
 
-      - name: Setup Java JDK 21  
-        uses: actions/setup-java@v4  
-        with:  
-          distribution: temurin  
-          java-version: 21  
+      - name: Setup Java JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
 
-      - name: Setup Android SDK  
-        uses: android-actions/setup-android@v3  
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
 
-      - name: Install Android SDK packages  
-        run: |  
-          sdkmanager "platform-tools"  
-          sdkmanager "platforms;android-34"  
-          sdkmanager "build-tools;34.0.0"  
+      - name: Install Android SDK packages
+        run: |
+          yes | sdkmanager --licenses || true
+          sdkmanager --install \
+            "platform-tools" \
+            "platforms;android-35" \
+            "build-tools;35.0.0"
 
-      - name: Install Capacitor  
-        run: |  
-          npm install @capacitor/core @capacitor/cli @capacitor/android  
+      - name: Check project files
+        run: |
+          set -e
 
-      - name: Create www folder  
-        run: |  
-          mkdir -p www  
-          cp -r public/* www/  
-          rm -f www/package.json  
-          rm -f www/gitignore  
-          rm -f www/manifest.json  
+          if [ ! -d public ]; then
+            echo "ERROR: public folder not found"
+            exit 1
+          fi
 
-      - name: Add Android platform  
-        run: |  
-          npx cap add android  
-          npx cap sync android  
+          if [ ! -f public/index.html ]; then
+            echo "ERROR: public/index.html not found"
+            exit 1
+          fi
 
-      - name: Change Android App Name  
-        run: |  
-          STRINGS="android/app/src/main/res/values/strings.xml"  
+          if [ ! -f public/icon.png ]; then
+            echo "ERROR: public/icon.png not found"
+            exit 1
+          fi
 
-          if [ -f "$STRINGS" ]; then  
-            sed -i 's|<string name="app_name">.*</string>|<string name="app_name">جهاز لاسلكي نداء ودردشة حقيقي</string>|' "$STRINGS"  
-          fi  
+          echo "Project files verified"
 
-      - name: Replace App Icons  
-        run: |  
-          set -e  
+      - name: Install Capacitor
+        run: |
+          set -e
 
-          ICON="$GITHUB_WORKSPACE/public/icon.png"  
-          RES="android/app/src/main/res"  
+          if [ ! -f package.json ]; then
+            npm init -y
+          fi
 
-          if [ ! -f "$ICON" ]; then  
-            echo "ERROR: New icon not found: $ICON"  
-            exit 1  
-          fi  
+          npm install --no-audit --no-fund \
+            @capacitor/core@^7 \
+            @capacitor/cli@^7 \
+            @capacitor/android@^7
 
-          echo "===== New icon information ====="  
-          file "$ICON"  
-          ls -lh "$ICON"  
+      - name: Prepare Capacitor configuration
+        run: |
+          if [ ! -f capacitor.config.json ] && \
+             [ ! -f capacitor.config.ts ] && \
+             [ ! -f capacitor.config.js ]; then
 
-          echo "===== Remove old adaptive icons ====="  
-          rm -f "$RES/mipmap-anydpi-v26/ic_launcher.xml"  
-          rm -f "$RES/mipmap-anydpi-v26/ic_launcher_round.xml"  
+            cat > capacitor.config.json <<'EOF'
+          {
+            "appId": "com.radioconnect.app",
+            "appName": "جهاز لاسلكي نداء ودردشة حقيقي",
+            "webDir": "www",
+            "android": {
+              "allowMixedContent": true
+            }
+          }
+          EOF
+          fi
 
-          echo "===== Replace launcher icons ====="  
-          for dir in "$RES"/mipmap-*; do  
-            if [ -d "$dir" ]; then  
-              cp "$ICON" "$dir/ic_launcher.png"  
-              cp "$ICON" "$dir/ic_launcher_round.png"  
-              echo "Updated: $dir"  
-            fi  
-          done  
+      - name: Create www folder
+        run: |
+          set -e
 
-          echo "===== Verify icons ====="  
-          find "$RES" \( -name "ic_launcher.png" -o -name "ic_launcher_round.png" \)  
+          mkdir -p www
+          cp -R public/. www/
 
-          echo "===== Icon replacement completed ====="  
+          test -f www/index.html
 
-      - name: Add Permissions to AndroidManifest  
-        run: |  
-          MANIFEST="android/app/src/main/AndroidManifest.xml"  
+          echo "Web files copied successfully"
 
-          sed -i '/<application/i\  
-          <uses-permission android:name="android.permission.INTERNET" />\  
-          <uses-permission android:name="android.permission.RECORD_AUDIO" />\  
-          <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />\  
-          <uses-permission android:name="android.permission.CAMERA" />\  
-          <uses-permission android:name="android.permission.WAKE_LOCK" />' "$MANIFEST"  
+      - name: Add Android platform
+        run: |
+          set -e
 
-      - name: Fix Kotlin Dependencies  
-        run: |  
-          find android -name "*.gradle" -o -name "*.gradle.kts" | while read file; do  
-            sed -i 's/kotlin-stdlib-jdk7/kotlin-stdlib/g' "$file"  
-            sed -i 's/kotlin-stdlib-jdk8/kotlin-stdlib/g' "$file"  
-          done  
+          if [ -f android/gradlew ]; then
+            echo "Android platform already exists"
+          else
+            npx cap add android
+          fi
 
-      - name: Build APK  
-        run: |  
-          cd android  
-          chmod +x gradlew  
-          ./gradlew assembleDebug  
+          npx cap sync android
 
-      - name: Upload APK  
-        uses: actions/upload-artifact@v4  
-        with:  
-          name: radio-connect-apk  
-          path: android/app/build/outputs/apk/debug/app-debug.apk  
+      - name: Change Android App Name
+        run: |
+          set -e
+
+          STRINGS="android/app/src/main/res/values/strings.xml"
+
+          if [ -f "$STRINGS" ]; then
+            sed -i \
+              's|<string name="app_name">[^<]*</string>|<string name="app_name">جهاز لاسلكي نداء ودردشة حقيقي</string>|' \
+              "$STRINGS"
+          fi
+
+      - name: Replace App Icons
+        run: |
+          set -e
+
+          ICON="$GITHUB_WORKSPACE/public/icon.png"
+          RES="android/app/src/main/res"
+
+          test -f "$ICON"
+
+          file "$ICON"
+          ls -lh "$ICON"
+
+          rm -f "$RES/mipmap-anydpi-v26/ic_launcher.xml"
+          rm -f "$RES/mipmap-anydpi-v26/ic_launcher_round.xml"
+
+          for dir in "$RES"/mipmap-*; do
+            if [ -d "$dir" ]; then
+              case "$dir" in
+                *mipmap-anydpi*)
+                  continue
+                  ;;
+              esac
+
+              cp "$ICON" "$dir/ic_launcher.png"
+              cp "$ICON" "$dir/ic_launcher_round.png"
+
+              echo "Updated $dir"
+            fi
+          done
+
+          echo "Icons replaced successfully"
+
+      - name: Add Android Permissions
+        run: |
+          set -e
+
+          MANIFEST="android/app/src/main/AndroidManifest.xml"
+
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path("android/app/src/main/AndroidManifest.xml")
+          content = path.read_text(encoding="utf-8")
+
+          permissions = [
+              "android.permission.INTERNET",
+              "android.permission.RECORD_AUDIO",
+              "android.permission.MODIFY_AUDIO_SETTINGS",
+              "android.permission.CAMERA",
+              "android.permission.WAKE_LOCK"
+          ]
+
+          additions = ""
+
+          for permission in permissions:
+              tag = f'<uses-permission android:name="{permission}" />'
+              if permission not in content:
+                  additions += f"\n    {tag}"
+
+          if additions:
+              if "<application" not in content:
+                  raise SystemExit("ERROR: application tag not found")
+
+              content = content.replace(
+                  "<application",
+                  additions + "\n    <application",
+                  1
+              )
+
+              path.write_text(content, encoding="utf-8")
+
+          print("Android permissions verified")
+          PY
+
+      - name: Verify Android project
+        run: |
+          set -e
+
+          test -f android/gradlew
+          test -f android/app/build.gradle || \
+          test -f android/app/build.gradle.kts
+          test -f android/app/src/main/AndroidManifest.xml
+
+          echo "Android project verified"
+
+      - name: Build APK
+        run: |
+          set -e
+
+          cd android
+
+          chmod +x gradlew
+
+          ./gradlew \
+            --no-daemon \
+            --stacktrace \
+            assembleDebug
+
+      - name: Verify APK
+        run: |
+          set -e
+
+          APK="android/app/build/outputs/apk/debug/app-debug.apk"
+
+          if [ ! -f "$APK" ]; then
+            echo "ERROR: APK file not found"
+            exit 1
+          fi
+
+          ls -lh "$APK"
+
+          echo "APK BUILD SUCCESSFUL"
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: radio-connect-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
+          retention-days: 14
