@@ -1,3 +1,4 @@
+
 name: Build Radio Connect APK
 
 on:
@@ -6,236 +7,122 @@ on:
       - main
   workflow_dispatch:
 
-permissions:
-  contents: read
-
 jobs:
   build:
-    name: Build Radio Connect APK
-    runs-on: ubuntu-24.04
+    name: Build APK
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 20
 
-      - name: Setup Java
-        uses: actions/setup-java@v5
+      - name: Setup Java JDK 21
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 21
 
-      - name: Check project files
-        run: |
-          test -f public/index.html
-          test -f public/icon.png
-          test -f package.json
-          test -f capacitor.config.json
-
-      - name: Install Capacitor
-        run: |
-          npm install --no-save --no-package-lock \
-            @capacitor/core@7 \
-            @capacitor/cli@7 \
-            @capacitor/android@7
-
-      - name: Prepare web files
-        run: |
-          mkdir -p www
-          cp -R public/. www/
-
-      - name: Verify Capacitor configuration
-        run: |
-          node -e "
-          const c = require('./capacitor.config.json');
-
-          if (c.appId !== 'com.radioconnect.app') {
-            throw new Error('Wrong appId');
-          }
-
-          if (c.server?.url !== 'https://radio-connect-server.onrender.com') {
-            throw new Error('Server URL is missing or incorrect');
-          }
-
-          console.log('Capacitor configuration OK');
-          "
-
-      - name: Create Android project
-        run: |
-          if [ ! -f android/gradlew ]; then
-            npx cap add android
-          fi
-
-          npx cap sync android
-
-      - name: Prepare app name and icon
-        run: |
-          python -m pip install Pillow
-
-          python - <<'PY'
-          from PIL import Image, ImageOps
-          from pathlib import Path
-          import re
-
-          icon_path = Path("public/icon.png")
-          icon = Image.open(icon_path).convert("RGBA")
-
-          sizes = {
-              "mipmap-mdpi": 48,
-              "mipmap-hdpi": 72,
-              "mipmap-xhdpi": 96,
-              "mipmap-xxhdpi": 144,
-              "mipmap-xxxhdpi": 192
-          }
-
-          for folder, size in sizes.items():
-              directory = Path("android/app/src/main/res") / folder
-              directory.mkdir(parents=True, exist_ok=True)
-
-              resized = ImageOps.contain(icon, (size, size))
-              canvas = Image.new(
-                  "RGBA",
-                  (size, size),
-                  (0, 0, 0, 0)
-              )
-
-              x = (size - resized.width) // 2
-              y = (size - resized.height) // 2
-
-              canvas.alpha_composite(resized, (x, y))
-
-              canvas.save(directory / "ic_launcher.png")
-              canvas.save(directory / "ic_launcher_round.png")
-
-          adaptive = Path(
-              "android/app/src/main/res/mipmap-anydpi-v26"
-          )
-
-          if adaptive.exists():
-              for name in (
-                  "ic_launcher.xml",
-                  "ic_launcher_round.xml"
-              ):
-                  file = adaptive / name
-                  if file.exists():
-                      file.unlink()
-
-          strings = Path(
-              "android/app/src/main/res/values/strings.xml"
-          )
-
-          content = strings.read_text(encoding="utf-8")
-
-          content, count = re.subn(
-              r'(<string name="app_name">).*?(</string>)',
-              r'\g<1>جهاز لاسلكي نداء ودردشة حقيقي\g<2>',
-              content,
-              count=1
-          )
-
-          if count == 0:
-              raise SystemExit("app_name not found")
-
-          strings.write_text(content, encoding="utf-8")
-
-          manifest = Path(
-              "android/app/src/main/AndroidManifest.xml"
-          )
-
-          content = manifest.read_text(encoding="utf-8")
-
-          permissions = [
-              "android.permission.INTERNET",
-              "android.permission.RECORD_AUDIO",
-              "android.permission.MODIFY_AUDIO_SETTINGS",
-              "android.permission.CAMERA",
-              "android.permission.WAKE_LOCK"
-          ]
-
-          for permission in permissions:
-              tag = (
-                  f'<uses-permission android:name="{permission}" />'
-              )
-
-              if permission not in content:
-                  content = content.replace(
-                      "<application",
-                      tag + "\n    <application",
-                      1
-                  )
-
-          manifest.write_text(content, encoding="utf-8")
-
-          print("App name, icon and permissions prepared")
-          PY
-
-      - name: Set app version
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-          import re
-
-          gradle = Path("android/app/build.gradle")
-          content = gradle.read_text(encoding="utf-8")
-
-          content, code_count = re.subn(
-              r'versionCode\s+\d+',
-              'versionCode 441',
-              content,
-              count=1
-          )
-
-          content, name_count = re.subn(
-              r'versionName\s+["\'][^"\']+["\']',
-              'versionName "4.4.1"',
-              content,
-              count=1
-          )
-
-          if code_count != 1 or name_count != 1:
-              raise SystemExit(
-                  "Could not set Android app version"
-              )
-
-          gradle.write_text(content, encoding="utf-8")
-
-          print("App version: 4.4.1")
-          print("Version code: 441")
-          PY
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
 
       - name: Install Android SDK packages
         run: |
-          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses
+          sdkmanager "platform-tools"
+          sdkmanager "platforms;android-34"
+          sdkmanager "build-tools;34.0.0"
 
-          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" \
-            "platform-tools" \
-            "platforms;android-35" \
-            "build-tools;35.0.0"
+      - name: Install Capacitor
+        run: |
+          npm install @capacitor/core @capacitor/cli @capacitor/android
+
+      - name: Create www folder
+        run: |
+          mkdir -p www
+          cp -r public/* www/
+          rm -f www/package.json
+          rm -f www/gitignore
+          rm -f www/manifest.json
+
+      - name: Add Android platform
+        run: |
+          npx cap add android
+          npx cap sync android
+
+      - name: Change Android App Name
+        run: |
+          STRINGS="android/app/src/main/res/values/strings.xml"
+
+          if [ -f "$STRINGS" ]; then
+            sed -i 's|<string name="app_name">.*</string>|<string name="app_name">جهاز لاسلكي نداء ودردشة حقيقي</string>|' "$STRINGS"
+          fi
+
+      - name: Replace App Icons
+        run: |
+          set -e
+
+          ICON="$GITHUB_WORKSPACE/public/icon.png"
+          RES="android/app/src/main/res"
+
+          if [ ! -f "$ICON" ]; then
+            echo "ERROR: New icon not found: $ICON"
+            exit 1
+          fi
+
+          echo "===== Check new icon ====="
+          file "$ICON"
+          ls -lh "$ICON"
+
+          echo "===== Remove adaptive icon XML files ====="
+          rm -f "$RES/mipmap-anydpi-v26/ic_launcher.xml"
+          rm -f "$RES/mipmap-anydpi-v26/ic_launcher_round.xml"
+
+          echo "===== Replace launcher icons ====="
+          for dir in "$RES"/mipmap-*; do
+            if [ -d "$dir" ]; then
+              cp "$ICON" "$dir/ic_launcher.png"
+              cp "$ICON" "$dir/ic_launcher_round.png"
+              echo "Updated: $dir"
+            fi
+          done
+
+          echo "===== Verify icon files ====="
+          test -f "$RES/mipmap-hdpi/ic_launcher.png"
+          test -f "$RES/mipmap-hdpi/ic_launcher_round.png"
+
+          echo "===== Icon replacement completed ====="
+
+      - name: Add Permissions to AndroidManifest
+        run: |
+          MANIFEST="android/app/src/main/AndroidManifest.xml"
+
+          sed -i '/<application/i\
+          <uses-permission android:name="android.permission.INTERNET" />\
+          <uses-permission android:name="android.permission.RECORD_AUDIO" />\
+          <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />\
+          <uses-permission android:name="android.permission.CAMERA" />\
+          <uses-permission android:name="android.permission.WAKE_LOCK" />' "$MANIFEST"
+
+      - name: Fix Kotlin Dependencies
+        run: |
+          find android \( -name "*.gradle" -o -name "*.gradle.kts" \) -type f | while read file; do
+            sed -i 's/kotlin-stdlib-jdk7/kotlin-stdlib/g' "$file"
+            sed -i 's/kotlin-stdlib-jdk8/kotlin-stdlib/g' "$file"
+          done
 
       - name: Build APK
         run: |
           cd android
           chmod +x gradlew
-
-          ./gradlew \
-            --no-daemon \
-            --stacktrace \
-            assembleDebug
-
-      - name: Verify APK
-        run: |
-          test -f android/app/build/outputs/apk/debug/app-debug.apk
-
-          ls -lh android/app/build/outputs/apk/debug/app-debug.apk
+          ./gradlew assembleDebug
 
       - name: Upload APK
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v4
         with:
           name: radio-connect-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
-          retention-days: 14
-
+          if-no-files-found: error
