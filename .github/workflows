@@ -12,7 +12,7 @@ permissions:
 jobs:
   build:
     name: Build Radio Connect APK
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout code
@@ -52,12 +52,15 @@ jobs:
         run: |
           node -e "
           const c = require('./capacitor.config.json');
+
           if (c.appId !== 'com.radioconnect.app') {
             throw new Error('Wrong appId');
           }
+
           if (c.server?.url !== 'https://radio-connect-server.onrender.com') {
             throw new Error('Server URL is missing or incorrect');
           }
+
           console.log('Capacitor configuration OK');
           "
 
@@ -66,6 +69,7 @@ jobs:
           if [ ! -f android/gradlew ]; then
             npx cap add android
           fi
+
           npx cap sync android
 
       - name: Prepare app name and icon
@@ -93,22 +97,37 @@ jobs:
               directory.mkdir(parents=True, exist_ok=True)
 
               resized = ImageOps.contain(icon, (size, size))
-              canvas = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+              canvas = Image.new(
+                  "RGBA",
+                  (size, size),
+                  (0, 0, 0, 0)
+              )
+
               x = (size - resized.width) // 2
               y = (size - resized.height) // 2
+
               canvas.alpha_composite(resized, (x, y))
 
               canvas.save(directory / "ic_launcher.png")
               canvas.save(directory / "ic_launcher_round.png")
 
-          adaptive = Path("android/app/src/main/res/mipmap-anydpi-v26")
+          adaptive = Path(
+              "android/app/src/main/res/mipmap-anydpi-v26"
+          )
+
           if adaptive.exists():
-              for name in ("ic_launcher.xml", "ic_launcher_round.xml"):
+              for name in (
+                  "ic_launcher.xml",
+                  "ic_launcher_round.xml"
+              ):
                   file = adaptive / name
                   if file.exists():
                       file.unlink()
 
-          strings = Path("android/app/src/main/res/values/strings.xml")
+          strings = Path(
+              "android/app/src/main/res/values/strings.xml"
+          )
+
           content = strings.read_text(encoding="utf-8")
 
           content, count = re.subn(
@@ -123,7 +142,10 @@ jobs:
 
           strings.write_text(content, encoding="utf-8")
 
-          manifest = Path("android/app/src/main/AndroidManifest.xml")
+          manifest = Path(
+              "android/app/src/main/AndroidManifest.xml"
+          )
+
           content = manifest.read_text(encoding="utf-8")
 
           permissions = [
@@ -135,7 +157,10 @@ jobs:
           ]
 
           for permission in permissions:
-              tag = f'<uses-permission android:name="{permission}" />'
+              tag = (
+                  f'<uses-permission android:name="{permission}" />'
+              )
+
               if permission not in content:
                   content = content.replace(
                       "<application",
@@ -144,6 +169,7 @@ jobs:
                   )
 
           manifest.write_text(content, encoding="utf-8")
+
           print("App name, icon and permissions prepared")
           PY
 
@@ -171,15 +197,20 @@ jobs:
           )
 
           if code_count != 1 or name_count != 1:
-              raise SystemExit("Could not set Android app version")
+              raise SystemExit(
+                  "Could not set Android app version"
+              )
 
           gradle.write_text(content, encoding="utf-8")
-          print("App version set to 4.4.1 (441)")
+
+          print("App version: 4.4.1")
+          print("Version code: 441")
           PY
 
       - name: Install Android SDK packages
         run: |
           yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses
+
           "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" \
             "platform-tools" \
             "platforms;android-35" \
@@ -189,11 +220,16 @@ jobs:
         run: |
           cd android
           chmod +x gradlew
-          ./gradlew --no-daemon --stacktrace assembleDebug
+
+          ./gradlew \
+            --no-daemon \
+            --stacktrace \
+            assembleDebug
 
       - name: Verify APK
         run: |
           test -f android/app/build/outputs/apk/debug/app-debug.apk
+
           ls -lh android/app/build/outputs/apk/debug/app-debug.apk
 
       - name: Upload APK
