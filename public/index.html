@@ -450,6 +450,34 @@ let currentUser = {
   isWaveOwner: false, roomCode: null, roomName: null, roomIcon: '💬',
   currentConvId: null, currentChatWith: null
 };
+   // استرجاع غرفي وفرقي من السيرفر - عشان ما تختفي لو خرجت أو نزلت تحديث
+async function restoreMyRoomsAndWaves() {
+  try {
+    const r = await fetch(SERVER_URL + '/api/rooms/my/' + DEVICE_ID);
+    const d = await r.json();
+    if (d.rooms && d.rooms.length > 0) {
+      const first = d.rooms[0];
+      currentUser.roomCode = first.roomCode;
+      currentUser.roomName = first.roomName;
+      localStorage.setItem('rc_room_code', first.roomCode);
+      localStorage.setItem('rc_room_name', first.roomName || '');
+      const el = document.getElementById('roomNameLabel');
+      if (el) el.textContent = first.roomName;
+    } else {
+      const savedCode = localStorage.getItem('rc_room_code');
+      if (savedCode) { currentUser.roomCode = savedCode; currentUser.roomName = localStorage.getItem('rc_room_name') || ''; }
+    }
+    const w = await fetch(SERVER_URL + '/api/waves/my/' + DEVICE_ID);
+    const wd = await w.json();
+    if (wd.waves && wd.waves.length > 0) {
+      const fw = wd.waves[0];
+      currentUser.waveId = fw.waveId;
+      currentUser.waveName = fw.waveName;
+      localStorage.setItem('rc_wave_id', fw.waveId);
+      if (socket) socket.emit('wave_join', { waveId: fw.waveId, deviceId: DEVICE_ID, userName: currentUser.name });
+    }
+  } catch (e) { console.log('restore failed', e); }
+} 
 
 let batteryPercent = null;
 let menuBusy = false;
