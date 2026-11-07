@@ -35,6 +35,7 @@ jobs:
       - name: Install Android SDK packages
         run: |
           yes | sdkmanager --licenses || true
+
           sdkmanager --install \
             "platform-tools" \
             "platforms;android-35" \
@@ -44,20 +45,11 @@ jobs:
         run: |
           set -e
 
-          if [ ! -d public ]; then
-            echo "ERROR: public folder not found"
-            exit 1
-          fi
-
-          if [ ! -f public/index.html ]; then
-            echo "ERROR: public/index.html not found"
-            exit 1
-          fi
-
-          if [ ! -f public/icon.png ]; then
-            echo "ERROR: public/icon.png not found"
-            exit 1
-          fi
+          test -d public
+          test -f public/index.html
+          test -f public/icon.png
+          test -f package.json
+          test -f capacitor.config.json
 
           echo "Project files verified"
 
@@ -65,32 +57,52 @@ jobs:
         run: |
           set -e
 
-          if [ ! -f package.json ]; then
-            npm init -y
-          fi
-
           npm install --no-audit --no-fund \
             @capacitor/core@^7 \
             @capacitor/cli@^7 \
             @capacitor/android@^7
 
-      - name: Prepare Capacitor configuration
+      - name: Set App Name and Preserve Server
         run: |
-          if [ ! -f capacitor.config.json ] && \
-             [ ! -f capacitor.config.ts ] && \
-             [ ! -f capacitor.config.js ]; then
+          set -e
 
-            cat > capacitor.config.json <<'EOF'
-          {
-            "appId": "com.radioconnect.app",
-            "appName": "جهاز لاسلكي نداء ودردشة حقيقي",
-            "webDir": "www",
-            "android": {
-              "allowMixedContent": true
-            }
-          }
-          EOF
-          fi
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          path = Path("capacitor.config.json")
+
+          config = json.loads(
+              path.read_text(encoding="utf-8")
+          )
+
+          config["appId"] = "com.radioconnect.app"
+          config["appName"] = "جهاز لاسلكي نداء ودردشة حقيقي"
+          config["webDir"] = "www"
+
+          if not config.get("server", {}).get("url"):
+              config["server"] = {
+                  "url": "https://radio-connect-server.onrender.com",
+                  "cleartext": False,
+                  "androidScheme": "https"
+              }
+
+          config.setdefault("android", {})
+          config["android"]["allowMixedContent"] = True
+
+          path.write_text(
+              json.dumps(
+                  config,
+                  ensure_ascii=False,
+                  indent=2
+              ),
+              encoding="utf-8"
+          )
+
+          print("New app name saved")
+          print("Server URL preserved")
+          print("App ID preserved")
+          PY
 
       - name: Create www folder
         run: |
@@ -100,6 +112,7 @@ jobs:
           cp -R public/. www/
 
           test -f www/index.html
+          test -f www/icon.png
 
           echo "Web files copied successfully"
 
@@ -121,11 +134,44 @@ jobs:
 
           STRINGS="android/app/src/main/res/values/strings.xml"
 
-          if [ -f "$STRINGS" ]; then
-            sed -i \
-              's|<string name="app_name">[^<]*</string>|<string name="app_name">جهاز لاسلكي نداء ودردشة حقيقي</string>|' \
-              "$STRINGS"
-          fi
+          test -f "$STRINGS"
+
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          path = Path(
+              "android/app/src/main/res/values/strings.xml"
+          )
+
+          content = path.read_text(encoding="utf-8")
+
+          pattern = (
+              r'<string name="app_name">.*?</string>'
+          )
+
+          replacement = (
+              '<string name="app_name">'
+              'جهاز لاسلكي نداء ودردشة حقيقي'
+              '</string>'
+          )
+
+          updated, count = re.subn(
+              pattern,
+              replacement,
+              content,
+              count=1
+          )
+
+          if count == 0:
+              raise SystemExit(
+                  "ERROR: app_name not found in strings.xml"
+              )
+
+          path.write_text(updated, encoding="utf-8")
+
+          print("Android app name updated")
+          PY
 
       - name: Replace App Icons
         run: |
@@ -136,6 +182,7 @@ jobs:
 
           test -f "$ICON"
 
+          echo "===== Icon information ====="
           file "$ICON"
           ls -lh "$ICON"
 
@@ -144,6 +191,7 @@ jobs:
 
           for dir in "$RES"/mipmap-*; do
             if [ -d "$dir" ]; then
+
               case "$dir" in
                 *mipmap-anydpi*)
                   continue
@@ -153,7 +201,7 @@ jobs:
               cp "$ICON" "$dir/ic_launcher.png"
               cp "$ICON" "$dir/ic_launcher_round.png"
 
-              echo "Updated $dir"
+              echo "Updated: $dir"
             fi
           done
 
@@ -163,12 +211,13 @@ jobs:
         run: |
           set -e
 
-          MANIFEST="android/app/src/main/AndroidManifest.xml"
-
           python3 - <<'PY'
           from pathlib import Path
 
-          path = Path("android/app/src/main/AndroidManifest.xml")
+          path = Path(
+              "android/app/src/main/AndroidManifest.xml"
+          )
+
           content = path.read_text(encoding="utf-8")
 
           permissions = [
@@ -182,13 +231,19 @@ jobs:
           additions = ""
 
           for permission in permissions:
-              tag = f'<uses-permission android:name="{permission}" />'
-              if permission not in content:
-                  additions += f"\n    {tag}"
+              tag = (
+                  f'<uses-permission '
+                  f'android:name="{permission}" />'
+              )
+
+              if tag not in content:
+                  additions += "\n    " + tag
 
           if additions:
               if "<application" not in content:
-                  raise SystemExit("ERROR: application tag not found")
+                  raise SystemExit(
+                      "ERROR: application tag not found"
+                  )
 
               content = content.replace(
                   "<application",
@@ -196,7 +251,10 @@ jobs:
                   1
               )
 
-              path.write_text(content, encoding="utf-8")
+              path.write_text(
+                  content,
+                  encoding="utf-8"
+              )
 
           print("Android permissions verified")
           PY
@@ -206,9 +264,8 @@ jobs:
           set -e
 
           test -f android/gradlew
-          test -f android/app/build.gradle || \
-          test -f android/app/build.gradle.kts
           test -f android/app/src/main/AndroidManifest.xml
+          test -f android/app/src/main/res/values/strings.xml
 
           echo "Android project verified"
 
@@ -236,6 +293,7 @@ jobs:
             exit 1
           fi
 
+          echo "===== APK information ====="
           ls -lh "$APK"
 
           echo "APK BUILD SUCCESSFUL"
