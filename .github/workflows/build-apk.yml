@@ -95,8 +95,12 @@ jobs:
 
           echo "===== Icon replacement completed ====="
 
-      - name: Add Permissions to AndroidManifest
-        run: |
+         
+              - name: Add Permissions to AndroidManifest
+          run: |
+          echo "Checking manifest"
+          ls -l android/app/src/main/AndroidManifest.xml
+          echo "Permissions OK
           MANIFEST="android/app/src/main/AndroidManifest.xml"
 
           sed -i '/<application/i\
