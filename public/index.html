@@ -717,6 +717,7 @@ async function registerUser() {
       const el4 = document.getElementById('lcdLine3'); if (el4) el4.textContent = currentUser.radCode + ' • RX';
     }
     if (data.waveId) { currentUser.waveId = data.waveId; currentUser.waveCode = currentUser.waveId; }
+    restoreMyRoomsAndWaves();
     return data;
   } catch (e) { return null; }
 }
