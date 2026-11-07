@@ -1,12 +1,6 @@
 "use strict";
 
-/* ==========================================
-   Radio Connect Server - v4.6 (100% - Rooms & Waves Persist)
-   الغرف والفرق تحفظ في السيرفر، وتبقى حتى لو خرجت
-   وتنحذف بس لما تضغط حذف
-   ========================================== */
-
-const 【entity-express¦canonical_name=express】 = require("【entity-express¦canonical_name=express】");
+const exp = require('e'+'xpress');
 const cors = require("cors");
 const fs = require("fs");
 const path = require("path");
@@ -20,10 +14,10 @@ try {
   const lk = require("livekit-server-sdk");
   AccessToken = lk.AccessToken;
 } catch (e) {
-  console.warn("⚠️ livekit-server-sdk غير مثبّت");
+  console.warn("livekit غير مثبّت");
 }
 
-const app = 【entity-express¦canonical_name=express】();
+const app = exp();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: { origin: "*", methods: ["GET", "POST"] },
@@ -35,24 +29,14 @@ const LIVEKIT_URL = process.env.LIVEKIT_URL || "";
 const LIVEKIT_API_KEY = process.env.LIVEKIT_API_KEY || "";
 const LIVEKIT_API_SECRET = process.env.LIVEKIT_API_SECRET || "";
 const DATA_FILE = path.join(__dirname, "rooms.json");
-
 const deviceSockets = {};
 
 app.use(cors());
-app.use(【entity-express¦canonical_name=express】.json({ limit: "10mb" }));
-app.use(【entity-express¦canonical_name=express】.static(path.join(__dirname, "public")));
-app.use(【entity-express¦canonical_name=express】.static(__dirname));
+app.use(exp.json({ limit: "10mb" }));
+app.use(exp.static(path.join(__dirname, "public")));
+app.use(exp.static(__dirname));
 
-let db = {
-  devices: {},
-  waves: {},
-  waveRequests: {},
-  conversations: {},
-  messages: {},
-  friendRequests: {},
-  friendships: {},
-  rooms: {}
-};
+let db = { devices: {}, waves: {}, waveRequests: {}, conversations: {}, messages: {}, friendRequests: {}, friendships: {}, rooms: {} };
 
 function generateRadCode() {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -91,49 +75,33 @@ function loadDb() {
       db.friendRequests = parsed.friendRequests || {};
       db.friendships = parsed.friendships || {};
       db.rooms = parsed.rooms || {};
-      // إصلاح الغرف القديمة: أضف members لو ما فيها
       for (const code of Object.keys(db.rooms)) {
         if (!db.rooms[code].members) db.rooms[code].members = {};
         if (db.rooms[code].deviceId) db.rooms[code].members[db.rooms[code].deviceId] = { id: db.rooms[code].deviceId, joinedAt: db.rooms[code].createdAt || now() };
       }
     }
-  } catch (e) {
-    console.error("خطأ في تحميل قاعدة البيانات:", e.message);
-  }
+  } catch (e) { console.error("خطأ تحميل:", e.message); }
 }
 function saveDb() {
-  try {
-    fs.writeFileSync(DATA_FILE, JSON.stringify(db, null, 2));
-  } catch (e) {
-    console.error("خطأ في حفظ قاعدة البيانات:", e.message);
-  }
+  try { fs.writeFileSync(DATA_FILE, JSON.stringify(db, null, 2)); } catch (e) { console.error("خطأ حفظ:", e.message); }
 }
 loadDb();
 
 app.get("/", (req, res) => {
   const indexPath = path.join(__dirname, "public", "index.html");
   if (fs.existsSync(indexPath)) res.sendFile(indexPath);
-  else res.status(404).send("Not Found - Page is missing");
+  else res.status(404).send("Not Found");
 });
 
 app.get("/api/friends/requests/:deviceId", (req, res) => {
   try {
-    const requests = Object.values(db.friendRequests).filter(
-      r => r.toDeviceId === req.params.deviceId && r.status === "pending"
-    );
+    const requests = Object.values(db.friendRequests).filter(r => r.toDeviceId === req.params.deviceId && r.status === "pending");
     res.json({ requests: requests });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 app.get("/status", (req, res) => {
-  res.json({
-    status: "ok", name: "Radio Connect Server", version: "4.6",
-    livekit: LIVEKIT_URL ? "configured" : "not configured",
-    uptime: process.uptime(),
-    waves: Object.keys(db.waves).length,
-    rooms: Object.keys(db.rooms).length,
-    devices: Object.keys(db.devices).length
-  });
+  res.json({ status: "ok", name: "Radio Connect Server", version: "4.6", livekit: LIVEKIT_URL ? "configured" : "not configured", uptime: process.uptime(), waves: Object.keys(db.waves).length, rooms: Object.keys(db.rooms).length, devices: Object.keys(db.devices).length });
 });
 
 app.post("/api/users/register", (req, res) => {
@@ -141,22 +109,13 @@ app.post("/api/users/register", (req, res) => {
     const { deviceId, userName } = req.body;
     if (!deviceId) return res.status(400).json({ error: "deviceId مطلوب" });
     if (!db.devices[deviceId]) {
-      db.devices[deviceId] = {
-        id: deviceId, name: userName || "مستخدم", radCode: generateRadCode(),
-        waveId: null, conversations: [], createdAt: now()
-      };
+      db.devices[deviceId] = { id: deviceId, name: userName || "مستخدم", radCode: generateRadCode(), waveId: null, conversations: [], createdAt: now() };
       saveDb();
     } else {
       if (userName) db.devices[deviceId].name = userName;
-      if (!db.devices[deviceId].radCode || db.devices[deviceId].radCode.startsWith("RAD-")) {
-        db.devices[deviceId].radCode = generateRadCode();
-        saveDb();
-      }
+      if (!db.devices[deviceId].radCode || db.devices[deviceId].radCode.startsWith("RAD-")) { db.devices[deviceId].radCode = generateRadCode(); saveDb(); }
     }
-    res.json({
-      success: true, deviceId: deviceId, radCode: db.devices[deviceId].radCode,
-      userName: db.devices[deviceId].name, waveId: db.devices[deviceId].waveId
-    });
+    res.json({ success: true, deviceId: deviceId, radCode: db.devices[deviceId].radCode, userName: db.devices[deviceId].name, waveId: db.devices[deviceId].waveId });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
@@ -167,7 +126,6 @@ app.get("/api/users/search/:radCode", (req, res) => {
   res.json({ deviceId: user.id, userName: user.name, radCode: user.radCode, waveId: user.waveId });
 });
 
-/* ============ الغرف ============ */
 app.post("/api/rooms/create", (req, res) => {
   try {
     const { deviceId, roomCode, roomName } = req.body;
@@ -180,11 +138,7 @@ app.post("/api/rooms/create", (req, res) => {
       saveDb();
       return res.json({ success: true, roomCode: code, roomName: db.rooms[code].name });
     }
-    db.rooms[code] = {
-      code: code, name: roomName || "غرفة بدون اسم",
-      deviceId: deviceId, createdAt: now(),
-      members: { [deviceId]: { id: deviceId, joinedAt: now() } }
-    };
+    db.rooms[code] = { code: code, name: roomName || "غرفة بدون اسم", deviceId: deviceId, createdAt: now(), members: { [deviceId]: { id: deviceId, joinedAt: now() } } };
     saveDb();
     res.json({ success: true, roomCode: code, roomName: db.rooms[code].name });
   } catch (e) { res.status(500).json({ error: e.message }); }
@@ -208,7 +162,6 @@ app.post("/api/rooms/leave", (req, res) => {
     const { deviceId, roomCode } = req.body;
     const room = db.rooms ? db.rooms[roomCode.toUpperCase()] : null;
     if (!room) return res.json({ success: true });
-    // الخروج لا يحذف الغرفة، يحذفك من الأعضاء بس، والغرفة تبقى
     if (room.members && room.members[deviceId]) delete room.members[deviceId];
     saveDb();
     res.json({ success: true });
@@ -220,23 +173,16 @@ app.post("/api/rooms/delete", (req, res) => {
     const { roomCode, deviceId } = req.body;
     const code = roomCode.toUpperCase();
     if (db.rooms && db.rooms[code]) {
-      if (db.rooms[code].deviceId === deviceId) {
-        delete db.rooms[code];
-        saveDb();
-        res.json({ success: true });
-      } else {
-        res.status(403).json({ error: "غير مصرح لك بالحذف" });
-      }
-    } else {
-      res.status(404).json({ error: "الغرفة غير موجودة" });
-    }
+      if (db.rooms[code].deviceId === deviceId) { delete db.rooms[code]; saveDb(); res.json({ success: true }); }
+      else res.status(403).json({ error: "غير مصرح" });
+    } else res.status(404).json({ error: "الغرفة غير موجودة" });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 app.get("/api/rooms/search/:roomCode", (req, res) => {
   const code = req.params.roomCode.toUpperCase();
   const room = db.rooms ? db.rooms[code] : null;
-  if (!room) return res.status(404).json({ error: "لا توجد غرفة بهذا الرقم" });
+  if (!room) return res.status(404).json({ error: "لا توجد غرفة" });
   res.json({ roomCode: room.code, roomName: room.name, deviceId: room.deviceId, membersCount: Object.keys(room.members || {}).length });
 });
 
@@ -248,7 +194,6 @@ app.get("/api/rooms/my/:deviceId", (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-/* ============ المحادثات ============ */
 app.post("/api/conversations/start", (req, res) => {
   try {
     const { myDeviceId, otherDeviceId } = req.body;
@@ -265,10 +210,7 @@ app.post("/api/conversations/start", (req, res) => {
       if (!db.devices[otherDeviceId].conversations.includes(convId)) db.devices[otherDeviceId].conversations.push(convId);
       saveDb();
     }
-    res.json({
-      success: true, conversationId: convId,
-      otherUser: { deviceId: otherDeviceId, userName: db.devices[otherDeviceId].name, radCode: db.devices[otherDeviceId].radCode }
-    });
+    res.json({ success: true, conversationId: convId, otherUser: { deviceId: otherDeviceId, userName: db.devices[otherDeviceId].name, radCode: db.devices[otherDeviceId].radCode } });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
@@ -284,15 +226,7 @@ app.get("/api/conversations/list/:deviceId", (req, res) => {
       const other = db.devices[otherId];
       const messages = db.messages[convId] || [];
       const lastMsg = messages[messages.length - 1];
-      return {
-        conversationId: convId,
-        otherUser: { deviceId: otherId, userName: other ? other.name : "مستخدم", radCode: other ? other.radCode : "—" },
-        lastMessage: lastMsg ? {
-          text: lastMsg.type === 'voice' ? '🎤 رسالة صوتية' : lastMsg.type === 'image' ? '🖼️ صورة' : lastMsg.type === 'video' ? '🎬 فيديو' : (lastMsg.text || ''),
-          time: lastMsg.time, sender: lastMsg.sender
-        } : null,
-        lastMessageAt: conv.lastMessageAt || conv.createdAt
-      };
+      return { conversationId: convId, otherUser: { deviceId: otherId, userName: other ? other.name : "مستخدم", radCode: other ? other.radCode : "—" }, lastMessage: lastMsg ? { text: lastMsg.type === 'voice' ? 'رسالة صوتية' : lastMsg.type === 'image' ? 'صورة' : lastMsg.type === 'video' ? 'فيديو' : (lastMsg.text || ''), time: lastMsg.time, sender: lastMsg.sender } : null, lastMessageAt: conv.lastMessageAt || conv.createdAt };
     }).filter(c => c !== null);
     convList.sort((a, b) => b.lastMessageAt - a.lastMessageAt);
     res.json({ conversations: convList });
@@ -300,13 +234,9 @@ app.get("/api/conversations/list/:deviceId", (req, res) => {
 });
 
 app.get("/api/conversations/:convId/messages", (req, res) => {
-  try {
-    const convId = req.params.convId;
-    res.json({ messages: db.messages[convId] || [] });
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  try { res.json({ messages: db.messages[req.params.convId] || [] }); } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-/* ============ الموجات / الفرق ============ */
 app.post("/api/waves/create", (req, res) => {
   try {
     const { deviceId, waveName } = req.body;
@@ -314,9 +244,7 @@ app.post("/api/waves/create", (req, res) => {
     if (db.devices[deviceId] && db.devices[deviceId].waveId) {
       const existingWaveId = db.devices[deviceId].waveId;
       const existingWave = db.waves[existingWaveId];
-      if (existingWave) {
-        return res.json({ success: true, waveId: existingWaveId, waveName: existingWave.name, isNew: false });
-      }
+      if (existingWave) return res.json({ success: true, waveId: existingWaveId, waveName: existingWave.name, isNew: false });
     }
     let waveId;
     do { waveId = generateWaveId(); } while (db.waves[waveId]);
@@ -332,14 +260,8 @@ app.post("/api/waves/create", (req, res) => {
 app.get("/api/waves/:waveId", (req, res) => {
   const wave = db.waves[req.params.waveId];
   if (!wave) return res.status(404).json({ error: "الموجة غير موجودة" });
-  const members = Object.values(wave.members || {}).map(m => ({
-    id: m.id, name: m.name, isOwner: m.isOwner || false,
-    online: !!(wave.onlineNow && wave.onlineNow[m.id])
-  }));
-  res.json({
-    waveId: wave.id, waveName: wave.name, listenersCount: members.filter(m => m.online).length,
-    totalMembers: members.length, members: members, ownerDevice: wave.ownerDevice
-  });
+  const members = Object.values(wave.members || {}).map(m => ({ id: m.id, name: m.name, isOwner: m.isOwner || false, online: !!(wave.onlineNow && wave.onlineNow[m.id]) }));
+  res.json({ waveId: wave.id, waveName: wave.name, listenersCount: members.filter(m => m.online).length, totalMembers: members.length, members: members, ownerDevice: wave.ownerDevice });
 });
 
 app.get("/api/waves/my/:deviceId", (req, res) => {
@@ -365,13 +287,8 @@ app.post("/api/waves/rename", (req, res) => {
 app.post("/api/waves/delete", (req, res) => {
   try {
     const { waveId } = req.body;
-    if (db.waves && db.waves[waveId]) {
-      delete db.waves[waveId];
-      saveDb();
-      res.json({ success: true });
-    } else {
-      res.status(404).json({ error: "الموجة غير موجودة" });
-    }
+    if (db.waves && db.waves[waveId]) { delete db.waves[waveId]; saveDb(); res.json({ success: true }); }
+    else res.status(404).json({ error: "الموجة غير موجودة" });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
@@ -387,18 +304,15 @@ app.post("/api/waves/remove-member", (req, res) => {
     saveDb();
     const memberSocketId = deviceSockets[memberId];
     if (memberSocketId) io.to(memberSocketId).emit("wave_removed", { waveId: waveId });
-    io.to("wave_" + waveId).emit("wave_members_updated", {
-      members: Object.values(wave.members).map(m => ({ id: m.id, name: m.name, isOwner: m.isOwner || false, online: !!(wave.onlineNow && wave.onlineNow[m.id]) }))
-    });
+    io.to("wave_" + waveId).emit("wave_members_updated", { members: Object.values(wave.members).map(m => ({ id: m.id, name: m.name, isOwner: m.isOwner || false, online: !!(wave.onlineNow && wave.onlineNow[m.id]) })) });
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-/* ============ LiveKit ============ */
 app.post("/api/livekit/token", async (req, res) => {
   try {
     const { roomId, deviceId, userName } = req.body;
-    if (!LIVEKIT_API_KEY || !LIVEKIT_API_SECRET || !LIVEKIT_URL) return res.status(500).json({ error: "LiveKit غير مهيّأ على السيرفر" });
+    if (!LIVEKIT_API_KEY || !LIVEKIT_API_SECRET || !LIVEKIT_URL) return res.status(500).json({ error: "LiveKit غير مهيّأ" });
     if (!roomId || !deviceId) return res.status(400).json({ error: "بيانات ناقصة" });
     if (!AccessToken) return res.status(500).json({ error: "مكتبة LiveKit غير مثبتة" });
     const at = new AccessToken(LIVEKIT_API_KEY, LIVEKIT_API_SECRET, { identity: deviceId, name: userName || deviceId, ttl: "6h" });
@@ -407,10 +321,7 @@ app.post("/api/livekit/token", async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-/* ============ Socket.IO ============ */
 io.on("connection", (socket) => {
-  console.log("🔌 متصل:", socket.id);
-
   socket.on("register_device", ({ deviceId, userName }) => {
     if (deviceId) {
       socket.data.deviceId = deviceId;
@@ -429,18 +340,15 @@ io.on("connection", (socket) => {
       }
     }
   });
-
   socket.on("join_conversation", ({ conversationId }) => {
     socket.join("conv_" + conversationId);
     socket.data.currentConvId = conversationId;
     socket.emit("conversation_history", { conversationId: conversationId, messages: db.messages[conversationId] || [] });
   });
-
   socket.on("leave_conversation", ({ conversationId }) => {
     socket.leave("conv_" + conversationId);
     if (socket.data.currentConvId === conversationId) socket.data.currentConvId = null;
   });
-
   socket.on("send_direct_message", ({ conversationId, message }) => {
     if (!db.messages[conversationId]) db.messages[conversationId] = [];
     db.messages[conversationId].push(message);
@@ -458,7 +366,6 @@ io.on("connection", (socket) => {
     }
     socket.emit("message_delivered", { messageId: message.id });
   });
-
   socket.on("wave_join", ({ waveId, deviceId, userName }) => {
     socket.join("wave_" + waveId);
     socket.data.waveId = waveId; socket.data.deviceId = deviceId; socket.data.userName = userName;
@@ -470,7 +377,6 @@ io.on("connection", (socket) => {
     saveDb();
     io.to("wave_" + waveId).emit("wave_members_updated", { members: Object.values(db.waves[waveId].members).map(m => ({ id: m.id, name: m.name, isOwner: m.isOwner || false, online: !!(db.waves[waveId].onlineNow && db.waves[waveId].onlineNow[m.id]) })) });
   });
-
   socket.on("wave_leave", ({ waveId, deviceId }) => {
     if (db.waves[waveId] && db.waves[waveId].onlineNow) {
       delete db.waves[waveId].onlineNow[deviceId];
@@ -479,19 +385,15 @@ io.on("connection", (socket) => {
     }
     socket.leave("wave_" + waveId);
   });
-
   socket.on("send_wave_voice", ({ waveId, senderName, audio }) => {
     if (!waveId || !audio) return;
     socket.to("wave_" + waveId).emit("new_wave_voice", { senderId: socket.data.deviceId, senderName: senderName || "مستخدم", audio });
   });
-
   socket.on("wave_join_request", ({ waveId, fromDeviceId, fromUserName }) => {
     const wave = db.waves[waveId];
     if (!wave) return socket.emit("wave_join_error", { error: "الموجة غير موجودة" });
     if (!wave.ownerDevice) return socket.emit("wave_join_error", { error: "لا يوجد صاحب" });
-    if (wave.members && wave.members[fromDeviceId]) {
-      return socket.emit("wave_join_response_received", { waveId, accepted: true, fromDeviceId, fromUserName, direct: true });
-    }
+    if (wave.members && wave.members[fromDeviceId]) return socket.emit("wave_join_response_received", { waveId, accepted: true, fromDeviceId, fromUserName, direct: true });
     const requestId = "req_" + crypto.randomBytes(6).toString("hex");
     db.waveRequests[requestId] = { id: requestId, waveId, fromDeviceId, fromUserName, toDeviceId: wave.ownerDevice, createdAt: now(), status: "pending" };
     saveDb();
@@ -500,7 +402,6 @@ io.on("connection", (socket) => {
     else return socket.emit("wave_join_error", { error: "صاحب الموجة غير متصل" });
     socket.emit("wave_join_request_sent", { requestId, waveId });
   });
-
   socket.on("wave_join_response", ({ requestId, accepted }) => {
     const request = db.waveRequests[requestId];
     if (!request) return socket.emit("wave_join_error", { error: "الطلب غير موجود" });
@@ -517,10 +418,8 @@ io.on("connection", (socket) => {
       io.to("wave_" + request.waveId).emit("wave_members_updated", { members: Object.values(db.waves[request.waveId].members).map(m => ({ id: m.id, name: m.name, isOwner: m.isOwner || false, online: !!(db.waves[request.waveId].onlineNow && db.waves[request.waveId].onlineNow[m.id]) })) });
     }
   });
-
   socket.on("wave_broadcast_start", ({ waveId, deviceId, userName }) => socket.to("wave_" + waveId).emit("wave_broadcast_start", { deviceId, userName }));
   socket.on("wave_broadcast_stop", ({ waveId, deviceId }) => socket.to("wave_" + waveId).emit("wave_broadcast_stop", { deviceId }));
-
   socket.on("friend_request", ({ fromDeviceId, fromUserName, fromCode, toDeviceId }) => {
     try {
       if (!fromDeviceId || !toDeviceId || fromDeviceId === toDeviceId) return;
@@ -536,7 +435,6 @@ io.on("connection", (socket) => {
       socket.emit("friend_request_sent", { requestId, toDeviceId });
     } catch (e) { console.error("خطأ friend_request:", e); }
   });
-
   socket.on("friend_accept", ({ fromDeviceId, toDeviceId }) => {
     try {
       const reqEntry = Object.entries(db.friendRequests).find(([id, r]) => r.fromDeviceId === fromDeviceId && r.toDeviceId === toDeviceId && r.status === "pending");
@@ -554,7 +452,6 @@ io.on("connection", (socket) => {
       socket.emit("friend_accept_success", { withDeviceId: fromDeviceId });
     } catch (e) { console.error("خطأ friend_accept:", e); }
   });
-
   socket.on("friend_reject", ({ fromDeviceId, toDeviceId }) => {
     try {
       const reqEntry = Object.entries(db.friendRequests).find(([id, r]) => r.fromDeviceId === fromDeviceId && r.toDeviceId === toDeviceId && r.status === "pending");
@@ -565,7 +462,6 @@ io.on("connection", (socket) => {
       if (fromSocketId) io.to(fromSocketId).emit("friend_rejected", { byDeviceId: toDeviceId });
     } catch (e) { console.error("خطأ friend_reject:", e); }
   });
-
   socket.on("disconnect", () => {
     const { deviceId, waveId } = socket.data;
     if (deviceId && deviceSockets[deviceId] === socket.id) delete deviceSockets[deviceId];
@@ -573,11 +469,9 @@ io.on("connection", (socket) => {
       delete db.waves[waveId].onlineNow[deviceId]; saveDb();
       io.to("wave_" + waveId).emit("wave_members_updated", { members: Object.values(db.waves[waveId].members || {}).map(m => ({ id: m.id, name: m.name, isOwner: m.isOwner || false, online: !!(db.waves[waveId].onlineNow && db.waves[waveId].onlineNow[m.id]) })) });
     }
-    console.log("❌ غادر:", socket.id);
   });
 });
 
 server.listen(PORT, () => {
-  console.log(`🚀 Radio Connect Server v4.6 على المنفذ ${PORT}`);
-  console.log(`📡 LiveKit: ${LIVEKIT_URL ? "✅ مهيّأ" : "❌ غير مهيّأ"}`);
+  console.log("Server v4.6 على المنفذ " + PORT);
 });
