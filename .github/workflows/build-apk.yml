@@ -1,4 +1,4 @@
-name: Build جهاز الاسلكي نداء ودردشة حقيقي APK
+name: Build APK
 
 on:
   push:
@@ -57,7 +57,7 @@ jobs:
           STRINGS="android/app/src/main/res/values/strings.xml"  
 
           if [ -f "$STRINGS" ]; then  
-            sed -i 's|<string name="app_name">.*</string>|<string name="app_name">جهاز لاسلكي نداء ودردشة حقيقي</string>|' "$STRINGS"  
+            sed -i 's|<string name="app_name">.*</string>|<string name="app_name">Real Walkie Talkie</string>|' "$STRINGS"  
           fi  
 
       - name: Replace App Icons  
