@@ -40,9 +40,9 @@ jobs:
           mkdir -p www
           cp -r public/* www/
 
-      - name: Add Android platform
-        run: |
-          npx cap add android || true
+            - name: Add Android platform
+          run: |
+          npx cap add android
           npx cap sync android
 
       - name: Change Android App Name
