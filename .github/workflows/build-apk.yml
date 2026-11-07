@@ -106,12 +106,20 @@ jobs:
           <uses-permission android:name="android.permission.CAMERA" />\
           <uses-permission android:name="android.permission.WAKE_LOCK" />' "$MANIFEST"
 
-      - name: Fix Kotlin Dependencies
-        run: |
-          find android \( -name "*.gradle" -o -name "*.gradle.kts" \) -type f | while read file; do
-            sed -i 's/kotlin-stdlib-jdk7/kotlin-stdlib/g' "$file"
-            sed -i 's/kotlin-stdlib-jdk8/kotlin-stdlib/g' "$file"
-          done
+            - name: Fix Kotlin Dependencies
+           run: |
+          cat >> android/build.gradle <<'EOF'
+          allprojects {
+            configurations.all {
+              resolutionStrategy.eachDependency { details ->
+                if (details.requested.group == 'org.jetbrains.kotlin') {
+                  details.useVersion '1.8.22'
+                }
+              }
+            }
+          }
+          EOF
+          echo "Kotlin version forced to 1.8.22"
 
       - name: Build APK
         run: |
