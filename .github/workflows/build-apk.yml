@@ -1,4 +1,4 @@
-name: Build Radio Connect APK
+name: Build جهاز الاسلكي نداء ودردشة حقيقي APK
 
 on:
   push:
