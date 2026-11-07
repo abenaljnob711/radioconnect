@@ -34,25 +34,12 @@ jobs:
       - name: Install Capacitor
         run: |
           npm install @capacitor/core @capacitor/cli @capacitor/android
-          ls node_modules/@capacitor/android 
+          ls node_modules/@capacitor/android
 
-      - name: Create www folder and copy assets
+      - name: Create www folder
         run: |
-          node -e "
-          const fs = require('fs');
-          const path = require('path');
-          
-          // إنشاء مجلد www إذا لم يكن موجوداً
-          fs.mkdirSync('www', { recursive: true });
-          
-          // نسخ محتويات مجلد public إلى www إن وجدت
-          if (fs.existsSync('public')) {
-            fs.cpSync('public', 'www', { recursive: true });
-            console.log('Public files copied to www successfully.');
-          } else {
-            console.log('Public folder not found, skipping copy.');
-          }
-          "
+          mkdir -p www
+          cp -r public/* www/
 
       - name: Add Android platform
         run: |
@@ -69,27 +56,20 @@ jobs:
         run: |
           echo "Replacing icons"
           ICON="public/icon.png"
-          if [ -f "$ICON" ]; then
-            ls -l "$ICON"
-            for d in android/app/src/main/res/mipmap-hdpi android/app/src/main/res/mipmap-mdpi android/app/src/main/res/mipmap-xhdpi android/app/src/main/res/mipmap-xxhdpi android/app/src/main/res/mipmap-xxxhdpi; do
-              mkdir -p "$d"
-              cp "$ICON" "$d/ic_launcher.png"
-              cp "$ICON" "$d/ic_launcher_round.png"
-            done
-            echo "Icons replaced"
-          else
-            echo "Icon file not found at $ICON, skipping..."
-          fi
+          ls -l "$ICON"
+          rm -rf android/app/src/main/res/mipmap-anydpi-v26
+          for d in android/app/src/main/res/mipmap-hdpi android/app/src/main/res/mipmap-mdpi android/app/src/main/res/mipmap-xhdpi android/app/src/main/res/mipmap-xxhdpi android/app/src/main/res/mipmap-xxxhdpi; do
+            cp "$ICON" "$d/ic_launcher.png"
+            cp "$ICON" "$d/ic_launcher_round.png"
+            cp "$ICON" "$d/ic_launcher_foreground.png"
+          done
+          echo "Icons replaced"
 
       - name: Add Permissions to AndroidManifest
         run: |
           echo "Checking manifest"
-          if [ -f "android/app/src/main/AndroidManifest.xml" ]; then
-            ls -l android/app/src/main/AndroidManifest.xml
-            echo "Manifest OK"
-          else
-            echo "Manifest not found yet."
-          fi
+          ls -l android/app/src/main/AndroidManifest.xml
+          echo "Permissions OK"
 
       - name: Fix Kotlin Dependencies
         run: |
