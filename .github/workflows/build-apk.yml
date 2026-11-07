@@ -1,9 +1,7 @@
-name: Build Radio Connect APK
-
-on:
+name: Build Radio Connect APK on:
 push:
-branches:
-- main
+  branches:
+   - main
 workflow_dispatch:
 
 jobs:
