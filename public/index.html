@@ -1691,6 +1691,8 @@ async function createRoom() {
 
   currentUser.roomName = name;
   currentUser.roomCode = roomCode;
+  localStorage.setItem('rc_saved_room_code', roomCode);
+  localStorage.setItem('rc_saved_room_name', name);
   document.getElementById('roomNameLabel').textContent = name;
   document.getElementById('roomName').value = '';
   document.getElementById('createdRoomCode').textContent = roomCode;
