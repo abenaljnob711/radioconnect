@@ -403,6 +403,7 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
     </nav>
     <div class="bottom-info" id="bottomInfo">إشارة: <span class="hl">قوي</span> • بطارية الراديو: <span class="hl" id="bottomBattery">--%</span></div>
     <div class="chat-input-bar" id="chatInputBar">
+      <canvas id="liveWave" width="300" height="34" style="display:none; width:100%; height:34px; position:absolute; top:-38px; left:0; right:0; background:rgba(0,0,0,.6); border-radius:10px;"></canvas>
       <button class="chat-primary" id="chatPrimaryBtn" title="التسجيل أو الإرسال">🎙️</button>
       <button class="chat-clip-btn" id="chatClip" title="إرفاق">📎</button>
       <input type="text" class="chat-input" id="chatInput" placeholder="اكتب رسالة...">
@@ -418,7 +419,6 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
     <div id="sideMenuContent"></div>
   </aside>
   <div class="members-dropdown" id="membersDropdown"></div>
-
   <div class="modal-overlay" id="modalRoomMenu"><div class="modal"><div class="modal-title">☰ خيارات الغرفة</div><div class="modal-sub">إدارة الغرفة والدردشة</div><button class="modal-menu-item" onclick="openEditRoomName()"><span class="modal-menu-icon">✏️</span><span>تعديل اسم الغرفة</span></button><button class="modal-menu-item" onclick="openEditRoomIcon()"><span class="modal-menu-icon">🎨</span><span>تغيير أيقونة الغرفة</span></button><button class="modal-menu-item danger" onclick="confirmClearChat()"><span class="modal-menu-icon">🗑️</span><span>مسح الدردشة كاملة</span></button><div class="modal-actions" style="grid-template-columns:1fr;margin-top:14px;"><button class="modal-btn cancel" onclick="closeModal('modalRoomMenu')">إغلاق</button></div></div></div>
   <div class="modal-overlay" id="modalEditWave"><div class="modal"><div class="modal-title">✏️ تعديل اسم الفرقة</div><div class="modal-sub">اكتب الاسم الجديد</div><div class="modal-field"><label>اسم الفرقة</label><input type="text" id="newWaveName" maxlength="30"></div><div class="modal-actions"><button class="modal-btn cancel" onclick="closeModal('modalEditWave')">إلغاء</button><button class="modal-btn confirm" onclick="saveWaveName()">حفظ</button></div></div></div>
   <div class="modal-overlay" id="modalEditName"><div class="modal"><div class="modal-title">✏️ تعديل اسم الغرفة</div><div class="modal-sub">اكتب الاسم الجديد</div><div class="modal-field"><label>اسم الغرفة</label><input type="text" id="newRoomName" maxlength="30"></div><div class="modal-actions"><button class="modal-btn cancel" onclick="closeModal('modalEditName')">إلغاء</button><button class="modal-btn confirm" onclick="saveRoomName()">حفظ</button></div></div></div>
