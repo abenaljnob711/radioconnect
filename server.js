@@ -1,12 +1,14 @@
 "use strict";
 
-const exp = require('e'+'xpress');
+const exp = require('express');
 const cors = require("cors");
 const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
 const http = require("http");
 const { Server } = require("socket.io");
+const helmet = require("helmet");
+const rateLimit = require("express-rate-limit");
 require("dotenv").config();
 
 let AccessToken;
@@ -31,10 +33,32 @@ const LIVEKIT_API_SECRET = process.env.LIVEKIT_API_SECRET || "";
 const DATA_FILE = path.join(__dirname, "rooms.json");
 const deviceSockets = {};
 
+// ✅ [الحماية 1]: تفعيل Helmet لحماية السيرفر من ثغرات المتصفح
+app.use(helmet({
+  contentSecurityPolicy: false, 
+  crossOriginEmbedderPolicy: false
+}));
+
 app.use(cors());
 app.use(exp.json({ limit: "10mb" }));
 app.use(exp.static(path.join(__dirname, "public")));
 app.use(exp.static(__dirname));
+
+// ✅ [الحماية 2]: تحديد عدد المحاولات لمنع تخمين أكواد الغرف والفرق
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 دقيقة
+  max: 100, // 100 طلب كحد أقصى لكل IP
+  message: { error: "محاولات كثيرة جداً، يرجى المحاولة لاحقاً" },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// تطبيق الحماية على مسارات البحث والانضمام
+app.use("/api/rooms/join", apiLimiter);
+app.use("/api/rooms/search", apiLimiter);
+app.use("/api/waves/join", apiLimiter);
+app.use("/api/waves/search", apiLimiter);
+app.use("/api/users/search", apiLimiter);
 
 let db = { devices: {}, waves: {}, waveRequests: {}, conversations: {}, messages: {}, friendRequests: {}, friendships: {}, rooms: {} };
 
@@ -101,7 +125,7 @@ app.get("/api/friends/requests/:deviceId", (req, res) => {
 });
 
 app.get("/status", (req, res) => {
-  res.json({ status: "ok", name: "Radio Connect Server", version: "4.6", livekit: LIVEKIT_URL ? "configured" : "not configured", uptime: process.uptime(), waves: Object.keys(db.waves).length, rooms: Object.keys(db.rooms).length, devices: Object.keys(db.devices).length });
+  res.json({ status: "ok", name: "Radio Connect Server", version: "4.7", livekit: LIVEKIT_URL ? "configured" : "not configured", uptime: process.uptime(), waves: Object.keys(db.waves).length, rooms: Object.keys(db.rooms).length, devices: Object.keys(db.devices).length });
 });
 
 app.post("/api/users/register", (req, res) => {
@@ -135,6 +159,9 @@ app.post("/api/rooms/create", (req, res) => {
     if (db.rooms[code]) {
       if (!db.rooms[code].members) db.rooms[code].members = {};
       db.rooms[code].members[deviceId] = { id: deviceId, joinedAt: now() };
+      if (roomName && (!db.rooms[code].name || db.rooms[code].name === 'غرفة بدون اسم')) {
+        db.rooms[code].name = roomName;
+      }
       saveDb();
       return res.json({ success: true, roomCode: code, roomName: db.rooms[code].name });
     }
@@ -322,6 +349,8 @@ app.post("/api/livekit/token", async (req, res) => {
 });
 
 io.on("connection", (socket) => {
+  
+  // ✅ [الحماية 3]: ربط الـ Socket بالجهاز لمنع الانتحال
   socket.on("register_device", ({ deviceId, userName }) => {
     if (deviceId) {
       socket.data.deviceId = deviceId;
@@ -340,16 +369,31 @@ io.on("connection", (socket) => {
       }
     }
   });
+
+  // دالة مساعدة للتحقق من الهوية
+  const checkAuth = () => {
+    if (!socket.data.deviceId) {
+      socket.emit("auth_error", { error: "غير مصرح. يرجى تسجيل الجهاز أولاً." });
+      return false;
+    }
+    return true;
+  };
+
   socket.on("join_conversation", ({ conversationId }) => {
+    if (!checkAuth()) return;
     socket.join("conv_" + conversationId);
     socket.data.currentConvId = conversationId;
     socket.emit("conversation_history", { conversationId: conversationId, messages: db.messages[conversationId] || [] });
   });
+  
   socket.on("leave_conversation", ({ conversationId }) => {
+    if (!checkAuth()) return;
     socket.leave("conv_" + conversationId);
     if (socket.data.currentConvId === conversationId) socket.data.currentConvId = null;
   });
+  
   socket.on("send_direct_message", ({ conversationId, message }) => {
+    if (!checkAuth()) return;
     if (!db.messages[conversationId]) db.messages[conversationId] = [];
     db.messages[conversationId].push(message);
     if (db.conversations[conversationId]) db.conversations[conversationId].lastMessageAt = now();
@@ -366,9 +410,16 @@ io.on("connection", (socket) => {
     }
     socket.emit("message_delivered", { messageId: message.id });
   });
+  
   socket.on("wave_join", ({ waveId, deviceId, userName }) => {
+    if (!checkAuth()) return;
+    if (socket.data.deviceId !== deviceId) {
+       return socket.emit("wave_join_error", { error: "خطأ في التحقق من الهوية" });
+    }
     socket.join("wave_" + waveId);
-    socket.data.waveId = waveId; socket.data.deviceId = deviceId; socket.data.userName = userName;
+    socket.data.waveId = waveId; 
+    socket.data.deviceId = deviceId; 
+    socket.data.userName = userName;
     if (!db.waves[waveId]) db.waves[waveId] = { id: waveId, name: waveId, ownerDevice: null, createdAt: now(), members: {}, onlineNow: {} };
     if (!db.waves[waveId].members) db.waves[waveId].members = {};
     if (!db.waves[waveId].onlineNow) db.waves[waveId].onlineNow = {};
@@ -377,7 +428,9 @@ io.on("connection", (socket) => {
     saveDb();
     io.to("wave_" + waveId).emit("wave_members_updated", { members: Object.values(db.waves[waveId].members).map(m => ({ id: m.id, name: m.name, isOwner: m.isOwner || false, online: !!(db.waves[waveId].onlineNow && db.waves[waveId].onlineNow[m.id]) })) });
   });
+
   socket.on("wave_leave", ({ waveId, deviceId }) => {
+    if (!checkAuth()) return;
     if (db.waves[waveId] && db.waves[waveId].onlineNow) {
       delete db.waves[waveId].onlineNow[deviceId];
       saveDb();
@@ -385,11 +438,15 @@ io.on("connection", (socket) => {
     }
     socket.leave("wave_" + waveId);
   });
+  
   socket.on("send_wave_voice", ({ waveId, senderName, audio }) => {
+    if (!checkAuth()) return;
     if (!waveId || !audio) return;
     socket.to("wave_" + waveId).emit("new_wave_voice", { senderId: socket.data.deviceId, senderName: senderName || "مستخدم", audio });
   });
+  
   socket.on("wave_join_request", ({ waveId, fromDeviceId, fromUserName }) => {
+    if (!checkAuth()) return;
     const wave = db.waves[waveId];
     if (!wave) return socket.emit("wave_join_error", { error: "الموجة غير موجودة" });
     if (!wave.ownerDevice) return socket.emit("wave_join_error", { error: "لا يوجد صاحب" });
@@ -402,7 +459,9 @@ io.on("connection", (socket) => {
     else return socket.emit("wave_join_error", { error: "صاحب الموجة غير متصل" });
     socket.emit("wave_join_request_sent", { requestId, waveId });
   });
+  
   socket.on("wave_join_response", ({ requestId, accepted }) => {
+    if (!checkAuth()) return;
     const request = db.waveRequests[requestId];
     if (!request) return socket.emit("wave_join_error", { error: "الطلب غير موجود" });
     request.status = accepted ? "accepted" : "rejected";
@@ -418,9 +477,19 @@ io.on("connection", (socket) => {
       io.to("wave_" + request.waveId).emit("wave_members_updated", { members: Object.values(db.waves[request.waveId].members).map(m => ({ id: m.id, name: m.name, isOwner: m.isOwner || false, online: !!(db.waves[request.waveId].onlineNow && db.waves[request.waveId].onlineNow[m.id]) })) });
     }
   });
-  socket.on("wave_broadcast_start", ({ waveId, deviceId, userName }) => socket.to("wave_" + waveId).emit("wave_broadcast_start", { deviceId, userName }));
-  socket.on("wave_broadcast_stop", ({ waveId, deviceId }) => socket.to("wave_" + waveId).emit("wave_broadcast_stop", { deviceId }));
+  
+  socket.on("wave_broadcast_start", ({ waveId, deviceId, userName }) => {
+    if (!checkAuth()) return;
+    socket.to("wave_" + waveId).emit("wave_broadcast_start", { deviceId, userName });
+  });
+  
+  socket.on("wave_broadcast_stop", ({ waveId, deviceId }) => {
+    if (!checkAuth()) return;
+    socket.to("wave_" + waveId).emit("wave_broadcast_stop", { deviceId });
+  });
+  
   socket.on("friend_request", ({ fromDeviceId, fromUserName, fromCode, toDeviceId }) => {
+    if (!checkAuth()) return;
     try {
       if (!fromDeviceId || !toDeviceId || fromDeviceId === toDeviceId) return;
       const friendshipKey = [fromDeviceId, toDeviceId].sort().join("_");
@@ -435,7 +504,9 @@ io.on("connection", (socket) => {
       socket.emit("friend_request_sent", { requestId, toDeviceId });
     } catch (e) { console.error("خطأ friend_request:", e); }
   });
+  
   socket.on("friend_accept", ({ fromDeviceId, toDeviceId }) => {
+    if (!checkAuth()) return;
     try {
       const reqEntry = Object.entries(db.friendRequests).find(([id, r]) => r.fromDeviceId === fromDeviceId && r.toDeviceId === toDeviceId && r.status === "pending");
       if (!reqEntry) return;
@@ -452,7 +523,9 @@ io.on("connection", (socket) => {
       socket.emit("friend_accept_success", { withDeviceId: fromDeviceId });
     } catch (e) { console.error("خطأ friend_accept:", e); }
   });
+  
   socket.on("friend_reject", ({ fromDeviceId, toDeviceId }) => {
+    if (!checkAuth()) return;
     try {
       const reqEntry = Object.entries(db.friendRequests).find(([id, r]) => r.fromDeviceId === fromDeviceId && r.toDeviceId === toDeviceId && r.status === "pending");
       if (!reqEntry) return;
@@ -462,6 +535,7 @@ io.on("connection", (socket) => {
       if (fromSocketId) io.to(fromSocketId).emit("friend_rejected", { byDeviceId: toDeviceId });
     } catch (e) { console.error("خطأ friend_reject:", e); }
   });
+  
   socket.on("disconnect", () => {
     const { deviceId, waveId } = socket.data;
     if (deviceId && deviceSockets[deviceId] === socket.id) delete deviceSockets[deviceId];
@@ -473,5 +547,5 @@ io.on("connection", (socket) => {
 });
 
 server.listen(PORT, () => {
-  console.log("Server v4.6 على المنفذ " + PORT);
+  console.log("Server v4.7 مع الحماية على المنفذ " + PORT);
 });
