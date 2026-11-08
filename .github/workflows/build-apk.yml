@@ -19,7 +19,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2. إعداد Node.js (تم إزالة cache لحل مشكلة عدم وجود package-lock.json)
+      # 2. إعداد Node.js - بدون cache عشان ما فيه package-lock.json
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -34,7 +34,7 @@ jobs:
 
       # 4. إعداد Android SDK
       - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v4
 
       - name: Install Android SDK
         run: |
@@ -45,43 +45,22 @@ jobs:
       # 5. تثبيت مكتبات المشروع
       - name: Install dependencies
         run: |
-          if [ -f package-lock.json ]; then
-            npm ci
-          else
-            npm install --no-audit --no-fund
-          fi
-
-          npm install \
-            @capacitor/core \
-            @capacitor/cli \
-            @capacitor/android \
-            --no-audit --no-fund
+          npm install --no-audit --no-fund
+          npm install @capacitor/core @capacitor/cli @capacitor/android --no-audit --no-fund
 
       # 6. تجهيز ملفات التطبيق
       - name: Prepare Web Assets
         run: |
           set -e
-
           rm -rf www
           mkdir -p www
-
-          if [ -d public ]; then
-            cp -a public/. www/
-          fi
-
-          if [ ! -f www/index.html ] && [ -f index.html ]; then
-            cp index.html www/index.html
-          fi
-
-          if [ ! -f www/index.html ]; then
-            echo "ERROR: index.html not found"
-            exit 1
-          fi
-
+          if [ -d public ]; then cp -a public/. www/; fi
+          if [ ! -f www/index.html ] && [ -f index.html ]; then cp index.html www/index.html; fi
+          if [ ! -f www/index.html ]; then echo "ERROR: index.html not found"; exit 1; fi
           echo "Web assets prepared successfully"
           ls -la www
 
-      # 7. إعداد Capacitor
+      # 7. إعداد Capacitor - بدون server.url عشان التطبيق يشتغل من www وما يطلع شاشة بيضاء اذا السيرفر نايم
       - name: Configure Capacitor
         run: |
           cat > capacitor.config.json << 'EOF'
@@ -89,67 +68,35 @@ jobs:
             "appId": "com.radioconnect.app",
             "appName": "جهاز لاسلكي نداء ودردشة حقيقي",
             "webDir": "www",
-            "server": {
-              "url": "https://radio-connect-server.onrender.com",
-              "cleartext": false,
-              "androidScheme": "https"
-            },
-            "android": {
-              "allowMixedContent": true,
-              "captureInput": true,
-              "webContentsDebuggingEnabled": true
-            }
+            "server": { "cleartext": true },
+            "android": { "allowMixedContent": true }
           }
           EOF
-
           rm -f capacitor.config.ts
 
       # 8. تجهيز Android
       - name: Sync Capacitor
         run: |
           set -e
-
-          if [ ! -d android ]; then
-            npx cap add android
-          fi
-
+          if [ ! -d android ]; then npx cap add android; fi
           npx cap sync android
 
-      # 9. إضافة صلاحيات التطبيق
+      # 9. إضافة صلاحيات التطبيق - بس اللي يحتاجها الراديو، بدون SMS وبدون جهات اتصال عشان Google ما يحظره
       - name: Fix Android Permissions
         run: |
           python3 << 'PYEOF'
-          import os
-          import re
-
+          import os, re
           path = "android/app/src/main/AndroidManifest.xml"
-
           if not os.path.exists(path):
               raise SystemExit("AndroidManifest.xml not found")
-
           with open(path, encoding="utf-8") as f:
               content = f.read()
-
           permissions = [
               "RECORD_AUDIO",
               "MODIFY_AUDIO_SETTINGS",
               "INTERNET",
               "ACCESS_NETWORK_STATE",
               "ACCESS_WIFI_STATE",
-              "CAMERA",
-              "SEND_SMS",
-              "RECEIVE_SMS",
-              "READ_SMS",
-              "RECEIVE_MMS",
-              "READ_CONTACTS",
-              "WRITE_CONTACTS",
-              "READ_EXTERNAL_STORAGE",
-              "WRITE_EXTERNAL_STORAGE",
-              "READ_MEDIA_IMAGES",
-              "READ_MEDIA_VIDEO",
-              "READ_MEDIA_AUDIO",
-              "ACCESS_FINE_LOCATION",
-              "ACCESS_COARSE_LOCATION",
               "BLUETOOTH",
               "BLUETOOTH_CONNECT",
               "BLUETOOTH_SCAN",
@@ -159,42 +106,20 @@ jobs:
               "VIBRATE",
               "RECEIVE_BOOT_COMPLETED"
           ]
-
           missing = []
-
           for permission in permissions:
               name = "android.permission." + permission
-
-              pattern = (
-                  r'<uses-permission\b[^>]*'
-                  r'android:name\s*=\s*["\']'
-                  + re.escape(name) +
-                  r'["\']'
-              )
-
+              pattern = r'<uses-permission\b[^>]*android:name\s*=\s*["\']' + re.escape(name) + r'["\']'
               if not re.search(pattern, content):
-                  missing.append(
-                      '    <uses-permission android:name="' +
-                      name + '" />'
-                  )
-
+                  missing.append('    <uses-permission android:name="' + name + '" />')
           if missing:
               match = re.search(r'<manifest\b[^>]*>', content)
-
               if not match:
                   raise SystemExit("Invalid Android manifest")
-
               position = match.end()
-
-              content = (
-                  content[:position] +
-                  "\n" + "\n".join(missing) +
-                  content[position:]
-              )
-
+              content = content[:position] + "\n" + "\n".join(missing) + content[position:]
               with open(path, "w", encoding="utf-8") as f:
                   f.write(content)
-
           print("Android permissions checked successfully")
           PYEOF
 
@@ -202,111 +127,75 @@ jobs:
       - name: Generate App Icons
         run: |
           set -e
-
-          if [ ! -f public/icon.png ]; then
-            echo "ERROR: public/icon.png not found"
-            exit 1
-          fi
-
+          if [ ! -f public/icon.png ]; then echo "ERROR: public/icon.png not found"; exit 1; fi
           python3 -m pip install Pillow
-
           python3 << 'PYEOF'
           from PIL import Image, ImageOps
           import os
-
           source = "public/icon.png"
           res = "android/app/src/main/res"
-
           icon = Image.open(source).convert("RGBA")
-
-          sizes = {
-              "mipmap-mdpi": 48,
-              "mipmap-hdpi": 72,
-              "mipmap-xhdpi": 96,
-              "mipmap-xxhdpi": 144,
-              "mipmap-xxxhdpi": 192
-          }
-
+          sizes = {"mipmap-mdpi": 48, "mipmap-hdpi": 72, "mipmap-xhdpi": 96, "mipmap-xxhdpi": 144, "mipmap-xxxhdpi": 192}
           for folder, size in sizes.items():
               target = os.path.join(res, folder)
               os.makedirs(target, exist_ok=True)
-
-              resized = ImageOps.fit(
-                  icon,
-                  (size, size),
-                  method=Image.Resampling.LANCZOS
-              )
-
-              for filename in [
-                  "ic_launcher.png",
-                  "ic_launcher_round.png",
-                  "ic_launcher_foreground.png"
-              ]:
-                  resized.save(
-                      os.path.join(target, filename),
-                      "PNG"
-                  )
-
+              resized = ImageOps.fit(icon, (size, size), method=Image.Resampling.LANCZOS)
+              for filename in ["ic_launcher.png", "ic_launcher_round.png", "ic_launcher_foreground.png"]:
+                  resized.save(os.path.join(target, filename), "PNG")
+          # Adaptive Icon - خلفية سوداء مباشرة، بدون لون مفقود
           adaptive_dir = os.path.join(res, "mipmap-anydpi-v26")
           os.makedirs(adaptive_dir, exist_ok=True)
-
-          adaptive_xml = '''<?xml version="1.0" encoding="utf-8"?>
-          <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
-              <background android:drawable="@color/ic_launcher_background"/>
-              <foreground android:drawable="@mipmap/ic_launcher_foreground"/>
-          </adaptive-icon>'''
-
+          adaptive_xml = '''<?xml version="1.0" encoding="utf-8"?>\n<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">\n    <background android:drawable="@android:color/black"/>\n    <foreground android:drawable="@mipmap/ic_launcher_foreground"/>\n</adaptive-icon>'''
           with open(os.path.join(adaptive_dir, "ic_launcher.xml"), "w", encoding="utf-8") as f:
               f.write(adaptive_xml)
-
           with open(os.path.join(adaptive_dir, "ic_launcher_round.xml"), "w", encoding="utf-8") as f:
               f.write(adaptive_xml)
-
           print("All launcher and adaptive icons generated successfully")
           PYEOF
 
-      # 11. التحقق من إعدادات Android
+      # 11. إصلاح Kotlin Duplicate - هذا اللي كان يفشل البناء
+      - name: Fix Kotlin Duplicate
+        run: |
+          python3 << 'PYEOF'
+          import re
+          p = "android/build.gradle"
+          with open(p, encoding="utf-8") as f:
+              t = f.read()
+          t = re.sub(r"kotlin_version\s*=\s*['\"][^'\"]+['\"]", "kotlin_version = '1.9.24'", t)
+          if "kotlin-stdlib:1.9.24" not in t:
+              t += "\nallprojects {\n  configurations.all {\n    resolutionStrategy {\n      force 'org.jetbrains.kotlin:kotlin-stdlib:1.9.24'\n      force 'org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.9.24'\n      force 'org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.24'\n    }\n  }\n}\n"
+          with open(p, "w", encoding="utf-8") as f:
+              f.write(t)
+          print("Kotlin fixed to 1.9.24")
+          PYEOF
+
+      # 12. التحقق من إعدادات Android
       - name: Verify Android Configuration
         run: |
           set -e
-
           test -f android/gradlew
           test -f android/app/src/main/AndroidManifest.xml
           test -f android/app/build.gradle
           test -f capacitor.config.json
-
           echo "Android configuration verified"
 
-      # 12. بناء APK
+      # 13. بناء APK
       - name: Build APK
         run: |
           set -e
-
           cd android
-
           chmod +x gradlew
+          ./gradlew --no-daemon clean assembleDebug --stacktrace
 
-          ./gradlew \
-            --no-daemon \
-            clean \
-            assembleDebug \
-            --stacktrace
-
-      # 13. التأكد من وجود APK
+      # 14. التأكد من وجود APK
       - name: Verify APK
         run: |
           set -e
-
           APK="android/app/build/outputs/apk/debug/app-debug.apk"
-
-          if [ ! -f "$APK" ]; then
-            echo "ERROR: APK was not generated"
-            exit 1
-          fi
-
+          if [ ! -f "$APK" ]; then echo "ERROR: APK was not generated"; exit 1; fi
           ls -lh "$APK"
 
-      # 14. رفع APK
+      # 15. رفع APK
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
