@@ -77,8 +77,8 @@ body::before { content: ''; position: fixed; inset: 0; background: radial-gradie
 #waveStatusChip.live .status-text { color: var(--green); }
 #waveStatusChip .wave-timer { font-family: 'Courier New', monospace; color: var(--text-dim); font-size: 11px; font-weight: 700; }
 #waveStatusChip.live .wave-timer { color: var(--green); }
-#friendRequestsChip, #addFriendBtn { cursor: pointer; position: relative; }
-#friendRequestsChip:active, #addFriendBtn:active { border-color: var(--cyan); box-shadow: 0 0 12px rgba(0,229,255,.3); }
+#friendRequestsChip { cursor: pointer; position: relative; }
+#friendRequestsChip:active { border-color: var(--cyan); box-shadow: 0 0 12px rgba(0,229,255,.3); }
 #searchWaveChip, #searchUserChip2 { cursor: pointer; }
 #friendReqBadge { position: absolute; top: -4px; left: -4px; background: var(--red); color: #fff; border-radius: 50%; min-width: 18px; height: 18px; font-size: 10px; font-weight: 900; align-items: center; justify-content: center; padding: 0 4px; box-shadow: 0 0 8px var(--red); display: none; }
 .radio-stage { position: relative; height: 360px; display: flex; align-items: center; justify-content: center; margin: 8px 0 16px; }
@@ -378,9 +378,7 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
           <span class="sub" id="roomSubLabel">محادثاتك الخاصة</span>
         </div>
       </div>
-       <div class="status-row" style="grid-template-columns:1fr 1fr;">
-        <!-- تم استبدال زر طلبات الصداقة الفارغ بزر إضافة صديق -->
-      </div>
+      <!-- تم حذف زر إضافة صديق بالكامل من هنا -->
       <div id="chatListContainer" style="margin-top:14px;"></div>
       <div class="empty-room" id="emptyRoom">
         <div class="empty-room-icon">💬</div>
@@ -445,7 +443,6 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
     </nav>
     <div class="bottom-info" id="bottomInfo">إشارة: <span class="hl">قوي</span> • بطارية الراديو: <span class="hl" id="bottomBattery">--%</span></div>
     <div class="chat-input-bar" id="chatInputBar">
-      <!-- استخدام الكانفس للتموج -->
       <canvas id="liveWave" width="300" height="34" style="display:none; width:100%; height:34px; position:absolute; top:-38px; left:0; right:0; background:rgba(0,0,0,.6); border-radius:10px;"></canvas>
       <button class="chat-primary" id="chatPrimaryBtn" title="التسجيل أو الإرسال">🎙️</button>
       <button class="chat-clip-btn" id="chatClip" title="إرفاق">📎</button>
@@ -696,6 +693,43 @@ async function restoreMyRoomsAndWaves() {
     }
   } catch (e) { console.log('restore failed', e); }
 } 
+
+// دالة جديدة لاستعادة الفرق والغرف المشترك بها من السيرفر تلقائياً
+async function autoRestoreFromServer() {
+  try {
+    const waveRes = await fetch(SERVER_URL + '/api/waves/my/' + DEVICE_ID);
+    const waveData = await waveRes.json();
+    if (waveData.waves && waveData.waves.length > 0) {
+      const latestWave = waveData.waves[0];
+      if (!currentUser.waveId || currentUser.waveId !== latestWave.waveId) {
+        currentUser.waveId = latestWave.waveId;
+        currentUser.waveName = latestWave.waveName;
+        localStorage.setItem('rc_saved_wave_id', latestWave.waveId);
+        localStorage.setItem('rc_saved_wave_name', latestWave.waveName);
+        
+        const el2 = document.getElementById('waveNameLabel'); if (el2) el2.textContent = latestWave.waveName;
+        const el1 = document.getElementById('waveCodeChip'); if (el1) el1.innerHTML = latestWave.waveId + ' <span style="font-size:12px;">🔑</span>';
+        
+        if (socket) socket.emit('wave_join', { waveId: latestWave.waveId, deviceId: DEVICE_ID, userName: currentUser.name });
+      }
+    }
+
+    const roomRes = await fetch(SERVER_URL + '/api/rooms/my/' + DEVICE_ID);
+    const roomData = await roomRes.json();
+    if (roomData.rooms && roomData.rooms.length > 0) {
+      const latestRoom = roomData.rooms[0];
+      currentUser.roomCode = latestRoom.roomCode;
+      currentUser.roomName = latestRoom.roomName;
+      localStorage.setItem('rc_saved_room_code', latestRoom.roomCode);
+      localStorage.setItem('rc_saved_room_name', latestRoom.roomName);
+      
+      const el = document.getElementById('roomNameLabel');
+      if (el) el.textContent = latestRoom.roomName;
+    }
+  } catch (e) {
+    console.log('Auto-restore failed:', e);
+  }
+}
 
 function factoryReset() {
   if (!confirm('⚠️ تحذير: سيتم مسح جميع البيانات. متأكد؟')) return;
@@ -1013,7 +1047,8 @@ async function joinWaveAsMember(waveId) {
     if (socket) socket.emit('wave_leave', { waveId: currentUser.waveId, deviceId: currentUser.id });
   }
 
-  currentUser.waveId = waveId; currentUser.waveCode = waveId;
+  currentUser.waveId = waveId; 
+  currentUser.waveCode = waveId;
   currentUser.isWaveOwner = false;
   localStorage.setItem('rc_is_wave_owner', 'false');
   
@@ -1024,16 +1059,23 @@ async function joinWaveAsMember(waveId) {
       currentUser.waveName = data.waveName;
       const el1 = document.getElementById('waveNameValue'); if (el1) el1.textContent = data.waveName;
       const el2 = document.getElementById('waveNameLabel'); if (el2) el2.textContent = data.waveName;
+      
+      localStorage.setItem('rc_saved_wave_id', waveId);
+      localStorage.setItem('rc_saved_wave_name', data.waveName);
+      
       addWaveToHistory(waveId, data.waveName);
     }
     if (data.members) renderWaveMembers(data.members);
-  } catch (e) {}
+  } catch (e) {
+    const oldName = localStorage.getItem('rc_saved_wave_name');
+    if (oldName) {
+      const el2 = document.getElementById('waveNameLabel'); if (el2) el2.textContent = oldName;
+    }
+  }
   
   const el1 = document.getElementById('waveCodeChip'); if (el1) el1.innerHTML = waveId + ' <span style="font-size:12px;">🔑</span>';
   const el2 = document.getElementById('waveCodeValue'); if (el2) el2.textContent = waveId;
   const el3 = document.getElementById('lcdLine3'); if (el3) el3.textContent = waveId + ' • RX';
-  localStorage.setItem('rc_saved_wave_id', waveId);
-  localStorage.setItem('rc_saved_wave_name', currentUser.waveName || '');
   
   if (socket) socket.emit('wave_join', { waveId: waveId, deviceId: currentUser.id, userName: currentUser.name });
   toast('✅ انضممت إلى الفرقة', 'success');
@@ -1419,8 +1461,6 @@ function addChatMessage(msg, direction, scroll = true) {
   }
   div.innerHTML = `<div class="msg-header">${senderName}</div><div class="msg-body" data-msgid="${msg.id || ''}">${bodyHtml}</div>`;
   
-  // ملاحظة: تم إزالة ربط حدث playBtn هنا لأنه أصبح داخل setupMessageAudioAnalyser
-  
   let pressTimer;
   const msgBody = div.querySelector('.msg-body');
   msgBody.addEventListener('pointerdown', () => {
@@ -1488,7 +1528,6 @@ async function startVoiceRecording() {
     isRecordingVoice = true;
     voiceStartTime = Date.now();
     
-    // إظهار التموج أثناء التسجيل
     startLiveWave(stream, '#ff4d6d');
 
     chatPrimaryBtn.classList.add('recording');
@@ -1527,8 +1566,6 @@ async function stopVoiceRecordingAndSend() {
     voiceRecorder = null;
   };
   voiceRecorder.stop();
-  
-  // إيقاف التموج
   stopLiveWave();
 }
 
@@ -2087,7 +2124,6 @@ function switchToRoom(roomCode, roomName) {
 
 document.getElementById('operationsChip').addEventListener('click', openOperationsList);
 document.getElementById('friendRequestsChip').addEventListener('click', openFriendRequests);
-// تم إزالة مستمع friendRequestsChip2 لأنه أصبح زر إضافة صديق
 
 setTimeout(updateFriendBadge, 500);
 
@@ -2104,6 +2140,8 @@ window.addEventListener('DOMContentLoaded', async () => {
   await registerUser();
   initSocket();
   refreshChatList();
+
+  await autoRestoreFromServer();
 
   const savedWaveId = localStorage.getItem('rc_saved_wave_id');
   const savedWaveName = localStorage.getItem('rc_saved_wave_name');
