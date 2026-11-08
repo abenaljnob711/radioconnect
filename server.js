@@ -33,6 +33,9 @@ const LIVEKIT_API_SECRET = process.env.LIVEKIT_API_SECRET || "";
 const DATA_FILE = path.join(__dirname, "rooms.json");
 const deviceSockets = {};
 
+// ✅ [الحماية والإصلاح]: إخبار السيرفر بأنه خلف بروكسي (مثل Render) لقراءة الـ IP بشكل صحيح
+app.set('trust proxy', 1);
+
 // ✅ [الحماية 1]: تفعيل Helmet لحماية السيرفر من ثغرات المتصفح
 app.use(helmet({
   contentSecurityPolicy: false, 
@@ -125,7 +128,7 @@ app.get("/api/friends/requests/:deviceId", (req, res) => {
 });
 
 app.get("/status", (req, res) => {
-  res.json({ status: "ok", name: "Radio Connect Server", version: "4.7", livekit: LIVEKIT_URL ? "configured" : "not configured", uptime: process.uptime(), waves: Object.keys(db.waves).length, rooms: Object.keys(db.rooms).length, devices: Object.keys(db.devices).length });
+  res.json({ status: "ok", name: "Radio Connect Server", version: "4.7.1", livekit: LIVEKIT_URL ? "configured" : "not configured", uptime: process.uptime(), waves: Object.keys(db.waves).length, rooms: Object.keys(db.rooms).length, devices: Object.keys(db.devices).length });
 });
 
 app.post("/api/users/register", (req, res) => {
@@ -547,5 +550,5 @@ io.on("connection", (socket) => {
 });
 
 server.listen(PORT, () => {
-  console.log("Server v4.7 مع الحماية على المنفذ " + PORT);
+  console.log("Server v4.7.1 مع الحماية على المنفذ " + PORT);
 });
