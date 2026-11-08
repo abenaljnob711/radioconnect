@@ -1166,6 +1166,7 @@ function addChatMessage(msg, direction, scroll = true) {
   const container = document.getElementById('chatMessages');
   const div = document.createElement('div');
   div.className = 'msg msg-' + direction;
+  if (msg.type === 'image' || msg.type === 'video') div.classList.add('image-msg');
   const time = msg.time ? new Date(msg.time).toLocaleTimeString('ar', { hour: '2-digit', minute: '2-digit' }) : '';
   const senderName = direction === 'out' ? (currentUser.name || 'أنا') : (msg.senderName || '');
   let bodyHtml = '';
