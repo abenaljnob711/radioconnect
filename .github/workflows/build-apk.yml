@@ -38,7 +38,6 @@ jobs:
           if [ -d "public" ]; then cp -r public/* www/ || true; fi
           if [ -f "index.html" ]; then cp index.html www/ || true; fi
           ls -la www
-          # امسح server.url اللي يخرب sync - سوي config نظيف
           cat > capacitor.config.json << 'EOF'
           {
             "appId": "com.radioconnect.app",
@@ -60,18 +59,13 @@ jobs:
           python3 << 'PYEOF'
           import os
           import shutil
-          import xml.etree.ElementTree as ET
 
           manifest_path = "android/app/src/main/AndroidManifest.xml"
           print("Manifest:", manifest_path, os.path.exists(manifest_path))
 
           if os.path.exists(manifest_path):
-              tree = ET.parse(manifest_path)
-              root = tree.getroot()
-              ns = "{http://schemas.android.com/apk/res/android}"
-              existing = set()
-              for el in root.findall("uses-permission"):
-                  existing.add(el.get(ns + "name"))
+              with open(manifest_path, encoding="utf-8") as f:
+                  text = f.read()
               needed = [
                   "android.permission.RECORD_AUDIO",
                   "android.permission.MODIFY_AUDIO_SETTINGS",
@@ -101,15 +95,28 @@ jobs:
                   "android.permission.VIBRATE",
                   "android.permission.RECEIVE_BOOT_COMPLETED",
               ]
+              to_add = []
               for perm in needed:
-                  if perm not in existing:
-                      e = ET.Element("uses-permission")
-                      e.set(ns + "name", perm)
-                      root.insert(0, e)
+                  if perm not in text:
+                      to_add.append('    <uses-permission android:name="' + perm + '" />')
                       print("Added:", perm)
-              ET.indent(tree, space="    ")
-              tree.write(manifest_path, encoding="utf-8", xml_declaration=True)
-              print("Manifest fixed OK")
+              if to_add:
+                  lines = text.splitlines()
+                  out = []
+                  inserted = False
+                  for line in lines:
+                      out.append(line)
+                      if not inserted and "<manifest" in line and ">" in line:
+                          out.extend(to_add)
+                          inserted = True
+                  if not inserted:
+                      out = to_add + out
+                  text = "\n".join(out) + "\n"
+                  with open(manifest_path, "w", encoding="utf-8") as f:
+                      f.write(text)
+                  print("Manifest fixed OK - text method")
+              else:
+                  print("All permissions already exist")
 
           icon_src = "public/icon.png"
           if not os.path.exists(icon_src):
