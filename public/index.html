@@ -1018,8 +1018,7 @@ async function createWave() {
     
     currentUser.waveId = data.waveId; 
     currentUser.waveCode = data.waveId;
-    currentUser.waveName = data.waveName; currentUser.isWaveOwner = true;
-    
+    currentUser.waveName = data.waveName; currentUser.isWaveOwner = true 
     document.getElementById('createdWaveCode').textContent = data.waveId;
     document.getElementById('waveName').value = '';
     closeModal('modalWave'); openModal('modalWaveCreated');
