@@ -1685,7 +1685,7 @@ async function createRoom() {
   try {
     await fetch(SERVER_URL + '/api/rooms/create', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ deviceId: currentUser.id, roomCode: roomCode })
+      body: JSON.stringify({ deviceId: currentUser.id, roomCode: roomCode, roomName: name })
     });
   } catch(e) { console.log("Error saving room", e); }
 
