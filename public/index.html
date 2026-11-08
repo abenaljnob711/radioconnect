@@ -25,13 +25,13 @@ body::before { content: ''; position: fixed; inset: 0; background: radial-gradie
 .brand-text { display: flex; flex-direction: column; line-height: 1.15; }
 .brand-title { font-size: 19px; font-weight: 800; color: var(--cyan); letter-spacing: .3px; text-shadow: 0 0 14px rgba(0,229,255,.5); }
 .brand-sub { font-size: 11px; color: var(--text-dim); font-weight: 500; }
-.menu-toggle { width: 42px; height: 42px; border-radius: 11px; background: linear-gradient(180deg, var(--card-2), var(--card)); border: 1px solid var(--border); color: var(--cyan); font-size: 22px; font-weight: 900; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all .2s; font-family: inherit; flex-shrink: 0; line-height: 1; }
+.menu-toggle { width: 42px; height: 42px; border-radius: 11px; background: linear-gradient(180deg, var(--card-2), var(--card)); border: 1px solid var(--border); color: var(--cyan); font-size: 22px; font-weight: 900; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all .2s; font-family: inherit; flex-shrink: 0; line-height: 1; z-index: 10; }
 .menu-toggle:active { transform: scale(.94); border-color: var(--cyan); box-shadow: 0 0 14px rgba(0,229,255,.4); }
 .menu-toggle.open { background: linear-gradient(180deg, #00e5ff, #008fa8); color: #001418; border-color: var(--cyan); box-shadow: 0 0 18px rgba(0,229,255,.6); }
-.side-menu { position: fixed; top: 0; bottom: 0; right: 0; height: auto; width: 280px; background: linear-gradient(180deg, var(--card-2), var(--bg)); border-left: 1px solid var(--cyan); box-shadow: -12px 0 40px rgba(0,229,255,.25); z-index: 300; transform: translateX(110%); transition: transform .32s cubic-bezier(.4,0,.2,1); display: flex; flex-direction: column; padding: 20px 16px; overflow-y: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain; touch-action: pan-y; }
+.side-menu { position: fixed; top: 0; bottom: 0; right: 0; height: auto; width: 280px; background: linear-gradient(180deg, var(--card-2), var(--bg)); border-left: 1px solid var(--cyan); box-shadow: -12px 0 40px rgba(0,229,255,.25); z-index: 400; transform: translateX(110%); transition: transform .32s cubic-bezier(.4,0,.2,1); display: flex; flex-direction: column; padding: 20px 16px; overflow-y: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain; touch-action: pan-y; }
 .side-menu::-webkit-scrollbar { display: none; }
 .side-menu.open { transform: translateX(0); }
-.side-menu-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.7); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); z-index: 299; opacity: 0; pointer-events: none; transition: opacity .3s; }
+.side-menu-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.7); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); z-index: 399; opacity: 0; pointer-events: none; transition: opacity .3s; }
 .side-menu-backdrop.show { opacity: 1; pointer-events: auto; }
 .side-menu-header { display: flex; align-items: center; justify-content: space-between; padding-bottom: 16px; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
 .side-menu-title { display: flex; align-items: center; gap: 8px; font-size: 16px; font-weight: 800; color: var(--cyan); text-shadow: 0 0 10px rgba(0,229,255,.5); }
@@ -235,7 +235,6 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
 .chat-back { width: 32px; height: 32px; border-radius: 8px; background: transparent; border: 1px solid var(--border); color: var(--cyan); font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-family: inherit; flex-shrink: 0; }
 .chat-back:active { border-color: var(--cyan); background: rgba(0,229,255,.1); }
 
-/* التموج الخاص باستلام الصوت */
 @keyframes wavePulse {
   0% { transform: scaleY(0.4); opacity: 0.7; }
   100% { transform: scaleY(1.2); opacity: 1; }
@@ -274,7 +273,6 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
   <audio id="walkieClose" src="./walkie_close.mp3" preload="auto"></audio>
 
   <div class="app">
-    <!-- مؤشر استلام الصوت -->
     <div id="rxAudioWave" class="audio-wave-indicator">
       <div class="wave-bar"></div>
       <div class="wave-bar"></div>
@@ -378,7 +376,6 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
           <span class="sub" id="roomSubLabel">محادثاتك الخاصة</span>
         </div>
       </div>
-      <!-- تم حذف زر إضافة صديق بالكامل من هنا -->
       <div id="chatListContainer" style="margin-top:14px;"></div>
       <div class="empty-room" id="emptyRoom">
         <div class="empty-room-icon">💬</div>
@@ -459,10 +456,10 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
     <div id="sideMenuContent"></div>
   </aside>
   <div class="members-dropdown" id="membersDropdown"></div>
-  <div class="modal-overlay" id="modalRoomMenu"><div class="modal"><div class="modal-title">☰ خيارات الغرفة</div><div class="modal-sub">إدارة الغرفة والدردشة</div><button class="modal-menu-item" onclick="openEditRoomName()"><span class="modal-menu-icon">✏️</span><span>تعديل اسم الغرفة</span></button><button class="modal-menu-item" onclick="openEditRoomIcon()"><span class="modal-menu-icon">🎨</span><span>تغيير أيقونة الغرفة</span></button><button class="modal-menu-item danger" onclick="confirmClearChat()"><span class="modal-menu-icon">🗑️</span><span>مسح الدردشة كاملة</span></button><div class="modal-actions" style="grid-template-columns:1fr;margin-top:14px;"><button class="modal-btn cancel" onclick="closeModal('modalRoomMenu')">إغلاق</button></div></div></div>
+  <div class="modal-overlay" id="modalRoomMenu"><div class="modal"><div class="modal-title">☰ خيارات الغرفة</div><div class="modal-sub">إدارة الغرفة والدردشة</div><button class="modal-menu-item" onclick="openEditRoomName()"><span class="modal-menu-icon">✏️</span><span>تعديل اسم الغرفة</span></button><button class="modal-menu-item" onclick="openEditRoomIcon()"><span class="modal-menu-icon">🎨</span><span>تغيير أيقونة الغرفة</span></button><button class="modal-menu-item danger" onclick="confirmClearChat()"><span class="modal-menu-icon">🗑️</span><span>مسح الدردشة كاملة</span></button><div class="modal-actions" style="grid-template-columns:1fr;margin-top:14px;"><button class="modal-btn cancel" onclick="closeModal('modalRoomMenu')">إلغاء</button></div></div></div>
   <div class="modal-overlay" id="modalEditWave"><div class="modal"><div class="modal-title">✏️ تعديل اسم الفرقة</div><div class="modal-sub">اكتب الاسم الجديد</div><div class="modal-field"><label>اسم الفرقة</label><input type="text" id="newWaveName" maxlength="30"></div><div class="modal-actions"><button class="modal-btn cancel" onclick="closeModal('modalEditWave')">إلغاء</button><button class="modal-btn confirm" onclick="saveWaveName()">حفظ</button></div></div></div>
   <div class="modal-overlay" id="modalEditName"><div class="modal"><div class="modal-title">✏️ تعديل اسم الغرفة</div><div class="modal-sub">اكتب الاسم الجديد</div><div class="modal-field"><label>اسم الغرفة</label><input type="text" id="newRoomName" maxlength="30"></div><div class="modal-actions"><button class="modal-btn cancel" onclick="closeModal('modalEditName')">إلغاء</button><button class="modal-btn confirm" onclick="saveRoomName()">حفظ</button></div></div></div>
-  <div class="modal-overlay" id="modalEditIcon"><div class="modal"><div class="modal-title">🎨 تغيير أيقونة الغرفة</div><div class="icon-grid" id="iconGrid"><div class="icon-option" data-icon="💬">💬</div><div class="icon-option" data-icon="📻">📻</div><div class="icon-option" data-icon="📡">📡</div><div class="icon-option" data-icon="🎙️">🎙️</div><div class="icon-option" data-icon="🔊">🔊</div><div class="icon-option" data-icon="📞">📞</div><div class="icon-option" data-icon="🛡️">🛡️</div><div class="icon-option" data-icon="⚡">⚡</div></div><div class="modal-actions" style="grid-template-columns:1fr;margin-top:14px;"><button class="modal-btn cancel" onclick="closeModal('modalEditIcon')">إغلاق</button></div></div></div>
+  <div class="modal-overlay" id="modalEditIcon"><div class="modal"><div class="modal-title">🎨 تغيير أيقونة الغرفة</div><div class="icon-grid" id="iconGrid"><div class="icon-option" data-icon="💬">💬</div><div class="icon-option" data-icon="📻">📻</div><div class="icon-option" data-icon="📡">📡</div><div class="icon-option" data-icon="🎙️">🎙️</div><div class="icon-option" data-icon="🔊">🔊</div><div class="icon-option" data-icon="📞">📞</div><div class="icon-option" data-icon="🛡️">🛡️</div><div class="icon-option" data-icon="⚡">⚡</div></div><div class="modal-actions" style="grid-template-columns:1fr;margin-top:14px;"><button class="modal-btn cancel" onclick="closeModal('modalEditIcon')">إلغاء</button></div></div></div>
   <div class="modal-overlay" id="modalClearChat"><div class="modal"><div class="modal-title">🗑️ مسح الدردشة</div><div class="modal-sub">هل أنت متأكد؟ لا يمكن التراجع.</div><div class="modal-actions"><button class="modal-btn cancel" onclick="closeModal('modalClearChat')">إلغاء</button><button class="modal-btn danger" onclick="doClearChat()">مسح</button></div></div></div>
   <div class="modal-overlay" id="modalAttach"><div class="modal"><div class="modal-title">📎 إرفاق</div><div class="modal-sub">اختر نوع المحتوى</div><div class="attach-grid"><button class="attach-item" onclick="pickCamera()"><span class="attach-icon">📷</span><span>كاميرا</span></button><button class="attach-item" onclick="pickFile('image')"><span class="attach-icon">🖼️</span><span>صورة</span></button><button class="attach-item" onclick="pickFile('video')"><span class="attach-icon">🎬</span><span>فيديو</span></button><button class="attach-item" onclick="pickFile('document')"><span class="attach-icon">📄</span><span>مستند</span></button><button class="attach-item" onclick="pickContact()"><span class="attach-icon">👥</span><span>جهة اتصال</span></button><button class="attach-item" onclick="pickFile('audio')"><span class="attach-icon">🎵</span><span>موسيقى</span></button></div><div class="modal-actions" style="grid-template-columns:1fr;margin-top:14px;"><button class="modal-btn cancel" onclick="closeModal('modalAttach')">إلغاء</button></div></div></div>
   <div class="modal-overlay" id="modalCreate"><div class="modal"><div class="modal-title">➕ إنشاء غرفة جديدة</div><div class="modal-sub">سيُولَّد رقم غرفة خاص بك تلقائياً</div><div class="modal-field"><label>اسم الغرفة</label><input type="text" id="roomName" maxlength="30"></div><div class="modal-actions"><button class="modal-btn cancel" onclick="closeModal('modalCreate')">إلغاء</button><button class="modal-btn confirm" onclick="createRoom()">إنشاء</button></div></div></div>
@@ -506,27 +503,20 @@ let waveAudioChunks = [];
 let waveStartTime = 0;
 let waveTimerInterval = null;
 
-// --- المتغيرات الخاصة بالتموج الحيوي للصوت ---
 let liveWaveCtx = null, liveWaveAnim = null, liveWaveAnalyser = null, liveWaveAudioCtx = null, liveWaveSource = null, liveWaveData = null;
 
 function startLiveWave(stream, color = '#ff4d6d') {
   const c = document.getElementById('liveWave');
   if (!c || !stream) return;
-
-  stopLiveWave(); // إعادة ضبط آمنة
-
+  stopLiveWave();
   try {
     liveWaveAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
     if (liveWaveAudioCtx.state === 'suspended') liveWaveAudioCtx.resume();
-
     liveWaveAnalyser = liveWaveAudioCtx.createAnalyser();
     liveWaveAnalyser.fftSize = 128;
-
     liveWaveSource = liveWaveAudioCtx.createMediaStreamSource(stream);
     liveWaveSource.connect(liveWaveAnalyser);
-
     liveWaveCtx = c.getContext('2d');
-
     const dpr = window.devicePixelRatio || 1;
     const rect = c.getBoundingClientRect();
     if (rect.width && rect.height) {
@@ -534,10 +524,8 @@ function startLiveWave(stream, color = '#ff4d6d') {
       c.height = rect.height * dpr;
       liveWaveCtx.scale(dpr, dpr);
     }
-
     liveWaveData = new Uint8Array(liveWaveAnalyser.frequencyBinCount);
     c.style.display = 'block';
-
     const draw = () => {
       liveWaveAnim = requestAnimationFrame(draw);
       liveWaveAnalyser.getByteFrequencyData(liveWaveData);
@@ -552,7 +540,6 @@ function startLiveWave(stream, color = '#ff4d6d') {
     };
     draw();
   } catch (e) {
-    console.warn('startLiveWave failed:', e);
     stopLiveWave();
   }
 }
@@ -561,53 +548,37 @@ function stopLiveWave() {
   if (liveWaveAnim) { cancelAnimationFrame(liveWaveAnim); liveWaveAnim = null; }
   if (liveWaveSource) { try { liveWaveSource.disconnect(); } catch (e) {} liveWaveSource = null; }
   if (liveWaveAudioCtx) { try { liveWaveAudioCtx.close(); } catch (e) {} liveWaveAudioCtx = null; }
-  liveWaveAnalyser = null;
-  liveWaveData = null;
-  liveWaveCtx = null;
+  liveWaveAnalyser = null; liveWaveData = null; liveWaveCtx = null;
   const c = document.getElementById('liveWave');
   if (c) c.style.display = 'none';
 }
 
-// --- دالة التموج الحقيقي لرسائل الصوت أثناء الاستماع ---
 function setupMessageAudioAnalyser(audioEl, canvasEl, playBtn) {
   if (!audioEl || !canvasEl) return;
-  
   const dpr = window.devicePixelRatio || 1;
   const rect = canvasEl.getBoundingClientRect();
   canvasEl.width = (rect.width || 150) * dpr;
   canvasEl.height = rect.height * dpr;
   const ctx = canvasEl.getContext('2d');
   ctx.scale(dpr, dpr);
-
-  let audioCtx = null;
-  let analyser = null;
-  let source = null;
-  let animId = null;
-  let dataArray = null;
+  let audioCtx = null, analyser = null, source = null, animId = null, dataArray = null;
   
   const draw = () => {
     animId = requestAnimationFrame(draw);
     if (!analyser) return;
-    
     analyser.getByteTimeDomainData(dataArray);
-    const W = canvasEl.width / dpr;
-    const H = canvasEl.height / dpr;
+    const W = canvasEl.width / dpr, H = canvasEl.height / dpr;
     ctx.clearRect(0, 0, W, H);
     ctx.lineWidth = 2;
     ctx.strokeStyle = playBtn.closest('.msg-out') ? '#ff5577' : '#00e5ff';
-    
     ctx.beginPath();
     const sliceWidth = W / dataArray.length;
     let x = 0;
-    
     for (let i = 0; i < dataArray.length; i++) {
-      const v = dataArray[i] / 128.0;
-      const y = (v * H) / 2;
-      if (i === 0) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
+      const v = dataArray[i] / 128.0, y = (v * H) / 2;
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
       x += sliceWidth;
     }
-    
     ctx.lineTo(W, H / 2);
     ctx.stroke();
   };
@@ -628,7 +599,6 @@ function setupMessageAudioAnalyser(audioEl, canvasEl, playBtn) {
       if (animId) cancelAnimationFrame(animId);
       draw();
     } catch (e) {
-      console.log('Analyser error:', e);
       ctx.strokeStyle = '#00e5ff';
       ctx.beginPath();
       ctx.moveTo(0, canvasEl.height / 2 / dpr);
@@ -648,21 +618,9 @@ function setupMessageAudioAnalyser(audioEl, canvasEl, playBtn) {
     ctx.stroke();
   };
 
-  audioEl.addEventListener('play', () => {
-    playBtn.textContent = '⏸';
-    startAnalyser();
-  });
-  
-  audioEl.addEventListener('pause', () => {
-    playBtn.textContent = '▶';
-    stopAnalyser();
-  });
-  
-  audioEl.addEventListener('ended', () => {
-    playBtn.textContent = '▶';
-    stopAnalyser();
-  });
-  
+  audioEl.addEventListener('play', () => { playBtn.textContent = '⏸'; startAnalyser(); });
+  audioEl.addEventListener('pause', () => { playBtn.textContent = '▶'; stopAnalyser(); });
+  audioEl.addEventListener('ended', () => { playBtn.textContent = '▶'; stopAnalyser(); });
   stopAnalyser();
 }
 
@@ -674,11 +632,11 @@ async function restoreMyRoomsAndWaves() {
       const first = d.rooms[0];
       currentUser.roomCode = first.roomCode;
       currentUser.roomName = first.roomName || localStorage.getItem('rc_saved_room_name') || 'غرفة بدون اسم';
-localStorage.setItem('rc_room_code', first.roomCode);
-localStorage.setItem('rc_room_name', currentUser.roomName);
-localStorage.setItem('rc_saved_room_name', currentUser.roomName);
-const el = document.getElementById('roomNameLabel');
-if (el) el.textContent = currentUser.roomName;
+      localStorage.setItem('rc_room_code', first.roomCode);
+      localStorage.setItem('rc_room_name', currentUser.roomName);
+      localStorage.setItem('rc_saved_room_name', currentUser.roomName);
+      const el = document.getElementById('roomNameLabel');
+      if (el) el.textContent = currentUser.roomName;
     } else {
       const savedCode = localStorage.getItem('rc_room_code');
       if (savedCode) { currentUser.roomCode = savedCode; currentUser.roomName = localStorage.getItem('rc_room_name') || ''; }
@@ -692,10 +650,9 @@ if (el) el.textContent = currentUser.roomName;
       localStorage.setItem('rc_wave_id', fw.waveId);
       if (socket) socket.emit('wave_join', { waveId: fw.waveId, deviceId: DEVICE_ID, userName: currentUser.name });
     }
-  } catch (e) { console.log('restore failed', e); }
+  } catch (e) {}
 } 
 
-// دالة جديدة لاستعادة الفرق والغرف المشترك بها من السيرفر تلقائياً
 async function autoRestoreFromServer() {
   try {
     const waveRes = await fetch(SERVER_URL + '/api/waves/my/' + DEVICE_ID);
@@ -707,14 +664,11 @@ async function autoRestoreFromServer() {
         currentUser.waveName = latestWave.waveName;
         localStorage.setItem('rc_saved_wave_id', latestWave.waveId);
         localStorage.setItem('rc_saved_wave_name', latestWave.waveName);
-        
         const el2 = document.getElementById('waveNameLabel'); if (el2) el2.textContent = latestWave.waveName;
         const el1 = document.getElementById('waveCodeChip'); if (el1) el1.innerHTML = latestWave.waveId + ' <span style="font-size:12px;">🔑</span>';
-        
         if (socket) socket.emit('wave_join', { waveId: latestWave.waveId, deviceId: DEVICE_ID, userName: currentUser.name });
       }
     }
-
     const roomRes = await fetch(SERVER_URL + '/api/rooms/my/' + DEVICE_ID);
     const roomData = await roomRes.json();
     if (roomData.rooms && roomData.rooms.length > 0) {
@@ -723,13 +677,10 @@ async function autoRestoreFromServer() {
       currentUser.roomName = latestRoom.roomName;
       localStorage.setItem('rc_saved_room_code', latestRoom.roomCode);
       localStorage.setItem('rc_saved_room_name', latestRoom.roomName);
-      
       const el = document.getElementById('roomNameLabel');
       if (el) el.textContent = latestRoom.roomName;
     }
-  } catch (e) {
-    console.log('Auto-restore failed:', e);
-  }
+  } catch (e) {}
 }
 
 function factoryReset() {
@@ -901,13 +852,8 @@ function initSocket() {
       waveText.textContent = senderName + ' يتحدث...';
       waveIndicator.classList.add('show');
     }
-
-    audioEl.play().catch(e => console.log("Audio play blocked", e));
-    
-    audioEl.onended = () => {
-      if (waveIndicator) waveIndicator.classList.remove('show');
-    };
-    
+    audioEl.play().catch(e => {});
+    audioEl.onended = () => { if (waveIndicator) waveIndicator.classList.remove('show'); };
     toast('🎤 رسالة صوتية من ' + senderName, 'success');
   });
 
@@ -922,7 +868,6 @@ function initSocket() {
         }
       } catch(e) {}
     }
-
     if (currentUser.currentConvId === conversationId) {
       addChatMessage(message, message.sender === currentUser.id ? 'out' : 'in');
     } else toast('💬 رسالة جديدة', 'success');
@@ -937,7 +882,6 @@ function initSocket() {
   });
 
   socket.on('conversation_updated', () => refreshChatList());
-
   socket.on('friend_request_received', (data) => handleIncomingFriendRequest(data));
 
   socket.on('friend_accepted', (data) => {
@@ -1059,10 +1003,8 @@ async function joinWaveAsMember(waveId) {
       currentUser.waveName = data.waveName;
       const el1 = document.getElementById('waveNameValue'); if (el1) el1.textContent = data.waveName;
       const el2 = document.getElementById('waveNameLabel'); if (el2) el2.textContent = data.waveName;
-      
       localStorage.setItem('rc_saved_wave_id', waveId);
       localStorage.setItem('rc_saved_wave_name', data.waveName);
-      
       addWaveToHistory(waveId, data.waveName);
     }
     if (data.members) renderWaveMembers(data.members);
@@ -1151,7 +1093,6 @@ function renderWaveMembers(members) {
   members.forEach(m => {
     if (m.id === currentUser.id || m.name === currentUser.name) m.online = true;
   });
-
   const dd = document.getElementById('membersDropdown');
   if (dd && dd.classList.contains('show')) {
     dd.innerHTML = `<div class="members-dropdown-title">👥 المشتركون (${members.length})</div>${members.map(m => `<div class="members-dropdown-item"><span>${m.name} ${m.id === currentUser.id ? '(أنت)' : ''} ${m.isOwner ? '👑' : ''}</span><span class="${m.online ? 'status-active' : 'status-inactive'}">${m.online ? '🟢 نشط' : '🔴 غير نشط'}</span></div>`).join('')}`;
@@ -1441,14 +1382,12 @@ function addChatMessage(msg, direction, scroll = true) {
       </div>
       <div class="voice-meta"><span>${time}</span><span>${(msg.duration || 0).toFixed(1)}s</span></div>
     `;
-    
     setTimeout(() => {
       const canvasEl = document.getElementById(canvasId);
       if (!canvasEl) return;
       const audioEl = canvasEl.parentElement.querySelector('audio');
       setupMessageAudioAnalyser(audioEl, canvasEl, div.querySelector('.play-btn'));
     }, 0);
-
   } else if (msg.type === 'image' && msg.url) {
     bodyHtml = `<img src="${msg.url}" class="attachment-preview-img" onclick="window.open('${msg.url}','_blank')"><div class="voice-meta"><span>${time}</span></div>`;
   } else if (msg.type === 'video' && msg.url) {
@@ -1528,9 +1467,7 @@ async function startVoiceRecording() {
     voiceRecorder.start(100);
     isRecordingVoice = true;
     voiceStartTime = Date.now();
-    
     startLiveWave(stream, '#ff4d6d');
-
     chatPrimaryBtn.classList.add('recording');
     chatPrimaryBtn.textContent = '⏹';
     clearInterval(voiceTimerInt);
@@ -1680,15 +1617,13 @@ function openEditRoomIcon() {
 async function createRoom() {
   const name = document.getElementById('roomName').value.trim();
   if (!name) { toast('⚠️ أدخل اسم الغرفة', 'error'); return; }
-
   const roomCode = 'R' + Math.random().toString(36).substring(2, 8).toUpperCase();
-  
   try {
     await fetch(SERVER_URL + '/api/rooms/create', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ deviceId: currentUser.id, roomCode: roomCode, roomName: name })
     });
-  } catch(e) { console.log("Error saving room", e); }
+  } catch(e) {}
 
   currentUser.roomName = name;
   currentUser.roomCode = roomCode;
@@ -1762,7 +1697,6 @@ function deleteRoomPermanently() {
   let rooms = JSON.parse(localStorage.getItem('rc_user_rooms_list') || '[]');
   rooms = rooms.filter(r => r.code !== currentUser.roomCode);
   localStorage.setItem('rc_user_rooms_list', JSON.stringify(rooms));
-
   localStorage.removeItem('rc_saved_room_code');
   localStorage.removeItem('rc_saved_room_name');
   localStorage.removeItem('rc_is_room_owner');
@@ -2007,18 +1941,15 @@ function sendFriendRequest() {
   if (!friendSearchResult) return;
   const user = friendSearchResult;
   if (friendRequests.outgoing.find(r => r.deviceId === user.deviceId)) { toast('⚠️ أرسلت طلباً بالفعل', 'error'); return; }
-  
   const req = { name: user.userName || 'مستخدم', code: user.radCode, deviceId: user.deviceId, sentAt: Date.now() };
   friendRequests.outgoing.push(req);
   saveFriendRequests();
-  
   if (socket) {
     const txt = JSON.stringify({type:'friend_request', fromDeviceId: currentUser.id, fromName: currentUser.name, fromCode: currentUser.radCode});
     socket.emit('send_direct_message', {toDeviceId: user.deviceId, fromDeviceId: currentUser.id, fromName: currentUser.name, fromCode: currentUser.radCode, text: txt, message: {text: txt}});
     socket.emit('friend_request_send', {toDeviceId: user.deviceId, fromDeviceId: currentUser.id, fromName: currentUser.name, fromCode: currentUser.radCode});
     socket.emit('friend_request', { fromDeviceId: currentUser.id, fromUserName: currentUser.name, fromCode: currentUser.radCode, toDeviceId: user.deviceId });
   }
-  
   closeModal('modalFriendSend');
   toast('📤 تم إرسال طلب الصداقة', 'success');
 }
@@ -2027,10 +1958,8 @@ function handleIncomingFriendRequest(data) {
   const fromId = data.fromDeviceId;
   const fromName = data.fromUserName || data.fromName || 'مستخدم';
   const fromCode = data.fromCode || '—';
-  
   if (friendRequests.friends.find(f => f.deviceId === fromId)) return;
   if (friendRequests.incoming.find(r => r.deviceId === fromId)) return;
-  
   const req = { name: fromName, code: fromCode, deviceId: fromId, receivedAt: Date.now() };
   friendRequests.incoming.push(req);
   saveFriendRequests(); updateFriendBadge();
@@ -2213,7 +2142,7 @@ function openMyRoom() {
     </div>
   `;
 }
-    window.addEventListener('pagehide', () => {
+window.addEventListener('pagehide', () => {
   if (currentUser.roomCode && currentUser.roomName) {
     localStorage.setItem('rc_saved_room_name', currentUser.roomName);
   }
