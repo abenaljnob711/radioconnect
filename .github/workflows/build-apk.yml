@@ -29,9 +29,30 @@ jobs:
           npm install
           npm install @capacitor/core @capacitor/cli @capacitor/android
 
+      - name: Prepare Web Assets
+        run: |
+          ls -la
+          echo "--- public? ---"
+          ls -la public || echo "no public"
+          mkdir -p www
+          if [ -d "public" ]; then cp -r public/* www/ || true; fi
+          if [ -f "index.html" ]; then cp index.html www/ || true; fi
+          ls -la www
+          # امسح server.url اللي يخرب sync - سوي config نظيف
+          cat > capacitor.config.json << 'EOF'
+          {
+            "appId": "com.radioconnect.app",
+            "appName": "Radio Connect",
+            "webDir": "www",
+            "server": { "cleartext": true }
+          }
+          EOF
+          rm -f capacitor.config.ts
+          cat capacitor.config.json
+
       - name: Sync Capacitor
         run: |
-          npx cap sync android || npx cap add android
+          if [ ! -d "android" ]; then npx cap add android; fi
           npx cap sync android
 
       - name: Fix Permissions and Icons
@@ -52,38 +73,29 @@ jobs:
               for el in root.findall("uses-permission"):
                   existing.add(el.get(ns + "name"))
               needed = [
-                  # المايك والصوت - اهم شي
                   "android.permission.RECORD_AUDIO",
                   "android.permission.MODIFY_AUDIO_SETTINGS",
-                  # النت
                   "android.permission.INTERNET",
                   "android.permission.ACCESS_NETWORK_STATE",
                   "android.permission.ACCESS_WIFI_STATE",
-                  # الكاميرا
                   "android.permission.CAMERA",
-                  # الرسائل
                   "android.permission.SEND_SMS",
                   "android.permission.RECEIVE_SMS",
                   "android.permission.READ_SMS",
                   "android.permission.RECEIVE_MMS",
-                  # جهات الاتصال
                   "android.permission.READ_CONTACTS",
                   "android.permission.WRITE_CONTACTS",
-                  # الملفات والصور والفيديو والصوت
                   "android.permission.READ_EXTERNAL_STORAGE",
                   "android.permission.WRITE_EXTERNAL_STORAGE",
                   "android.permission.READ_MEDIA_IMAGES",
                   "android.permission.READ_MEDIA_VIDEO",
                   "android.permission.READ_MEDIA_AUDIO",
-                  # الموقع
                   "android.permission.ACCESS_FINE_LOCATION",
                   "android.permission.ACCESS_COARSE_LOCATION",
-                  # البلوتوث
                   "android.permission.BLUETOOTH",
                   "android.permission.BLUETOOTH_CONNECT",
                   "android.permission.BLUETOOTH_SCAN",
                   "android.permission.BLUETOOTH_ADVERTISE",
-                  # الاشعارات والخدمة في الخلفية
                   "android.permission.FOREGROUND_SERVICE",
                   "android.permission.FOREGROUND_SERVICE_MICROPHONE",
                   "android.permission.POST_NOTIFICATIONS",
@@ -99,9 +111,8 @@ jobs:
                       print("Added:", perm)
               ET.indent(tree, space="    ")
               tree.write(manifest_path, encoding="utf-8", xml_declaration=True)
-              print("Manifest fixed OK - All permissions added")
+              print("Manifest fixed OK")
 
-          # Fix Icons
           icon_src = "public/icon.png"
           if not os.path.exists(icon_src):
               icon_src = "icon.png"
