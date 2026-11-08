@@ -13,84 +13,119 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: 20
 
-      - name: Setup Java JDK 21
+      - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '21'
+          java-version: 17
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v4
-
-      - name: Install Android SDK packages
+      - name: Install dependencies
         run: |
-          echo "y" | sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
-
-      - name: Install Capacitor
-        run: |
+          npm install
           npm install @capacitor/core @capacitor/cli @capacitor/android
-          ls node_modules/@capacitor/android
 
-      - name: Create www folder
+      - name: Sync Capacitor
         run: |
-          mkdir -p www
-          cp -r public/* www/
-
-      - name: Add Android platform
-        run: |
-          npx cap add android
+          npx cap sync android || npx cap add android
           npx cap sync android
 
-      - name: Change Android App Name
+      - name: Fix Permissions and Icons
         run: |
-          echo "Changing app name"
-          sed -i 's/<string name="app_name">.*<\/string>/<string name="app_name">Radio Connect<\/string>/' android/app/src/main/res/values/strings.xml || true
-          echo "App name OK"
+          python3 << 'PYEOF'
+          import os
+          import shutil
+          import xml.etree.ElementTree as ET
 
-      - name: Replace App Icons
-        run: |
-          echo "Replacing icons"
-          ICON="public/icon.png"
-          ls -l "$ICON"
-          rm -rf android/app/src/main/res/mipmap-anydpi-v26
-          for d in android/app/src/main/res/mipmap-hdpi android/app/src/main/res/mipmap-mdpi android/app/src/main/res/mipmap-xhdpi android/app/src/main/res/mipmap-xxhdpi android/app/src/main/res/mipmap-xxxhdpi; do
-            cp "$ICON" "$d/ic_launcher.png"
-            cp "$ICON" "$d/ic_launcher_round.png"
-            cp "$ICON" "$d/ic_launcher_foreground.png"
-          done
-          echo "Icons replaced"
+          manifest_path = "android/app/src/main/AndroidManifest.xml"
+          print("Manifest:", manifest_path, os.path.exists(manifest_path))
 
-      - name: Add Permissions to AndroidManifest
-        run: |
-          echo "Checking manifest"
-          ls -l android/app/src/main/AndroidManifest.xml
-          echo "Permissions OK"
+          if os.path.exists(manifest_path):
+              tree = ET.parse(manifest_path)
+              root = tree.getroot()
+              ns = "{http://schemas.android.com/apk/res/android}"
+              existing = set()
+              for el in root.findall("uses-permission"):
+                  existing.add(el.get(ns + "name"))
+              needed = [
+                  # المايك والصوت - اهم شي
+                  "android.permission.RECORD_AUDIO",
+                  "android.permission.MODIFY_AUDIO_SETTINGS",
+                  # النت
+                  "android.permission.INTERNET",
+                  "android.permission.ACCESS_NETWORK_STATE",
+                  "android.permission.ACCESS_WIFI_STATE",
+                  # الكاميرا
+                  "android.permission.CAMERA",
+                  # الرسائل
+                  "android.permission.SEND_SMS",
+                  "android.permission.RECEIVE_SMS",
+                  "android.permission.READ_SMS",
+                  "android.permission.RECEIVE_MMS",
+                  # جهات الاتصال
+                  "android.permission.READ_CONTACTS",
+                  "android.permission.WRITE_CONTACTS",
+                  # الملفات والصور والفيديو والصوت
+                  "android.permission.READ_EXTERNAL_STORAGE",
+                  "android.permission.WRITE_EXTERNAL_STORAGE",
+                  "android.permission.READ_MEDIA_IMAGES",
+                  "android.permission.READ_MEDIA_VIDEO",
+                  "android.permission.READ_MEDIA_AUDIO",
+                  # الموقع
+                  "android.permission.ACCESS_FINE_LOCATION",
+                  "android.permission.ACCESS_COARSE_LOCATION",
+                  # البلوتوث
+                  "android.permission.BLUETOOTH",
+                  "android.permission.BLUETOOTH_CONNECT",
+                  "android.permission.BLUETOOTH_SCAN",
+                  "android.permission.BLUETOOTH_ADVERTISE",
+                  # الاشعارات والخدمة في الخلفية
+                  "android.permission.FOREGROUND_SERVICE",
+                  "android.permission.FOREGROUND_SERVICE_MICROPHONE",
+                  "android.permission.POST_NOTIFICATIONS",
+                  "android.permission.WAKE_LOCK",
+                  "android.permission.VIBRATE",
+                  "android.permission.RECEIVE_BOOT_COMPLETED",
+              ]
+              for perm in needed:
+                  if perm not in existing:
+                      e = ET.Element("uses-permission")
+                      e.set(ns + "name", perm)
+                      root.insert(0, e)
+                      print("Added:", perm)
+              ET.indent(tree, space="    ")
+              tree.write(manifest_path, encoding="utf-8", xml_declaration=True)
+              print("Manifest fixed OK - All permissions added")
 
-      - name: Fix Kotlin Dependencies
-        run: |
-          cat >> android/build.gradle <<'EOF'
-          allprojects {
-            configurations.all {
-              resolutionStrategy.eachDependency { details ->
-                if (details.requested.group == 'org.jetbrains.kotlin') {
-                  details.useVersion '1.8.22'
-                }
-              }
-            }
-          }
-          EOF
-          echo "Kotlin version forced to 1.8.22"
+          # Fix Icons
+          icon_src = "public/icon.png"
+          if not os.path.exists(icon_src):
+              icon_src = "icon.png"
+          print("Icon src:", icon_src, os.path.exists(icon_src))
+          if os.path.exists(icon_src):
+              res_dir = "android/app/src/main/res"
+              anydpi = os.path.join(res_dir, "mipmap-anydpi-v26")
+              if os.path.exists(anydpi):
+                  shutil.rmtree(anydpi)
+                  print("Deleted mipmap-anydpi-v26")
+              for d in ["mipmap-mdpi", "mipmap-hdpi", "mipmap-xhdpi", "mipmap-xxhdpi", "mipmap-xxxhdpi"]:
+                  folder = os.path.join(res_dir, d)
+                  os.makedirs(folder, exist_ok=True)
+                  shutil.copy(icon_src, os.path.join(folder, "ic_launcher.png"))
+                  shutil.copy(icon_src, os.path.join(folder, "ic_launcher_round.png"))
+                  shutil.copy(icon_src, os.path.join(folder, "ic_launcher_foreground.png"))
+                  print("Icon copied to", d)
+          PYEOF
 
       - name: Build APK
         run: |
           cd android
           chmod +x gradlew
-          ./gradlew assembleDebug
+          ./gradlew assembleDebug --stacktrace
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
