@@ -2131,6 +2131,12 @@ document.getElementById('friendRequestsChip').addEventListener('click', openFrie
 setTimeout(updateFriendBadge, 500);
 
 window.addEventListener('DOMContentLoaded', async () => {
+   const savedRoomName = localStorage.getItem('rc_saved_room_name');
+   if (savedRoomName && savedRoomName !== 'null' && savedRoomName !== 'غرفة بدون اسم') {
+    const el = document.getElementById('roomNameLabel');
+    if (el) el.textContent = savedRoomName;
+    currentUser.roomName = savedRoomName;
+  }
   const bar = document.getElementById('chatInputBar');
   if (bar) bar.classList.remove('active');
   await initBattery();
@@ -2167,7 +2173,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   const savedRoomName = localStorage.getItem('rc_saved_room_name');
   if (savedRoomCode) {
     currentUser.roomCode = savedRoomCode;
-    currentUser.roomName = savedRoomName;
+    currentUser.roomName = savedRoomName || localStorage.getItem('rc_saved_room_name') || 'غرفة بدون اسم';
     const el4 = document.getElementById('roomNameLabel');
     if (el4 && savedRoomName) el4.textContent = savedRoomName;
   }
@@ -2207,6 +2213,11 @@ function openMyRoom() {
     </div>
   `;
 }
+    window.addEventListener('pagehide', () => {
+  if (currentUser.roomCode && currentUser.roomName) {
+    localStorage.setItem('rc_saved_room_name', currentUser.roomName);
+  }
+});
   </script>
 </body>
 </html>
