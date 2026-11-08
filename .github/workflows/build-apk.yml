@@ -19,12 +19,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2. إعداد Node.js
+      # 2. إعداد Node.js (تم إزالة cache لحل مشكلة عدم وجود package-lock.json)
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
 
       # 3. إعداد Java
       - name: Setup Java
@@ -199,7 +198,7 @@ jobs:
           print("Android permissions checked successfully")
           PYEOF
 
-      # 10. تجهيز أيقونات التطبيق (تم إصلاح مشكلة الأيقونات التكيفية)
+      # 10. تجهيز أيقونات التطبيق
       - name: Generate App Icons
         run: |
           set -e
@@ -248,7 +247,6 @@ jobs:
                       "PNG"
                   )
 
-          # إضافة الأيقونات التكيفية (Adaptive Icons) بدلاً من حذفها
           adaptive_dir = os.path.join(res, "mipmap-anydpi-v26")
           os.makedirs(adaptive_dir, exist_ok=True)
 
@@ -308,7 +306,7 @@ jobs:
 
           ls -lh "$APK"
 
-      # 14. رفع APK (تم إصلاح المسافات البادئة هنا)
+      # 14. رفع APK
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
