@@ -673,11 +673,12 @@ async function restoreMyRoomsAndWaves() {
     if (d.rooms && d.rooms.length > 0) {
       const first = d.rooms[0];
       currentUser.roomCode = first.roomCode;
-      currentUser.roomName = first.roomName;
-      localStorage.setItem('rc_room_code', first.roomCode);
-      localStorage.setItem('rc_room_name', first.roomName || '');
-      const el = document.getElementById('roomNameLabel');
-      if (el) el.textContent = first.roomName;
+      currentUser.roomName = first.roomName || localStorage.getItem('rc_saved_room_name') || 'غرفة بدون اسم';
+localStorage.setItem('rc_room_code', first.roomCode);
+localStorage.setItem('rc_room_name', currentUser.roomName);
+localStorage.setItem('rc_saved_room_name', currentUser.roomName);
+const el = document.getElementById('roomNameLabel');
+if (el) el.textContent = currentUser.roomName;
     } else {
       const savedCode = localStorage.getItem('rc_room_code');
       if (savedCode) { currentUser.roomCode = savedCode; currentUser.roomName = localStorage.getItem('rc_room_name') || ''; }
