@@ -31,13 +31,9 @@ jobs:
 
       - name: Prepare Web Assets
         run: |
-          ls -la
-          echo "--- public? ---"
-          ls -la public || echo "no public"
           mkdir -p www
           if [ -d "public" ]; then cp -r public/* www/ || true; fi
           if [ -f "index.html" ]; then cp index.html www/ || true; fi
-          ls -la www
           cat > capacitor.config.json << 'EOF'
           {
             "appId": "com.radioconnect.app",
@@ -47,7 +43,6 @@ jobs:
           }
           EOF
           rm -f capacitor.config.ts
-          cat capacitor.config.json
 
       - name: Sync Capacitor
         run: |
@@ -61,8 +56,6 @@ jobs:
           import shutil
 
           manifest_path = "android/app/src/main/AndroidManifest.xml"
-          print("Manifest:", manifest_path, os.path.exists(manifest_path))
-
           if os.path.exists(manifest_path):
               with open(manifest_path, encoding="utf-8") as f:
                   text = f.read()
@@ -99,42 +92,61 @@ jobs:
               for perm in needed:
                   if perm not in text:
                       to_add.append('    <uses-permission android:name="' + perm + '" />')
-                      print("Added:", perm)
               if to_add:
-                  lines = text.splitlines()
-                  out = []
-                  inserted = False
-                  for line in lines:
-                      out.append(line)
-                      if not inserted and "<manifest" in line and ">" in line:
-                          out.extend(to_add)
-                          inserted = True
-                  if not inserted:
-                      out = to_add + out
-                  text = "\n".join(out) + "\n"
-                  with open(manifest_path, "w", encoding="utf-8") as f:
-                      f.write(text)
-                  print("Manifest fixed OK - text method")
-              else:
-                  print("All permissions already exist")
+                  start = text.find("<manifest")
+                  end = text.find(">", start)
+                  if start != -1 and end != -1:
+                      insert_text = "\n" + "\n".join(to_add)
+                      text = text[:end+1] + insert_text + text[end+1:]
+                      with open(manifest_path, "w", encoding="utf-8") as f:
+                          f.write(text)
+                      print("Manifest fixed OK")
 
           icon_src = "public/icon.png"
           if not os.path.exists(icon_src):
               icon_src = "icon.png"
-          print("Icon src:", icon_src, os.path.exists(icon_src))
           if os.path.exists(icon_src):
               res_dir = "android/app/src/main/res"
               anydpi = os.path.join(res_dir, "mipmap-anydpi-v26")
               if os.path.exists(anydpi):
                   shutil.rmtree(anydpi)
-                  print("Deleted mipmap-anydpi-v26")
               for d in ["mipmap-mdpi", "mipmap-hdpi", "mipmap-xhdpi", "mipmap-xxhdpi", "mipmap-xxxhdpi"]:
                   folder = os.path.join(res_dir, d)
                   os.makedirs(folder, exist_ok=True)
                   shutil.copy(icon_src, os.path.join(folder, "ic_launcher.png"))
                   shutil.copy(icon_src, os.path.join(folder, "ic_launcher_round.png"))
                   shutil.copy(icon_src, os.path.join(folder, "ic_launcher_foreground.png"))
-                  print("Icon copied to", d)
+          PYEOF
+
+      - name: Fix Kotlin Duplicate
+        run: |
+          python3 << 'PYEOF'
+          import os
+          import re
+          # نجبر كل Kotlin على نسخة واحدة 1.9.24
+          p = "android/build.gradle"
+          if os.path.exists(p):
+              with open(p, encoding="utf-8") as f:
+                  t = f.read()
+              # لو فيه kotlin_version قديم، نغيره
+              t = re.sub(r"kotlin_version\s*=\s*['\"][^'\"]+['\"]", "kotlin_version = '1.9.24'", t)
+              t = re.sub(r"kotlinVersion\s*=\s*['\"][^'\"]+['\"]", "kotlinVersion = '1.9.24'", t)
+              # نضيف force في الاخير
+              if "kotlin-stdlib:1.9.24" not in t:
+                  t += "\nallprojects {\n  configurations.all {\n    resolutionStrategy {\n      force 'org.jetbrains.kotlin:kotlin-stdlib:1.9.24'\n      force 'org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.9.24'\n      force 'org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.24'\n    }\n  }\n}\n"
+              with open(p, "w", encoding="utf-8") as f:
+                  f.write(t)
+              print("build.gradle fixed - kotlin forced to 1.9.24")
+          # نفس الشي في app/build.gradle - نحذف النسخ القديمة
+          p2 = "android/app/build.gradle"
+          if os.path.exists(p2):
+              with open(p2, encoding="utf-8") as f:
+                  t2 = f.read()
+              if "kotlin-stdlib-jdk7" not in t2:
+                  t2 += "\nconfigurations.all {\n  exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk7'\n  exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk8'\n}\n"
+              with open(p2, "w", encoding="utf-8") as f:
+                  f.write(t2)
+              print("app/build.gradle fixed")
           PYEOF
 
       - name: Build APK
