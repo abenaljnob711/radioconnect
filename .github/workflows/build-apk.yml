@@ -15,7 +15,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-
       # 1. تحميل المشروع
       - name: Checkout code
         uses: actions/checkout@v4
@@ -40,6 +39,7 @@ jobs:
 
       - name: Install Android SDK
         run: |
+          yes | sdkmanager --licenses > /dev/null 2>&1 || true
           sdkmanager "platforms;android-36"
           sdkmanager "build-tools;36.0.0"
 
@@ -199,7 +199,7 @@ jobs:
           print("Android permissions checked successfully")
           PYEOF
 
-      # 10. تجهيز أيقونات التطبيق
+      # 10. تجهيز أيقونات التطبيق (تم إصلاح مشكلة الأيقونات التكيفية)
       - name: Generate App Icons
         run: |
           set -e
@@ -214,7 +214,6 @@ jobs:
           python3 << 'PYEOF'
           from PIL import Image, ImageOps
           import os
-          import shutil
 
           source = "public/icon.png"
           res = "android/app/src/main/res"
@@ -229,15 +228,7 @@ jobs:
               "mipmap-xxxhdpi": 192
           }
 
-          adaptive = os.path.join(
-              res, "mipmap-anydpi-v26"
-          )
-
-          if os.path.exists(adaptive):
-              shutil.rmtree(adaptive)
-
           for folder, size in sizes.items():
-
               target = os.path.join(res, folder)
               os.makedirs(target, exist_ok=True)
 
@@ -257,7 +248,23 @@ jobs:
                       "PNG"
                   )
 
-          print("All launcher icons generated successfully")
+          # إضافة الأيقونات التكيفية (Adaptive Icons) بدلاً من حذفها
+          adaptive_dir = os.path.join(res, "mipmap-anydpi-v26")
+          os.makedirs(adaptive_dir, exist_ok=True)
+
+          adaptive_xml = '''<?xml version="1.0" encoding="utf-8"?>
+          <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+              <background android:drawable="@color/ic_launcher_background"/>
+              <foreground android:drawable="@mipmap/ic_launcher_foreground"/>
+          </adaptive-icon>'''
+
+          with open(os.path.join(adaptive_dir, "ic_launcher.xml"), "w", encoding="utf-8") as f:
+              f.write(adaptive_xml)
+
+          with open(os.path.join(adaptive_dir, "ic_launcher_round.xml"), "w", encoding="utf-8") as f:
+              f.write(adaptive_xml)
+
+          print("All launcher and adaptive icons generated successfully")
           PYEOF
 
       # 11. التحقق من إعدادات Android
@@ -301,11 +308,11 @@ jobs:
 
           ls -lh "$APK"
 
-      # 14. رفع APK
+      # 14. رفع APK (تم إصلاح المسافات البادئة هنا)
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: radio-connect-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
-         retention-days: 14
+          retention-days: 14
