@@ -1,3 +1,4 @@
+
 name: Build Radio Connect APK
 
 on:
@@ -6,157 +7,306 @@ on:
       - main
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   build:
+    name: Build Radio Connect APK
     runs-on: ubuntu-latest
+
     steps:
+
+      # 1. تحميل المشروع
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node
+      # 2. إعداد Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
+          cache: npm
 
+      # 3. إعداد Java
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 21
 
+      # 4. إعداد Android SDK
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK
+        run: |
+          sdkmanager "platforms;android-36"
+          sdkmanager "build-tools;36.0.0"
+
+      # 5. تثبيت مكتبات المشروع
       - name: Install dependencies
         run: |
-          npm install
-          npm install @capacitor/core @capacitor/cli @capacitor/android
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install --no-audit --no-fund
+          fi
 
+          npm install \
+            @capacitor/core \
+            @capacitor/cli \
+            @capacitor/android \
+            --no-audit --no-fund
+
+      # 6. تجهيز ملفات التطبيق
       - name: Prepare Web Assets
         run: |
+          set -e
+
+          rm -rf www
           mkdir -p www
-          if [ -d "public" ]; then cp -r public/* www/ || true; fi
-          if [ -f "index.html" ]; then cp index.html www/ || true; fi
+
+          if [ -d public ]; then
+            cp -a public/. www/
+          fi
+
+          if [ ! -f www/index.html ] && [ -f index.html ]; then
+            cp index.html www/index.html
+          fi
+
+          if [ ! -f www/index.html ]; then
+            echo "ERROR: index.html not found"
+            exit 1
+          fi
+
+          echo "Web assets prepared successfully"
+          ls -la www
+
+      # 7. إعداد Capacitor
+      - name: Configure Capacitor
+        run: |
           cat > capacitor.config.json << 'EOF'
           {
             "appId": "com.radioconnect.app",
-            "appName": "Radio Connect",
+            "appName": "جهاز لاسلكي نداء ودردشة حقيقي",
             "webDir": "www",
-            "server": { "cleartext": true }
+            "server": {
+              "url": "https://radio-connect-server.onrender.com",
+              "cleartext": false,
+              "androidScheme": "https"
+            },
+            "android": {
+              "allowMixedContent": true,
+              "captureInput": true,
+              "webContentsDebuggingEnabled": true
+            }
           }
           EOF
+
           rm -f capacitor.config.ts
 
+      # 8. تجهيز Android
       - name: Sync Capacitor
         run: |
-          if [ ! -d "android" ]; then npx cap add android; fi
+          set -e
+
+          if [ ! -d android ]; then
+            npx cap add android
+          fi
+
           npx cap sync android
 
-      - name: Fix Permissions and Icons
-        run: |
-          python3 << 'PYEOF'
-          import os
-          import shutil
-
-          manifest_path = "android/app/src/main/AndroidManifest.xml"
-          if os.path.exists(manifest_path):
-              with open(manifest_path, encoding="utf-8") as f:
-                  text = f.read()
-              needed = [
-                  "android.permission.RECORD_AUDIO",
-                  "android.permission.MODIFY_AUDIO_SETTINGS",
-                  "android.permission.INTERNET",
-                  "android.permission.ACCESS_NETWORK_STATE",
-                  "android.permission.ACCESS_WIFI_STATE",
-                  "android.permission.CAMERA",
-                  "android.permission.SEND_SMS",
-                  "android.permission.RECEIVE_SMS",
-                  "android.permission.READ_SMS",
-                  "android.permission.RECEIVE_MMS",
-                  "android.permission.READ_CONTACTS",
-                  "android.permission.WRITE_CONTACTS",
-                  "android.permission.READ_EXTERNAL_STORAGE",
-                  "android.permission.WRITE_EXTERNAL_STORAGE",
-                  "android.permission.READ_MEDIA_IMAGES",
-                  "android.permission.READ_MEDIA_VIDEO",
-                  "android.permission.READ_MEDIA_AUDIO",
-                  "android.permission.ACCESS_FINE_LOCATION",
-                  "android.permission.ACCESS_COARSE_LOCATION",
-                  "android.permission.BLUETOOTH",
-                  "android.permission.BLUETOOTH_CONNECT",
-                  "android.permission.BLUETOOTH_SCAN",
-                  "android.permission.FOREGROUND_SERVICE",
-                  "android.permission.POST_NOTIFICATIONS",
-                  "android.permission.WAKE_LOCK",
-                  "android.permission.VIBRATE",
-                  "android.permission.RECEIVE_BOOT_COMPLETED",
-              ]
-              to_add = []
-              for perm in needed:
-                  if perm not in text:
-                      to_add.append('    <uses-permission android:name="' + perm + '" />')
-              if to_add:
-                  start = text.find("<manifest")
-                  end = text.find(">", start)
-                  if start != -1 and end != -1:
-                      insert_text = "\n" + "\n".join(to_add)
-                      text = text[:end+1] + insert_text + text[end+1:]
-                      with open(manifest_path, "w", encoding="utf-8") as f:
-                          f.write(text)
-                      print("Manifest fixed OK")
-
-          icon_src = "public/icon.png"
-          if not os.path.exists(icon_src):
-              icon_src = "icon.png"
-          if os.path.exists(icon_src):
-              res_dir = "android/app/src/main/res"
-              anydpi = os.path.join(res_dir, "mipmap-anydpi-v26")
-              if os.path.exists(anydpi):
-                  shutil.rmtree(anydpi)
-              for d in ["mipmap-mdpi", "mipmap-hdpi", "mipmap-xhdpi", "mipmap-xxhdpi", "mipmap-xxxhdpi"]:
-                  folder = os.path.join(res_dir, d)
-                  os.makedirs(folder, exist_ok=True)
-                  shutil.copy(icon_src, os.path.join(folder, "ic_launcher.png"))
-                  shutil.copy(icon_src, os.path.join(folder, "ic_launcher_round.png"))
-                  shutil.copy(icon_src, os.path.join(folder, "ic_launcher_foreground.png"))
-          PYEOF
-
-      - name: Fix Kotlin Duplicate
+      # 9. إضافة صلاحيات التطبيق
+      - name: Fix Android Permissions
         run: |
           python3 << 'PYEOF'
           import os
           import re
-          # نجبر كل Kotlin على نسخة واحدة 1.9.24
-          p = "android/build.gradle"
-          if os.path.exists(p):
-              with open(p, encoding="utf-8") as f:
-                  t = f.read()
-              # لو فيه kotlin_version قديم، نغيره
-              t = re.sub(r"kotlin_version\s*=\s*['\"][^'\"]+['\"]", "kotlin_version = '1.9.24'", t)
-              t = re.sub(r"kotlinVersion\s*=\s*['\"][^'\"]+['\"]", "kotlinVersion = '1.9.24'", t)
-              # نضيف force في الاخير
-              if "kotlin-stdlib:1.9.24" not in t:
-                  t += "\nallprojects {\n  configurations.all {\n    resolutionStrategy {\n      force 'org.jetbrains.kotlin:kotlin-stdlib:1.9.24'\n      force 'org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.9.24'\n      force 'org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.24'\n    }\n  }\n}\n"
-              with open(p, "w", encoding="utf-8") as f:
-                  f.write(t)
-              print("build.gradle fixed - kotlin forced to 1.9.24")
-          # نفس الشي في app/build.gradle - نحذف النسخ القديمة
-          p2 = "android/app/build.gradle"
-          if os.path.exists(p2):
-              with open(p2, encoding="utf-8") as f:
-                  t2 = f.read()
-              if "kotlin-stdlib-jdk7" not in t2:
-                  t2 += "\nconfigurations.all {\n  exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk7'\n  exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk8'\n}\n"
-              with open(p2, "w", encoding="utf-8") as f:
-                  f.write(t2)
-              print("app/build.gradle fixed")
+
+          path = "android/app/src/main/AndroidManifest.xml"
+
+          if not os.path.exists(path):
+              raise SystemExit("AndroidManifest.xml not found")
+
+          with open(path, encoding="utf-8") as f:
+              content = f.read()
+
+          permissions = [
+              "RECORD_AUDIO",
+              "MODIFY_AUDIO_SETTINGS",
+              "INTERNET",
+              "ACCESS_NETWORK_STATE",
+              "ACCESS_WIFI_STATE",
+              "CAMERA",
+              "SEND_SMS",
+              "RECEIVE_SMS",
+              "READ_SMS",
+              "RECEIVE_MMS",
+              "READ_CONTACTS",
+              "WRITE_CONTACTS",
+              "READ_EXTERNAL_STORAGE",
+              "WRITE_EXTERNAL_STORAGE",
+              "READ_MEDIA_IMAGES",
+              "READ_MEDIA_VIDEO",
+              "READ_MEDIA_AUDIO",
+              "ACCESS_FINE_LOCATION",
+              "ACCESS_COARSE_LOCATION",
+              "BLUETOOTH",
+              "BLUETOOTH_CONNECT",
+              "BLUETOOTH_SCAN",
+              "FOREGROUND_SERVICE",
+              "POST_NOTIFICATIONS",
+              "WAKE_LOCK",
+              "VIBRATE",
+              "RECEIVE_BOOT_COMPLETED"
+          ]
+
+          missing = []
+
+          for permission in permissions:
+              name = "android.permission." + permission
+
+              pattern = (
+                  r'<uses-permission\b[^>]*'
+                  r'android:name\s*=\s*["\']'
+                  + re.escape(name) +
+                  r'["\']'
+              )
+
+              if not re.search(pattern, content):
+                  missing.append(
+                      '    <uses-permission android:name="' +
+                      name + '" />'
+                  )
+
+          if missing:
+              match = re.search(r'<manifest\b[^>]*>', content)
+
+              if not match:
+                  raise SystemExit("Invalid Android manifest")
+
+              position = match.end()
+
+              content = (
+                  content[:position] +
+                  "\n" + "\n".join(missing) +
+                  content[position:]
+              )
+
+              with open(path, "w", encoding="utf-8") as f:
+                  f.write(content)
+
+          print("Android permissions checked successfully")
           PYEOF
 
+      # 10. تجهيز أيقونات التطبيق
+      - name: Generate App Icons
+        run: |
+          set -e
+
+          if [ ! -f public/icon.png ]; then
+            echo "ERROR: public/icon.png not found"
+            exit 1
+          fi
+
+          python3 -m pip install Pillow
+
+          python3 << 'PYEOF'
+          from PIL import Image, ImageOps
+          import os
+          import shutil
+
+          source = "public/icon.png"
+          res = "android/app/src/main/res"
+
+          icon = Image.open(source).convert("RGBA")
+
+          sizes = {
+              "mipmap-mdpi": 48,
+              "mipmap-hdpi": 72,
+              "mipmap-xhdpi": 96,
+              "mipmap-xxhdpi": 144,
+              "mipmap-xxxhdpi": 192
+          }
+
+          adaptive = os.path.join(
+              res, "mipmap-anydpi-v26"
+          )
+
+          if os.path.exists(adaptive):
+              shutil.rmtree(adaptive)
+
+          for folder, size in sizes.items():
+
+              target = os.path.join(res, folder)
+              os.makedirs(target, exist_ok=True)
+
+              resized = ImageOps.fit(
+                  icon,
+                  (size, size),
+                  method=Image.Resampling.LANCZOS
+              )
+
+              for filename in [
+                  "ic_launcher.png",
+                  "ic_launcher_round.png",
+                  "ic_launcher_foreground.png"
+              ]:
+                  resized.save(
+                      os.path.join(target, filename),
+                      "PNG"
+                  )
+
+          print("All launcher icons generated successfully")
+          PYEOF
+
+      # 11. التحقق من إعدادات Android
+      - name: Verify Android Configuration
+        run: |
+          set -e
+
+          test -f android/gradlew
+          test -f android/app/src/main/AndroidManifest.xml
+          test -f android/app/build.gradle
+          test -f capacitor.config.json
+
+          echo "Android configuration verified"
+
+      # 12. بناء APK
       - name: Build APK
         run: |
-          cd android
-          chmod +x gradlew
-          ./gradlew assembleDebug --stacktrace
+          set -e
 
+          cd android
+
+          chmod +x gradlew
+
+          ./gradlew \
+            --no-daemon \
+            clean \
+            assembleDebug \
+            --stacktrace
+
+      # 13. التأكد من وجود APK
+      - name: Verify APK
+        run: |
+          set -e
+
+          APK="android/app/build/outputs/apk/debug/app-debug.apk"
+
+          if [ ! -f "$APK" ]; then
+            echo "ERROR: APK was not generated"
+            exit 1
+          fi
+
+          ls -lh "$APK"
+
+      # 14. رفع APK
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: radio-connect-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+         retention-days: 14
