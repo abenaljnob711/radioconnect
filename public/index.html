@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#05080c">
 <link rel="icon" href="../icon.png">
+<link rel="manifest" href="/manifest.json">
 <title>جهاز الاسلكي نداء ودردشة حقيقي</title>
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 <style>
@@ -133,9 +134,9 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
 .voice-avatar { width: 38px !important; height: 38px !important; border-radius: 50% !important; background: rgba(255,255,255,0.1) !important; display: flex !important; align-items: center !important; justify-content: center !important; font-size: 18px !important; font-weight: 800 !important; flex-shrink: 0 !important; color: #fff !important; }
 .play-btn { width: 40px !important; height: 40px !important; border-radius: 50% !important; background: transparent !important; border: none !important; display: flex !important; align-items: center !important; justify-content: center !important; color: var(--cyan) !important; font-size: 24px !important; cursor: pointer !important; flex-shrink: 0 !important; padding: 0 !important; }
 .msg-out .play-btn { color: #ff5577 !important; background: transparent !important; border: none !important; }
-.waveform { flex: 1 !important; height: 30px !important; display: flex !important; align-items: center !important; gap: 3px !important; overflow: hidden !important; }
-.waveform span { display: block !important; width: 3px !important; background: var(--cyan) !important; border-radius: 2px !important; }
-.msg-out .waveform span { background: #ff5577 !important; }
+.waveform { flex: 1 !important; height: 30px !important; display: flex !important; align-items: center !important; position: relative !important; overflow: hidden !important; }
+.waveform span { display: none !important; }
+.waveform canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
 .voice-meta { display: flex !important; justify-content: space-between !important; align-items: center !important; font-size: 11px !important; color: rgba(255,255,255,.6) !important; margin-top: 4px !important; }
 .text-msg { font-size: 14px; line-height: 1.4; color: #fff; font-weight: 400; padding-bottom: 2px; }
 .attach-msg { display: flex; align-items: center; gap: 10px; padding: 8px 4px; }
@@ -503,27 +504,20 @@ let waveAudioChunks = [];
 let waveStartTime = 0;
 let waveTimerInterval = null;
 
-// --- المتغيرات الخاصة بالتموج الحيوي للصوت ---
 let liveWaveCtx = null, liveWaveAnim = null, liveWaveAnalyser = null, liveWaveAudioCtx = null, liveWaveSource = null, liveWaveData = null;
 
 function startLiveWave(stream, color = '#ff4d6d') {
   const c = document.getElementById('liveWave');
   if (!c || !stream) return;
-
-  stopLiveWave(); // إعادة ضبط آمنة
-
+  stopLiveWave();
   try {
     liveWaveAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
     if (liveWaveAudioCtx.state === 'suspended') liveWaveAudioCtx.resume();
-
     liveWaveAnalyser = liveWaveAudioCtx.createAnalyser();
     liveWaveAnalyser.fftSize = 128;
-
     liveWaveSource = liveWaveAudioCtx.createMediaStreamSource(stream);
     liveWaveSource.connect(liveWaveAnalyser);
-
     liveWaveCtx = c.getContext('2d');
-
     const dpr = window.devicePixelRatio || 1;
     const rect = c.getBoundingClientRect();
     if (rect.width && rect.height) {
@@ -531,10 +525,8 @@ function startLiveWave(stream, color = '#ff4d6d') {
       c.height = rect.height * dpr;
       liveWaveCtx.scale(dpr, dpr);
     }
-
     liveWaveData = new Uint8Array(liveWaveAnalyser.frequencyBinCount);
     c.style.display = 'block';
-
     const draw = () => {
       liveWaveAnim = requestAnimationFrame(draw);
       liveWaveAnalyser.getByteFrequencyData(liveWaveData);
@@ -549,7 +541,6 @@ function startLiveWave(stream, color = '#ff4d6d') {
     };
     draw();
   } catch (e) {
-    console.warn('startLiveWave failed:', e);
     stopLiveWave();
   }
 }
@@ -558,53 +549,37 @@ function stopLiveWave() {
   if (liveWaveAnim) { cancelAnimationFrame(liveWaveAnim); liveWaveAnim = null; }
   if (liveWaveSource) { try { liveWaveSource.disconnect(); } catch (e) {} liveWaveSource = null; }
   if (liveWaveAudioCtx) { try { liveWaveAudioCtx.close(); } catch (e) {} liveWaveAudioCtx = null; }
-  liveWaveAnalyser = null;
-  liveWaveData = null;
-  liveWaveCtx = null;
+  liveWaveAnalyser = null; liveWaveData = null; liveWaveCtx = null;
   const c = document.getElementById('liveWave');
   if (c) c.style.display = 'none';
 }
 
-// --- دالة التموج الحقيقي لرسائل الصوت أثناء الاستماع ---
 function setupMessageAudioAnalyser(audioEl, canvasEl, playBtn) {
   if (!audioEl || !canvasEl) return;
-  
   const dpr = window.devicePixelRatio || 1;
   const rect = canvasEl.getBoundingClientRect();
   canvasEl.width = (rect.width || 150) * dpr;
   canvasEl.height = rect.height * dpr;
   const ctx = canvasEl.getContext('2d');
   ctx.scale(dpr, dpr);
-
-  let audioCtx = null;
-  let analyser = null;
-  let source = null;
-  let animId = null;
-  let dataArray = null;
+  let audioCtx = null, analyser = null, source = null, animId = null, dataArray = null;
   
   const draw = () => {
     animId = requestAnimationFrame(draw);
     if (!analyser) return;
-    
     analyser.getByteTimeDomainData(dataArray);
-    const W = canvasEl.width / dpr;
-    const H = canvasEl.height / dpr;
+    const W = canvasEl.width / dpr, H = canvasEl.height / dpr;
     ctx.clearRect(0, 0, W, H);
     ctx.lineWidth = 2;
     ctx.strokeStyle = playBtn.closest('.msg-out') ? '#ff5577' : '#00e5ff';
-    
     ctx.beginPath();
     const sliceWidth = W / dataArray.length;
     let x = 0;
-    
     for (let i = 0; i < dataArray.length; i++) {
-      const v = dataArray[i] / 128.0;
-      const y = (v * H) / 2;
-      if (i === 0) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
+      const v = dataArray[i] / 128.0, y = (v * H) / 2;
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
       x += sliceWidth;
     }
-    
     ctx.lineTo(W, H / 2);
     ctx.stroke();
   };
@@ -625,7 +600,6 @@ function setupMessageAudioAnalyser(audioEl, canvasEl, playBtn) {
       if (animId) cancelAnimationFrame(animId);
       draw();
     } catch (e) {
-      console.log('Analyser error:', e);
       ctx.strokeStyle = '#00e5ff';
       ctx.beginPath();
       ctx.moveTo(0, canvasEl.height / 2 / dpr);
@@ -645,21 +619,9 @@ function setupMessageAudioAnalyser(audioEl, canvasEl, playBtn) {
     ctx.stroke();
   };
 
-  audioEl.addEventListener('play', () => {
-    playBtn.textContent = '⏸';
-    startAnalyser();
-  });
-  
-  audioEl.addEventListener('pause', () => {
-    playBtn.textContent = '▶';
-    stopAnalyser();
-  });
-  
-  audioEl.addEventListener('ended', () => {
-    playBtn.textContent = '▶';
-    stopAnalyser();
-  });
-  
+  audioEl.addEventListener('play', () => { playBtn.textContent = '⏸'; startAnalyser(); });
+  audioEl.addEventListener('pause', () => { playBtn.textContent = '▶'; stopAnalyser(); });
+  audioEl.addEventListener('ended', () => { playBtn.textContent = '▶'; stopAnalyser(); });
   stopAnalyser();
 }
 
@@ -891,13 +853,8 @@ function initSocket() {
       waveText.textContent = senderName + ' يتحدث...';
       waveIndicator.classList.add('show');
     }
-
-    audioEl.play().catch(e => console.log("Audio play blocked", e));
-    
-    audioEl.onended = () => {
-      if (waveIndicator) waveIndicator.classList.remove('show');
-    };
-    
+    audioEl.play().catch(e => {});
+    audioEl.onended = () => { if (waveIndicator) waveIndicator.classList.remove('show'); };
     toast('🎤 رسالة صوتية من ' + senderName, 'success');
   });
 
@@ -912,7 +869,6 @@ function initSocket() {
         }
       } catch(e) {}
     }
-
     if (currentUser.currentConvId === conversationId) {
       addChatMessage(message, message.sender === currentUser.id ? 'out' : 'in');
     } else toast('💬 رسالة جديدة', 'success');
@@ -927,7 +883,6 @@ function initSocket() {
   });
 
   socket.on('conversation_updated', () => refreshChatList());
-
   socket.on('friend_request_received', (data) => handleIncomingFriendRequest(data));
 
   socket.on('friend_accepted', (data) => {
@@ -1050,10 +1005,8 @@ async function joinWaveAsMember(waveId) {
       currentUser.waveName = data.waveName;
       const el1 = document.getElementById('waveNameValue'); if (el1) el1.textContent = data.waveName;
       const el2 = document.getElementById('waveNameLabel'); if (el2) el2.textContent = data.waveName;
-      
       localStorage.setItem('rc_saved_wave_id', waveId);
       localStorage.setItem('rc_saved_wave_name', data.waveName);
-      
       addWaveToHistory(waveId, data.waveName);
     }
     if (data.members) renderWaveMembers(data.members);
@@ -1142,7 +1095,6 @@ function renderWaveMembers(members) {
   members.forEach(m => {
     if (m.id === currentUser.id || m.name === currentUser.name) m.online = true;
   });
-
   const dd = document.getElementById('membersDropdown');
   if (dd && dd.classList.contains('show')) {
     dd.innerHTML = `<div class="members-dropdown-title">👥 المشتركون (${members.length})</div>${members.map(m => `<div class="members-dropdown-item"><span>${m.name} ${m.id === currentUser.id ? '(أنت)' : ''} ${m.isOwner ? '👑' : ''}</span><span class="${m.online ? 'status-active' : 'status-inactive'}">${m.online ? '🟢 نشط' : '🔴 غير نشط'}</span></div>`).join('')}`;
@@ -1517,10 +1469,7 @@ async function startVoiceRecording() {
     voiceRecorder.start(100);
     isRecordingVoice = true;
     voiceStartTime = Date.now();
-    
-    // إظهار التموج أثناء التسجيل
     startLiveWave(stream, '#ff4d6d');
-
     chatPrimaryBtn.classList.add('recording');
     chatPrimaryBtn.textContent = '⏹';
     clearInterval(voiceTimerInt);
@@ -1557,8 +1506,6 @@ async function stopVoiceRecordingAndSend() {
     voiceRecorder = null;
   };
   voiceRecorder.stop();
-  
-  // إيقاف التموج
   stopLiveWave();
 }
 
