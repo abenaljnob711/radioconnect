@@ -1575,37 +1575,44 @@ body.ptt-active .antenna::before { background: var(--green); box-shadow: 0 0 14p
       toast('✅ تم حذف الغرفة نهائياً', 'success');
       switchTab('log');
     }
+async function initBattery() {
+  if (!navigator.getBattery) return;
+  try {
+    const battery = await navigator.getBattery();
+    const update = () => {
+      batteryPercent = Math.round(battery.level * 100);
+      const el1 = document.getElementById('batteryValue'); if (el1) el1.textContent = batteryPercent + '%';
+      const el2 = document.getElementById('bottomBattery'); if (el2) el2.textContent = batteryPercent + '%';
+      const lcdBat = document.getElementById('lcdBattery'); if (lcdBat) lcdBat.textContent = batteryPercent + '%';
+      updateBatteryVisual();
+    };
+    update();
+    battery.addEventListener('levelchange', update);
+  } catch (e) {}
+}
 
-    async function initBattery() {
-      if (!navigator.getBattery) return;
-      try {
-        const battery = await navigator.getBattery();
-        const update = () => {
-          batteryPercent = Math.round(battery.level * 100);
-          const el1 = document.getElementById('batteryValue'); if (el1) el1.textContent = batteryPercent + '%';
-          const el2 = document.getElementById('bottomBattery'); if (el2) el2.textContent = batteryPercent + '%';
-          updateBatteryVisual();
-        };
-        update();
-        battery.addEventListener('levelchange', update);
-      } catch (e) {}
-    }
+function updateBatteryVisual() {
+  const chip = document.getElementById('batteryChip');
+  const pct = batteryPercent == null ? 0 : batteryPercent;
+  
+  const lcdBat = document.getElementById('lcdBattery');
+  if (lcdBat) {
+    lcdBat.textContent = (batteryPercent != null ? batteryPercent : '--') + '%';
+  }
 
-    function updateBatteryVisual() {
-      const chip = document.getElementById('batteryChip');
-      if (!chip) return;
-      const bars = chip.querySelectorAll('.battery-bars span');
-      const pct = batteryPercent == null ? 0 : batteryPercent;
-      const filled = Math.ceil((pct / 100) * 5);
-      chip.classList.remove('level-high', 'level-mid', 'level-low');
-      if (pct >= 60) chip.classList.add('level-high');
-      else if (pct >= 21) chip.classList.add('level-mid');
-      else chip.classList.add('level-low');
-      bars.forEach((b, i) => {
-        b.style.background = i < filled ? '' : '#3a4048';
-      });
-    }
-
+  if (!chip) return;
+  const bars = chip.querySelectorAll('.battery-bars span');
+  const filled = Math.ceil((pct / 100) * 5);
+  
+  chip.classList.remove('level-high', 'level-mid', 'level-low');
+  if (pct >= 60) chip.classList.add('level-high');
+  else if (pct >= 21) chip.classList.add('level-mid');
+  else chip.classList.add('level-low');
+  
+  bars.forEach((b, i) => {
+    b.style.background = i < filled ? '' : '#3a4048';
+  });
+}
     function updateConnectionIcon() {
       const chip = document.getElementById('networkChip');
       if (!chip) return;
